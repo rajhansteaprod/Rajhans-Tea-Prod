@@ -1,0 +1,62 @@
+@use 'app/core/design-tokens/tokens' as *;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: $font-size-md;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: $font-family;
+  color: $color-text-primary;
+  background-color: $color-bg-primary;
+  line-height: $line-height-normal;
+  min-height: 100vh;
+}
+
+a {
+  color: $color-primary;
+  text-decoration: none;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $color-primary-hover;
+  }
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+// Override ng-zorro primary color
+.ant-btn-primary {
+  background-color: $color-primary !important;
+  border-color: $color-primary !important;
+
+  &:hover {
+    background-color: $color-primary-hover !important;
+    border-color: $color-primary-hover !important;
+  }
+}
+
+.ant-input:focus,
+.ant-input-focused {
+  border-color: $color-primary !important;
+  box-shadow: $shadow-glow !important;
+}
+
+::selection {
+  background: rgba(204, 88, 3, 0.15);
+  color: $color-text-primary;
+}

@@ -1,0 +1,59 @@
+@use 'tokens' as *;
+
+// --- Responsive Breakpoints ---
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == xs { @media (max-width: $breakpoint-xs) { @content; } }
+  @else if $breakpoint == sm { @media (max-width: $breakpoint-sm) { @content; } }
+  @else if $breakpoint == md { @media (max-width: $breakpoint-md) { @content; } }
+  @else if $breakpoint == lg { @media (max-width: $breakpoint-lg) { @content; } }
+  @else if $breakpoint == xl { @media (max-width: $breakpoint-xl) { @content; } }
+  @else if $breakpoint == xxl { @media (max-width: $breakpoint-xxl) { @content; } }
+}
+
+// --- Flexbox ---
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// --- Typography ---
+@mixin heading($size: $font-size-xl) {
+  font-size: $size;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-tight;
+  color: $color-text-primary;
+}
+
+// --- Truncation ---
+@mixin truncate($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+// --- Card ---
+@mixin card {
+  background: $color-bg-primary;
+  border-radius: $radius-md;
+  box-shadow: $shadow-sm;
+  border: 1px solid $color-border-light;
+}

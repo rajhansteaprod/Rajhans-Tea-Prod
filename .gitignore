@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+.angular/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Coverage
+coverage/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Docker volumes
+mongo-data/
+redis-data/
+grafana-data/
+
+# Keys
+*.pem
+*.key
+firebase-service-account.json
+*-firebase-adminsdk-*.json
+
+# Uploads
+uploads/

@@ -1,0 +1,112 @@
+// ============================================
+// RAJHANS ECOMMERCE - DESIGN TOKENS
+// Single source of truth for all design values
+// ============================================
+
+// --- Brand Colors ---
+$color-primary: #CC5803;
+$color-primary-hover: #B34E03;
+$color-primary-active: #9A4403;
+$color-primary-light: rgba(204, 88, 3, 0.08);
+$color-secondary: #57886C;
+$color-secondary-hover: #4A7560;
+$color-accent: #A27E8E;
+$color-accent-light: rgba(162, 126, 142, 0.12);
+
+// --- Semantic Colors ---
+$color-success: #57886C;
+$color-warning: #CC5803;
+$color-error: #C0392B;
+$color-info: #A27E8E;
+
+// --- Background Colors ---
+$color-bg-primary: #FCFFF7;
+$color-bg-secondary: #F5F8F2;
+$color-bg-tertiary: #FFFFFF;
+$color-bg-dark: #3A2D32;
+
+// --- Text Colors ---
+$color-text-primary: #3A2D32;
+$color-text-secondary: #5C4F53;
+$color-text-tertiary: #8A7D81;
+$color-text-disabled: #B8ADB1;
+$color-text-inverse: #FCFFF7;
+
+// --- Border Colors ---
+$color-border: #E0DCD8;
+$color-border-light: #EDE9E6;
+$color-border-focus: #CC5803;
+
+// --- Spacing ---
+$space-xxs: 4px;
+$space-xs: 8px;
+$space-sm: 12px;
+$space-md: 16px;
+$space-lg: 24px;
+$space-xl: 32px;
+$space-xxl: 48px;
+$space-xxxl: 64px;
+
+// --- Typography ---
+$font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$font-family-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+$font-size-xs: 12px;
+$font-size-sm: 14px;
+$font-size-md: 16px;
+$font-size-lg: 20px;
+$font-size-xl: 24px;
+$font-size-xxl: 32px;
+$font-size-xxxl: 40px;
+$font-size-display: 56px;
+
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+$line-height-tight: 1.2;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+$letter-spacing-tight: -0.02em;
+$letter-spacing-normal: 0;
+$letter-spacing-wide: 0.04em;
+
+// --- Border Radius ---
+$radius-sm: 4px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-xxl: 24px;
+$radius-full: 9999px;
+
+// --- Shadows ---
+$shadow-sm: 0 1px 2px rgba(58, 45, 50, 0.04);
+$shadow-md: 0 4px 12px rgba(58, 45, 50, 0.06);
+$shadow-lg: 0 8px 32px rgba(58, 45, 50, 0.08);
+$shadow-xl: 0 16px 48px rgba(58, 45, 50, 0.12);
+$shadow-glow: 0 0 0 3px rgba(204, 88, 3, 0.15);
+
+// --- Breakpoints ---
+$breakpoint-xs: 480px;
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+$breakpoint-xxl: 1600px;
+
+// --- Transitions ---
+$transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-spring: 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+// --- Z-Index ---
+$z-dropdown: 1000;
+$z-sticky: 1020;
+$z-fixed: 1030;
+$z-modal-backdrop: 1040;
+$z-modal: 1050;
+$z-popover: 1060;
+$z-tooltip: 1070;

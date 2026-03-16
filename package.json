@@ -1,0 +1,39 @@
+{
+  "name": "rajhans-ecommerce",
+  "version": "1.0.0",
+  "description": "Industry-grade MEAN stack ecommerce application",
+  "private": true,
+  "workspaces": [
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=backend",
+    "build": "npm run build --workspace=backend",
+    "test": "npm run test --workspace=backend",
+    "test:unit": "npm run test:unit --workspace=backend",
+    "test:integration": "npm run test:integration --workspace=backend",
+    "test:sanity": "npm run test:sanity --workspace=backend",
+    "lint": "npm run lint --workspace=backend",
+    "format": "npm run format --workspace=backend",
+    "typecheck": "npm run typecheck --workspace=backend",
+    "docker:dev": "docker compose up -d",
+    "docker:test": "docker compose -f docker-compose.yml -f docker-compose.test.yml up --abort-on-container-exit",
+    "docker:monitoring": "docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d",
+    "docker:down": "docker compose down -v",
+    "seed": "npm run seed --workspace=backend",
+    "prepare": "husky"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.0",
+    "lint-staged": "^15.2.0"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
+}
