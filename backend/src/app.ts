@@ -7,6 +7,7 @@ import { config } from './config';
 import { requestIdMiddleware } from './middleware/request-id.middleware';
 import { requestLoggerMiddleware } from './middleware/request-logger.middleware';
 import { metricsMiddleware } from './middleware/metrics.middleware';
+import { globalRateLimiter } from './middleware/rate-limit.middleware';
 import { errorHandler } from './middleware/error-handler.middleware';
 import { notFoundHandler } from './middleware/not-found.middleware';
 import apiV1Routes from './api/v1/routes';
@@ -21,6 +22,9 @@ app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Rate limiting
+app.use(globalRateLimiter);
 
 // Request tracking & logging
 app.use(requestIdMiddleware);
