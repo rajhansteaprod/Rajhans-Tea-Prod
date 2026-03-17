@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
+import path from 'path';
 import { config } from './config';
 import { requestIdMiddleware } from './middleware/request-id.middleware';
 import { requestLoggerMiddleware } from './middleware/request-logger.middleware';
@@ -30,6 +31,9 @@ app.use(globalRateLimiter);
 app.use(requestIdMiddleware);
 app.use(requestLoggerMiddleware);
 app.use(metricsMiddleware);
+
+// Static file serving for uploaded images
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Routes
 app.use('/api/v1', apiV1Routes);
