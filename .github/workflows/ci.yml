@@ -1,0 +1,431 @@
+# =============================================================================
+# CI PIPELINE — Rajhans Ecommerce
+# =============================================================================
+#
+# WHAT IS A CI PIPELINE?
+# CI stands for "Continuous Integration". It means every time a developer
+# pushes code or opens a Pull Request, this file runs automatically on
+# GitHub's servers. It's like an automated QA team that never sleeps.
+#
+# WHY DO WE NEED IT?
+# Without CI, you'd have to manually run lint, tests, and builds before every
+# deploy. Humans forget. CI never does. It enforces quality gates automatically.
+#
+# HOW DOES GITHUB ACTIONS WORK?
+# GitHub Actions reads this YAML file and executes it on their cloud servers
+# (called "runners") — free for public repos, limited free minutes for private.
+#
+# STRUCTURE:
+#   on:       → WHEN to run (on push? on PR? on schedule?)
+#   jobs:     → WHAT to run (each job is an independent machine)
+#   steps:    → HOW to run (ordered list of commands inside a job)
+#
+# Jobs run IN PARALLEL by default unless you declare dependencies with `needs:`.
+# =============================================================================
+
+name: CI # The name shown on GitHub under the "Actions" tab
+
+# -----------------------------------------------------------------------------
+# TRIGGERS — When should this pipeline run?
+# -----------------------------------------------------------------------------
+on:
+  # Run on every push to these branches
+  push:
+    branches:
+      - main   # production branch
+      - v1     # current development branch
+
+  # Run on every Pull Request targeting these branches
+  # This means: before merging INTO main or v1, all checks must pass
+  pull_request:
+    branches:
+      - main
+      - v1
+
+# -----------------------------------------------------------------------------
+# CONCURRENCY — Prevent duplicate runs
+# -----------------------------------------------------------------------------
+# If you push twice quickly, cancel the older run and start fresh.
+# ${{ github.ref }} is the branch name — so each branch gets its own queue.
+# This saves CI minutes and avoids confusing results.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# =============================================================================
+# JOBS
+# All 4 jobs run IN PARALLEL — they don't wait for each other.
+# This makes the pipeline fast (total time = slowest single job, not sum of all).
+# =============================================================================
+jobs:
+
+  # ===========================================================================
+  # JOB 1: CODE QUALITY
+  # ===========================================================================
+  # This job answers: "Is the code written correctly and consistently?"
+  # It does NOT run tests — it only checks formatting and types.
+  #
+  # WHY SEPARATE FROM TESTS?
+  # Quality checks are the fastest (< 1 min). If your code has a typo or
+  # formatting issue, you find out immediately without waiting for tests.
+  # ===========================================================================
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest # Use GitHub's free Ubuntu Linux server
+
+    steps:
+      # -----------------------------------------------------------------------
+      # STEP 1: Checkout — Download your code onto the runner machine
+      # -----------------------------------------------------------------------
+      # The runner is a fresh empty machine. First thing we do is clone the repo.
+      # `actions/checkout` is an official GitHub Action that does `git clone` for us.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # STEP 2: Setup Node.js
+      # -----------------------------------------------------------------------
+      # The runner doesn't have your Node version installed. We tell it which
+      # version to use. `cache: 'npm'` means node_modules are cached between
+      # runs — so `npm ci` is fast on subsequent runs (like having a local cache).
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22' # Must match our Dockerfile and local dev
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      # -----------------------------------------------------------------------
+      # STEP 3: Install dependencies
+      # -----------------------------------------------------------------------
+      # `npm ci` (clean install) is used instead of `npm install` in CI because:
+      #   1. It installs EXACTLY what's in package-lock.json (reproducible)
+      #   2. It's faster (skips some checks)
+      #   3. It deletes node_modules first to ensure a clean state
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      # -----------------------------------------------------------------------
+      # STEP 4: TypeScript type checking
+      # -----------------------------------------------------------------------
+      # `tsc --noEmit` runs the TypeScript compiler but doesn't output any files.
+      # It ONLY checks for type errors.
+      #
+      # Example of what it catches:
+      #   const user: User = "hello"  ← this would fail here, not at runtime
+      #
+      # WHY THIS MATTERS: TypeScript errors = bugs waiting to happen in production.
+      - name: TypeScript type check
+        working-directory: backend
+        run: npm run typecheck
+
+      # -----------------------------------------------------------------------
+      # STEP 5: ESLint
+      # -----------------------------------------------------------------------
+      # ESLint reads your code and checks for bad patterns. Examples:
+      #   - using `var` instead of `const`/`let`
+      #   - unused variables
+      #   - calling `console.log` in production code
+      #   - security anti-patterns
+      - name: Lint
+        working-directory: backend
+        run: npm run lint
+
+      # -----------------------------------------------------------------------
+      # STEP 6: Prettier format check
+      # -----------------------------------------------------------------------
+      # Prettier checks that all files are formatted consistently.
+      # We use `--check` flag (NOT --write) — we want CI to FAIL if formatting
+      # is wrong, not silently fix it. Developers must format before pushing.
+      #
+      # WHY? Consistent formatting means cleaner git diffs (no noise from
+      # whitespace changes) and easier code reviews.
+      - name: Format check
+        working-directory: backend
+        run: npx prettier --check "src/**/*.ts" "tests/**/*.ts"
+
+
+  # ===========================================================================
+  # JOB 2: UNIT TESTS
+  # ===========================================================================
+  # This job answers: "Does each piece of logic work correctly in isolation?"
+  #
+  # WHAT ARE UNIT TESTS?
+  # Unit tests test a single function/class in complete isolation.
+  # We "mock" (fake) all external dependencies like databases and APIs.
+  #
+  # Example: Testing AuthService.verifyOtp()
+  #   - We don't hit a real database
+  #   - We replace UserRepository with a fake that returns whatever we tell it to
+  #   - We only test: given this input, does the function return the right output?
+  #
+  # WHY MOCK?
+  #   1. Tests run in milliseconds (no network calls)
+  #   2. Tests are deterministic (same input = same output, always)
+  #   3. You can simulate edge cases (e.g. database down) easily
+  # ===========================================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      # -----------------------------------------------------------------------
+      # Run unit tests WITH coverage report
+      # -----------------------------------------------------------------------
+      # `--coverage` tells Jest to measure how much code was executed.
+      # If coverage drops below the thresholds in jest.config.ts (70%), this fails.
+      #
+      # The coverage report is saved to backend/coverage/ folder.
+      - name: Run unit tests with coverage
+        working-directory: backend
+        run: npm run test:unit
+        env:
+          # Set dummy values for env vars — unit tests don't hit real services
+          # but our config/index.ts still reads these on import
+          NODE_ENV: test
+          JWT_ACCESS_SECRET: test-access-secret-for-ci
+          JWT_REFRESH_SECRET: test-refresh-secret-for-ci
+          FIREBASE_PROJECT_ID: test-project
+
+      # -----------------------------------------------------------------------
+      # Upload coverage report as a build artifact
+      # -----------------------------------------------------------------------
+      # After tests run, the coverage/ folder contains an HTML report.
+      # This step saves it so you can download and view it from the GitHub UI.
+      # "Artifact" = any file output from a CI job that you want to keep.
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        # `if: always()` means upload even if tests failed — so you can see
+        # what coverage looked like when it failed
+        if: always()
+        with:
+          name: unit-coverage-report
+          path: backend/coverage/
+          retention-days: 7 # Keep for 7 days, then auto-delete to save space
+
+
+  # ===========================================================================
+  # JOB 3: INTEGRATION TESTS
+  # ===========================================================================
+  # This job answers: "Does the code work correctly with REAL databases?"
+  #
+  # WHAT ARE INTEGRATION TESTS?
+  # Unlike unit tests, integration tests use real MongoDB and real Redis.
+  # They test that your repositories/services actually talk to the DB correctly.
+  #
+  # Example: Test that UserRepository.create() actually saves to MongoDB,
+  # and that findByPhone() actually retrieves it back.
+  #
+  # WHY NOT JUST USE UNIT TESTS?
+  # Mocks can lie. You can mock a repository to return data,
+  # but if your Mongoose schema has a bug or the query is wrong,
+  # unit tests won't catch it — integration tests will.
+  #
+  # HOW WE SET UP THE DATABASE:
+  # GitHub Actions lets us spin up Docker containers alongside our code.
+  # These are called "services". We start a real MongoDB and Redis container
+  # just for this job, run the tests, then throw them away.
+  # ===========================================================================
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      # -----------------------------------------------------------------------
+      # Start MongoDB with Replica Set
+      # -----------------------------------------------------------------------
+      # WHY REPLICA SET?
+      # MongoDB replica set is required for:
+      #   1. Transactions (atomicity — all-or-nothing operations)
+      #   2. Change streams (real-time data watching)
+      #
+      # A "replica set" normally means multiple MongoDB servers that mirror each
+      # other for high availability. But even a single-node replica set unlocks
+      # transactions. That's what we're doing here — 1 node, replica set enabled.
+      #
+      # HOW IT WORKS:
+      # 1. `docker run -d` → start container in background (-d = detached)
+      # 2. `mongod --replSet rs0` → start MongoDB with replica set named "rs0"
+      # 3. `--bind_ip_all` → allow connections from any IP (needed in Docker)
+      # 4. We wait for it to be ready, then run `rs.initiate()` to activate it
+      - name: Start MongoDB with replica set
+        run: |
+          # Start MongoDB container
+          docker run -d \
+            --name mongodb \
+            -p 27017:27017 \
+            mongo:7 \
+            mongod --replSet rs0 --bind_ip_all
+
+          # Wait up to 30 seconds for MongoDB to be ready to accept connections
+          # `mongosh --eval "db.adminCommand('ping')"` is a simple health check
+          echo "Waiting for MongoDB to be ready..."
+          for i in $(seq 1 30); do
+            if docker exec mongodb mongosh --eval "db.adminCommand('ping')" --quiet 2>/dev/null; then
+              echo "MongoDB is ready!"
+              break
+            fi
+            echo "Attempt $i/30 — waiting..."
+            sleep 1
+          done
+
+          # Initialize the replica set
+          # rs.initiate() tells MongoDB: "Start operating as a replica set"
+          # We define 1 member: localhost:27017 (the container itself)
+          docker exec mongodb mongosh --eval "
+            rs.initiate({
+              _id: 'rs0',
+              members: [{ _id: 0, host: 'localhost:27017' }]
+            })
+          "
+
+          # Wait for the replica set to elect a PRIMARY node
+          # A replica set needs a primary to accept writes
+          echo "Waiting for replica set primary election..."
+          for i in $(seq 1 15); do
+            STATUS=$(docker exec mongodb mongosh --eval "rs.status().myState" --quiet 2>/dev/null || echo "0")
+            if [ "$STATUS" = "1" ]; then
+              echo "Replica set primary elected!"
+              break
+            fi
+            echo "Attempt $i/15 — waiting for primary..."
+            sleep 2
+          done
+
+      # -----------------------------------------------------------------------
+      # Start Redis
+      # -----------------------------------------------------------------------
+      # Redis is our cache and session store. We start a plain Redis container
+      # with no password (fine for CI — it's thrown away after tests).
+      - name: Start Redis
+        run: |
+          docker run -d \
+            --name redis \
+            -p 6379:6379 \
+            redis:7-alpine
+
+          # Wait for Redis to be ready
+          echo "Waiting for Redis to be ready..."
+          for i in $(seq 1 15); do
+            if docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; then
+              echo "Redis is ready!"
+              break
+            fi
+            echo "Attempt $i/15 — waiting..."
+            sleep 1
+          done
+
+      # -----------------------------------------------------------------------
+      # Run integration tests
+      # -----------------------------------------------------------------------
+      # `--runInBand` is important here — it means run tests one at a time
+      # (in series), NOT in parallel. Why? Because multiple tests hitting the
+      # same database simultaneously would interfere with each other
+      # (e.g. test A creates a user, test B also creates the same user → conflict)
+      - name: Run integration tests
+        working-directory: backend
+        run: npm run test:integration
+        env:
+          NODE_ENV: test
+          # Point to our local Docker containers
+          MONGO_TEST_URI: mongodb://localhost:27017/rajhans-ecommerce-test?replicaSet=rs0
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_ACCESS_SECRET: test-access-secret-for-ci
+          JWT_REFRESH_SECRET: test-refresh-secret-for-ci
+          # Firebase is mocked in integration tests — dummy value is fine
+          FIREBASE_PROJECT_ID: test-project
+
+
+  # ===========================================================================
+  # JOB 4: BUILD & SECURITY AUDIT
+  # ===========================================================================
+  # This job answers two questions:
+  #   1. "Does the TypeScript code compile to valid JavaScript?" (build)
+  #   2. "Do any of our dependencies have known security vulnerabilities?" (audit)
+  #
+  # WHY BUILD CHECK IN CI?
+  # `typecheck` (Job 1) catches TypeScript type errors.
+  # But a full `tsc` build also catches things like circular imports,
+  # missing output files, and misconfigured tsconfig.
+  # If the build breaks, the Docker container can't be created → no deploy.
+  #
+  # WHY NPM AUDIT?
+  # npm audit checks your package-lock.json against the npm security advisory
+  # database. If a library you use has a known CVE (Common Vulnerability),
+  # it reports it. `--audit-level=high` means: only fail on HIGH or CRITICAL
+  # vulnerabilities (ignore low/moderate to reduce noise).
+  # ===========================================================================
+  build-and-security:
+    name: Build & Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      # -----------------------------------------------------------------------
+      # TypeScript full build
+      # -----------------------------------------------------------------------
+      # This runs `tsc` and actually outputs JavaScript files to dist/.
+      # If this fails, our Docker build would also fail.
+      # Better to catch it here than after trying to deploy.
+      - name: Build TypeScript
+        working-directory: backend
+        run: npm run build
+
+      # -----------------------------------------------------------------------
+      # Security audit
+      # -----------------------------------------------------------------------
+      # npm audit checks ALL your dependencies (and their dependencies)
+      # against a database of known security issues.
+      #
+      # `--audit-level=high` → fail only on HIGH or CRITICAL severity
+      # We ignore LOW and MODERATE because they're usually theoretical risks
+      # that don't apply to our specific usage — fixing them all would mean
+      # constant upgrades with risk of breaking changes.
+      #
+      # In a real enterprise setup, you'd review moderate ones quarterly.
+      - name: Security audit
+        working-directory: backend
+        run: npm audit --audit-level=high

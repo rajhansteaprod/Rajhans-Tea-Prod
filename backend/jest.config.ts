@@ -1,6 +1,45 @@
 import type { Config } from 'jest';
 
 const config: Config = {
+  // ---------------------------------------------------------------------------
+  // COVERAGE THRESHOLDS
+  // ---------------------------------------------------------------------------
+  // After running tests, Jest measures how much of your SOURCE code was actually
+  // executed by tests. This is called "code coverage".
+  //
+  // Think of it like this: if you have 100 lines of code and your tests only
+  // run through 60 of them, your coverage is 60%.
+  //
+  // These thresholds act as a GATE — if coverage drops below these numbers,
+  // the test run fails. This prevents developers from adding new code without
+  // writing tests for it.
+  //
+  // What each metric means:
+  //   branches  → every if/else path (e.g. both the "if user exists" and "if not" branch)
+  //   functions → every function/method must be called at least once by a test
+  //   lines     → every line of code must be executed at least once
+  //   statements → every statement (similar to lines but more granular)
+  //
+  // We start at 70% — a realistic target for a new project. Raise it over time.
+  coverageThreshold: {
+    global: {
+      branches: 70,
+      functions: 70,
+      lines: 70,
+      statements: 70,
+    },
+  },
+
+  // Tell Jest WHERE to collect coverage from.
+  // We only want to measure coverage of our actual source code (src/),
+  // not the test files themselves or config files.
+  collectCoverageFrom: [
+    'src/**/*.ts',           // include all TypeScript source files
+    '!src/server.ts',        // exclude server entry point (just starts the app, not testable logic)
+    '!src/config/index.ts',  // exclude config (just reads env vars)
+    '!src/**/*.d.ts',        // exclude type declaration files
+  ],
+
   projects: [
     {
       displayName: 'unit',
