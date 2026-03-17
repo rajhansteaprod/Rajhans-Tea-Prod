@@ -93,7 +93,9 @@ jobs:
         with:
           node-version: '22' # Must match our Dockerfile and local dev
           cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+          # This is a monorepo — the single package-lock.json lives at the ROOT,
+          # not inside backend/. The root lock file covers all workspaces.
+          cache-dependency-path: package-lock.json
 
       # -----------------------------------------------------------------------
       # STEP 3: Install dependencies
@@ -102,8 +104,13 @@ jobs:
       #   1. It installs EXACTLY what's in package-lock.json (reproducible)
       #   2. It's faster (skips some checks)
       #   3. It deletes node_modules first to ensure a clean state
+      #
+      # WHY NO working-directory HERE?
+      # This is an npm workspace monorepo. `npm ci` must run from the ROOT
+      # because that's where package-lock.json lives. Running it from backend/
+      # would fail — there's no lock file there.
+      # npm workspaces installs dependencies for ALL workspaces into root node_modules.
       - name: Install dependencies
-        working-directory: backend
         run: npm ci
 
       # -----------------------------------------------------------------------
@@ -178,10 +185,9 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: backend
         run: npm ci
 
       # -----------------------------------------------------------------------
@@ -254,10 +260,9 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: backend
         run: npm ci
 
       # -----------------------------------------------------------------------
@@ -398,10 +403,9 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: backend
         run: npm ci
 
       # -----------------------------------------------------------------------
@@ -426,6 +430,6 @@ jobs:
       # constant upgrades with risk of breaking changes.
       #
       # In a real enterprise setup, you'd review moderate ones quarterly.
+      # npm audit reads the root package-lock.json which covers all workspaces
       - name: Security audit
-        working-directory: backend
         run: npm audit --audit-level=high
