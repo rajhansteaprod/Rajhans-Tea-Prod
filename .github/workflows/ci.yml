@@ -358,7 +358,11 @@ jobs:
       # (e.g. test A creates a user, test B also creates the same user → conflict)
       - name: Run integration tests
         working-directory: backend
-        run: npm run test:integration
+        # --passWithNoTests → exit 0 when no test files exist yet.
+        # Integration tests are written incrementally as features are built.
+        # Without this flag, Jest exits with code 1 ("no tests found") which
+        # would fail CI even though the infrastructure is correctly set up.
+        run: npm run test:integration -- --passWithNoTests
         env:
           NODE_ENV: test
           # Point to our local Docker containers
