@@ -1,5 +1,5 @@
 // Central export for all DTOs.
-// Import from here: import { UserDTO, AuthDTO, DashboardDTO } from '../dto';
+// Import from here: import { UserDTO, AuthDTO, DashboardDTO, SessionDTO } from '../dto';
 
 export { UserDTO } from './user.dto';
 export type { UserAdminView, UserPublicView, UserAuthView } from './user.dto';
@@ -9,3 +9,6 @@ export type { AuthLoginResponse, AuthRefreshResponse, AuthMeResponse } from './a
 
 export { DashboardDTO } from './dashboard.dto';
 export type { DashboardStats, DashboardResponse } from './dashboard.dto';
+
+export { SessionDTO } from './session.dto';
+export type { SessionUserView, SessionAdminView } from './session.dto';

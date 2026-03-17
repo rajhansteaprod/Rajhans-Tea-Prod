@@ -7,11 +7,12 @@ import {
   PaginationMeta,
   UserListParams,
 } from '../../../../core/services/admin.service';
+import { UserSessionsComponent } from '../user-sessions/user-sessions';
 
 @Component({
   selector: 'app-user-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UserSessionsComponent],
   template: `
     <div class="page">
       <!-- Page Header -->
@@ -94,11 +95,15 @@ import {
                   <th>Status</th>
                   <th>Last Login</th>
                   <th>Joined</th>
+                  <th>Sessions</th>
                 </tr>
               </thead>
               <tbody>
                 @for (user of users(); track user._id) {
-                  <tr class="table-row">
+                  <tr
+                    class="table-row"
+                    [class.expanded]="selectedUserId() === user._id"
+                  >
                     <td>
                       <div class="user-cell">
                         <div class="user-avatar" [class.admin]="user.role === 'admin'">
@@ -132,7 +137,36 @@ import {
                     <td>
                       <span class="muted-text">{{ formatDate(user.createdAt) }}</span>
                     </td>
+                    <td>
+                      <!-- Sessions toggle button -->
+                      <button
+                        class="sessions-btn"
+                        [class.active]="selectedUserId() === user._id"
+                        (click)="toggleSessions(user)"
+                        title="View active sessions"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                          <path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                        Sessions
+                      </button>
+                    </td>
                   </tr>
+
+                  <!-- Inline sessions panel — spans all columns -->
+                  @if (selectedUserId() === user._id) {
+                    <tr class="sessions-row">
+                      <td colspan="7" class="sessions-cell">
+                        <app-user-sessions
+                          [userId]="user._id"
+                          [userName]="getDisplayName(user)"
+                          (closed)="closeSessionsPanel()"
+                          (sessionRevoked)="onSessionRevoked()"
+                        />
+                      </td>
+                    </tr>
+                  }
                 }
               </tbody>
             </table>
@@ -184,11 +218,9 @@ import {
     @use '../../../../core/design-tokens/tokens' as *;
     @use '../../../../core/design-tokens/mixins' as *;
 
-    .page { max-width: 1100px; }
+    .page { max-width: 1200px; }
 
-    .page-header {
-      margin-bottom: $space-lg;
-    }
+    .page-header { margin-bottom: $space-lg; }
 
     .page-title {
       font-family: $font-family-display;
@@ -240,10 +272,7 @@ import {
       transition: all $transition-fast;
 
       &::placeholder { color: $color-text-disabled; }
-      &:focus {
-        border-color: $color-primary;
-        box-shadow: $shadow-glow;
-      }
+      &:focus { border-color: $color-primary; box-shadow: $shadow-glow; }
     }
 
     .search-clear {
@@ -255,14 +284,10 @@ import {
       cursor: pointer;
       padding: 2px;
       display: flex;
-
       &:hover { color: $color-text-primary; }
     }
 
-    .filter-group {
-      display: flex;
-      gap: $space-sm;
-    }
+    .filter-group { display: flex; gap: $space-sm; }
 
     .filter-select {
       padding: $space-sm $space-xl $space-sm $space-sm;
@@ -280,17 +305,11 @@ import {
       background-position: right 10px center;
       min-width: 120px;
 
-      &:focus {
-        border-color: $color-primary;
-        box-shadow: $shadow-glow;
-      }
+      &:focus { border-color: $color-primary; box-shadow: $shadow-glow; }
     }
 
     // === Table ===
-    .table-card {
-      @include card;
-      overflow: hidden;
-    }
+    .table-card { @include card; overflow: hidden; }
 
     .table-loading, .table-empty {
       padding: $space-xxxl;
@@ -310,12 +329,9 @@ import {
       border-radius: 50%;
       animation: spin 0.6s linear infinite;
     }
-
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .table-wrapper {
-      overflow-x: auto;
-    }
+    .table-wrapper { overflow-x: auto; }
 
     .table {
       width: 100%;
@@ -347,14 +363,54 @@ import {
       transition: background $transition-fast;
       &:hover { background: rgba(204, 88, 3, 0.02); }
       &:last-child td { border-bottom: none; }
+
+      &.expanded {
+        background: rgba(204, 88, 3, 0.03);
+        td { border-bottom: none; }
+      }
+    }
+
+    // === Sessions inline row ===
+    .sessions-row {
+      td { padding: 0 $space-md $space-md; border-bottom: 1px solid $color-border-light; }
+    }
+
+    .sessions-cell {
+      padding: 0 $space-md $space-md !important;
+    }
+
+    // === Sessions toggle button ===
+    .sessions-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: $space-xs;
+      padding: $space-xs $space-sm;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-md;
+      background: $color-bg-tertiary;
+      color: $color-text-secondary;
+      font-size: $font-size-xs;
+      font-weight: $font-weight-medium;
+      font-family: $font-family;
+      cursor: pointer;
+      transition: all $transition-fast;
+      white-space: nowrap;
+
+      &:hover {
+        border-color: $color-primary;
+        color: $color-primary;
+        background: $color-primary-light;
+      }
+
+      &.active {
+        border-color: $color-primary;
+        color: $color-primary;
+        background: $color-primary-light;
+      }
     }
 
     // === User Cell ===
-    .user-cell {
-      display: flex;
-      align-items: center;
-      gap: $space-sm;
-    }
+    .user-cell { display: flex; align-items: center; gap: $space-sm; }
 
     .user-avatar {
       width: 36px;
@@ -369,22 +425,12 @@ import {
       font-weight: $font-weight-bold;
       flex-shrink: 0;
 
-      &.admin {
-        background: $color-primary-light;
-        color: $color-primary;
-      }
+      &.admin { background: $color-primary-light; color: $color-primary; }
     }
 
-    .user-info {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
+    .user-info { display: flex; flex-direction: column; min-width: 0; }
 
-    .user-name {
-      font-weight: $font-weight-medium;
-      color: $color-text-primary;
-    }
+    .user-name { font-weight: $font-weight-medium; color: $color-text-primary; }
 
     .user-email {
       font-size: $font-size-xs;
@@ -409,10 +455,7 @@ import {
       background: $color-bg-secondary;
       color: $color-text-secondary;
 
-      &.admin {
-        background: $color-primary-light;
-        color: $color-primary;
-      }
+      &.admin { background: $color-primary-light; color: $color-primary; }
     }
 
     .status-cell {
@@ -429,9 +472,7 @@ import {
       background: $color-error;
       flex-shrink: 0;
 
-      &.active {
-        background: $color-success;
-      }
+      &.active { background: $color-success; }
     }
 
     .muted-text {
@@ -448,21 +489,12 @@ import {
       padding: $space-sm $space-md;
       border-top: 1px solid $color-border-light;
 
-      @include respond-to(sm) {
-        flex-direction: column;
-        gap: $space-sm;
-      }
+      @include respond-to(sm) { flex-direction: column; gap: $space-sm; }
     }
 
-    .pagination-info {
-      font-size: $font-size-xs;
-      color: $color-text-tertiary;
-    }
+    .pagination-info { font-size: $font-size-xs; color: $color-text-tertiary; }
 
-    .pagination-controls {
-      display: flex;
-      gap: $space-xxs;
-    }
+    .pagination-controls { display: flex; gap: $space-xxs; }
 
     .page-btn {
       min-width: 32px;
@@ -480,43 +512,30 @@ import {
       transition: all $transition-fast;
       padding: 0 $space-xs;
 
-      &:hover:not(:disabled):not(.active) {
-        border-color: $color-primary;
-        color: $color-primary;
-      }
-
-      &.active {
-        background: $color-primary;
-        border-color: $color-primary;
-        color: $color-text-inverse;
-      }
-
-      &:disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
-      }
+      &:hover:not(:disabled):not(.active) { border-color: $color-primary; color: $color-primary; }
+      &.active { background: $color-primary; border-color: $color-primary; color: $color-text-inverse; }
+      &:disabled { opacity: 0.3; cursor: not-allowed; }
     }
   `],
 })
 export class UserListComponent implements OnInit, OnDestroy {
-  users = signal<AdminUser[]>([]);
-  meta = signal<PaginationMeta | null>(null);
-  loading = signal(false);
-  searchTerm = signal('');
-  currentPage = signal(1);
-  roleFilter = signal('');
-  statusFilter = signal('');
+  users          = signal<AdminUser[]>([]);
+  meta           = signal<PaginationMeta | null>(null);
+  loading        = signal(false);
+  searchTerm     = signal('');
+  currentPage    = signal(1);
+  roleFilter     = signal('');
+  statusFilter   = signal('');
+  selectedUserId = signal<string | null>(null);  // which user's sessions are open
 
   Math = Math;
 
   private searchTimeout: ReturnType<typeof setTimeout> | null = null;
   private loadEffect = effect(() => {
-    // Track reactive dependencies
-    const page = this.currentPage();
+    const page   = this.currentPage();
     const search = this.searchTerm();
-    const role = this.roleFilter();
+    const role   = this.roleFilter();
     const status = this.statusFilter();
-    // Trigger load
     this.loadUsers({ page, search, role, isActive: status ? status === 'true' : undefined });
   });
 
@@ -536,34 +555,45 @@ export class UserListComponent implements OnInit, OnDestroy {
     }, 300);
   }
 
+  // Open the sessions panel for a user (or close if already open)
+  toggleSessions(user: AdminUser): void {
+    this.selectedUserId.update((current) =>
+      current === user._id ? null : user._id,
+    );
+  }
+
+  closeSessionsPanel(): void {
+    this.selectedUserId.set(null);
+  }
+
+  onSessionRevoked(): void {
+    // Optionally refresh the user list to update lastLogin etc.
+    // For now, just a no-op — the panel handles its own state.
+  }
+
   getInitials(user: AdminUser): string {
-    if (user.firstName) {
-      return (user.firstName[0] + (user.lastName?.[0] || '')).toUpperCase();
-    }
+    if (user.firstName) return (user.firstName[0] + (user.lastName?.[0] || '')).toUpperCase();
     return user.phone.slice(-2);
   }
 
   getDisplayName(user: AdminUser): string {
-    if (user.firstName) {
-      return `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`;
-    }
+    if (user.firstName) return `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`;
     return '+91 ' + user.phone;
   }
 
   formatDate(date?: string): string {
     if (!date) return '—';
-    const d = new Date(date);
-    const now = new Date();
-    const diffMs = now.getTime() - d.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
+    const d    = new Date(date);
+    const now  = new Date();
+    const diff = now.getTime() - d.getTime();
+    const mins = Math.floor(diff / 60000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    const diffDays = Math.floor(diffHours / 24);
-    if (diffDays < 7) return `${diffDays}d ago`;
-
+    if (mins < 1)  return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24)  return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7)  return `${days}d ago`;
     return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
@@ -572,7 +602,7 @@ export class UserListComponent implements OnInit, OnDestroy {
     if (!m) return [];
     const pages: number[] = [];
     const start = Math.max(1, m.page - 2);
-    const end = Math.min(m.totalPages, m.page + 2);
+    const end   = Math.min(m.totalPages, m.page + 2);
     for (let i = start; i <= end; i++) pages.push(i);
     return pages;
   }
@@ -581,14 +611,14 @@ export class UserListComponent implements OnInit, OnDestroy {
     this.loading.set(true);
 
     const queryParams: UserListParams = {
-      page: params.page,
-      limit: 20,
-      sortBy: 'createdAt',
+      page:      params.page,
+      limit:     20,
+      sortBy:    'createdAt',
       sortOrder: 'desc',
     };
 
-    if (params.search) queryParams.search = params.search;
-    if (params.role) queryParams.role = params.role;
+    if (params.search)   queryParams.search   = params.search;
+    if (params.role)     queryParams.role     = params.role;
     if (params.isActive !== undefined) queryParams.isActive = params.isActive;
 
     this.adminService.getUsers(queryParams).subscribe({
@@ -597,9 +627,7 @@ export class UserListComponent implements OnInit, OnDestroy {
         this.meta.set(res.meta);
         this.loading.set(false);
       },
-      error: () => {
-        this.loading.set(false);
-      },
+      error: () => this.loading.set(false),
     });
   }
 }

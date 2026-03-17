@@ -27,6 +27,7 @@
 import { AuthService } from '../../../src/services/auth.service';
 import { UserRepository } from '../../../src/repositories/user.repository';
 import { TokenRepository } from '../../../src/repositories/token.repository';
+import { IDeviceInfo } from '../../../src/models/token.model';
 import { StatusCodes } from 'http-status-codes';
 import { ApiError } from '../../../src/utils/api-error';
 
@@ -54,8 +55,6 @@ import { getFirebaseAuth } from '../../../src/loaders';
 // -----------------------------------------------------------------------------
 // HELPER — assert an ApiError with a specific status code was thrown
 // -----------------------------------------------------------------------------
-// This is a reusable pattern: call a function, expect it to throw,
-// and verify it threw the right kind of error with the right status code.
 const expectApiError = async (promise: Promise<unknown>, statusCode: number) => {
   try {
     await promise;
@@ -66,13 +65,24 @@ const expectApiError = async (promise: Promise<unknown>, statusCode: number) => 
   }
 };
 
+// -----------------------------------------------------------------------------
+// FIXTURE — a fake DeviceInfo used in every test
+// -----------------------------------------------------------------------------
+// verifyFirebaseToken and refreshToken now require device info so we can
+// associate each session with the device that created it.
+const mockDeviceInfo: IDeviceInfo = {
+  userAgent:  'Mozilla/5.0 (Test)',
+  ip:         '127.0.0.1',
+  browser:    'Chrome 120',
+  os:         'Windows',
+  deviceType: 'desktop',
+  deviceName: 'Chrome 120 on Windows',
+};
+
 // =============================================================================
 // TEST SUITE
 // =============================================================================
-// `describe` groups related tests together — think of it as a folder.
-// The outer describe is the class, inner describes are the methods.
 describe('AuthService', () => {
-  // These variables hold our service and its mocked dependencies
   let authService: AuthService;
   let mockUserRepo: jest.Mocked<UserRepository>;
   let mockTokenRepo: jest.Mocked<TokenRepository>;
@@ -81,20 +91,17 @@ describe('AuthService', () => {
   // `beforeEach` runs before EVERY single test case (`it(...)` block).
   // We reset everything to a clean state so tests don't affect each other.
   beforeEach(() => {
-    // Clear all mock call history and return values
     jest.clearAllMocks();
 
-    // Create a fresh AuthService — its constructor creates UserRepo + TokenRepo
-    // but since we mocked those modules above, it gets fake versions automatically
-    authService = new AuthService();
+    // Create typed mock instances
+    mockUserRepo  = new UserRepository()  as jest.Mocked<UserRepository>;
+    mockTokenRepo = new TokenRepository() as jest.Mocked<TokenRepository>;
 
-    // Reach into the private properties of AuthService to get the mock instances.
-    // TypeScript doesn't allow accessing private properties directly,
-    // so we cast to `unknown` first, then to the shape we need.
-    mockUserRepo = (authService as unknown as { userRepo: jest.Mocked<UserRepository> }).userRepo;
-    mockTokenRepo = (authService as unknown as { tokenRepo: jest.Mocked<TokenRepository> }).tokenRepo;
+    // AuthService now accepts repositories as constructor parameters (Dependency Injection).
+    // This is cleaner than reaching into private properties — we pass our mocks directly.
+    authService = new AuthService(mockUserRepo, mockTokenRepo);
 
-    // Set up the mock Firebase auth object with a mock `verifyIdToken` function
+    // Set up mock Firebase auth
     mockFirebaseAuth = { verifyIdToken: jest.fn() };
     (getFirebaseAuth as jest.Mock).mockReturnValue(mockFirebaseAuth);
   });
@@ -115,50 +122,48 @@ describe('AuthService', () => {
 
       // Act + Assert — call the method and expect it to throw a 401
       await expectApiError(
-        authService.verifyFirebaseToken('bad-token'),
+        authService.verifyFirebaseToken('bad-token', mockDeviceInfo),
         StatusCodes.UNAUTHORIZED,
       );
     });
 
     it('should throw 400 when Firebase token has no phone number', async () => {
-      // Arrange — Firebase succeeds but the decoded token has no phone_number
-      // This happens if the user authenticated with email, not phone
+      // Arrange — Firebase succeeds but decoded token has no phone_number
       mockFirebaseAuth.verifyIdToken.mockResolvedValue({
-        phone_number: undefined, // no phone
+        phone_number: undefined,
         uid: 'firebase-uid-123',
       });
 
       // Act + Assert
       await expectApiError(
-        authService.verifyFirebaseToken('token-without-phone'),
+        authService.verifyFirebaseToken('token-without-phone', mockDeviceInfo),
         StatusCodes.BAD_REQUEST,
       );
     });
 
     it('should create a new user and return tokens on first login', async () => {
-      // Arrange — Firebase returns a valid decoded token with a phone number
+      // Arrange — Firebase returns a valid decoded token
       mockFirebaseAuth.verifyIdToken.mockResolvedValue({
-        phone_number: '+919876543210', // Indian format with country code
+        phone_number: '+919876543210',
         uid: 'firebase-uid-123',
       });
 
       // The user doesn't exist in our DB yet → findByPhone returns null
       mockUserRepo.findByPhone.mockResolvedValue(null);
 
-      // Simulate successful user creation — return a fake user object
+      // Simulate successful user creation
       mockUserRepo.create.mockResolvedValue({
         _id: { toString: () => 'user-id-abc' },
-        phone: '9876543210', // stripped of +91
+        phone: '9876543210',
         role: 'customer',
         firstName: undefined,
         lastName: undefined,
       } as never);
 
-      // Token storage succeeds
       mockTokenRepo.create.mockResolvedValue({} as never);
 
       // Act
-      const result = await authService.verifyFirebaseToken('valid-firebase-token');
+      const result = await authService.verifyFirebaseToken('valid-firebase-token', mockDeviceInfo);
 
       // Assert — check the shape of the result
       expect(result.isNewUser).toBe(true);
@@ -193,16 +198,12 @@ describe('AuthService', () => {
       mockTokenRepo.create.mockResolvedValue({} as never);
 
       // Act
-      const result = await authService.verifyFirebaseToken('valid-firebase-token');
+      const result = await authService.verifyFirebaseToken('valid-firebase-token', mockDeviceInfo);
 
       // Assert
-      expect(result.isNewUser).toBe(false); // existing user, not new
+      expect(result.isNewUser).toBe(false);
       expect(result.user._id).toBe('existing-user-id');
-
-      // Verify lastLogin was updated
       expect(mockUserRepo.updateLastLogin).toHaveBeenCalledWith('existing-user-id');
-
-      // Verify we did NOT create a new user
       expect(mockUserRepo.create).not.toHaveBeenCalled();
     });
 
@@ -221,7 +222,7 @@ describe('AuthService', () => {
       mockTokenRepo.create.mockResolvedValue({} as never);
 
       // Act
-      await authService.verifyFirebaseToken('token');
+      await authService.verifyFirebaseToken('token', mockDeviceInfo);
 
       // Assert — the phone stored must NOT include +91
       expect(mockUserRepo.findByPhone).toHaveBeenCalledWith('9876543210');
@@ -239,12 +240,12 @@ describe('AuthService', () => {
   describe('refreshToken', () => {
 
     it('should throw 401 when refresh token is not found in DB', async () => {
-      // Arrange — no token record found (token is invalid or already used)
+      // Arrange — no token record found
       mockTokenRepo.findByToken.mockResolvedValue(null);
 
       // Act + Assert
       await expectApiError(
-        authService.refreshToken('invalid-refresh-token'),
+        authService.refreshToken('invalid-refresh-token', mockDeviceInfo),
         StatusCodes.UNAUTHORIZED,
       );
     });
@@ -253,18 +254,18 @@ describe('AuthService', () => {
       // Arrange — token exists in DB
       mockTokenRepo.findByToken.mockResolvedValue({
         token: 'hashed-token',
-        user: { toString: () => 'user-id' },
+        user:  { toString: () => 'user-id' },
       } as never);
 
       // But user is banned (isActive: false)
       mockUserRepo.findById.mockResolvedValue({
-        _id: { toString: () => 'user-id' },
-        isActive: false, // ← BANNED
+        _id:      { toString: () => 'user-id' },
+        isActive: false,
       } as never);
 
       // Act + Assert — banned user cannot refresh tokens
       await expectApiError(
-        authService.refreshToken('some-refresh-token'),
+        authService.refreshToken('some-refresh-token', mockDeviceInfo),
         StatusCodes.UNAUTHORIZED,
       );
     });
@@ -273,12 +274,12 @@ describe('AuthService', () => {
       // Arrange — valid token and active user
       mockTokenRepo.findByToken.mockResolvedValue({
         token: 'hashed-token',
-        user: { toString: () => 'user-id' },
+        user:  { toString: () => 'user-id' },
       } as never);
 
       mockUserRepo.findById.mockResolvedValue({
-        _id: { toString: () => 'user-id' },
-        role: 'customer',
+        _id:      { toString: () => 'user-id' },
+        role:     'customer',
         isActive: true,
       } as never);
 
@@ -286,7 +287,7 @@ describe('AuthService', () => {
       mockTokenRepo.create.mockResolvedValue({} as never);
 
       // Act
-      const result = await authService.refreshToken('valid-refresh-token');
+      const result = await authService.refreshToken('valid-refresh-token', mockDeviceInfo);
 
       // Assert — new tokens are issued
       expect(result.tokens.accessToken).toBeDefined();
@@ -295,7 +296,7 @@ describe('AuthService', () => {
       // Old token must be deleted (token rotation security pattern)
       expect(mockTokenRepo.deleteByToken).toHaveBeenCalled();
 
-      // A new token record must be stored
+      // A new token record must be stored with deviceInfo
       expect(mockTokenRepo.create).toHaveBeenCalled();
     });
   });
@@ -306,15 +307,10 @@ describe('AuthService', () => {
   describe('logout', () => {
 
     it('should delete the refresh token on logout', async () => {
-      // Arrange
       mockTokenRepo.deleteByToken.mockResolvedValue(undefined as never);
 
-      // Act
       await authService.logout('some-refresh-token');
 
-      // Assert — the hashed token was deleted from DB
-      // We don't test the exact hash (that's an implementation detail)
-      // — we just verify deleteByToken was called once
       expect(mockTokenRepo.deleteByToken).toHaveBeenCalledTimes(1);
     });
   });
@@ -325,13 +321,10 @@ describe('AuthService', () => {
   describe('logoutAll', () => {
 
     it('should delete all tokens for the user', async () => {
-      // Arrange
       mockTokenRepo.deleteByUserId.mockResolvedValue(undefined as never);
 
-      // Act
       await authService.logoutAll('user-id-xyz');
 
-      // Assert — all sessions wiped for this user
       expect(mockTokenRepo.deleteByUserId).toHaveBeenCalledWith('user-id-xyz');
     });
   });
