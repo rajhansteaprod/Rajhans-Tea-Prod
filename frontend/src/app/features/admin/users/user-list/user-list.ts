@@ -431,6 +431,9 @@ import { UserSessionsComponent } from '../user-sessions/user-sessions';
               </select>
             </div>
           </div>
+          @if (createError()) {
+            <div class="modal-error">{{ createError() }}</div>
+          }
           <div class="modal-footer">
             <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
             <button
@@ -1083,6 +1086,16 @@ import { UserSessionsComponent } from '../user-sessions/user-sessions';
       @include respond-to(xs) { grid-template-columns: 1fr; }
     }
 
+    .modal-error {
+      margin: 0 $space-lg $space-sm;
+      padding: $space-xs $space-sm;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 6px;
+      color: #ef4444;
+      font-size: 13px;
+    }
+
     .modal-footer {
       display: flex;
       justify-content: flex-end;
@@ -1112,6 +1125,7 @@ export class UserListComponent implements OnInit, OnDestroy {
   createForm    = signal<{ phone: string; firstName: string; lastName: string; email: string; role: string }>({
     phone: '', firstName: '', lastName: '', email: '', role: 'customer',
   });
+  createError   = signal<string | null>(null);
   savingEdit    = signal(false);
   savingCreate  = signal(false);
   actionUserId  = signal<string | null>(null);
@@ -1203,12 +1217,21 @@ export class UserListComponent implements OnInit, OnDestroy {
 
   openCreate(): void {
     this.createForm.set({ phone: '', firstName: '', lastName: '', email: '', role: 'customer' });
+    this.createError.set(null);
     this.showCreate.set(true);
   }
 
   saveCreate(): void {
     const f = this.createForm();
     if (!f.phone) return;
+
+    // Basic phone validation before hitting the API
+    if (!/^[6-9]\d{9}$/.test(f.phone)) {
+      this.createError.set('Enter a valid 10-digit Indian mobile number (starts with 6–9).');
+      return;
+    }
+
+    this.createError.set(null);
     this.savingCreate.set(true);
     this.adminService.createUser({
       phone:     f.phone,
@@ -1219,10 +1242,15 @@ export class UserListComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: (res) => {
         this.users.update((list) => [res.data, ...list]);
+        this.meta.update((m) => m ? { ...m, total: m.total + 1 } : m);
         this.savingCreate.set(false);
         this.showCreate.set(false);
       },
-      error: () => this.savingCreate.set(false),
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Failed to create user. Please try again.';
+        this.createError.set(msg);
+        this.savingCreate.set(false);
+      },
     });
   }
 
