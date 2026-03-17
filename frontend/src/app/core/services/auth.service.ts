@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, catchError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 interface AuthUser {
@@ -78,8 +78,33 @@ export class AuthService {
     this.router.navigate(['/auth/login']);
   }
 
+  logoutBanned(): void {
+    this.clearAuth();
+    this.router.navigate(['/auth/login'], {
+      queryParams: { reason: 'banned' },
+    });
+  }
+
   getAccessToken(): string | null {
     return this._accessToken();
+  }
+
+  /**
+   * Called once at app startup via APP_INITIALIZER.
+   * Attempts a token refresh to validate the stored session.
+   * If the refresh token was revoked (session deleted), clears auth state
+   * so the user is immediately signed out on next page load.
+   */
+  initializeAuth(): Observable<unknown> {
+    if (!this._user()) {
+      return of(null); // not logged in — nothing to validate
+    }
+    return this.refreshToken().pipe(
+      catchError(() => {
+        this.clearAuth();
+        return of(null);
+      }),
+    );
   }
 
   private clearAuth(): void {

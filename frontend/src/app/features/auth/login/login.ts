@@ -1,5 +1,5 @@
 import { Component, signal, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
@@ -215,6 +215,11 @@ import { FirebaseService } from '../../../core/services/firebase.service';
       position: relative;
       overflow: hidden;
       padding: $space-lg;
+
+      @include respond-to(xs) {
+        padding: 0;
+        align-items: stretch;
+      }
     }
 
     // === Background Shapes ===
@@ -333,6 +338,15 @@ import { FirebaseService } from '../../../core/services/firebase.service';
         grid-template-columns: 1fr;
         max-width: 460px;
         min-height: auto;
+      }
+
+      @include respond-to(xs) {
+        max-width: 100%;
+        width: 100%;
+        border-radius: 0;
+        box-shadow: none;
+        min-height: 100vh;
+        min-height: 100dvh;
       }
     }
 
@@ -491,6 +505,11 @@ import { FirebaseService } from '../../../core/services/firebase.service';
 
       @include respond-to(md) {
         padding: $space-xl $space-lg;
+      }
+
+      @include respond-to(xs) {
+        padding: 72px $space-md $space-xl;
+        justify-content: flex-start;
       }
     }
 
@@ -834,11 +853,16 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
     private authService: AuthService,
     private firebaseService: FirebaseService,
     private router: Router,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
     this.firebaseService.initRecaptcha('recaptcha-container');
     setTimeout(() => this.entered.set(true), 100);
+
+    if (this.route.snapshot.queryParamMap.get('reason') === 'banned') {
+      this.error.set('Your account has been suspended. Contact support for assistance.');
+    }
   }
 
   ngAfterViewInit(): void {

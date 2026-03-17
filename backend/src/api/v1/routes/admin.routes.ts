@@ -2,7 +2,13 @@ import { Router } from 'express';
 import { authenticate } from '../../../middleware/auth.middleware';
 import { authorize }    from '../../../middleware/rbac.middleware';
 import { validate }     from '../../../middleware/validate.middleware';
-import { listUsersSchema }    from '../validators/admin-user.validator';
+import {
+  listUsersSchema,
+  createUserSchema,
+  updateUserSchema,
+  banUserSchema,
+  userIdSchema,
+} from '../validators/admin-user.validator';
 import {
   userIdParamSchema,
   adminRevokeSessionSchema,
@@ -21,7 +27,12 @@ router.use(authorize('admin'));
 router.get('/admin/dashboard/stats', adminDashboardController.getDashboardStats);
 
 // User management
-router.get('/admin/users', validate(listUsersSchema), adminUserController.listUsers);
+router.get   ('/admin/users',                   validate(listUsersSchema),   adminUserController.listUsers);
+router.post  ('/admin/users',                   validate(createUserSchema),  adminUserController.createUser);
+router.put   ('/admin/users/:userId',            validate(updateUserSchema),  adminUserController.updateUser);
+router.delete('/admin/users/:userId',            validate(userIdSchema),      adminUserController.deleteUser);
+router.patch ('/admin/users/:userId/ban',        validate(banUserSchema),     adminUserController.banUser);
+router.patch ('/admin/users/:userId/unban',      validate(userIdSchema),      adminUserController.unbanUser);
 
 // Session management (admin can view + revoke any user's sessions)
 router.get(   '/admin/users/:userId/sessions',  validate(userIdParamSchema),         adminSessionController.listUserSessions);

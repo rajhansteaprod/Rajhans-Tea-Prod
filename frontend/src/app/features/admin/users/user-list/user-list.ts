@@ -25,6 +25,12 @@ import { UserSessionsComponent } from '../user-sessions/user-sessions';
             }
           </p>
         </div>
+        <button class="btn-primary-create" (click)="openCreate()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Add User
+        </button>
       </div>
 
       <!-- Filters -->
@@ -95,18 +101,23 @@ import { UserSessionsComponent } from '../user-sessions/user-sessions';
                   <th>Status</th>
                   <th>Last Login</th>
                   <th>Joined</th>
-                  <th>Sessions</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 @for (user of users(); track user._id) {
                   <tr
                     class="table-row"
-                    [class.expanded]="selectedUserId() === user._id"
+                    [class.expanded]="selectedUserId() === user._id || editingUserId() === user._id"
                   >
+                    <!-- User cell -->
                     <td>
                       <div class="user-cell">
-                        <div class="user-avatar" [class.admin]="user.role === 'admin'">
+                        <div
+                          class="user-avatar"
+                          [class.admin]="user.role === 'admin'"
+                          [class.banned]="user.isBanned"
+                        >
                           {{ getInitials(user) }}
                         </div>
                         <div class="user-info">
@@ -117,44 +128,108 @@ import { UserSessionsComponent } from '../user-sessions/user-sessions';
                         </div>
                       </div>
                     </td>
+
+                    <!-- Phone -->
                     <td>
                       <span class="phone-text">+91 {{ user.phone }}</span>
                     </td>
+
+                    <!-- Role -->
                     <td>
                       <span class="role-badge" [class.admin]="user.role === 'admin'">
                         {{ user.role }}
                       </span>
                     </td>
+
+                    <!-- Status — shows Banned badge when applicable -->
                     <td>
-                      <div class="status-cell">
-                        <span class="status-dot" [class.active]="user.isActive"></span>
-                        <span>{{ user.isActive ? 'Active' : 'Inactive' }}</span>
-                      </div>
+                      @if (user.isBanned) {
+                        <span class="banned-badge">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                            <path d="M4.93 4.93l14.14 14.14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                          </svg>
+                          Banned
+                        </span>
+                      } @else {
+                        <div class="status-cell">
+                          <span class="status-dot" [class.active]="user.isActive"></span>
+                          <span>{{ user.isActive ? 'Active' : 'Inactive' }}</span>
+                        </div>
+                      }
                     </td>
+
+                    <!-- Last Login -->
                     <td>
                       <span class="muted-text">{{ formatDate(user.lastLogin) }}</span>
                     </td>
+
+                    <!-- Joined -->
                     <td>
                       <span class="muted-text">{{ formatDate(user.createdAt) }}</span>
                     </td>
+
+                    <!-- Actions column -->
                     <td>
-                      <!-- Sessions toggle button -->
-                      <button
-                        class="sessions-btn"
-                        [class.active]="selectedUserId() === user._id"
-                        (click)="toggleSessions(user)"
-                        title="View active sessions"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                          <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
-                          <path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                        </svg>
-                        Sessions
-                      </button>
+                      <div class="action-btns">
+                        <!-- Sessions toggle — icon only -->
+                        <button
+                          class="sessions-btn"
+                          [class.active]="selectedUserId() === user._id"
+                          (click)="toggleSessions(user)"
+                          title="View sessions"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                            <path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                          </svg>
+                        </button>
+
+                        <!-- Edit -->
+                        <button
+                          class="btn-icon edit-btn"
+                          (click)="openEdit(user)"
+                          [disabled]="actionUserId() === user._id"
+                          title="Edit user"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                          </svg>
+                        </button>
+
+                        <!-- Ban / Unban -->
+                        <button
+                          class="btn-icon ban-btn"
+                          [class.banned]="user.isBanned"
+                          (click)="toggleBan(user)"
+                          [disabled]="actionUserId() === user._id"
+                          [title]="user.isBanned ? 'Unban user' : 'Ban user'"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
+                            <path d="M4.93 4.93l14.14 14.14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                          </svg>
+                        </button>
+
+                        <!-- Delete -->
+                        <button
+                          class="btn-icon delete-btn"
+                          (click)="deleteUser(user)"
+                          [disabled]="actionUserId() === user._id"
+                          title="Delete user"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            <path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                          </svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
 
-                  <!-- Inline sessions panel — spans all columns -->
+                  <!-- Inline sessions panel -->
                   @if (selectedUserId() === user._id) {
                     <tr class="sessions-row">
                       <td colspan="7" class="sessions-cell">
@@ -164,6 +239,80 @@ import { UserSessionsComponent } from '../user-sessions/user-sessions';
                           (closed)="closeSessionsPanel()"
                           (sessionRevoked)="onSessionRevoked()"
                         />
+                      </td>
+                    </tr>
+                  }
+
+                  <!-- Inline edit panel -->
+                  @if (editingUserId() === user._id) {
+                    <tr class="edit-row">
+                      <td colspan="7" class="edit-cell">
+                        <div class="edit-panel">
+                          <p class="edit-panel-title">Edit — {{ getDisplayName(user) }}</p>
+                          <div class="edit-form-grid">
+                            <div class="form-field">
+                              <label class="form-label">First Name</label>
+                              <input
+                                class="form-input"
+                                type="text"
+                                [ngModel]="editForm().firstName"
+                                (ngModelChange)="editForm.update(f => ({...f, firstName: $event}))"
+                                placeholder="First name"
+                              />
+                            </div>
+                            <div class="form-field">
+                              <label class="form-label">Last Name</label>
+                              <input
+                                class="form-input"
+                                type="text"
+                                [ngModel]="editForm().lastName"
+                                (ngModelChange)="editForm.update(f => ({...f, lastName: $event}))"
+                                placeholder="Last name"
+                              />
+                            </div>
+                            <div class="form-field">
+                              <label class="form-label">Email</label>
+                              <input
+                                class="form-input"
+                                type="email"
+                                [ngModel]="editForm().email"
+                                (ngModelChange)="editForm.update(f => ({...f, email: $event}))"
+                                placeholder="email@example.com"
+                              />
+                            </div>
+                            <div class="form-field">
+                              <label class="form-label">Role</label>
+                              <select
+                                class="form-select"
+                                [ngModel]="editForm().role"
+                                (ngModelChange)="editForm.update(f => ({...f, role: $event}))"
+                              >
+                                <option value="customer">Customer</option>
+                                <option value="admin">Admin</option>
+                              </select>
+                            </div>
+                            <div class="form-field">
+                              <label class="form-label">Status</label>
+                              <div class="form-toggle-row">
+                                <label class="toggle-switch">
+                                  <input
+                                    type="checkbox"
+                                    [ngModel]="editForm().isActive"
+                                    (ngModelChange)="editForm.update(f => ({...f, isActive: $event}))"
+                                  />
+                                  <span class="slider"></span>
+                                </label>
+                                <span class="form-toggle-label">{{ editForm().isActive ? 'Active' : 'Inactive' }}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="edit-actions">
+                            <button class="btn-save" (click)="saveEdit()" [disabled]="savingEdit()">
+                              {{ savingEdit() ? 'Saving…' : 'Save Changes' }}
+                            </button>
+                            <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   }
@@ -213,6 +362,88 @@ import { UserSessionsComponent } from '../user-sessions/user-sessions';
         }
       </div>
     </div>
+
+    <!-- Create User Modal -->
+    @if (showCreate()) {
+      <div class="modal-overlay" (click)="showCreate.set(false)">
+        <div class="modal-box" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2 class="modal-title">Add New User</h2>
+            <button class="modal-close" (click)="showCreate.set(false)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-field">
+              <label class="form-label">Phone Number *</label>
+              <input
+                class="form-input"
+                type="tel"
+                [ngModel]="createForm().phone"
+                (ngModelChange)="createForm.update(f => ({...f, phone: $event}))"
+                placeholder="9876543210"
+                maxlength="10"
+              />
+            </div>
+            <div class="modal-form-grid">
+              <div class="form-field">
+                <label class="form-label">First Name</label>
+                <input
+                  class="form-input"
+                  type="text"
+                  [ngModel]="createForm().firstName"
+                  (ngModelChange)="createForm.update(f => ({...f, firstName: $event}))"
+                  placeholder="First name"
+                />
+              </div>
+              <div class="form-field">
+                <label class="form-label">Last Name</label>
+                <input
+                  class="form-input"
+                  type="text"
+                  [ngModel]="createForm().lastName"
+                  (ngModelChange)="createForm.update(f => ({...f, lastName: $event}))"
+                  placeholder="Last name"
+                />
+              </div>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Email</label>
+              <input
+                class="form-input"
+                type="email"
+                [ngModel]="createForm().email"
+                (ngModelChange)="createForm.update(f => ({...f, email: $event}))"
+                placeholder="email@example.com"
+              />
+            </div>
+            <div class="form-field">
+              <label class="form-label">Role</label>
+              <select
+                class="form-select"
+                [ngModel]="createForm().role"
+                (ngModelChange)="createForm.update(f => ({...f, role: $event}))"
+              >
+                <option value="customer">Customer</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
+            <button
+              class="btn-save"
+              (click)="saveCreate()"
+              [disabled]="savingCreate() || !createForm().phone"
+            >
+              {{ savingCreate() ? 'Creating…' : 'Create User' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     @use '../../../../core/design-tokens/tokens' as *;
@@ -220,7 +451,14 @@ import { UserSessionsComponent } from '../user-sessions/user-sessions';
 
     .page { max-width: 1200px; }
 
-    .page-header { margin-bottom: $space-lg; }
+    // === Page Header ===
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: $space-md;
+      margin-bottom: $space-lg;
+    }
 
     .page-title {
       font-family: $font-family-display;
@@ -234,6 +472,26 @@ import { UserSessionsComponent } from '../user-sessions/user-sessions';
       font-size: $font-size-sm;
       color: $color-text-tertiary;
       margin-top: $space-xxs;
+    }
+
+    .btn-primary-create {
+      display: inline-flex;
+      align-items: center;
+      gap: $space-xs;
+      padding: $space-sm $space-md;
+      background: $color-primary;
+      color: $color-text-inverse;
+      border: none;
+      border-radius: $radius-md;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-semibold;
+      font-family: $font-family;
+      cursor: pointer;
+      transition: all $transition-fast;
+      white-space: nowrap;
+      flex-shrink: 0;
+
+      &:hover { background: $color-primary-hover; }
     }
 
     // === Filters ===
@@ -379,12 +637,21 @@ import { UserSessionsComponent } from '../user-sessions/user-sessions';
       padding: 0 $space-md $space-md !important;
     }
 
-    // === Sessions toggle button ===
-    .sessions-btn {
-      display: inline-flex;
+    // === Action buttons in table ===
+    .action-btns {
+      display: flex;
       align-items: center;
       gap: $space-xs;
-      padding: $space-xs $space-sm;
+      flex-wrap: nowrap;
+    }
+
+    // === Sessions toggle button (icon-only) ===
+    .sessions-btn {
+      width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       border: 1px solid $color-border-light;
       border-radius: $radius-md;
       background: $color-bg-tertiary;
@@ -394,7 +661,7 @@ import { UserSessionsComponent } from '../user-sessions/user-sessions';
       font-family: $font-family;
       cursor: pointer;
       transition: all $transition-fast;
-      white-space: nowrap;
+      flex-shrink: 0;
 
       &:hover {
         border-color: $color-primary;
@@ -407,6 +674,72 @@ import { UserSessionsComponent } from '../user-sessions/user-sessions';
         color: $color-primary;
         background: $color-primary-light;
       }
+    }
+
+    .btn-icon {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid transparent;
+      border-radius: $radius-sm;
+      background: none;
+      cursor: pointer;
+      transition: all $transition-fast;
+      flex-shrink: 0;
+      color: $color-text-disabled;
+
+      &:hover:not(:disabled) {
+        border-color: $color-border;
+        background: $color-bg-secondary;
+        color: $color-text-secondary;
+      }
+
+      &:disabled { opacity: 0.3; cursor: not-allowed; }
+
+      &.ban-btn:hover:not(:disabled) {
+        border-color: rgba(203, 65, 65, 0.3);
+        background: rgba(203, 65, 65, 0.06);
+        color: $color-error;
+      }
+
+      &.ban-btn.banned {
+        color: $color-error;
+        border-color: rgba(203, 65, 65, 0.3);
+        background: rgba(203, 65, 65, 0.06);
+
+        &:hover:not(:disabled) {
+          background: rgba(87, 136, 108, 0.1);
+          border-color: rgba(87, 136, 108, 0.3);
+          color: $color-success;
+        }
+      }
+
+      &.delete-btn:hover:not(:disabled) {
+        border-color: rgba(203, 65, 65, 0.3);
+        background: rgba(203, 65, 65, 0.06);
+        color: $color-error;
+      }
+
+      &.edit-btn:hover:not(:disabled) {
+        border-color: $color-primary;
+        background: $color-primary-light;
+        color: $color-primary;
+      }
+    }
+
+    // === Banned badge in status column ===
+    .banned-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: $font-size-xs;
+      font-weight: $font-weight-semibold;
+      color: $color-error;
+      background: rgba(203, 65, 65, 0.08);
+      border-radius: $radius-sm;
+      padding: 2px $space-xs;
     }
 
     // === User Cell ===
@@ -426,6 +759,11 @@ import { UserSessionsComponent } from '../user-sessions/user-sessions';
       flex-shrink: 0;
 
       &.admin { background: $color-primary-light; color: $color-primary; }
+
+      &.banned {
+        outline: 2px solid $color-error;
+        outline-offset: 1px;
+      }
     }
 
     .user-info { display: flex; flex-direction: column; min-width: 0; }
@@ -516,9 +854,246 @@ import { UserSessionsComponent } from '../user-sessions/user-sessions';
       &.active { background: $color-primary; border-color: $color-primary; color: $color-text-inverse; }
       &:disabled { opacity: 0.3; cursor: not-allowed; }
     }
+
+    // === Edit panel row ===
+    .edit-row td { padding: 0 $space-md $space-md; border-bottom: 1px solid $color-border-light; }
+    .edit-cell { padding: 0 $space-md $space-md !important; }
+
+    .edit-panel {
+      background: $color-bg-secondary;
+      border: 1px solid $color-border;
+      border-radius: $radius-xl;
+      padding: $space-lg;
+      animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .edit-panel-title {
+      font-size: $font-size-sm;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+      margin-bottom: $space-md;
+    }
+
+    .edit-form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: $space-md;
+      margin-bottom: $space-md;
+
+      @include respond-to(md) { grid-template-columns: repeat(2, 1fr); }
+      @include respond-to(xs) { grid-template-columns: 1fr; }
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: $space-xxs;
+    }
+
+    .form-label {
+      font-size: $font-size-xs;
+      font-weight: $font-weight-medium;
+      color: $color-text-secondary;
+      text-transform: uppercase;
+      letter-spacing: $letter-spacing-wide;
+    }
+
+    .form-input, .form-select {
+      padding: $space-sm $space-sm;
+      border: 1.5px solid $color-border;
+      border-radius: $radius-md;
+      font-size: $font-size-sm;
+      font-family: $font-family;
+      color: $color-text-primary;
+      background: $color-bg-tertiary;
+      outline: none;
+      transition: all $transition-fast;
+
+      &:focus { border-color: $color-primary; box-shadow: $shadow-glow; }
+    }
+
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%238A7D81' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: $space-xl;
+      cursor: pointer;
+    }
+
+    .form-toggle-row {
+      display: flex;
+      align-items: center;
+      gap: $space-sm;
+      padding-top: $space-sm;
+    }
+
+    .form-toggle-label {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 40px;
+      height: 22px;
+
+      input { opacity: 0; width: 0; height: 0; }
+
+      .slider {
+        position: absolute;
+        inset: 0;
+        background: $color-border;
+        border-radius: $radius-full;
+        cursor: pointer;
+        transition: background $transition-fast;
+
+        &::before {
+          content: '';
+          position: absolute;
+          width: 16px;
+          height: 16px;
+          left: 3px;
+          top: 3px;
+          background: white;
+          border-radius: 50%;
+          transition: transform $transition-fast;
+        }
+      }
+
+      input:checked + .slider { background: $color-success; }
+      input:checked + .slider::before { transform: translateX(18px); }
+    }
+
+    .edit-actions {
+      display: flex;
+      gap: $space-sm;
+    }
+
+    .btn-save {
+      padding: $space-xs $space-md;
+      background: $color-primary;
+      color: $color-text-inverse;
+      border: none;
+      border-radius: $radius-md;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-semibold;
+      font-family: $font-family;
+      cursor: pointer;
+      transition: background $transition-fast;
+
+      &:hover:not(:disabled) { background: $color-primary-hover; }
+      &:disabled { opacity: 0.5; cursor: not-allowed; }
+    }
+
+    .btn-cancel {
+      padding: $space-xs $space-md;
+      background: none;
+      color: $color-text-secondary;
+      border: 1px solid $color-border;
+      border-radius: $radius-md;
+      font-size: $font-size-sm;
+      font-family: $font-family;
+      cursor: pointer;
+      transition: all $transition-fast;
+
+      &:hover { background: $color-bg-secondary; }
+    }
+
+    // === Create modal ===
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: $space-md;
+      animation: fadeIn 0.15s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .modal-box {
+      background: $color-bg-primary;
+      border-radius: $radius-xl;
+      border: 1px solid $color-border;
+      box-shadow: $shadow-xl;
+      width: 100%;
+      max-width: 540px;
+      animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: $space-lg;
+      border-bottom: 1px solid $color-border-light;
+    }
+
+    .modal-title {
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+    }
+
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: none;
+      color: $color-text-tertiary;
+      cursor: pointer;
+      border-radius: $radius-sm;
+
+      &:hover { background: $color-bg-secondary; color: $color-text-primary; }
+    }
+
+    .modal-body {
+      padding: $space-lg;
+      display: flex;
+      flex-direction: column;
+      gap: $space-md;
+    }
+
+    .modal-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: $space-md;
+
+      @include respond-to(xs) { grid-template-columns: 1fr; }
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: $space-sm;
+      padding: $space-md $space-lg;
+      border-top: 1px solid $color-border-light;
+    }
   `],
 })
 export class UserListComponent implements OnInit, OnDestroy {
+  // --- Existing signals ---
   users          = signal<AdminUser[]>([]);
   meta           = signal<PaginationMeta | null>(null);
   loading        = signal(false);
@@ -526,7 +1101,20 @@ export class UserListComponent implements OnInit, OnDestroy {
   currentPage    = signal(1);
   roleFilter     = signal('');
   statusFilter   = signal('');
-  selectedUserId = signal<string | null>(null);  // which user's sessions are open
+  selectedUserId = signal<string | null>(null);
+
+  // --- New signals ---
+  editingUserId = signal<string | null>(null);
+  editForm      = signal<{ firstName: string; lastName: string; email: string; role: string; isActive: boolean }>({
+    firstName: '', lastName: '', email: '', role: 'customer', isActive: true,
+  });
+  showCreate    = signal(false);
+  createForm    = signal<{ phone: string; firstName: string; lastName: string; email: string; role: string }>({
+    phone: '', firstName: '', lastName: '', email: '', role: 'customer',
+  });
+  savingEdit    = signal(false);
+  savingCreate  = signal(false);
+  actionUserId  = signal<string | null>(null);
 
   Math = Math;
 
@@ -557,6 +1145,7 @@ export class UserListComponent implements OnInit, OnDestroy {
 
   // Open the sessions panel for a user (or close if already open)
   toggleSessions(user: AdminUser): void {
+    this.editingUserId.set(null);
     this.selectedUserId.update((current) =>
       current === user._id ? null : user._id,
     );
@@ -570,6 +1159,115 @@ export class UserListComponent implements OnInit, OnDestroy {
     // Optionally refresh the user list to update lastLogin etc.
     // For now, just a no-op — the panel handles its own state.
   }
+
+  // --- Edit ---
+
+  openEdit(user: AdminUser): void {
+    this.selectedUserId.set(null);
+    this.editingUserId.set(user._id);
+    this.editForm.set({
+      firstName: user.firstName ?? '',
+      lastName:  user.lastName  ?? '',
+      email:     user.email     ?? '',
+      role:      user.role,
+      isActive:  user.isActive,
+    });
+  }
+
+  cancelEdit(): void {
+    this.editingUserId.set(null);
+  }
+
+  saveEdit(): void {
+    const userId = this.editingUserId();
+    if (!userId) return;
+    this.savingEdit.set(true);
+    const f = this.editForm();
+    this.adminService.updateUser(userId, {
+      firstName: f.firstName || undefined,
+      lastName:  f.lastName  || undefined,
+      email:     f.email     || undefined,
+      role:      f.role as 'customer' | 'admin',
+      isActive:  f.isActive,
+    }).subscribe({
+      next: (res) => {
+        this.users.update((list) => list.map((u) => u._id === userId ? res.data : u));
+        this.savingEdit.set(false);
+        this.editingUserId.set(null);
+      },
+      error: () => this.savingEdit.set(false),
+    });
+  }
+
+  // --- Create ---
+
+  openCreate(): void {
+    this.createForm.set({ phone: '', firstName: '', lastName: '', email: '', role: 'customer' });
+    this.showCreate.set(true);
+  }
+
+  saveCreate(): void {
+    const f = this.createForm();
+    if (!f.phone) return;
+    this.savingCreate.set(true);
+    this.adminService.createUser({
+      phone:     f.phone,
+      firstName: f.firstName || undefined,
+      lastName:  f.lastName  || undefined,
+      email:     f.email     || undefined,
+      role:      f.role as 'customer' | 'admin',
+    }).subscribe({
+      next: (res) => {
+        this.users.update((list) => [res.data, ...list]);
+        this.savingCreate.set(false);
+        this.showCreate.set(false);
+      },
+      error: () => this.savingCreate.set(false),
+    });
+  }
+
+  // --- Ban / Unban ---
+
+  toggleBan(user: AdminUser): void {
+    if (user.isBanned) {
+      if (!confirm(`Unban ${this.getDisplayName(user)}?`)) return;
+      this.actionUserId.set(user._id);
+      this.adminService.unbanUser(user._id).subscribe({
+        next: (res) => {
+          this.users.update((list) => list.map((u) => u._id === user._id ? res.data : u));
+          this.actionUserId.set(null);
+        },
+        error: () => this.actionUserId.set(null),
+      });
+    } else {
+      const reason = prompt(`Ban reason for ${this.getDisplayName(user)} (optional):`);
+      if (reason === null) return; // user clicked Cancel
+      this.actionUserId.set(user._id);
+      this.adminService.banUser(user._id, reason || undefined).subscribe({
+        next: (res) => {
+          this.users.update((list) => list.map((u) => u._id === user._id ? res.data : u));
+          this.actionUserId.set(null);
+        },
+        error: () => this.actionUserId.set(null),
+      });
+    }
+  }
+
+  // --- Delete ---
+
+  deleteUser(user: AdminUser): void {
+    if (!confirm(`Delete ${this.getDisplayName(user)}? This cannot be undone.`)) return;
+    this.actionUserId.set(user._id);
+    this.adminService.deleteUser(user._id).subscribe({
+      next: () => {
+        this.users.update((list) => list.filter((u) => u._id !== user._id));
+        this.actionUserId.set(null);
+      },
+      error: () => this.actionUserId.set(null),
+    });
+  }
+
+  // --- Helpers ---
 
   getInitials(user: AdminUser): string {
     if (user.firstName) return (user.firstName[0] + (user.lastName?.[0] || '')).toUpperCase();
@@ -617,8 +1315,8 @@ export class UserListComponent implements OnInit, OnDestroy {
       sortOrder: 'desc',
     };
 
-    if (params.search)   queryParams.search   = params.search;
-    if (params.role)     queryParams.role     = params.role;
+    if (params.search)               queryParams.search   = params.search;
+    if (params.role)                 queryParams.role     = params.role;
     if (params.isActive !== undefined) queryParams.isActive = params.isActive;
 
     this.adminService.getUsers(queryParams).subscribe({

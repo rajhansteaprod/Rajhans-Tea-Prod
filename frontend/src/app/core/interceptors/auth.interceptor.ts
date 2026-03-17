@@ -20,6 +20,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
+      // Banned user — clear session immediately and redirect to login
+      if (error.status === 403 && error.error?.message?.includes('suspended')) {
+        authService.logoutBanned();
+        return throwError(() => error);
+      }
+
       if (error.status === 401 && !req.url.includes('/auth/refresh-token')) {
         return authService.refreshToken().pipe(
           switchMap((res) => {

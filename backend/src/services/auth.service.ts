@@ -1,7 +1,7 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
 import crypto from 'crypto';
 import { config } from '../config';
-import { BadRequestError, NotFoundError, UnauthorizedError } from '../utils/api-error';
+import { BadRequestError, ForbiddenError, NotFoundError, UnauthorizedError } from '../utils/api-error';
 import { UserRepository } from '../repositories/user.repository';
 import { TokenRepository } from '../repositories/token.repository';
 import { ITokenPayload } from '../types/auth.types';
@@ -57,6 +57,9 @@ export class AuthService {
       } as never);
       isNewUser = true;
     } else {
+      if (user.isBanned) {
+        throw new ForbiddenError('Your account has been suspended. Contact support for assistance.');
+      }
       if (!user.isPhoneVerified) {
         await this.userRepo.updateById(user._id.toString(), { isPhoneVerified: true });
       }
@@ -91,6 +94,9 @@ export class AuthService {
     const user = await this.userRepo.findById(tokenRecord.user.toString());
     if (!user || !user.isActive) {
       throw new UnauthorizedError('User not found or inactive');
+    }
+    if (user.isBanned) {
+      throw new ForbiddenError('Your account has been suspended. Contact support for assistance.');
     }
 
     // Stamp lastUsedAt before we delete the old record so the time is preserved

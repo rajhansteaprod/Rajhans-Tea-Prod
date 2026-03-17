@@ -20,6 +20,9 @@ export interface UserAdminView {
   isPhoneVerified: boolean;
   avatar?: string;
   lastLogin?: Date;
+  isBanned: boolean;
+  bannedAt?: Date;
+  bannedReason?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -74,6 +77,9 @@ export class UserDTO {
       isPhoneVerified: user.isPhoneVerified,
       avatar: user.avatar,
       lastLogin: user.lastLogin,
+      isBanned: user.isBanned ?? false,
+      bannedAt: user.bannedAt,
+      bannedReason: user.bannedReason,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

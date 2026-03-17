@@ -33,9 +33,6 @@ import { AdminService, SessionView } from '../../../../core/services/admin.servi
         <div class="panel-actions">
           @if (sessions().length > 0) {
             <button class="btn-danger-outline" (click)="revokeAll()" [disabled]="revoking()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M18.364 5.636L5.636 18.364M5.636 5.636l12.728 12.728" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
               Revoke All
             </button>
           }

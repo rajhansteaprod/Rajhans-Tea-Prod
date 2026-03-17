@@ -21,6 +21,9 @@ export interface IUserDoc extends Document {
   avatar?: string;
   isActive: boolean;
   lastLogin?: Date;
+  isBanned: boolean;
+  bannedAt?: Date;
+  bannedReason?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -60,6 +63,9 @@ const userSchema = new Schema<IUserDoc>(
     avatar: { type: String },
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date },
+    isBanned: { type: Boolean, default: false, index: true },
+    bannedAt: { type: Date },
+    bannedReason: { type: String, trim: true },
   },
   {
     timestamps: true,

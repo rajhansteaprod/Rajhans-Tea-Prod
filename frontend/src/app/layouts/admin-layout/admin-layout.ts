@@ -368,6 +368,10 @@ interface NavItem {
         margin-left: 0;
         padding: 72px $space-md $space-lg;
       }
+
+      @include respond-to(xs) {
+        padding: 60px $space-sm $space-md;
+      }
     }
   `],
 })

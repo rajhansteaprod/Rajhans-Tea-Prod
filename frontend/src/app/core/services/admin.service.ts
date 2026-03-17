@@ -39,6 +39,25 @@ export interface AdminUser {
   lastLogin?: string;
   createdAt: string;
   updatedAt: string;
+  isBanned: boolean;
+  bannedAt?: string;
+  bannedReason?: string;
+}
+
+export interface CreateUserPayload {
+  phone: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  role?: 'customer' | 'admin';
+}
+
+export interface UpdateUserPayload {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  role?: 'customer' | 'admin';
+  isActive?: boolean;
 }
 
 export interface PaginationMeta {
@@ -132,6 +151,28 @@ export class AdminService {
     return this.http.get<PaginatedResponse<AdminUser>>(`${this.apiUrl}/users`, {
       params: httpParams,
     });
+  }
+
+  // --- User CRUD ---
+
+  createUser(payload: CreateUserPayload): Observable<ApiResponse<AdminUser>> {
+    return this.http.post<ApiResponse<AdminUser>>(`${this.apiUrl}/users`, payload);
+  }
+
+  updateUser(userId: string, payload: UpdateUserPayload): Observable<ApiResponse<AdminUser>> {
+    return this.http.put<ApiResponse<AdminUser>>(`${this.apiUrl}/users/${userId}`, payload);
+  }
+
+  deleteUser(userId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/users/${userId}`);
+  }
+
+  banUser(userId: string, reason?: string): Observable<ApiResponse<AdminUser>> {
+    return this.http.patch<ApiResponse<AdminUser>>(`${this.apiUrl}/users/${userId}/ban`, { reason });
+  }
+
+  unbanUser(userId: string): Observable<ApiResponse<AdminUser>> {
+    return this.http.patch<ApiResponse<AdminUser>>(`${this.apiUrl}/users/${userId}/unban`, {});
   }
 
   // --- Sessions ---

@@ -17,4 +17,20 @@ export class UserRepository extends BaseRepository<IUserDoc> {
   async updateLastLogin(userId: string): Promise<void> {
     await this.model.findByIdAndUpdate(userId, { lastLogin: new Date() }).exec();
   }
+
+  async banUser(userId: string, reason?: string): Promise<IUserDoc | null> {
+    return this.model.findByIdAndUpdate(
+      userId,
+      { isBanned: true, bannedAt: new Date(), bannedReason: reason ?? '' },
+      { new: true },
+    ).exec();
+  }
+
+  async unbanUser(userId: string): Promise<IUserDoc | null> {
+    return this.model.findByIdAndUpdate(
+      userId,
+      { isBanned: false, $unset: { bannedAt: '', bannedReason: '' } },
+      { new: true },
+    ).exec();
+  }
 }

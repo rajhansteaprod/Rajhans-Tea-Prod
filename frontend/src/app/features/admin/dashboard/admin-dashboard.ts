@@ -311,6 +311,8 @@ import { AdminService, DashboardStats, AdminUser } from '../../../core/services/
       border: 1px solid $color-border-light;
       border-radius: $radius-xl;
       padding: $space-lg;
+
+      @include respond-to(xs) { padding: $space-md; }
       transition: all $transition-normal;
       position: relative;
       overflow: hidden;
@@ -383,6 +385,8 @@ import { AdminService, DashboardStats, AdminUser } from '../../../core/services/
       color: $color-text-primary;
       letter-spacing: $letter-spacing-tight;
       line-height: 1;
+
+      @include respond-to(xs) { font-size: 26px; }
     }
 
     .kpi-change {
