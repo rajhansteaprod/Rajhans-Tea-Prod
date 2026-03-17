@@ -39,6 +39,6 @@ export class CategoryRepository extends BaseRepository<ICategoryDoc> {
   }
 
   async hasChildren(categoryId: string): Promise<boolean> {
-    return this.exists({ parent: categoryId });
+    return this.model.exists({ parent: categoryId }).then((r) => r !== null);
   }
 }

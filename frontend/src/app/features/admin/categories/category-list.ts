@@ -71,9 +71,10 @@ const emptyForm = (): CategoryForm => ({
                   <td>{{ cat.parent?.name ?? '—' }}</td>
                   <td>{{ cat.sortOrder }}</td>
                   <td>
-                    <span class="status-badge" [class.active]="cat.isActive" [class.inactive]="!cat.isActive">
+                    <button class="status-toggle" [class.active]="cat.isActive" [class.inactive]="!cat.isActive"
+                      (click)="toggleActive(cat)" [disabled]="saving()">
                       {{ cat.isActive ? 'Active' : 'Inactive' }}
-                    </span>
+                    </button>
                   </td>
                   <td>
                     <div class="action-btns">
@@ -309,13 +310,17 @@ const emptyForm = (): CategoryForm => ({
       color: $color-text-tertiary;
     }
 
-    .status-badge {
+    .status-toggle {
       font-size: 11px;
       font-weight: $font-weight-semibold;
       padding: 2px 8px;
       border-radius: $radius-full;
-      &.active   { background: rgba(87,136,108,0.12); color: $color-secondary; }
-      &.inactive { background: rgba(176,0,32,0.08);   color: $color-error; }
+      border: none;
+      cursor: pointer;
+      transition: all $transition-fast;
+      &.active   { background: rgba(87,136,108,0.12); color: $color-secondary; &:hover { background: rgba(87,136,108,0.22); } }
+      &.inactive { background: rgba(176,0,32,0.08);   color: $color-error;     &:hover { background: rgba(176,0,32,0.16); } }
+      &:disabled { opacity: 0.5; cursor: default; }
     }
 
     .action-btns {
@@ -530,10 +535,10 @@ export class CategoryListComponent implements OnInit {
       sortOrder:   f.sortOrder,
     };
     this.catalog.createCategory(payload).subscribe({
-      next: (res) => {
-        this.categories.update((list) => [...list, res.data]);
+      next: () => {
         this.saving.set(false);
         this.showCreate.set(false);
+        this.load();
       },
       error: (err) => {
         this.formError.set(err?.error?.message ?? 'Failed to create category');
@@ -572,15 +577,23 @@ export class CategoryListComponent implements OnInit {
       sortOrder:   f.sortOrder,
       isActive:    f.isActive,
     }).subscribe({
-      next: (res) => {
-        this.categories.update((list) => list.map((c) => c._id === id ? res.data : c));
+      next: () => {
         this.saving.set(false);
         this.editingId.set(null);
+        this.load();
       },
       error: (err) => {
         this.formError.set(err?.error?.message ?? 'Failed to update category');
         this.saving.set(false);
       },
+    });
+  }
+
+  toggleActive(cat: Category) {
+    this.saving.set(true);
+    this.catalog.updateCategory(cat._id, { isActive: !cat.isActive }).subscribe({
+      next: () => { this.saving.set(false); this.load(); },
+      error: (err) => { this.saving.set(false); alert(err?.error?.message ?? 'Failed to update status'); },
     });
   }
 

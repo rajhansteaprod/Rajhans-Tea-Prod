@@ -84,8 +84,13 @@ export interface CreateCategoryPayload {
   sortOrder?: number;
 }
 
-export interface UpdateCategoryPayload extends Partial<CreateCategoryPayload> {
+export interface UpdateCategoryPayload {
+  name?: string;
+  slug?: string;
+  description?: string;
+  image?: string;
   parentId?: string | null;
+  sortOrder?: number;
   isActive?: boolean;
 }
 

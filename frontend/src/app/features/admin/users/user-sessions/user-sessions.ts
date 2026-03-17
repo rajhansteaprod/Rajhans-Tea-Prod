@@ -148,8 +148,8 @@ import { AdminService, SessionView } from '../../../../core/services/admin.servi
     </div>
   `,
   styles: [`
-    @use '../../../../../core/design-tokens/tokens' as *;
-    @use '../../../../../core/design-tokens/mixins' as *;
+    @use '../../../../core/design-tokens/tokens' as *;
+    @use '../../../../core/design-tokens/mixins' as *;
 
     .sessions-panel {
       background: $color-bg-secondary;

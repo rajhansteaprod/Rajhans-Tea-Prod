@@ -75,6 +75,7 @@ export class CategoryService {
     if (data.parentId) {
       const parent = await this.repo.findById(data.parentId);
       if (!parent) throw new BadRequestError('Parent category not found');
+      if (!parent.isActive) throw new BadRequestError('Cannot assign an inactive category as parent');
     }
 
     // Slug handling
@@ -112,6 +113,19 @@ export class CategoryService {
     // Prevent circular parent
     if (data.parentId && data.parentId === id) {
       throw new BadRequestError('Category cannot be its own parent');
+    }
+
+    // Validate parent is active
+    if (data.parentId) {
+      const parent = await this.repo.findById(data.parentId);
+      if (!parent) throw new BadRequestError('Parent category not found');
+      if (!parent.isActive) throw new BadRequestError('Cannot assign an inactive category as parent');
+    }
+
+    // Block deactivating a parent that has active children
+    if (data.isActive === false) {
+      const hasChildren = await this.repo.hasChildren(id);
+      if (hasChildren) throw new BadRequestError('Cannot deactivate a category that has subcategories. Deactivate children first.');
     }
 
     // Slug update
