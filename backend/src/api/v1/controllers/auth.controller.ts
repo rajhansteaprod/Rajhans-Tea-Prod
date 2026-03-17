@@ -50,5 +50,10 @@ export const logoutAll = async (req: Request, res: Response) => {
 };
 
 export const me = async (req: Request, res: Response) => {
-  sendSuccess(res, req.user, 'User profile');
+  // req.user only has { userId, role } from the JWT.
+  // getProfile fetches the full document from DB, then shapes it via UserDTO.fromRole:
+  //   - admin calling /me → UserAdminView (all fields including isActive, lastLogin, etc.)
+  //   - customer calling /me → UserPublicView (safe public fields only)
+  const result = await authService.getProfile(req.user!.userId, req.user!.role as 'admin' | 'customer');
+  sendSuccess(res, result, 'User profile');
 };

@@ -1,11 +1,12 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
 import crypto from 'crypto';
 import { config } from '../config';
-import { BadRequestError, UnauthorizedError } from '../utils/api-error';
+import { BadRequestError, NotFoundError, UnauthorizedError } from '../utils/api-error';
 import { UserRepository } from '../repositories/user.repository';
 import { TokenRepository } from '../repositories/token.repository';
 import { ITokenPayload } from '../types/auth.types';
 import { getFirebaseAuth } from '../loaders';
+import { AuthDTO } from '../dto';
 
 export class AuthService {
   private userRepo: UserRepository;
@@ -54,17 +55,8 @@ export class AuthService {
     // Generate our JWT tokens
     const tokens = await this.generateTokens({ userId: user._id.toString(), role: user.role });
 
-    return {
-      user: {
-        _id: user._id.toString(),
-        phone: user.phone,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-      },
-      tokens,
-      isNewUser,
-    };
+    // AuthDTO.fromLogin shapes the response: minimal user embed + tokens + isNewUser flag
+    return AuthDTO.fromLogin(user, tokens, isNewUser);
   }
 
   async refreshToken(refreshToken: string) {
@@ -84,7 +76,26 @@ export class AuthService {
 
     const tokens = await this.generateTokens({ userId: user._id.toString(), role: user.role });
 
-    return { tokens };
+    return AuthDTO.fromRefresh(tokens);
+  }
+
+  /**
+   * Fetches the full user document and shapes it based on the caller's role.
+   * Used by the GET /auth/me endpoint.
+   *
+   * Why fetch from DB here instead of just returning req.user (JWT payload)?
+   * The JWT payload only contains { userId, role } — that's intentionally minimal
+   * for token size. The profile endpoint should return the actual stored profile
+   * (name, email, avatar, etc.) which lives in the DB, not the token.
+   */
+  async getProfile(userId: string, role: 'admin' | 'customer') {
+    const user = await this.userRepo.findById(userId);
+
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    return AuthDTO.fromProfile(user, role);
   }
 
   async logout(refreshToken: string) {

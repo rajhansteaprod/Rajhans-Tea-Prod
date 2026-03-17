@@ -1,5 +1,6 @@
 import { UserRepository } from '../repositories/user.repository';
 import { parsePagination, buildPaginationMeta } from '../utils/pagination';
+import { UserDTO } from '../dto';
 
 interface UserListQuery {
   page?: number;
@@ -44,20 +45,8 @@ export class AdminUserService {
 
     const meta = buildPaginationMeta(page, limit, total);
 
-    // Strip heavy fields for list view
-    const sanitized = users.map((u) => ({
-      _id: u._id.toString(),
-      phone: u.phone,
-      firstName: u.firstName,
-      lastName: u.lastName,
-      email: u.email,
-      role: u.role,
-      isActive: u.isActive,
-      isPhoneVerified: u.isPhoneVerified,
-      lastLogin: u.lastLogin,
-      createdAt: u.createdAt,
-    }));
-
-    return { users: sanitized, meta };
+    // UserDTO.forAdmin gives every field (role, isActive, isPhoneVerified, etc.)
+    // Admin user list needs all fields — that's the point of this page.
+    return { users: users.map((u) => UserDTO.forAdmin(u)), meta };
   }
 }

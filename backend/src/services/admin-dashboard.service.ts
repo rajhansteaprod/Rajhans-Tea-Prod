@@ -1,4 +1,5 @@
 import { UserRepository } from '../repositories/user.repository';
+import { DashboardDTO } from '../dto';
 
 export class AdminDashboardService {
   private userRepo: UserRepository;
@@ -25,8 +26,11 @@ export class AdminDashboardService {
       this.userRepo.count({ createdAt: { $gte: weekStart } } as never),
     ]);
 
-    return {
-      stats: {
+    // DashboardDTO.fromData shapes the response:
+    // - stats object with all 6 counters
+    // - recentUsers mapped through UserDTO.forAdmin (full admin view per user)
+    return DashboardDTO.fromData(
+      {
         totalUsers,
         activeUsers,
         adminUsers,
@@ -34,15 +38,7 @@ export class AdminDashboardService {
         todaySignups,
         weekSignups,
       },
-      recentUsers: recentUsers.map((u) => ({
-        _id: u._id.toString(),
-        phone: u.phone,
-        firstName: u.firstName,
-        lastName: u.lastName,
-        role: u.role,
-        isActive: u.isActive,
-        createdAt: u.createdAt,
-      })),
-    };
+      recentUsers,
+    );
   }
 }
