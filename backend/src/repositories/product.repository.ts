@@ -41,7 +41,9 @@ export class ProductRepository extends BaseRepository<IProductDoc> {
     return this.exists(query);
   }
 
-  async findList(options: ProductListOptions = {}): Promise<{ products: IProductDoc[]; total: number }> {
+  async findList(
+    options: ProductListOptions = {},
+  ): Promise<{ products: IProductDoc[]; total: number }> {
     const {
       skip = 0,
       limit = 20,

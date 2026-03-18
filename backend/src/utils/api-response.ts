@@ -2,7 +2,12 @@ import { Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { IPaginationMeta } from '../types/common.types';
 
-export function sendSuccess<T>(res: Response, data: T, message = 'Success', statusCode = StatusCodes.OK) {
+export function sendSuccess<T>(
+  res: Response,
+  data: T,
+  message = 'Success',
+  statusCode = StatusCodes.OK,
+) {
   return res.status(statusCode).json({
     success: true,
     statusCode,

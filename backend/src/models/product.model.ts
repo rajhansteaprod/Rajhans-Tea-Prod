@@ -21,17 +21,17 @@ export interface IProductDoc extends Document {
 
 const productSchema = new Schema<IProductDoc>(
   {
-    name:             { type: String, required: true, trim: true },
-    slug:             { type: String, required: true, unique: true, lowercase: true, trim: true },
-    description:      { type: String, trim: true },
+    name: { type: String, required: true, trim: true },
+    slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    description: { type: String, trim: true },
     shortDescription: { type: String, trim: true, maxlength: 300 },
-    category:         { type: Schema.Types.ObjectId, ref: 'Category', required: true },
-    collections:      [{ type: Schema.Types.ObjectId, ref: 'Collection' }],
-    basePrice:        { type: Number, required: true, min: 0 },
-    images:           [{ type: String }],
-    attributes:       { type: Map, of: String, default: {} },
-    tags:             [{ type: String, trim: true, lowercase: true }],
-    status:           {
+    category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
+    collections: [{ type: Schema.Types.ObjectId, ref: 'Collection' }],
+    basePrice: { type: Number, required: true, min: 0 },
+    images: [{ type: String }],
+    attributes: { type: Map, of: String, default: {} },
+    tags: [{ type: String, trim: true, lowercase: true }],
+    status: {
       type: String,
       enum: ['draft', 'active', 'archived'],
       default: 'draft',

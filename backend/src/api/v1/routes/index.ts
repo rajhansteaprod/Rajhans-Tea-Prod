@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import healthRoutes  from './health.routes';
-import authRoutes    from './auth.routes';
-import adminRoutes   from './admin.routes';
+import healthRoutes from './health.routes';
+import authRoutes from './auth.routes';
+import adminRoutes from './admin.routes';
 import catalogRoutes from './catalog.routes';
 
 const router = Router();

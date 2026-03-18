@@ -75,7 +75,8 @@ export class CategoryService {
     if (data.parentId) {
       const parent = await this.repo.findById(data.parentId);
       if (!parent) throw new BadRequestError('Parent category not found');
-      if (!parent.isActive) throw new BadRequestError('Cannot assign an inactive category as parent');
+      if (!parent.isActive)
+        throw new BadRequestError('Cannot assign an inactive category as parent');
     }
 
     // Slug handling
@@ -83,12 +84,12 @@ export class CategoryService {
     const slug = await ensureUniqueSlug(baseSlug, (s) => this.repo.slugExists(s));
 
     const cat = await this.repo.create({
-      name:      data.name,
+      name: data.name,
       slug,
       description: data.description,
-      image:     data.image,
-      parent:    data.parentId ? (data.parentId as never) : null,
-      isActive:  true,
+      image: data.image,
+      parent: data.parentId ? (data.parentId as never) : null,
+      isActive: true,
       sortOrder: data.sortOrder ?? 0,
     });
 
@@ -119,13 +120,17 @@ export class CategoryService {
     if (data.parentId) {
       const parent = await this.repo.findById(data.parentId);
       if (!parent) throw new BadRequestError('Parent category not found');
-      if (!parent.isActive) throw new BadRequestError('Cannot assign an inactive category as parent');
+      if (!parent.isActive)
+        throw new BadRequestError('Cannot assign an inactive category as parent');
     }
 
     // Block deactivating a parent that has active children
     if (data.isActive === false) {
       const hasChildren = await this.repo.hasChildren(id);
-      if (hasChildren) throw new BadRequestError('Cannot deactivate a category that has subcategories. Deactivate children first.');
+      if (hasChildren)
+        throw new BadRequestError(
+          'Cannot deactivate a category that has subcategories. Deactivate children first.',
+        );
     }
 
     // Slug update
@@ -138,12 +143,12 @@ export class CategoryService {
     }
 
     const update: Record<string, unknown> = {};
-    if (data.name !== undefined)     update.name       = data.name;
-    if (slug !== undefined)          update.slug       = slug;
+    if (data.name !== undefined) update.name = data.name;
+    if (slug !== undefined) update.slug = slug;
     if (data.description !== undefined) update.description = data.description;
-    if (data.image !== undefined)    update.image      = data.image;
-    if (data.parentId !== undefined) update.parent     = data.parentId ?? null;
-    if (data.isActive !== undefined) update.isActive   = data.isActive;
+    if (data.image !== undefined) update.image = data.image;
+    if (data.parentId !== undefined) update.parent = data.parentId ?? null;
+    if (data.isActive !== undefined) update.isActive = data.isActive;
     if (data.sortOrder !== undefined) update.sortOrder = data.sortOrder;
 
     await this.repo.updateById(id, update);

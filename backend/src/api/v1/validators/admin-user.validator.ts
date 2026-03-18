@@ -23,8 +23,8 @@ export const createUserSchema = z.object({
   body: z.object({
     phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
     firstName: optionalStr(50),
-    lastName:  optionalStr(50),
-    email:     optionalStr(200),
+    lastName: optionalStr(50),
+    email: optionalStr(200),
     role: z.enum(['customer', 'admin']).optional(),
   }),
 });
@@ -33,10 +33,13 @@ export const updateUserSchema = z.object({
   params: z.object({ userId: z.string().regex(/^[a-f\d]{24}$/i) }),
   body: z.object({
     firstName: optionalStr(50),
-    lastName:  optionalStr(50),
-    email:     z.preprocess((v) => (v === '' || v === null) ? undefined : v, z.string().max(200).optional()),
-    role:      z.enum(['customer', 'admin']).optional(),
-    isActive:  z.boolean().optional(),
+    lastName: optionalStr(50),
+    email: z.preprocess(
+      (v) => (v === '' || v === null ? undefined : v),
+      z.string().max(200).optional(),
+    ),
+    role: z.enum(['customer', 'admin']).optional(),
+    isActive: z.boolean().optional(),
   }),
 });
 

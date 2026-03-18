@@ -17,9 +17,9 @@ export const verifyFirebaseToken = async (req: Request, res: Response) => {
   // Set refresh token as httpOnly cookie — JS cannot read it (XSS protection)
   res.cookie('refreshToken', result.tokens.refreshToken, {
     httpOnly: true,
-    secure:   process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
-    maxAge:   7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 
   sendCreated(res, result, result.isNewUser ? 'Account created successfully' : 'Login successful');
@@ -35,9 +35,9 @@ export const refreshToken = async (req: Request, res: Response) => {
 
   res.cookie('refreshToken', result.tokens.refreshToken, {
     httpOnly: true,
-    secure:   process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
-    maxAge:   7 * 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
   sendSuccess(res, result, 'Token refreshed successfully');

@@ -17,10 +17,7 @@ export class CategoryRepository extends BaseRepository<ICategoryDoc> {
   }
 
   async findRoots(): Promise<ICategoryDoc[]> {
-    return this.model
-      .find({ parent: null, isActive: true })
-      .sort({ sortOrder: 1, name: 1 })
-      .exec();
+    return this.model.find({ parent: null, isActive: true }).sort({ sortOrder: 1, name: 1 }).exec();
   }
 
   async findChildren(parentId: string): Promise<ICategoryDoc[]> {
@@ -31,11 +28,7 @@ export class CategoryRepository extends BaseRepository<ICategoryDoc> {
   }
 
   async findAllForAdmin(): Promise<ICategoryDoc[]> {
-    return this.model
-      .find()
-      .populate('parent', 'name slug')
-      .sort({ sortOrder: 1, name: 1 })
-      .exec();
+    return this.model.find().populate('parent', 'name slug').sort({ sortOrder: 1, name: 1 }).exec();
   }
 
   async hasChildren(categoryId: string): Promise<boolean> {

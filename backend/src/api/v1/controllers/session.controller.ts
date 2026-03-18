@@ -16,7 +16,7 @@ const sessionService = new SessionService();
  * The frontend never needs to know the raw refresh token for this feature.
  */
 export const listSessions = async (req: Request, res: Response) => {
-  const userId          = req.user!.userId;
+  const userId = req.user!.userId;
   const rawRefreshToken = req.cookies?.refreshToken ?? null;
 
   const sessions = await sessionService.getUserSessions(userId, rawRefreshToken);
@@ -31,7 +31,7 @@ export const listSessions = async (req: Request, res: Response) => {
  */
 export const revokeSession = async (req: Request, res: Response) => {
   const sessionId = req.params['sessionId'] as string;
-  const userId    = req.user!.userId;
+  const userId = req.user!.userId;
 
   await sessionService.revokeOwnSession(sessionId, userId);
   sendNoContent(res);

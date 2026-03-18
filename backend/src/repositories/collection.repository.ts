@@ -17,24 +17,20 @@ export class CollectionRepository extends BaseRepository<ICollectionDoc> {
   }
 
   async findActive(): Promise<ICollectionDoc[]> {
-    return this.model
-      .find({ isActive: true })
-      .sort({ sortOrder: 1, name: 1 })
-      .exec();
+    return this.model.find({ isActive: true }).sort({ sortOrder: 1, name: 1 }).exec();
   }
 
   async findFeatured(): Promise<ICollectionDoc[]> {
-    return this.model
-      .find({ isActive: true, isFeatured: true })
-      .sort({ sortOrder: 1 })
-      .exec();
+    return this.model.find({ isActive: true, isFeatured: true }).sort({ sortOrder: 1 }).exec();
   }
 
-  async findAllForAdmin(options: {
-    skip?: number;
-    limit?: number;
-    search?: string;
-  } = {}): Promise<{ collections: ICollectionDoc[]; total: number }> {
+  async findAllForAdmin(
+    options: {
+      skip?: number;
+      limit?: number;
+      search?: string;
+    } = {},
+  ): Promise<{ collections: ICollectionDoc[]; total: number }> {
     const { skip = 0, limit = 20, search } = options;
     const filter: Record<string, unknown> = {};
     if (search) {

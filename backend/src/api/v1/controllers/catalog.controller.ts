@@ -2,12 +2,17 @@ import { Request, Response } from 'express';
 import { CategoryService } from '../../../services/category.service';
 import { CollectionService } from '../../../services/collection.service';
 import { ProductService } from '../../../services/product.service';
-import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../../../utils/api-response';
+import {
+  sendSuccess,
+  sendCreated,
+  sendPaginated,
+  sendNoContent,
+} from '../../../utils/api-response';
 import { BadRequestError } from '../../../utils/api-error';
 
-const categoryService   = new CategoryService();
+const categoryService = new CategoryService();
 const collectionService = new CollectionService();
-const productService    = new ProductService();
+const productService = new ProductService();
 
 // ---------------------------------------------------------------------------
 // Category controllers
@@ -34,7 +39,7 @@ export const createCategory = async (req: Request, res: Response) => {
 };
 
 export const updateCategory = async (req: Request, res: Response) => {
-  const id   = req.params['id'] as string;
+  const id = req.params['id'] as string;
   const data = await categoryService.update(id, req.body);
   sendSuccess(res, data, 'Category updated successfully');
 };
@@ -69,7 +74,7 @@ export const createCollection = async (req: Request, res: Response) => {
 };
 
 export const updateCollection = async (req: Request, res: Response) => {
-  const id   = req.params['id'] as string;
+  const id = req.params['id'] as string;
   const data = await collectionService.update(id, req.body);
   sendSuccess(res, data, 'Collection updated successfully');
 };
@@ -104,7 +109,7 @@ export const createProduct = async (req: Request, res: Response) => {
 };
 
 export const updateProduct = async (req: Request, res: Response) => {
-  const id   = req.params['id'] as string;
+  const id = req.params['id'] as string;
   const data = await productService.update(id, req.body);
   sendSuccess(res, data, 'Product updated successfully');
 };

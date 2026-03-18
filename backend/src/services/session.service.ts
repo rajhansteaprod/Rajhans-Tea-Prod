@@ -21,7 +21,10 @@ export class SessionService {
    * compute its hash and mark the current session as isCurrent: true.
    * If the cookie isn't present (e.g. logout race), isCurrent = false for all.
    */
-  async getUserSessions(userId: string, rawRefreshToken: string | null): Promise<SessionUserView[]> {
+  async getUserSessions(
+    userId: string,
+    rawRefreshToken: string | null,
+  ): Promise<SessionUserView[]> {
     const tokens = await this.tokenRepo.findByUserId(userId);
     const currentHash = rawRefreshToken ? this.hashToken(rawRefreshToken) : null;
     return tokens.map((t) => SessionDTO.forUser(t, currentHash));
@@ -69,7 +72,7 @@ export class SessionService {
       throw new NotFoundError('Session not found');
     }
 
-    const userId     = token.user.toString();
+    const userId = token.user.toString();
     const deviceName = token.deviceInfo?.deviceName ?? 'Unknown Device';
 
     await this.tokenRepo.deleteById(sessionId);

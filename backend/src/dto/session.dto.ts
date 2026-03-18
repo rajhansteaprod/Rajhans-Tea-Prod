@@ -15,7 +15,7 @@ export interface SessionUserView {
   browser: string;
   os: string;
   deviceType: 'mobile' | 'desktop' | 'tablet';
-  ip: string;          // masked
+  ip: string; // masked
   isCurrent: boolean;
   createdAt: Date;
   lastUsedAt: Date;
@@ -27,8 +27,8 @@ export interface SessionUserView {
  */
 export interface SessionAdminView extends SessionUserView {
   userId: string;
-  fullIp: string;      // unmasked
-  userAgent: string;   // raw UA string
+  fullIp: string; // unmasked
+  userAgent: string; // raw UA string
 }
 
 // ---------------------------------------------------------------------------
@@ -64,14 +64,14 @@ export class SessionDTO {
    */
   static forUser(token: ITokenDoc, currentTokenHash: string | null): SessionUserView {
     return {
-      _id:        token._id.toString(),
-      deviceName: token.deviceInfo?.deviceName  ?? 'Unknown Device',
-      browser:    token.deviceInfo?.browser     ?? 'Unknown Browser',
-      os:         token.deviceInfo?.os          ?? 'Unknown OS',
-      deviceType: token.deviceInfo?.deviceType  ?? 'desktop',
-      ip:         maskIp(token.deviceInfo?.ip   ?? ''),
-      isCurrent:  currentTokenHash !== null && token.token === currentTokenHash,
-      createdAt:  token.createdAt,
+      _id: token._id.toString(),
+      deviceName: token.deviceInfo?.deviceName ?? 'Unknown Device',
+      browser: token.deviceInfo?.browser ?? 'Unknown Browser',
+      os: token.deviceInfo?.os ?? 'Unknown OS',
+      deviceType: token.deviceInfo?.deviceType ?? 'desktop',
+      ip: maskIp(token.deviceInfo?.ip ?? ''),
+      isCurrent: currentTokenHash !== null && token.token === currentTokenHash,
+      createdAt: token.createdAt,
       lastUsedAt: token.lastUsedAt ?? token.createdAt,
     };
   }
@@ -83,8 +83,8 @@ export class SessionDTO {
   static forAdmin(token: ITokenDoc, currentTokenHash: string | null = null): SessionAdminView {
     return {
       ...SessionDTO.forUser(token, currentTokenHash),
-      userId:    token.user.toString(),
-      fullIp:    token.deviceInfo?.ip        ?? 'Unknown',
+      userId: token.user.toString(),
+      fullIp: token.deviceInfo?.ip ?? 'Unknown',
       userAgent: token.deviceInfo?.userAgent ?? 'Unknown',
     };
   }

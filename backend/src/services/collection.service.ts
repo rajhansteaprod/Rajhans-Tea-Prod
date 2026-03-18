@@ -76,13 +76,13 @@ export class CollectionService {
     const slug = await ensureUniqueSlug(baseSlug, (s) => this.repo.slugExists(s));
 
     const col = await this.repo.create({
-      name:        data.name,
+      name: data.name,
       slug,
       description: data.description,
-      image:       data.image,
-      isActive:    true,
-      isFeatured:  data.isFeatured ?? false,
-      sortOrder:   data.sortOrder ?? 0,
+      image: data.image,
+      isActive: true,
+      isFeatured: data.isFeatured ?? false,
+      sortOrder: data.sortOrder ?? 0,
     });
 
     return CollectionDTO.toView(col, 0);
@@ -112,13 +112,13 @@ export class CollectionService {
     }
 
     const update: Record<string, unknown> = {};
-    if (data.name !== undefined)        update.name        = data.name;
-    if (slug !== undefined)             update.slug        = slug;
+    if (data.name !== undefined) update.name = data.name;
+    if (slug !== undefined) update.slug = slug;
     if (data.description !== undefined) update.description = data.description;
-    if (data.image !== undefined)       update.image       = data.image;
-    if (data.isActive !== undefined)    update.isActive    = data.isActive;
-    if (data.isFeatured !== undefined)  update.isFeatured  = data.isFeatured;
-    if (data.sortOrder !== undefined)   update.sortOrder   = data.sortOrder;
+    if (data.image !== undefined) update.image = data.image;
+    if (data.isActive !== undefined) update.isActive = data.isActive;
+    if (data.isFeatured !== undefined) update.isFeatured = data.isFeatured;
+    if (data.sortOrder !== undefined) update.sortOrder = data.sortOrder;
 
     await this.repo.updateById(id, update);
     return this.getById(id);

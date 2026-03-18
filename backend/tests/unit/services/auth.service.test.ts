@@ -71,10 +71,10 @@ const expectApiError = async (promise: Promise<unknown>, statusCode: number) => 
 // verifyFirebaseToken and refreshToken now require device info so we can
 // associate each session with the device that created it.
 const mockDeviceInfo: IDeviceInfo = {
-  userAgent:  'Mozilla/5.0 (Test)',
-  ip:         '127.0.0.1',
-  browser:    'Chrome 120',
-  os:         'Windows',
+  userAgent: 'Mozilla/5.0 (Test)',
+  ip: '127.0.0.1',
+  browser: 'Chrome 120',
+  os: 'Windows',
   deviceType: 'desktop',
   deviceName: 'Chrome 120 on Windows',
 };
@@ -94,7 +94,7 @@ describe('AuthService', () => {
     jest.clearAllMocks();
 
     // Create typed mock instances
-    mockUserRepo  = new UserRepository()  as jest.Mocked<UserRepository>;
+    mockUserRepo = new UserRepository() as jest.Mocked<UserRepository>;
     mockTokenRepo = new TokenRepository() as jest.Mocked<TokenRepository>;
 
     // AuthService now accepts repositories as constructor parameters (Dependency Injection).
@@ -115,7 +115,6 @@ describe('AuthService', () => {
   //   3. Creates or finds the user in our DB
   //   4. Issues our own JWT access + refresh tokens
   describe('verifyFirebaseToken', () => {
-
     it('should throw 401 when Firebase token is invalid', async () => {
       // Arrange — make Firebase throw an error (simulating an invalid/expired token)
       mockFirebaseAuth.verifyIdToken.mockRejectedValue(new Error('Invalid token'));
@@ -238,7 +237,6 @@ describe('AuthService', () => {
   //   3. Deletes the old token (rotation — each refresh token can only be used once)
   //   4. Issues a fresh pair of tokens
   describe('refreshToken', () => {
-
     it('should throw 401 when refresh token is not found in DB', async () => {
       // Arrange — no token record found
       mockTokenRepo.findByToken.mockResolvedValue(null);
@@ -254,12 +252,12 @@ describe('AuthService', () => {
       // Arrange — token exists in DB
       mockTokenRepo.findByToken.mockResolvedValue({
         token: 'hashed-token',
-        user:  { toString: () => 'user-id' },
+        user: { toString: () => 'user-id' },
       } as never);
 
       // But user is banned (isActive: false)
       mockUserRepo.findById.mockResolvedValue({
-        _id:      { toString: () => 'user-id' },
+        _id: { toString: () => 'user-id' },
         isActive: false,
       } as never);
 
@@ -274,12 +272,12 @@ describe('AuthService', () => {
       // Arrange — valid token and active user
       mockTokenRepo.findByToken.mockResolvedValue({
         token: 'hashed-token',
-        user:  { toString: () => 'user-id' },
+        user: { toString: () => 'user-id' },
       } as never);
 
       mockUserRepo.findById.mockResolvedValue({
-        _id:      { toString: () => 'user-id' },
-        role:     'customer',
+        _id: { toString: () => 'user-id' },
+        role: 'customer',
         isActive: true,
       } as never);
 
@@ -305,7 +303,6 @@ describe('AuthService', () => {
   // logout()
   // ===========================================================================
   describe('logout', () => {
-
     it('should delete the refresh token on logout', async () => {
       mockTokenRepo.deleteByToken.mockResolvedValue(undefined as never);
 
@@ -319,7 +316,6 @@ describe('AuthService', () => {
   // logoutAll()
   // ===========================================================================
   describe('logoutAll', () => {
-
     it('should delete all tokens for the user', async () => {
       mockTokenRepo.deleteByUserId.mockResolvedValue(undefined as never);
 

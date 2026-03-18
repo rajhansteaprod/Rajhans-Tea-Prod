@@ -1,7 +1,12 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
 import crypto from 'crypto';
 import { config } from '../config';
-import { BadRequestError, ForbiddenError, NotFoundError, UnauthorizedError } from '../utils/api-error';
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+  UnauthorizedError,
+} from '../utils/api-error';
 import { UserRepository } from '../repositories/user.repository';
 import { TokenRepository } from '../repositories/token.repository';
 import { ITokenPayload } from '../types/auth.types';
@@ -17,7 +22,7 @@ export class AuthService {
     userRepo: UserRepository = new UserRepository(),
     tokenRepo: TokenRepository = new TokenRepository(),
   ) {
-    this.userRepo  = userRepo;
+    this.userRepo = userRepo;
     this.tokenRepo = tokenRepo;
   }
 
@@ -58,7 +63,9 @@ export class AuthService {
       isNewUser = true;
     } else {
       if (user.isBanned) {
-        throw new ForbiddenError('Your account has been suspended. Contact support for assistance.');
+        throw new ForbiddenError(
+          'Your account has been suspended. Contact support for assistance.',
+        );
       }
       if (!user.isPhoneVerified) {
         await this.userRepo.updateById(user._id.toString(), { isPhoneVerified: true });
@@ -159,9 +166,9 @@ export class AuthService {
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
     await this.tokenRepo.create({
-      user:       payload.userId,
-      token:      this.hashToken(refreshToken),
-      type:       'refresh',
+      user: payload.userId,
+      token: this.hashToken(refreshToken),
+      type: 'refresh',
       expiresAt,
       deviceInfo,
       lastUsedAt: new Date(),

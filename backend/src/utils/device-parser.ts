@@ -115,9 +115,9 @@ function parseDeviceType(ua: string): 'mobile' | 'desktop' | 'tablet' {
 export function extractDeviceInfo(req: Request): IDeviceInfo {
   // Cap userAgent length to prevent oversized strings in DB
   const userAgent = (req.headers['user-agent'] ?? 'Unknown').substring(0, 512);
-  const ip        = extractIp(req);
-  const browser   = parseBrowser(userAgent);
-  const os        = parseOs(userAgent);
+  const ip = extractIp(req);
+  const browser = parseBrowser(userAgent);
+  const os = parseOs(userAgent);
   const deviceType = parseDeviceType(userAgent);
   const deviceName = `${browser} on ${os}`;
 

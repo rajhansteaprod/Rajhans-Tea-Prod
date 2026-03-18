@@ -35,29 +35,29 @@ export class ProductDTO {
     const collections = (product.collections ?? []) as unknown as ICollectionDoc[];
 
     return {
-      _id:              product._id.toString(),
-      name:             product.name,
-      slug:             product.slug,
-      description:      product.description,
+      _id: product._id.toString(),
+      name: product.name,
+      slug: product.slug,
+      description: product.description,
       shortDescription: product.shortDescription,
       category: {
-        _id:  category._id?.toString() ?? product.category.toString(),
+        _id: category._id?.toString() ?? product.category.toString(),
         name: category.name ?? '',
         slug: category.slug ?? '',
       },
       collections: collections.map((c) => ({
-        _id:  c._id?.toString() ?? c.toString(),
+        _id: c._id?.toString() ?? c.toString(),
         name: c.name ?? '',
         slug: c.slug ?? '',
       })),
-      basePrice:  product.basePrice,
-      images:     product.images ?? [],
+      basePrice: product.basePrice,
+      images: product.images ?? [],
       attributes: attributesToRecord(product.attributes),
-      tags:       product.tags ?? [],
-      status:     product.status,
+      tags: product.tags ?? [],
+      status: product.status,
       isFeatured: product.isFeatured,
-      createdAt:  product.createdAt,
-      updatedAt:  product.updatedAt,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt,
     };
   }
 }

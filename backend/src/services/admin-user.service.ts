@@ -80,7 +80,13 @@ export class AdminUserService {
   async updateUser(
     userId: string,
     _callerId: string,
-    data: { firstName?: string; lastName?: string; email?: string; role?: string; isActive?: boolean },
+    data: {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      role?: string;
+      isActive?: boolean;
+    },
   ) {
     const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundError('User not found');

@@ -14,13 +14,13 @@ export interface ICollectionDoc extends Document {
 
 const collectionSchema = new Schema<ICollectionDoc>(
   {
-    name:        { type: String, required: true, trim: true },
-    slug:        { type: String, required: true, unique: true, lowercase: true, trim: true },
+    name: { type: String, required: true, trim: true },
+    slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     description: { type: String, trim: true },
-    image:       { type: String },
-    isActive:    { type: Boolean, default: true },
-    isFeatured:  { type: Boolean, default: false },
-    sortOrder:   { type: Number, default: 0 },
+    image: { type: String },
+    isActive: { type: Boolean, default: true },
+    isFeatured: { type: Boolean, default: false },
+    sortOrder: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

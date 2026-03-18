@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { authenticate } from '../../../middleware/auth.middleware';
-import { authorize }    from '../../../middleware/rbac.middleware';
-import { validate }     from '../../../middleware/validate.middleware';
-import { upload }       from '../../../middleware/upload.middleware';
-import * as catalog     from '../controllers/catalog.controller';
+import { authorize } from '../../../middleware/rbac.middleware';
+import { validate } from '../../../middleware/validate.middleware';
+import { upload } from '../../../middleware/upload.middleware';
+import * as catalog from '../controllers/catalog.controller';
 import {
   listCategoriesSchema,
   createCategorySchema,
@@ -27,16 +27,16 @@ const router = Router();
 // ===========================================================================
 
 // Categories
-router.get('/catalog/categories',        catalog.listCategoriesPublic);
-router.get('/catalog/categories/:slug',  catalog.getCategoryBySlug);
+router.get('/catalog/categories', catalog.listCategoriesPublic);
+router.get('/catalog/categories/:slug', catalog.getCategoryBySlug);
 
 // Collections
-router.get('/catalog/collections',       catalog.listCollectionsPublic);
+router.get('/catalog/collections', catalog.listCollectionsPublic);
 router.get('/catalog/collections/:slug', catalog.getCollectionBySlug);
 
 // Products
-router.get('/catalog/products',          validate(listProductsSchema),    catalog.listProducts);
-router.get('/catalog/products/:slug',    validate(productSlugSchema),     catalog.getProductBySlug);
+router.get('/catalog/products', validate(listProductsSchema), catalog.listProducts);
+router.get('/catalog/products/:slug', validate(productSlugSchema), catalog.getProductBySlug);
 
 // ===========================================================================
 // ADMIN — authenticate + admin role required
@@ -50,23 +50,23 @@ adminRouter.use(authorize('admin'));
 adminRouter.post('/uploads', upload.single('image'), catalog.uploadImage);
 
 // Categories — admin CRUD
-adminRouter.get   ('/categories', validate(listCategoriesSchema),  catalog.listCategories);
-adminRouter.post  ('/categories', validate(createCategorySchema),  catalog.createCategory);
-adminRouter.put   ('/categories/:id', validate(updateCategorySchema), catalog.updateCategory);
-adminRouter.delete('/categories/:id', validate(categoryIdSchema),  catalog.deleteCategory);
+adminRouter.get('/categories', validate(listCategoriesSchema), catalog.listCategories);
+adminRouter.post('/categories', validate(createCategorySchema), catalog.createCategory);
+adminRouter.put('/categories/:id', validate(updateCategorySchema), catalog.updateCategory);
+adminRouter.delete('/categories/:id', validate(categoryIdSchema), catalog.deleteCategory);
 
 // Collections — admin CRUD
-adminRouter.get   ('/collections', validate(listCollectionsSchema),  catalog.listCollections);
-adminRouter.post  ('/collections', validate(createCollectionSchema), catalog.createCollection);
-adminRouter.put   ('/collections/:id', validate(updateCollectionSchema), catalog.updateCollection);
+adminRouter.get('/collections', validate(listCollectionsSchema), catalog.listCollections);
+adminRouter.post('/collections', validate(createCollectionSchema), catalog.createCollection);
+adminRouter.put('/collections/:id', validate(updateCollectionSchema), catalog.updateCollection);
 adminRouter.delete('/collections/:id', validate(collectionIdSchema), catalog.deleteCollection);
 
 // Products — admin CRUD
-adminRouter.get   ('/products',     validate(listProductsSchema),   catalog.listProducts);
-adminRouter.get   ('/products/:id', validate(productIdSchema),      catalog.getProductById);
-adminRouter.post  ('/products',     validate(createProductSchema),  catalog.createProduct);
-adminRouter.put   ('/products/:id', validate(updateProductSchema),  catalog.updateProduct);
-adminRouter.delete('/products/:id', validate(productIdSchema),      catalog.deleteProduct);
+adminRouter.get('/products', validate(listProductsSchema), catalog.listProducts);
+adminRouter.get('/products/:id', validate(productIdSchema), catalog.getProductById);
+adminRouter.post('/products', validate(createProductSchema), catalog.createProduct);
+adminRouter.put('/products/:id', validate(updateProductSchema), catalog.updateProduct);
+adminRouter.delete('/products/:id', validate(productIdSchema), catalog.deleteProduct);
 
 router.use('/admin', adminRouter);
 

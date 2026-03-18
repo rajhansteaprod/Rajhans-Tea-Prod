@@ -37,6 +37,6 @@ export const revokeAllUserSessions = async (req: Request, res: Response) => {
  */
 export const adminRevokeSession = async (req: Request, res: Response) => {
   const sessionId = req.params['sessionId'] as string;
-  const result    = await sessionService.adminRevokeSession(sessionId);
+  const result = await sessionService.adminRevokeSession(sessionId);
   sendSuccess(res, result, `Session revoked for user ${result.userId}`);
 };

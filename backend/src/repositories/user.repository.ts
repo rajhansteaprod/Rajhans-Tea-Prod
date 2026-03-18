@@ -19,18 +19,22 @@ export class UserRepository extends BaseRepository<IUserDoc> {
   }
 
   async banUser(userId: string, reason?: string): Promise<IUserDoc | null> {
-    return this.model.findByIdAndUpdate(
-      userId,
-      { isBanned: true, bannedAt: new Date(), bannedReason: reason ?? '' },
-      { new: true },
-    ).exec();
+    return this.model
+      .findByIdAndUpdate(
+        userId,
+        { isBanned: true, bannedAt: new Date(), bannedReason: reason ?? '' },
+        { new: true },
+      )
+      .exec();
   }
 
   async unbanUser(userId: string): Promise<IUserDoc | null> {
-    return this.model.findByIdAndUpdate(
-      userId,
-      { isBanned: false, $unset: { bannedAt: '', bannedReason: '' } },
-      { new: true },
-    ).exec();
+    return this.model
+      .findByIdAndUpdate(
+        userId,
+        { isBanned: false, $unset: { bannedAt: '', bannedReason: '' } },
+        { new: true },
+      )
+      .exec();
   }
 }
