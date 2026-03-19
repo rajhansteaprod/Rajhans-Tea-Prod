@@ -34,4 +34,9 @@ export class CategoryRepository extends BaseRepository<ICategoryDoc> {
   async hasChildren(categoryId: string): Promise<boolean> {
     return this.model.exists({ parent: categoryId }).then((r) => r !== null);
   }
+
+  async deleteAll(): Promise<number> {
+    const result = await this.model.deleteMany({}).exec();
+    return result.deletedCount ?? 0;
+  }
 }

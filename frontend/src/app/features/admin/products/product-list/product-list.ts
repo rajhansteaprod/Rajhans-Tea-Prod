@@ -546,7 +546,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
 
   loadProducts(page: number, search: string, status: string, categoryId: string) {
     this.loading.set(true);
-    const params: Record<string, string | number> = { page, limit: 20 };
+    const params: Record<string, string | number> = { page, limit: 10 };
     if (search) params['search'] = search;
     if (status && status !== 'all') params['status'] = status;
     if (categoryId) params['categoryId'] = categoryId;

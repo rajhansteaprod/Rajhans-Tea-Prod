@@ -112,9 +112,30 @@ const emptyForm = (): CollectionForm => ({
                         (ngModelChange)="editForm.update(f=>({...f,name:$event}))" />
                     </div>
                     <div class="form-field">
-                      <label class="form-label">Image URL</label>
-                      <input class="form-input" type="text" [ngModel]="editForm().image"
-                        (ngModelChange)="editForm.update(f=>({...f,image:$event}))" placeholder="/uploads/image.jpg" />
+                      <label class="form-label">Image</label>
+                      <div class="image-upload-area">
+                        @if (editForm().image) {
+                          <div class="image-preview-wrap">
+                            <img [src]="editForm().image" class="image-preview" />
+                            <button type="button" class="remove-image" (click)="editForm.update(f=>({...f,image:''}))">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                              </svg>
+                            </button>
+                          </div>
+                        } @else {
+                          <label class="upload-btn">
+                            <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                              (change)="onImageSelect($event, 'edit')" [disabled]="uploadingImage()" />
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                              <polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                              <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                            {{ uploadingImage() ? 'Uploading…' : 'Upload' }}
+                          </label>
+                        }
+                      </div>
                     </div>
                     <div class="form-field full-width">
                       <label class="form-label">Description</label>
@@ -176,9 +197,30 @@ const emptyForm = (): CollectionForm => ({
                   (ngModelChange)="createForm.update(f=>({...f,name:$event}))" placeholder="e.g. New Arrivals" />
               </div>
               <div class="form-field">
-                <label class="form-label">Image URL</label>
-                <input class="form-input" type="text" [ngModel]="createForm().image"
-                  (ngModelChange)="createForm.update(f=>({...f,image:$event}))" placeholder="/uploads/image.jpg" />
+                <label class="form-label">Image</label>
+                <div class="image-upload-area">
+                  @if (createForm().image) {
+                    <div class="image-preview-wrap">
+                      <img [src]="createForm().image" class="image-preview" />
+                      <button type="button" class="remove-image" (click)="createForm.update(f=>({...f,image:''}))">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                      </button>
+                    </div>
+                  } @else {
+                    <label class="upload-btn">
+                      <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                        (change)="onImageSelect($event, 'create')" [disabled]="uploadingImage()" />
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        <polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      </svg>
+                      {{ uploadingImage() ? 'Uploading…' : 'Upload Image' }}
+                    </label>
+                  }
+                </div>
               </div>
               <div class="form-field full-width">
                 <label class="form-label">Description</label>
@@ -196,6 +238,11 @@ const emptyForm = (): CollectionForm => ({
                   <input type="checkbox" [ngModel]="createForm().isFeatured"
                     (ngModelChange)="createForm.update(f=>({...f,isFeatured:$event}))" />
                   Featured
+                </label>
+                <label class="toggle-label">
+                  <input type="checkbox" [ngModel]="createForm().isActive"
+                    (ngModelChange)="createForm.update(f=>({...f,isActive:$event}))" />
+                  Active
                 </label>
               </div>
             </div>
@@ -323,6 +370,41 @@ const emptyForm = (): CollectionForm => ({
     }
     textarea.form-input { resize: vertical; font-family: inherit; }
 
+    .image-upload-area { display: flex; }
+
+    .image-preview-wrap {
+      position: relative;
+      width: 80px; height: 80px;
+      border-radius: $radius-md;
+      overflow: hidden;
+      border: 1px solid $color-border-light;
+    }
+
+    .image-preview { width: 100%; height: 100%; object-fit: cover; }
+
+    .remove-image {
+      position: absolute; top: 4px; right: 4px;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: rgba(58,45,50,0.7);
+      color: white; border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background $transition-fast;
+      &:hover { background: $color-error; }
+    }
+
+    .upload-btn {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 6px; width: 100%; padding: $space-md;
+      border: 2px dashed $color-border;
+      border-radius: $radius-md;
+      color: $color-text-tertiary;
+      font-size: $font-size-xs; font-weight: $font-weight-medium;
+      cursor: pointer; transition: all $transition-fast;
+      &:hover { border-color: $color-primary; color: $color-primary; background: $color-primary-light; }
+    }
+
     .btn-cancel {
       padding: $space-sm $space-md; border: 1px solid $color-border; border-radius: $radius-md;
       background: transparent; font-size: $font-size-sm; color: $color-text-secondary;
@@ -353,9 +435,10 @@ const emptyForm = (): CollectionForm => ({
   `],
 })
 export class CollectionListComponent implements OnInit {
-  collections = signal<Collection[]>([]);
-  loading     = signal(false);
-  saving      = signal(false);
+  collections    = signal<Collection[]>([]);
+  loading        = signal(false);
+  saving         = signal(false);
+  uploadingImage = signal(false);
   formError   = signal<string | null>(null);
   showCreate  = signal(false);
   editingId   = signal<string | null>(null);
@@ -392,6 +475,7 @@ export class CollectionListComponent implements OnInit {
       image:       f.image || undefined,
       isFeatured:  f.isFeatured,
       sortOrder:   f.sortOrder,
+      isActive:    f.isActive,
     };
     this.catalog.createCollection(payload).subscribe({
       next: (res) => {
@@ -444,6 +528,27 @@ export class CollectionListComponent implements OnInit {
       error: (err) => {
         this.formError.set(err?.error?.message ?? 'Failed to update collection');
         this.saving.set(false);
+      },
+    });
+  }
+
+  onImageSelect(event: Event, target: 'create' | 'edit') {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.uploadingImage.set(true);
+    this.catalog.uploadImage(file).subscribe({
+      next: (res) => {
+        const url = res.data.url;
+        if (target === 'edit') {
+          this.editForm.update((f) => ({ ...f, image: url }));
+        } else {
+          this.createForm.update((f) => ({ ...f, image: url }));
+        }
+        this.uploadingImage.set(false);
+      },
+      error: () => {
+        this.uploadingImage.set(false);
+        alert('Failed to upload image');
       },
     });
   }

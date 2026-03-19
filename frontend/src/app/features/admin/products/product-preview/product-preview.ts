@@ -8,6 +8,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CatalogService, Product } from '../../../../core/services/catalog.service';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import * as THREE from 'three';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -93,7 +94,7 @@ gsap.registerPlugin(ScrollTrigger);
                   <button
                     class="thumb"
                     [class.active]="activeIdx() === i"
-                    (click)="switchImage(i)"
+                    (mouseenter)="switchImage(i)"
                   >
                     <img [src]="img" [alt]="product()!.name + ' ' + (i+1)" />
                   </button>
@@ -193,6 +194,20 @@ gsap.registerPlugin(ScrollTrigger);
               <p class="cta-note">Preview only · Not functional in admin panel</p>
             </div>
 
+            <!-- 3D Product Viewer -->
+            <div class="viewer-3d-section" #viewer3dSection>
+              <div class="viewer-3d-header">
+                <h3 class="section-heading">Interactive 3D View</h3>
+                <span class="drag-hint">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L12 22M2 12L22 12M5 5L19 19M19 5L5 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+                  </svg>
+                  Drag to rotate
+                </span>
+              </div>
+              <div class="viewer-3d-canvas" #viewer3dCanvas></div>
+            </div>
+
             <!-- Bottom spacing -->
             <div style="height: 120px"></div>
           </div>
@@ -283,31 +298,35 @@ gsap.registerPlugin(ScrollTrigger);
     }
 
     // =========================================================
-    // PRODUCT LAYOUT — two column sticky
+    // PRODUCT LAYOUT — sticky left, natural scroll right
     // =========================================================
     .product-layout {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      min-height: 100vh;
-      padding-top: 64px;
+      margin-top: 64px;
     }
 
     // =========================================================
-    // GALLERY PANEL — sticky left
+    // GALLERY PANEL — sticky, fills viewport height
     // =========================================================
     .gallery-panel {
-      position: sticky; top: 64px;
+      position: sticky;
+      top: 64px;
       height: calc(100vh - 64px);
-      display: flex; flex-direction: column;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
       background: #F5F8F2;
-      padding: 48px 40px 32px;
-      gap: 20px;
-      overflow: hidden;
+      padding: 24px 32px;
     }
 
     .main-image-wrapper {
-      position: relative; flex: 1; overflow: hidden;
-      border-radius: 20px; background: white;
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      border-radius: 20px;
+      background: white;
     }
 
     .main-image {
@@ -339,18 +358,32 @@ gsap.registerPlugin(ScrollTrigger);
     }
 
     .thumbnail-strip {
-      display: flex; gap: 10px; flex-shrink: 0;
+      flex-shrink: 0;
+      display: flex; gap: 10px;
+      height: 72px; align-items: center;
+      overflow-x: auto;
+      &::-webkit-scrollbar { height: 3px; }
+      &::-webkit-scrollbar-thumb { background: rgba(58,45,50,0.2); border-radius: 2px; }
     }
 
     .thumb {
       width: 64px; height: 64px; border-radius: 12px; overflow: hidden;
-      border: 2px solid transparent; cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      border: 2px solid transparent; cursor: grab;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
       background: none; padding: 0; flex-shrink: 0;
 
-      img { width: 100%; height: 100%; object-fit: cover; }
+      img {
+        width: 100%; height: 100%; object-fit: cover;
+        transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
 
-      &:hover { transform: scale(1.06); border-color: rgba(204,88,3,0.4); }
+      &:hover {
+        transform: scale(1.08); border-color: rgba(204,88,3,0.4);
+        box-shadow: 0 4px 16px rgba(58,45,50,0.12);
+        img { transform: scale(1.2); }
+      }
+
+      &:active { cursor: grabbing; }
 
       &.active {
         border-color: #CC5803;
@@ -360,11 +393,10 @@ gsap.registerPlugin(ScrollTrigger);
     }
 
     // =========================================================
-    // INFO PANEL — scrolling right
+    // INFO PANEL — natural page scroll
     // =========================================================
     .info-panel {
-      padding: 72px 64px 48px 56px;
-      overflow-y: auto;
+      padding: 40px 56px 120px;
     }
 
     .breadcrumb {
@@ -490,13 +522,50 @@ gsap.registerPlugin(ScrollTrigger);
     .cta-note { font-size: 12px; color: #B8ADB1; text-align: center; }
 
     // =========================================================
+    // 3D VIEWER
+    // =========================================================
+    .viewer-3d-section {
+      margin-top: 48px; margin-bottom: 48px;
+      will-change: transform, opacity;
+    }
+
+    .viewer-3d-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .drag-hint {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: #B8ADB1; font-weight: 500;
+    }
+
+    .viewer-3d-canvas {
+      width: 100%; height: 420px;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #F5F8F2;
+      border: 1px solid rgba(58,45,50,0.06);
+      box-shadow: 0 8px 32px rgba(58,45,50,0.06);
+
+      canvas {
+        display: block;
+        border-radius: 20px;
+      }
+    }
+
+    // =========================================================
     // RESPONSIVE
     // =========================================================
     @media (max-width: 900px) {
       .preview-nav { padding: 0 24px; }
       .product-layout { grid-template-columns: 1fr; }
-      .gallery-panel { position: relative; top: 0; height: 60vw; min-height: 300px; max-height: 480px; padding: 24px; }
-      .info-panel { padding: 40px 24px; }
+      .gallery-panel {
+        position: relative; top: 0;
+        height: auto;
+        padding: 16px;
+      }
+      .main-image-wrapper { flex: none; aspect-ratio: 4/3; }
+      .info-panel { padding: 32px 24px 80px; }
       .product-title { font-size: 32px; }
       .price-value { font-size: 40px; }
     }
@@ -518,6 +587,8 @@ export class ProductPreviewComponent implements OnInit, AfterViewInit, OnDestroy
   @ViewChild('ctaSection')        ctaSection!:        ElementRef<HTMLElement>;
   @ViewChild('ctaBtn')            ctaBtn!:            ElementRef<HTMLButtonElement>;
   @ViewChild('thumbStrip')        thumbStrip!:        ElementRef<HTMLElement>;
+  @ViewChild('viewer3dCanvas')    viewer3dCanvas!:    ElementRef<HTMLElement>;
+  @ViewChild('viewer3dSection')   viewer3dSection!:   ElementRef<HTMLElement>;
 
   product       = signal<Product | null>(null);
   loading       = signal(true);
@@ -532,6 +603,8 @@ export class ProductPreviewComponent implements OnInit, AfterViewInit, OnDestroy
   private scrollTriggers: ScrollTrigger[] = [];
   private ctaMouseMove: ((e: MouseEvent) => void) | null = null;
   private ctaMouseLeave: (() => void) | null = null;
+  private threeRenderer: THREE.WebGLRenderer | null = null;
+  private threeAnimId: number | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -574,6 +647,11 @@ export class ProductPreviewComponent implements OnInit, AfterViewInit, OnDestroy
     if (this.ctaBtn?.nativeElement) {
       if (this.ctaMouseMove)  this.ctaBtn.nativeElement.removeEventListener('mousemove', this.ctaMouseMove);
       if (this.ctaMouseLeave) this.ctaBtn.nativeElement.removeEventListener('mouseleave', this.ctaMouseLeave);
+    }
+    if (this.threeAnimId) cancelAnimationFrame(this.threeAnimId);
+    if (this.threeRenderer) {
+      this.threeRenderer.dispose();
+      this.threeRenderer.domElement.remove();
     }
   }
 
@@ -681,7 +759,7 @@ export class ProductPreviewComponent implements OnInit, AfterViewInit, OnDestroy
         scrollTrigger: {
           trigger: this.descSection.nativeElement,
           start: 'top 82%',
-          scroller: this.descSection.nativeElement.closest('.info-panel') ?? undefined,
+          scroller: undefined,
         },
         y: 32, opacity: 0, duration: 0.6,
       });
@@ -751,5 +829,220 @@ export class ProductPreviewComponent implements OnInit, AfterViewInit, OnDestroy
       btn.addEventListener('mousemove', this.ctaMouseMove);
       btn.addEventListener('mouseleave', this.ctaMouseLeave);
     }
+
+    // ── 3D Viewer ──────────────────────────────────────────────
+    this.init3DViewer();
+  }
+
+  private init3DViewer() {
+    const container = this.viewer3dCanvas?.nativeElement;
+    if (!container) return;
+
+    const width = container.clientWidth;
+    const height = 420;
+
+    // Scene
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf5f8f2);
+
+    // Camera
+    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+    camera.position.set(0, 1.5, 5);
+    camera.lookAt(0, 0.6, 0);
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+    container.appendChild(renderer.domElement);
+    this.threeRenderer = renderer;
+
+    // ── Product group ──
+    const productGroup = new THREE.Group();
+
+    // Tea container — cylinder body
+    const bodyGeo = new THREE.CylinderGeometry(0.7, 0.7, 2.2, 64);
+    const bodyMat = new THREE.MeshPhysicalMaterial({
+      color: 0xcc5803,
+      metalness: 0.1,
+      roughness: 0.35,
+      clearcoat: 0.4,
+      clearcoatRoughness: 0.2,
+    });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = 1.1;
+    body.castShadow = true;
+    productGroup.add(body);
+
+    // Label band — slightly larger cylinder ring
+    const labelGeo = new THREE.CylinderGeometry(0.72, 0.72, 0.9, 64);
+    const labelMat = new THREE.MeshPhysicalMaterial({
+      color: 0xfcfff7,
+      metalness: 0.0,
+      roughness: 0.6,
+    });
+    const label = new THREE.Mesh(labelGeo, labelMat);
+    label.position.y = 1.0;
+    productGroup.add(label);
+
+    // Gold accent ring top
+    const ringGeoTop = new THREE.TorusGeometry(0.71, 0.02, 16, 64);
+    const goldMat = new THREE.MeshPhysicalMaterial({
+      color: 0xd4a84b,
+      metalness: 0.9,
+      roughness: 0.15,
+    });
+    const ringTop = new THREE.Mesh(ringGeoTop, goldMat);
+    ringTop.rotation.x = Math.PI / 2;
+    ringTop.position.y = 1.45;
+    productGroup.add(ringTop);
+
+    // Gold accent ring bottom
+    const ringBottom = new THREE.Mesh(ringGeoTop, goldMat);
+    ringBottom.rotation.x = Math.PI / 2;
+    ringBottom.position.y = 0.55;
+    productGroup.add(ringBottom);
+
+    // Lid — slightly wider, shorter cylinder
+    const lidGeo = new THREE.CylinderGeometry(0.74, 0.74, 0.18, 64);
+    const lidMat = new THREE.MeshPhysicalMaterial({
+      color: 0x3a2d32,
+      metalness: 0.3,
+      roughness: 0.2,
+      clearcoat: 0.6,
+    });
+    const lid = new THREE.Mesh(lidGeo, lidMat);
+    lid.position.y = 2.29;
+    lid.castShadow = true;
+    productGroup.add(lid);
+
+    // Lid knob
+    const knobGeo = new THREE.SphereGeometry(0.12, 32, 32);
+    const knob = new THREE.Mesh(knobGeo, goldMat);
+    knob.position.y = 2.44;
+    productGroup.add(knob);
+
+    // Bottom ring
+    const bottomGeo = new THREE.CylinderGeometry(0.74, 0.74, 0.06, 64);
+    const bottom = new THREE.Mesh(bottomGeo, lidMat);
+    bottom.position.y = 0.03;
+    bottom.receiveShadow = true;
+    productGroup.add(bottom);
+
+    scene.add(productGroup);
+
+    // ── Floor ──
+    const floorGeo = new THREE.PlaneGeometry(12, 12);
+    const floorMat = new THREE.ShadowMaterial({ opacity: 0.08 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = 0;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // ── Lighting ──
+    const ambientLight = new THREE.AmbientLight(0xfcfff7, 0.6);
+    scene.add(ambientLight);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    keyLight.position.set(3, 6, 4);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(1024, 1024);
+    keyLight.shadow.radius = 4;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xcc5803, 0.3);
+    fillLight.position.set(-3, 2, -2);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0x57886c, 0.4);
+    rimLight.position.set(0, 3, -5);
+    scene.add(rimLight);
+
+    // ── Mouse interaction ──
+    let isDragging = false;
+    let prevX = 0;
+    let prevY = 0;
+    let rotVelX = 0;
+    let rotVelY = 0;
+    let targetRotY = 0;
+    let targetRotX = 0;
+
+    const onPointerDown = (e: PointerEvent) => {
+      isDragging = true;
+      prevX = e.clientX;
+      prevY = e.clientY;
+      renderer.domElement.style.cursor = 'grabbing';
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isDragging) return;
+      const dx = e.clientX - prevX;
+      const dy = e.clientY - prevY;
+      rotVelX = dx * 0.008;
+      rotVelY = dy * 0.005;
+      targetRotY += rotVelX;
+      targetRotX += rotVelY;
+      targetRotX = Math.max(-0.5, Math.min(0.5, targetRotX));
+      prevX = e.clientX;
+      prevY = e.clientY;
+    };
+
+    const onPointerUp = () => {
+      isDragging = false;
+      renderer.domElement.style.cursor = 'grab';
+    };
+
+    renderer.domElement.style.cursor = 'grab';
+    renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    renderer.domElement.addEventListener('pointermove', onPointerMove);
+    renderer.domElement.addEventListener('pointerup', onPointerUp);
+    renderer.domElement.addEventListener('pointerleave', onPointerUp);
+
+    // ── Animation loop ──
+    const animate = () => {
+      this.threeAnimId = requestAnimationFrame(animate);
+
+      // Auto-rotate when not dragging
+      if (!isDragging) {
+        targetRotY += 0.004;
+        rotVelX *= 0.92;
+        rotVelY *= 0.92;
+      }
+
+      // Smooth lerp
+      productGroup.rotation.y += (targetRotY - productGroup.rotation.y) * 0.08;
+      productGroup.rotation.x += (targetRotX - productGroup.rotation.x) * 0.08;
+
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    // ── Scroll reveal ──
+    if (this.viewer3dSection?.nativeElement) {
+      gsap.from(this.viewer3dSection.nativeElement, {
+        scrollTrigger: {
+          trigger: this.viewer3dSection.nativeElement,
+          start: 'top 85%',
+          scroller: this.viewer3dSection.nativeElement.closest('.info-panel') ?? undefined,
+        },
+        y: 48, opacity: 0, duration: 0.7, ease: 'power3.out',
+      });
+      if (ScrollTrigger.getAll().at(-1)) this.scrollTriggers.push(ScrollTrigger.getAll().at(-1)!);
+    }
+
+    // ── Resize handler ──
+    const onResize = () => {
+      const w = container.clientWidth;
+      camera.aspect = w / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, height);
+    };
+    window.addEventListener('resize', onResize);
   }
 }

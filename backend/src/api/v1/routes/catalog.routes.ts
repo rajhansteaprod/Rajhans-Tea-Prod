@@ -53,6 +53,7 @@ adminRouter.post('/uploads', upload.single('image'), catalog.uploadImage);
 adminRouter.get('/categories', validate(listCategoriesSchema), catalog.listCategories);
 adminRouter.post('/categories', validate(createCategorySchema), catalog.createCategory);
 adminRouter.put('/categories/:id', validate(updateCategorySchema), catalog.updateCategory);
+adminRouter.delete('/categories', catalog.deleteAllCategories);
 adminRouter.delete('/categories/:id', validate(categoryIdSchema), catalog.deleteCategory);
 
 // Collections — admin CRUD

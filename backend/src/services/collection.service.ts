@@ -71,6 +71,7 @@ export class CollectionService {
     image?: string;
     isFeatured?: boolean;
     sortOrder?: number;
+    isActive?: boolean;
   }) {
     const baseSlug = slugify(data.slug || data.name);
     const slug = await ensureUniqueSlug(baseSlug, (s) => this.repo.slugExists(s));
@@ -80,7 +81,7 @@ export class CollectionService {
       slug,
       description: data.description,
       image: data.image,
-      isActive: true,
+      isActive: data.isActive ?? true,
       isFeatured: data.isFeatured ?? false,
       sortOrder: data.sortOrder ?? 0,
     });

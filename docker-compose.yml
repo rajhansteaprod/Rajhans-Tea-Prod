@@ -77,6 +77,7 @@ services:
       - ./backend/src:/app/backend/src
       - ./backend/nodemon.json:/app/backend/nodemon.json
       - ./backend/firebase-service-account.json:/app/backend/firebase-service-account.json:ro
+      - ./backend/uploads:/app/backend/uploads
 
   frontend:
     build:

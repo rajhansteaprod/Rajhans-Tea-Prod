@@ -82,6 +82,7 @@ export interface CreateCategoryPayload {
   image?: string;
   parentId?: string;
   sortOrder?: number;
+  isActive?: boolean;
 }
 
 export interface UpdateCategoryPayload {
@@ -101,6 +102,7 @@ export interface CreateCollectionPayload {
   image?: string;
   isFeatured?: boolean;
   sortOrder?: number;
+  isActive?: boolean;
 }
 
 export interface UpdateCollectionPayload extends Partial<CreateCollectionPayload> {
@@ -171,6 +173,10 @@ export class CatalogService {
 
   deleteCategory(id: string): Observable<void> {
     return this.http.delete<void>(`${this.adminUrl}/categories/${id}`);
+  }
+
+  deleteAllCategories(): Observable<unknown> {
+    return this.http.delete(`${this.adminUrl}/categories`);
   }
 
   // --- Collections ---

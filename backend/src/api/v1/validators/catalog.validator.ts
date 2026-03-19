@@ -28,6 +28,7 @@ export const createCategorySchema = z.object({
     image: optStr(500),
     parentId: z.preprocess((v) => (v === '' ? undefined : v), mongoId.optional()),
     sortOrder: z.coerce.number().int().min(0).optional(),
+    isActive: z.boolean().optional(),
   }),
 });
 
@@ -68,6 +69,7 @@ export const createCollectionSchema = z.object({
     image: optStr(500),
     isFeatured: z.boolean().optional(),
     sortOrder: z.coerce.number().int().min(0).optional(),
+    isActive: z.boolean().optional(),
   }),
 });
 

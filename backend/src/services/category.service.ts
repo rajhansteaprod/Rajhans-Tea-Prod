@@ -70,6 +70,7 @@ export class CategoryService {
     image?: string;
     parentId?: string;
     sortOrder?: number;
+    isActive?: boolean;
   }) {
     // Validate parent
     if (data.parentId) {
@@ -89,7 +90,7 @@ export class CategoryService {
       description: data.description,
       image: data.image,
       parent: data.parentId ? (data.parentId as never) : null,
-      isActive: true,
+      isActive: data.isActive ?? true,
       sortOrder: data.sortOrder ?? 0,
     });
 
@@ -165,5 +166,10 @@ export class CategoryService {
     }
 
     await this.repo.deleteById(id);
+  }
+
+  async deleteAll() {
+    const count = await this.repo.deleteAll();
+    return { deletedCount: count };
   }
 }

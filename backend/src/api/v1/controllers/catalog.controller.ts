@@ -49,6 +49,11 @@ export const deleteCategory = async (req: Request, res: Response) => {
   sendNoContent(res);
 };
 
+export const deleteAllCategories = async (_req: Request, res: Response) => {
+  const result = await categoryService.deleteAll();
+  sendSuccess(res, result, 'All categories deleted');
+};
+
 // ---------------------------------------------------------------------------
 // Collection controllers
 // ---------------------------------------------------------------------------

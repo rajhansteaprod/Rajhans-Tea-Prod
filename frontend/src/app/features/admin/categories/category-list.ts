@@ -27,12 +27,23 @@ const emptyForm = (): CategoryForm => ({
           <h1 class="page-title">Categories</h1>
           <p class="page-subtitle">Organise your product taxonomy</p>
         </div>
-        <button class="btn-primary-create" (click)="openCreate()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          Add Category
-        </button>
+        <div class="header-actions">
+          @if (categories().length > 0) {
+            <button class="btn-danger-outline" (click)="deleteAll()" [disabled]="saving()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Purge All
+            </button>
+          }
+          <button class="btn-primary-create" (click)="openCreate()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Add Category
+          </button>
+        </div>
       </div>
 
       <!-- Table -->
@@ -175,9 +186,30 @@ const emptyForm = (): CategoryForm => ({
             placeholder="Optional description"></textarea>
         </div>
         <div class="form-field">
-          <label class="form-label">Image URL</label>
-          <input class="form-input" type="text" [ngModel]="form.image"
-            (ngModelChange)="updateForm(form, 'image', $event)" placeholder="/uploads/image.jpg" />
+          <label class="form-label">Image</label>
+          <div class="image-upload-area">
+            @if (form.image) {
+              <div class="image-preview-wrap">
+                <img [src]="form.image" class="image-preview" />
+                <button type="button" class="remove-image" (click)="updateForm(form, 'image', '')">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            } @else {
+              <label class="upload-btn">
+                <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                  (change)="onImageSelect($event)" [disabled]="uploadingImage()" />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                {{ uploadingImage() ? 'Uploading…' : 'Upload Image' }}
+              </label>
+            }
+          </div>
         </div>
         <div class="form-field">
           <label class="form-label">Sort Order</label>
@@ -221,6 +253,30 @@ const emptyForm = (): CategoryForm => ({
       font-size: $font-size-sm;
       color: $color-text-tertiary;
       margin: 0;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: $space-sm;
+      align-items: center;
+    }
+
+    .btn-danger-outline {
+      display: flex;
+      align-items: center;
+      gap: $space-xs;
+      background: transparent;
+      color: $color-error;
+      border: 1px solid rgba(176,0,32,0.3);
+      padding: $space-sm $space-md;
+      border-radius: $radius-md;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-semibold;
+      cursor: pointer;
+      transition: all $transition-fast;
+      white-space: nowrap;
+      &:hover { background: rgba(176,0,32,0.06); border-color: $color-error; }
+      &:disabled { opacity: 0.5; cursor: default; }
     }
 
     .btn-primary-create {
@@ -401,6 +457,49 @@ const emptyForm = (): CategoryForm => ({
 
     textarea.form-input { resize: vertical; font-family: inherit; }
 
+    .image-upload-area { display: flex; }
+
+    .image-preview-wrap {
+      position: relative;
+      width: 80px; height: 80px;
+      border-radius: $radius-md;
+      overflow: hidden;
+      border: 1px solid $color-border-light;
+    }
+
+    .image-preview {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    .remove-image {
+      position: absolute; top: 4px; right: 4px;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: rgba(58,45,50,0.7);
+      color: white;
+      border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background $transition-fast;
+      &:hover { background: $color-error; }
+    }
+
+    .upload-btn {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 6px;
+      width: 100%; padding: $space-md;
+      border: 2px dashed $color-border;
+      border-radius: $radius-md;
+      color: $color-text-tertiary;
+      font-size: $font-size-xs;
+      font-weight: $font-weight-medium;
+      cursor: pointer;
+      transition: all $transition-fast;
+      &:hover { border-color: $color-primary; color: $color-primary; background: $color-primary-light; }
+    }
+
     .btn-cancel {
       padding: $space-sm $space-md;
       border: 1px solid $color-border;
@@ -486,9 +585,10 @@ const emptyForm = (): CategoryForm => ({
   `],
 })
 export class CategoryListComponent implements OnInit {
-  categories  = signal<Category[]>([]);
-  loading     = signal(false);
-  saving      = signal(false);
+  categories     = signal<Category[]>([]);
+  loading        = signal(false);
+  saving         = signal(false);
+  uploadingImage = signal(false);
   formError   = signal<string | null>(null);
   showCreate  = signal(false);
   editingId   = signal<string | null>(null);
@@ -533,6 +633,7 @@ export class CategoryListComponent implements OnInit {
       image:       f.image || undefined,
       parentId:    f.parentId || undefined,
       sortOrder:   f.sortOrder,
+      isActive:    f.isActive,
     };
     this.catalog.createCategory(payload).subscribe({
       next: () => {
@@ -597,11 +698,44 @@ export class CategoryListComponent implements OnInit {
     });
   }
 
+  onImageSelect(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.uploadingImage.set(true);
+    this.catalog.uploadImage(file).subscribe({
+      next: (res) => {
+        const url = res.data.url;
+        if (this.editingId()) {
+          this.editForm.update((f) => ({ ...f, image: url }));
+        } else {
+          this.createForm.update((f) => ({ ...f, image: url }));
+        }
+        this.uploadingImage.set(false);
+      },
+      error: () => {
+        this.uploadingImage.set(false);
+        alert('Failed to upload image');
+      },
+    });
+  }
+
   deleteCategory(id: string) {
     if (!confirm('Delete this category? This cannot be undone.')) return;
     this.catalog.deleteCategory(id).subscribe({
       next: () => this.categories.update((list) => list.filter((c) => c._id !== id)),
       error: (err) => alert(err?.error?.message ?? 'Failed to delete category'),
+    });
+  }
+
+  deleteAll() {
+    if (!confirm('Delete ALL categories? This cannot be undone.')) return;
+    this.saving.set(true);
+    this.catalog.deleteAllCategories().subscribe({
+      next: () => { this.saving.set(false); this.categories.set([]); },
+      error: (err) => {
+        this.saving.set(false);
+        alert(err?.error?.message ?? 'Failed to delete categories');
+      },
     });
   }
 }
