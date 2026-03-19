@@ -20,8 +20,7 @@ export const ADMIN_ROUTES: Routes = [
       },
       {
         path: 'users',
-        loadComponent: () =>
-          import('./users/user-list/user-list').then((m) => m.UserListComponent),
+        loadComponent: () => import('./users/user-list/user-list').then((m) => m.UserListComponent),
       },
       {
         path: 'products',
@@ -37,6 +36,10 @@ export const ADMIN_ROUTES: Routes = [
         path: 'collections',
         loadComponent: () =>
           import('./collections/collection-list').then((m) => m.CollectionListComponent),
+      },
+      {
+        path: 'pricing',
+        loadComponent: () => import('./pricing/pricing-rules').then((m) => m.PricingRulesComponent),
       },
     ],
   },

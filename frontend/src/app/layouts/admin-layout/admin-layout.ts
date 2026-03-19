@@ -19,7 +19,12 @@ interface NavItem {
       <div class="mobile-header">
         <button class="menu-toggle" (click)="sidebarOpen.set(!sidebarOpen())">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path
+              d="M3 12h18M3 6h18M3 18h18"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
           </svg>
         </button>
         <span class="mobile-title">Rajhans Admin</span>
@@ -76,7 +81,13 @@ interface NavItem {
           </div>
           <a routerLink="/" class="back-link">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path
+                d="M19 12H5M5 12L12 19M5 12L12 5"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
             Back to Store
           </a>
@@ -89,291 +100,301 @@ interface NavItem {
       </main>
     </div>
   `,
-  styles: [`
-    @use '../../core/design-tokens/tokens' as *;
-    @use '../../core/design-tokens/mixins' as *;
+  styles: [
+    `
+      @use '../../core/design-tokens/tokens' as *;
+      @use '../../core/design-tokens/mixins' as *;
 
-    .admin-shell {
-      display: flex;
-      min-height: 100vh;
-      background: $color-bg-secondary;
-    }
-
-    // === Mobile Header ===
-    .mobile-header {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 56px;
-      background: $color-bg-dark;
-      color: $color-text-inverse;
-      padding: 0 $space-md;
-      align-items: center;
-      gap: $space-sm;
-      z-index: $z-fixed;
-
-      @include respond-to(md) {
+      .admin-shell {
         display: flex;
+        min-height: 100vh;
+        background: $color-bg-secondary;
       }
-    }
 
-    .menu-toggle {
-      background: none;
-      border: none;
-      color: $color-text-inverse;
-      cursor: pointer;
-      padding: $space-xs;
-    }
-
-    .mobile-title {
-      font-weight: $font-weight-semibold;
-      font-size: $font-size-md;
-    }
-
-    // === Sidebar ===
-    .sidebar {
-      width: 260px;
-      background: $color-bg-dark;
-      display: flex;
-      flex-direction: column;
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      z-index: $z-fixed;
-      transition: transform $transition-normal;
-
-      @include respond-to(md) {
-        transform: translateX(-100%);
-        &.open { transform: translateX(0); }
-      }
-    }
-
-    .sidebar-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: #{$z-fixed - 1};
-
-      @include respond-to(md) {
-        display: block;
-      }
-    }
-
-    .sidebar-header {
-      padding: $space-lg $space-lg $space-md;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .sidebar-logo {
-      display: flex;
-      align-items: center;
-      gap: $space-sm;
-      text-decoration: none;
-    }
-
-    .logo-mark {
-      width: 32px;
-      height: 32px;
-      background: $color-primary;
-      color: $color-text-inverse;
-      border-radius: $radius-md;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: $font-size-sm;
-      font-weight: $font-weight-bold;
-    }
-
-    .logo-text {
-      font-size: $font-size-lg;
-      font-weight: $font-weight-bold;
-      color: $color-text-inverse;
-      letter-spacing: $letter-spacing-tight;
-    }
-
-    .env-badge {
-      font-size: 10px;
-      font-weight: $font-weight-semibold;
-      text-transform: uppercase;
-      letter-spacing: $letter-spacing-wide;
-      color: $color-primary;
-      background: rgba(204, 88, 3, 0.15);
-      padding: 2px $space-xs;
-      border-radius: $radius-sm;
-    }
-
-    // === Navigation ===
-    .sidebar-nav {
-      flex: 1;
-      padding: $space-md $space-sm;
-      overflow-y: auto;
-    }
-
-    .nav-section {
-      margin-bottom: $space-lg;
-    }
-
-    .nav-section-label {
-      display: block;
-      font-size: 10px;
-      font-weight: $font-weight-semibold;
-      text-transform: uppercase;
-      letter-spacing: $letter-spacing-wide;
-      color: rgba(252, 255, 247, 0.3);
-      padding: 0 $space-md;
-      margin-bottom: $space-sm;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: $space-sm;
-      padding: $space-sm $space-md;
-      border-radius: $radius-md;
-      color: rgba(252, 255, 247, 0.6);
-      text-decoration: none;
-      font-size: $font-size-sm;
-      font-weight: $font-weight-medium;
-      transition: all $transition-fast;
-      cursor: pointer;
-      margin-bottom: 2px;
-
-      &:hover:not(.disabled) {
-        background: rgba(252, 255, 247, 0.06);
+      // === Mobile Header ===
+      .mobile-header {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        background: $color-bg-dark;
         color: $color-text-inverse;
+        padding: 0 $space-md;
+        align-items: center;
+        gap: $space-sm;
+        z-index: $z-fixed;
+
+        @include respond-to(md) {
+          display: flex;
+        }
       }
 
-      &.active {
-        background: rgba(204, 88, 3, 0.15);
+      .menu-toggle {
+        background: none;
+        border: none;
+        color: $color-text-inverse;
+        cursor: pointer;
+        padding: $space-xs;
+      }
+
+      .mobile-title {
+        font-weight: $font-weight-semibold;
+        font-size: $font-size-md;
+      }
+
+      // === Sidebar ===
+      .sidebar {
+        width: 260px;
+        background: $color-bg-dark;
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: $z-fixed;
+        transition: transform $transition-normal;
+
+        @include respond-to(md) {
+          transform: translateX(-100%);
+          &.open {
+            transform: translateX(0);
+          }
+        }
+      }
+
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: #{$z-fixed - 1};
+
+        @include respond-to(md) {
+          display: block;
+        }
+      }
+
+      .sidebar-header {
+        padding: $space-lg $space-lg $space-md;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .sidebar-logo {
+        display: flex;
+        align-items: center;
+        gap: $space-sm;
+        text-decoration: none;
+      }
+
+      .logo-mark {
+        width: 32px;
+        height: 32px;
+        background: $color-primary;
+        color: $color-text-inverse;
+        border-radius: $radius-md;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-bold;
+      }
+
+      .logo-text {
+        font-size: $font-size-lg;
+        font-weight: $font-weight-bold;
+        color: $color-text-inverse;
+        letter-spacing: $letter-spacing-tight;
+      }
+
+      .env-badge {
+        font-size: 10px;
+        font-weight: $font-weight-semibold;
+        text-transform: uppercase;
+        letter-spacing: $letter-spacing-wide;
         color: $color-primary;
-
-        .nav-icon { color: $color-primary; }
+        background: rgba(204, 88, 3, 0.15);
+        padding: 2px $space-xs;
+        border-radius: $radius-sm;
       }
 
-      &.disabled {
-        opacity: 0.4;
-        cursor: default;
-      }
-    }
-
-    .nav-icon {
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-
-      ::ng-deep svg {
-        width: 18px;
-        height: 18px;
+      // === Navigation ===
+      .sidebar-nav {
+        flex: 1;
+        padding: $space-md $space-sm;
+        overflow-y: auto;
       }
 
-      ::ng-deep path, ::ng-deep circle, ::ng-deep rect, ::ng-deep polyline, ::ng-deep line {
-        stroke: currentColor;
-        stroke-width: 1.8;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        fill: none;
+      .nav-section {
+        margin-bottom: $space-lg;
       }
-    }
 
-    .nav-label {
-      flex: 1;
-    }
+      .nav-section-label {
+        display: block;
+        font-size: 10px;
+        font-weight: $font-weight-semibold;
+        text-transform: uppercase;
+        letter-spacing: $letter-spacing-wide;
+        color: rgba(252, 255, 247, 0.3);
+        padding: 0 $space-md;
+        margin-bottom: $space-sm;
+      }
 
-    .coming-soon {
-      font-size: 9px;
-      font-weight: $font-weight-semibold;
-      text-transform: uppercase;
-      letter-spacing: $letter-spacing-wide;
-      color: rgba(252, 255, 247, 0.25);
-      background: rgba(252, 255, 247, 0.06);
-      padding: 1px 6px;
-      border-radius: $radius-sm;
-    }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: $space-sm;
+        padding: $space-sm $space-md;
+        border-radius: $radius-md;
+        color: rgba(252, 255, 247, 0.6);
+        text-decoration: none;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-medium;
+        transition: all $transition-fast;
+        cursor: pointer;
+        margin-bottom: 2px;
 
-    // === Footer ===
-    .sidebar-footer {
-      padding: $space-md $space-lg;
-      border-top: 1px solid rgba(252, 255, 247, 0.06);
-    }
+        &:hover:not(.disabled) {
+          background: rgba(252, 255, 247, 0.06);
+          color: $color-text-inverse;
+        }
 
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: $space-sm;
-      margin-bottom: $space-sm;
-    }
+        &.active {
+          background: rgba(204, 88, 3, 0.15);
+          color: $color-primary;
 
-    .user-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: $radius-md;
-      background: rgba(204, 88, 3, 0.2);
-      color: $color-primary;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: $font-size-xs;
-      font-weight: $font-weight-bold;
-      flex-shrink: 0;
-    }
+          .nav-icon {
+            color: $color-primary;
+          }
+        }
 
-    .user-details {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
+        &.disabled {
+          opacity: 0.4;
+          cursor: default;
+        }
+      }
 
-    .user-name {
-      font-size: $font-size-sm;
-      color: $color-text-inverse;
-      font-weight: $font-weight-medium;
-    }
+      .nav-icon {
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
 
-    .user-role {
-      font-size: $font-size-xs;
-      color: rgba(252, 255, 247, 0.4);
-    }
+        ::ng-deep svg {
+          width: 18px;
+          height: 18px;
+        }
 
-    .back-link {
-      display: flex;
-      align-items: center;
-      gap: $space-xs;
-      font-size: $font-size-xs;
-      color: rgba(252, 255, 247, 0.4);
-      text-decoration: none;
-      transition: color $transition-fast;
+        ::ng-deep path,
+        ::ng-deep circle,
+        ::ng-deep rect,
+        ::ng-deep polyline,
+        ::ng-deep line {
+          stroke: currentColor;
+          stroke-width: 1.8;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          fill: none;
+        }
+      }
 
-      &:hover {
+      .nav-label {
+        flex: 1;
+      }
+
+      .coming-soon {
+        font-size: 9px;
+        font-weight: $font-weight-semibold;
+        text-transform: uppercase;
+        letter-spacing: $letter-spacing-wide;
+        color: rgba(252, 255, 247, 0.25);
+        background: rgba(252, 255, 247, 0.06);
+        padding: 1px 6px;
+        border-radius: $radius-sm;
+      }
+
+      // === Footer ===
+      .sidebar-footer {
+        padding: $space-md $space-lg;
+        border-top: 1px solid rgba(252, 255, 247, 0.06);
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: $space-sm;
+        margin-bottom: $space-sm;
+      }
+
+      .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: $radius-md;
+        background: rgba(204, 88, 3, 0.2);
+        color: $color-primary;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: $font-size-xs;
+        font-weight: $font-weight-bold;
+        flex-shrink: 0;
+      }
+
+      .user-details {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
+      .user-name {
+        font-size: $font-size-sm;
         color: $color-text-inverse;
-      }
-    }
-
-    // === Main Content ===
-    .admin-content {
-      flex: 1;
-      margin-left: 260px;
-      padding: $space-xl $space-xl;
-      min-height: 100vh;
-
-      @include respond-to(md) {
-        margin-left: 0;
-        padding: 72px $space-md $space-lg;
+        font-weight: $font-weight-medium;
       }
 
-      @include respond-to(xs) {
-        padding: 60px $space-sm $space-md;
+      .user-role {
+        font-size: $font-size-xs;
+        color: rgba(252, 255, 247, 0.4);
       }
-    }
-  `],
+
+      .back-link {
+        display: flex;
+        align-items: center;
+        gap: $space-xs;
+        font-size: $font-size-xs;
+        color: rgba(252, 255, 247, 0.4);
+        text-decoration: none;
+        transition: color $transition-fast;
+
+        &:hover {
+          color: $color-text-inverse;
+        }
+      }
+
+      // === Main Content ===
+      .admin-content {
+        flex: 1;
+        margin-left: 260px;
+        padding: $space-xl $space-xl;
+        min-height: 100vh;
+
+        @include respond-to(md) {
+          margin-left: 0;
+          padding: 72px $space-md $space-lg;
+        }
+
+        @include respond-to(xs) {
+          padding: 60px $space-sm $space-md;
+        }
+      }
+    `,
+  ],
 })
 export class AdminLayoutComponent {
   sidebarOpen = signal(false);
@@ -407,6 +428,12 @@ export class AdminLayoutComponent {
       label: 'Collections',
       icon: '<svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
       route: '/admin/collections',
+      active: true,
+    },
+    {
+      label: 'Pricing',
+      icon: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v2M12 16v2M8.5 9.5l1.41 1.41M13.09 13.09l1.41 1.41M6 12h2M16 12h2M8.5 14.5l1.41-1.41M13.09 10.91l1.41-1.41"/></svg>',
+      route: '/admin/pricing',
       active: true,
     },
     {
