@@ -1,0 +1,284 @@
+import { OrderRepository } from '../repositories/order.repository';
+import { WarehouseRepository } from '../repositories/warehouse.repository';
+import { InventoryService } from './inventory.service';
+import { getShippingProvider } from './shipping/shipping.factory';
+import { Payment } from '../../../models/payment.model';
+import { BadRequestError, NotFoundError, ForbiddenError } from '../../../utils/api-error';
+import { OrderStatus, IOrderDoc } from '../models/order.model';
+import { Types } from 'mongoose';
+
+// Valid status transitions (state machine)
+const VALID_TRANSITIONS: Record<string, OrderStatus[]> = {
+  confirmed: ['processing', 'cancelled'],
+  processing: ['shipped', 'cancelled'],
+  shipped: ['in_transit'],
+  in_transit: ['out_for_delivery'],
+  out_for_delivery: ['delivered'],
+  delivered: ['return_requested'],
+  return_requested: ['returned'],
+};
+
+export class OrderService {
+  private orderRepo = new OrderRepository();
+  private warehouseRepo = new WarehouseRepository();
+  private inventoryService = new InventoryService();
+
+  // ─── Create order from captured payment ───────────────────────────────────
+
+  async createFromPayment(paymentId: string): Promise<IOrderDoc> {
+    // Idempotency — already created?
+    const existing = await this.orderRepo.findByPaymentId(paymentId);
+    if (existing) return existing;
+
+    const payment = await Payment.findById(paymentId).exec();
+    if (!payment) throw new NotFoundError('Payment not found');
+    if (payment.status !== 'captured') throw new BadRequestError('Payment not captured');
+    if (!payment.userId) throw new BadRequestError('Payment has no userId');
+
+    const warehouse = await this.warehouseRepo.findDefault();
+    if (!warehouse) throw new BadRequestError('No default warehouse configured. Create one in Admin → Warehouses.');
+
+    const orderNumber = await this.orderRepo.generateOrderNumber();
+    const snapshot = payment.checkoutSnapshot;
+
+    const order = await this.orderRepo.create({
+      orderNumber,
+      userId: payment.userId,
+      paymentId: payment._id,
+      items: snapshot.items.map((item) => ({
+        productId: item.productId,
+        name: item.name,
+        qty: item.qty,
+        unitPrice: item.unitPrice,
+        totalPrice: item.totalPrice,
+        fulfillmentStatus: 'pending',
+      })),
+      subtotal: snapshot.subtotal,
+      totalDiscount: snapshot.totalDiscount,
+      totalTax: snapshot.totalTax,
+      shippingCost: 0,
+      total: snapshot.total,
+      status: 'confirmed',
+      statusHistory: [
+        {
+          status: 'confirmed',
+          timestamp: new Date(),
+          note: 'Order created from payment',
+          updatedBy: null,
+        },
+      ],
+      shippingAddress: payment.shippingAddress,
+      warehouseId: warehouse._id,
+      shiprocket: {
+        orderId: null,
+        shipmentId: null,
+        awbCode: null,
+        courierName: null,
+        courierId: null,
+        trackingUrl: null,
+        label: null,
+        estimatedDelivery: null,
+        pickupScheduledDate: null,
+      },
+    });
+
+    // Deduct stock
+    await this.inventoryService.deductStock(order._id.toString());
+
+    return order;
+  }
+
+  // ─── Ship order via shipping provider ─────────────────────────────────────
+
+  async shipOrder(orderId: string): Promise<IOrderDoc> {
+    const order = await this.orderRepo.findById(orderId);
+    if (!order) throw new NotFoundError('Order not found');
+    if (order.status !== 'confirmed' && order.status !== 'processing') {
+      throw new BadRequestError('Order cannot be shipped in current status');
+    }
+
+    const warehouse = await this.warehouseRepo.findById(order.warehouseId.toString());
+    if (!warehouse) throw new BadRequestError('Warehouse not found');
+
+    const provider = getShippingProvider();
+    const pickupLocation = warehouse.name;
+
+    // Create shipping order
+    const shipment = await provider.createOrder(order, pickupLocation);
+    await this.orderRepo.updateShiprocketInfo(orderId, {
+      orderId: shipment.providerOrderId,
+      shipmentId: shipment.shipmentId,
+    });
+
+    // Generate AWB
+    const awb = await provider.generateAWB(shipment.shipmentId);
+    await this.orderRepo.updateShiprocketInfo(orderId, {
+      awbCode: awb.awbCode,
+      courierName: awb.courierName,
+      courierId: awb.courierId,
+    });
+
+    // Generate label
+    const label = await provider.generateLabel(shipment.shipmentId);
+    await this.orderRepo.updateShiprocketInfo(orderId, { label });
+
+    // Schedule pickup
+    const pickup = await provider.schedulePickup(shipment.shipmentId);
+    await this.orderRepo.updateShiprocketInfo(orderId, {
+      pickupScheduledDate: new Date(pickup.pickupScheduledDate),
+    });
+
+    // Update status to processing
+    return this.updateStatus(orderId, 'processing', 'Shipped via ' + provider.name, null);
+  }
+
+  // ─── Update order status ──────────────────────────────────────────────────
+
+  async updateStatus(
+    orderId: string,
+    newStatus: OrderStatus,
+    note: string | null,
+    adminUserId: string | null,
+  ): Promise<IOrderDoc> {
+    const order = await this.orderRepo.findById(orderId);
+    if (!order) throw new NotFoundError('Order not found');
+
+    if (!this.isValidTransition(order.status, newStatus)) {
+      throw new BadRequestError(
+        `Cannot transition from "${order.status}" to "${newStatus}"`,
+      );
+    }
+
+    const extra: Record<string, unknown> = {};
+    if (newStatus === 'cancelled') {
+      extra.cancellationReason = note || 'Cancelled by admin';
+    }
+
+    const updated = await this.orderRepo.updateStatus(
+      orderId,
+      newStatus,
+      {
+        status: newStatus,
+        timestamp: new Date(),
+        note,
+        updatedBy: adminUserId ? new Types.ObjectId(adminUserId) : null,
+      },
+      extra,
+    );
+
+    // Side effects
+    if (newStatus === 'cancelled') {
+      await this.inventoryService.restockFromReturn(
+        orderId,
+        order.items.map((i) => ({ productId: i.productId, qty: i.qty })),
+      );
+    }
+
+    if (newStatus === 'returned') {
+      await this.inventoryService.restockFromReturn(
+        orderId,
+        order.items.map((i) => ({ productId: i.productId, qty: i.qty })),
+      );
+    }
+
+    return updated!;
+  }
+
+  // ─── Cancel order ─────────────────────────────────────────────────────────
+
+  async cancelOrder(orderId: string, reason: string, adminUserId: string): Promise<void> {
+    const order = await this.orderRepo.findById(orderId);
+    if (!order) throw new NotFoundError('Order not found');
+
+    if (!['confirmed', 'processing'].includes(order.status)) {
+      throw new BadRequestError('Order can only be cancelled in confirmed or processing status');
+    }
+
+    // Cancel shipping if already created
+    if (order.shiprocket.orderId) {
+      try {
+        const provider = getShippingProvider();
+        await provider.cancelOrder(order.shiprocket.orderId);
+      } catch {
+        // Log but don't block cancellation
+      }
+    }
+
+    await this.updateStatus(orderId, 'cancelled', reason, adminUserId);
+  }
+
+  // ─── Tracking ─────────────────────────────────────────────────────────────
+
+  async getTracking(orderId: string) {
+    const order = await this.orderRepo.findById(orderId);
+    if (!order) throw new NotFoundError('Order not found');
+
+    const result: {
+      orderNumber: string;
+      status: string;
+      statusHistory: typeof order.statusHistory;
+      shiprocket: typeof order.shiprocket;
+      tracking: any;
+    } = {
+      orderNumber: order.orderNumber,
+      status: order.status,
+      statusHistory: order.statusHistory,
+      shiprocket: order.shiprocket,
+      tracking: null,
+    };
+
+    if (order.shiprocket.shipmentId) {
+      try {
+        const provider = getShippingProvider();
+        result.tracking = await provider.trackShipment(order.shiprocket.shipmentId);
+        if (result.tracking?.trackingUrl) {
+          await this.orderRepo.updateShiprocketInfo(orderId, {
+            trackingUrl: result.tracking.trackingUrl,
+          });
+        }
+      } catch {
+        // Tracking unavailable
+      }
+    }
+
+    return result;
+  }
+
+  // ─── Queries ──────────────────────────────────────────────────────────────
+
+  async getOrderForUser(orderId: string, userId: string) {
+    const order = await this.orderRepo.findById(orderId);
+    if (!order) throw new NotFoundError('Order not found');
+    if (order.userId.toString() !== userId) throw new ForbiddenError('Access denied');
+    return order;
+  }
+
+  async getUserOrders(userId: string, query: { page?: number; limit?: number; status?: string } = {}) {
+    return this.orderRepo.findByUserId(userId, query);
+  }
+
+  async adminListOrders(query: { page?: number; limit?: number; status?: string; search?: string } = {}) {
+    return this.orderRepo.findAllAdmin(query);
+  }
+
+  async adminGetOrder(orderId: string) {
+    const order = await this.orderRepo.findById(orderId);
+    if (!order) throw new NotFoundError('Order not found');
+    return order;
+  }
+
+  async getOrderStats() {
+    return this.orderRepo.getOrderStats();
+  }
+
+  async getShippingRates(pickupPincode: string, deliveryPincode: string, weight = 0.5) {
+    const provider = getShippingProvider();
+    return provider.getShippingRates(pickupPincode, deliveryPincode, weight);
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  private isValidTransition(current: OrderStatus, next: OrderStatus): boolean {
+    return VALID_TRANSITIONS[current]?.includes(next) ?? false;
+  }
+}

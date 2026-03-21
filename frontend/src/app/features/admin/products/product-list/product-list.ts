@@ -21,6 +21,8 @@ interface ProductForm {
   tags: string;
   status: 'draft' | 'active' | 'archived';
   isFeatured: boolean;
+  stock: number;
+  trackInventory: boolean;
 }
 
 const emptyForm = (): ProductForm => ({
@@ -28,6 +30,7 @@ const emptyForm = (): ProductForm => ({
   categoryId: '', collectionIds: [], basePrice: '',
   images: [], attributes: [], tags: '',
   status: 'draft', isFeatured: false,
+  stock: 0, trackInventory: false,
 });
 
 @Component({
@@ -96,6 +99,7 @@ const emptyForm = (): ProductForm => ({
                 <th>Product</th>
                 <th>Category</th>
                 <th>Price</th>
+                <th>Stock</th>
                 <th>Status</th>
                 <th>Featured</th>
                 <th>Actions</th>
@@ -125,6 +129,13 @@ const emptyForm = (): ProductForm => ({
                   </td>
                   <td>{{ product.category.name }}</td>
                   <td class="price-cell">₹{{ product.basePrice | number }}</td>
+                  <td>
+                    @if (product.trackInventory) {
+                      <span class="stock-val" [class.low]="product.stock <= 5" [class.out]="product.stock === 0">{{ product.stock }}</span>
+                    } @else {
+                      <span class="stock-off">—</span>
+                    }
+                  </td>
                   <td>
                     <span class="status-badge" [class]="product.status">{{ product.status }}</span>
                   </td>
@@ -206,7 +217,7 @@ const emptyForm = (): ProductForm => ({
                     <option value="archived">Archived</option>
                   </select>
                 </div>
-                <div class="form-field span-2">
+                <div class="form-field span-3">
                   <label class="form-label">Short Description</label>
                   <input class="form-input" type="text" [ngModel]="form().shortDescription"
                     (ngModelChange)="form.update(f=>({...f,shortDescription:$event}))"
@@ -216,6 +227,19 @@ const emptyForm = (): ProductForm => ({
                   <label class="form-label">Base Price (₹) *</label>
                   <input class="form-input" type="number" min="0" [ngModel]="form().basePrice"
                     (ngModelChange)="form.update(f=>({...f,basePrice:$event}))" placeholder="0" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Stock Quantity</label>
+                  <input class="form-input" type="number" min="0" [ngModel]="form().stock"
+                    (ngModelChange)="form.update(f=>({...f,stock:$event}))" placeholder="0" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Inventory Tracking</label>
+                  <label class="toggle-label">
+                    <input type="checkbox" [ngModel]="form().trackInventory"
+                      (ngModelChange)="form.update(f=>({...f,trackInventory:$event}))" />
+                    Enable
+                  </label>
                 </div>
                 <div class="form-field span-3">
                   <label class="form-label">Description</label>
@@ -416,6 +440,9 @@ const emptyForm = (): ProductForm => ({
     }
 
     .featured-dot { color: $color-primary; font-size: $font-size-md; }
+    .stock-val { font-weight: $font-weight-bold; color: $color-success; &.low { color: $color-warning; } &.out { color: $color-error; } }
+    .stock-off { color: $color-text-disabled; }
+    .toggle-label { display: flex; align-items: center; gap: $space-xs; font-size: $font-size-sm; color: $color-text-secondary; cursor: pointer; input { cursor: pointer; } }
 
     .action-btns { display: flex; gap: $space-xs; }
     .icon-btn {
@@ -588,6 +615,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
       tags:             product.tags.join(', '),
       status:           product.status,
       isFeatured:       product.isFeatured,
+      stock:            product.stock ?? 0,
+      trackInventory:   product.trackInventory ?? false,
     });
     this.formError.set(null);
     this.showForm.set(true);
@@ -680,6 +709,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
       tags,
       status:           f.status,
       isFeatured:       f.isFeatured,
+      stock:            Number(f.stock) || 0,
+      trackInventory:   f.trackInventory,
     };
 
     this.formError.set(null);

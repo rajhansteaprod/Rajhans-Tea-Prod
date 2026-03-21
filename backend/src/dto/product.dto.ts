@@ -16,6 +16,8 @@ export interface ProductView {
   tags: string[];
   status: ProductStatus;
   isFeatured: boolean;
+  stock: number;
+  trackInventory: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -56,6 +58,8 @@ export class ProductDTO {
       tags: product.tags ?? [],
       status: product.status,
       isFeatured: product.isFeatured,
+      stock: product.stock ?? 0,
+      trackInventory: product.trackInventory ?? false,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
     };

@@ -35,6 +35,15 @@ export const config = {
     keySecret: process.env.RAZORPAY_KEY_SECRET || '',
     webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || '',
   },
+  shipping: {
+    provider: (process.env.SHIPPING_PROVIDER || 'shiprocket') as 'shiprocket',
+    shiprocket: {
+      email: process.env.SHIPROCKET_EMAIL || '',
+      password: process.env.SHIPROCKET_PASSWORD || '',
+      baseUrl: process.env.SHIPROCKET_BASE_URL || 'https://apiv2.shiprocket.in/v1/external',
+      webhookToken: process.env.SHIPROCKET_WEBHOOK_TOKEN || '',
+    },
+  },
   log: {
     level: process.env.LOG_LEVEL || 'debug',
   },

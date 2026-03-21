@@ -125,7 +125,7 @@ interface Stats {
                   <td class="mono">{{ p.razorpayOrderId }}</td>
                   <td>
                     <div class="customer-cell">
-                      <span class="customer-name">{{ p.userId?.firstName ? (p.userId.firstName + ' ' + (p.userId.lastName || '')) : p.shippingAddress.name }}</span>
+                      <span class="customer-name">{{ p.userId?.firstName ? (p.userId!.firstName + ' ' + (p.userId!.lastName || '')) : p.shippingAddress.name }}</span>
                       <span class="customer-phone">{{ p.userId?.phone || p.shippingAddress.phone }}</span>
                     </div>
                   </td>

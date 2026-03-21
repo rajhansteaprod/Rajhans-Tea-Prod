@@ -171,7 +171,7 @@ export class PaymentStore {
           amountPaise: order.amountPaise,
           currency: order.currency,
           keyId: order.keyId,
-          prefill: user ? { name: user.firstName, contact: user.phone } : undefined,
+          prefill: user?.phone ? { name: user.firstName || '', contact: user.phone } : undefined,
         });
       } catch {
         // User dismissed modal

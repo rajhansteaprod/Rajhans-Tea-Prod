@@ -67,6 +67,8 @@ export interface Product {
   tags: string[];
   status: 'draft' | 'active' | 'archived';
   isFeatured: boolean;
+  stock: number;
+  trackInventory: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -122,6 +124,8 @@ export interface CreateProductPayload {
   tags?: string[];
   status?: 'draft' | 'active' | 'archived';
   isFeatured?: boolean;
+  stock?: number;
+  trackInventory?: boolean;
 }
 
 export interface UpdateProductPayload extends Partial<CreateProductPayload> {}

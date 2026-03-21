@@ -127,6 +127,8 @@ export const createProductSchema = z.object({
     tags: z.array(z.string().trim().max(50)).max(20).optional(),
     status: z.enum(['draft', 'active', 'archived']).optional(),
     isFeatured: z.boolean().optional(),
+    stock: z.coerce.number().int().min(0).optional(),
+    trackInventory: z.boolean().optional(),
   }),
 });
 
@@ -145,6 +147,8 @@ export const updateProductSchema = z.object({
     tags: z.array(z.string().trim().max(50)).max(20).optional(),
     status: z.enum(['draft', 'active', 'archived']).optional(),
     isFeatured: z.boolean().optional(),
+    stock: z.coerce.number().int().min(0).optional(),
+    trackInventory: z.boolean().optional(),
   }),
 });
 

@@ -51,6 +51,21 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./wallets/wallet-management').then((m) => m.AdminWalletManagementComponent),
       },
+      {
+        path: 'orders',
+        loadComponent: () =>
+          import('./orders/order-list').then((m) => m.AdminOrderListComponent),
+      },
+      {
+        path: 'inventory',
+        loadComponent: () =>
+          import('./inventory/inventory-dashboard').then((m) => m.InventoryDashboardComponent),
+      },
+      {
+        path: 'warehouses',
+        loadComponent: () =>
+          import('./warehouses/warehouse-list').then((m) => m.WarehouseListComponent),
+      },
     ],
   },
 ];

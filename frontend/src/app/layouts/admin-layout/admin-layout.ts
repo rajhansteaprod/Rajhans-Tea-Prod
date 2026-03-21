@@ -449,6 +449,24 @@ export class AdminLayoutComponent {
       active: true,
     },
     {
+      label: 'Orders',
+      icon: '<svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2"/></svg>',
+      route: '/admin/orders',
+      active: true,
+    },
+    {
+      label: 'Inventory',
+      icon: '<svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" stroke-width="2" fill="none"/><polyline points="3.27 6.96 12 12.01 20.73 6.96" stroke="currentColor" stroke-width="2" fill="none"/><line x1="12" y1="22.08" x2="12" y2="12" stroke="currentColor" stroke-width="2"/></svg>',
+      route: '/admin/inventory',
+      active: true,
+    },
+    {
+      label: 'Warehouses',
+      icon: '<svg viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 21V10M18 21V10M3 7l9-4 9 4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      route: '/admin/warehouses',
+      active: true,
+    },
+    {
       label: 'Analytics',
       icon: '<svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
       route: '/admin/analytics',

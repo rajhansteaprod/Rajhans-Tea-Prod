@@ -71,6 +71,10 @@ services:
       - RAZORPAY_KEY_ID=rzp_test_STo8X60gyG9PvZ
       - RAZORPAY_KEY_SECRET=F2V1oUFcvc6vcvbu4OP0ezur
       - RAZORPAY_WEBHOOK_SECRET=
+      - SHIPPING_PROVIDER=shiprocket
+      - SHIPROCKET_EMAIL=${SHIPROCKET_EMAIL:-}
+      - SHIPROCKET_PASSWORD=${SHIPROCKET_PASSWORD:-}
+      - SHIPROCKET_WEBHOOK_TOKEN=${SHIPROCKET_WEBHOOK_TOKEN:-}
     depends_on:
       mongo:
         condition: service_healthy

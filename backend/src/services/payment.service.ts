@@ -7,6 +7,7 @@ import { CartService } from './cart.service';
 import { getInvoiceQueue, InvoiceJobs } from '../jobs/queues/invoice.queue';
 import { getPaymentQueue, PaymentJobs } from '../jobs/queues/payment.queue';
 import { getWalletQueue, WalletJobs } from '../jobs/queues/wallet.queue';
+import { getFulfillmentQueue, FulfillmentJobs } from '../modules/inventory/jobs/queues/fulfillment.queue';
 import { WalletService } from './wallet.service';
 import { BadRequestError, NotFoundError } from '../utils/api-error';
 import { IShippingAddress } from '../models/payment.model';
@@ -44,19 +45,31 @@ export class PaymentService {
     sessionId: string,
     userId: string | null,
     address: IShippingAddress,
-    idempotencyKey: string,
+    idempotencyKey_: string,
     walletAmount = 0,
   ): Promise<CreateOrderResult | { paymentId: string; paidViaWallet: true }> {
-    // Idempotency — return existing if already created
+    let idempotencyKey = idempotencyKey_;
+
+    // Idempotency — return existing if still valid (created + fresh < 25 min)
     const existing = await this.paymentRepo.findByIdempotencyKey(idempotencyKey);
     if (existing) {
-      return {
-        paymentId: existing._id.toString(),
-        razorpayOrderId: existing.razorpayOrderId,
-        amountPaise: existing.amountPaise,
-        currency: existing.currency,
-        keyId: config.razorpay.keyId,
-      };
+      const ageMs = Date.now() - new Date(existing.createdAt).getTime();
+      const isFresh = ageMs < 25 * 60 * 1000;
+
+      if (existing.status === 'created' && isFresh) {
+        return {
+          paymentId: existing._id.toString(),
+          razorpayOrderId: existing.razorpayOrderId,
+          amountPaise: existing.amountPaise,
+          currency: existing.currency,
+          keyId: config.razorpay.keyId,
+        };
+      }
+
+      // Stale or failed — delete old and create fresh
+      await this.paymentRepo.updateStatus(existing._id.toString(), 'failed');
+      // Generate new unique idempotency key
+      idempotencyKey = `${idempotencyKey}-${Date.now()}`;
     }
 
     // Get checkout summary (runs pricing engine)
@@ -120,6 +133,11 @@ export class PaymentService {
       await this.cartService.clearCart(sessionId);
       await getInvoiceQueue().add(
         InvoiceJobs.GENERATE,
+        { paymentId: payment._id.toString() },
+        { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
+      );
+      await getFulfillmentQueue().add(
+        FulfillmentJobs.CREATE_ORDER,
         { paymentId: payment._id.toString() },
         { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
       );
@@ -246,6 +264,13 @@ export class PaymentService {
     // 6. Enqueue invoice generation
     await getInvoiceQueue().add(
       InvoiceJobs.GENERATE,
+      { paymentId: payment._id.toString() },
+      { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
+    );
+
+    // 7. Enqueue order creation (Inventory & Fulfillment)
+    await getFulfillmentQueue().add(
+      FulfillmentJobs.CREATE_ORDER,
       { paymentId: payment._id.toString() },
       { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
     );

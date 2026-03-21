@@ -78,6 +78,8 @@ export class ProductService {
     tags?: string[];
     status?: ProductStatus;
     isFeatured?: boolean;
+    stock?: number;
+    trackInventory?: boolean;
   }) {
     // Validate category
     const category = await this.categoryRepo.findById(data.categoryId);
@@ -109,6 +111,8 @@ export class ProductService {
       tags: (data.tags ?? []).map((t) => t.toLowerCase().trim()),
       status: data.status ?? 'draft',
       isFeatured: data.isFeatured ?? false,
+      stock: data.stock ?? 0,
+      trackInventory: data.trackInventory ?? false,
     });
 
     return this.getById(product._id.toString());
@@ -129,6 +133,8 @@ export class ProductService {
       tags?: string[];
       status?: ProductStatus;
       isFeatured?: boolean;
+      stock?: number;
+      trackInventory?: boolean;
     },
   ) {
     const product = await this.productRepo.findById(id);
@@ -171,6 +177,8 @@ export class ProductService {
     }
     if (data.status !== undefined) update.status = data.status;
     if (data.isFeatured !== undefined) update.isFeatured = data.isFeatured;
+    if (data.stock !== undefined) update.stock = data.stock;
+    if (data.trackInventory !== undefined) update.trackInventory = data.trackInventory;
 
     await this.productRepo.updateById(id, update);
     return this.getById(id);
