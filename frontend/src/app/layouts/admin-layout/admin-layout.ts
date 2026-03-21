@@ -437,10 +437,16 @@ export class AdminLayoutComponent {
       active: true,
     },
     {
-      label: 'Orders',
-      icon: '<svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
-      route: '/admin/orders',
-      active: false,
+      label: 'Payments',
+      icon: '<svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      route: '/admin/payments',
+      active: true,
+    },
+    {
+      label: 'Wallets',
+      icon: '<svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none"/><line x1="1" y1="10" x2="23" y2="10" stroke="currentColor" stroke-width="2"/></svg>',
+      route: '/admin/wallets',
+      active: true,
     },
     {
       label: 'Analytics',

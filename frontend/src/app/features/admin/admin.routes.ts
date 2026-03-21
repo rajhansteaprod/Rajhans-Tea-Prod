@@ -41,6 +41,16 @@ export const ADMIN_ROUTES: Routes = [
         path: 'pricing',
         loadComponent: () => import('./pricing/pricing-rules').then((m) => m.PricingRulesComponent),
       },
+      {
+        path: 'payments',
+        loadComponent: () =>
+          import('./payments/payment-list').then((m) => m.AdminPaymentListComponent),
+      },
+      {
+        path: 'wallets',
+        loadComponent: () =>
+          import('./wallets/wallet-management').then((m) => m.AdminWalletManagementComponent),
+      },
     ],
   },
 ];

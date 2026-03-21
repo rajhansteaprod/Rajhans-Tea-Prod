@@ -25,16 +25,15 @@ function getSessionId(req: Request): string {
 export const createOrder = async (req: Request, res: Response) => {
   const sessionId = getSessionId(req);
   const userId = req.user?.userId ?? null;
-  const { address } = req.body;
+  const { address, walletAmount } = req.body;
 
   // Idempotency key: derived from sessionId + address hash (prevents double payment for same cart)
-  // If client sends X-Idempotency-Key header, use that. Otherwise derive from session + address.
   const addressHash = crypto.createHash('md5').update(JSON.stringify(address)).digest('hex').slice(0, 12);
   const idempotencyKey =
     (req.headers['x-idempotency-key'] as string) || `${sessionId}-${addressHash}`;
 
-  const result = await paymentService.createOrder(sessionId, userId, address, idempotencyKey);
-  sendCreated(res, result, 'Razorpay order created');
+  const result = await paymentService.createOrder(sessionId, userId, address, idempotencyKey, walletAmount || 0);
+  sendCreated(res, result, 'paidViaWallet' in result ? 'Paid via wallet' : 'Razorpay order created');
 };
 
 export const verifyPayment = async (req: Request, res: Response) => {
@@ -132,4 +131,49 @@ export const downloadInvoice = async (req: Request, res: Response) => {
 
   // Redirect to static file path (served by express.static or nginx)
   res.redirect(invoice.pdfPath);
+};
+
+// ---------------------------------------------------------------------------
+// ADMIN — Payments Management
+// ---------------------------------------------------------------------------
+
+export const adminGetPaymentStats = async (_req: Request, res: Response) => {
+  const stats = await paymentService.getRevenueStats();
+  sendSuccess(res, stats);
+};
+
+export const adminListPayments = async (req: Request, res: Response) => {
+  const { page, limit, status, search } = req.query as {
+    page?: string; limit?: string; status?: string; search?: string;
+  };
+  const result = await paymentService.adminListPayments({
+    page: page ? parseInt(page, 10) : undefined,
+    limit: limit ? parseInt(limit, 10) : undefined,
+    status,
+    search,
+  });
+  sendPaginated(res, result.payments, result.meta, 'Payments');
+};
+
+export const adminGetPaymentDetail = async (req: Request, res: Response) => {
+  const paymentId = req.params['id'] as string;
+  const payment = await paymentService.getPaymentById(paymentId);
+  if (!payment) throw new NotFoundError('Payment not found');
+  sendSuccess(res, payment);
+};
+
+export const adminGetUserWallet = async (req: Request, res: Response) => {
+  const userId = req.params['userId'] as string;
+  const wallet = await walletService.getOrCreateWallet(userId);
+  const history = await walletService.getHistory(userId, { page: 1, limit: 50 });
+  sendSuccess(res, { wallet, transactions: history.transactions });
+};
+
+export const adminListInvoices = async (req: Request, res: Response) => {
+  const { page, limit } = req.query as { page?: string; limit?: string };
+  const result = await invoiceService.getAllInvoices({
+    page: page ? parseInt(page, 10) : undefined,
+    limit: limit ? parseInt(limit, 10) : undefined,
+  });
+  sendPaginated(res, result.invoices, result.meta, 'Invoices');
 };

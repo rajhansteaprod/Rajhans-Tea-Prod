@@ -52,4 +52,15 @@ export class InvoiceRepository {
     ]);
     return { invoices, meta: buildPaginationMeta(page, limit, total) };
   }
+
+  async findAll(
+    query: { page?: number; limit?: number } = {},
+  ): Promise<{ invoices: IInvoiceDoc[]; meta: ReturnType<typeof buildPaginationMeta> }> {
+    const { page, limit, skip } = parsePagination(query);
+    const [invoices, total] = await Promise.all([
+      Invoice.find().sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+      Invoice.countDocuments().exec(),
+    ]);
+    return { invoices, meta: buildPaginationMeta(page, limit, total) };
+  }
 }

@@ -136,24 +136,33 @@ export class PaymentStore {
    * 2. Open Razorpay modal (frontend)
    * 3. Verify payment (backend)
    */
-  async pay(address: AddressForm): Promise<boolean> {
+  async pay(address: AddressForm, walletAmount = 0): Promise<boolean> {
     this._paymentLoading.set(true);
     this._paymentError.set(null);
     this._paymentSuccess.set(false);
 
     try {
-      // Step 1: Create Razorpay order
+      // Step 1: Create order (with optional wallet deduction)
       const orderRes = await this.http
-        .post<ApiResponse<CreateOrderResponse>>(
+        .post<ApiResponse<CreateOrderResponse & { paidViaWallet?: boolean }>>(
           `${this.api}/payments/orders`,
-          { address },
+          { address, walletAmount },
           { headers: this.sessionHeaders() },
         )
         .toPromise();
 
       const order = orderRes!.data;
 
-      // Step 2: Open Razorpay checkout modal
+      // Fully paid via wallet — no Razorpay needed
+      if (order.paidViaWallet) {
+        this._lastPaymentId.set(order.paymentId);
+        this._paymentSuccess.set(true);
+        this._paymentLoading.set(false);
+        this.cart.loadCart();
+        return true;
+      }
+
+      // Step 2: Open Razorpay checkout modal for remaining amount
       const user = this.auth.user();
       let rzpResponse: RazorpayResponse;
       try {

@@ -7,6 +7,7 @@ import { CartService } from './cart.service';
 import { getInvoiceQueue, InvoiceJobs } from '../jobs/queues/invoice.queue';
 import { getPaymentQueue, PaymentJobs } from '../jobs/queues/payment.queue';
 import { getWalletQueue, WalletJobs } from '../jobs/queues/wallet.queue';
+import { WalletService } from './wallet.service';
 import { BadRequestError, NotFoundError } from '../utils/api-error';
 import { IShippingAddress } from '../models/payment.model';
 import { StockReservation } from '../models/stock-reservation.model';
@@ -33,6 +34,7 @@ export class PaymentService {
   private paymentRepo = new PaymentRepository();
   private checkoutService = new CheckoutService();
   private cartService = new CartService();
+  private walletService = new WalletService();
 
   // ---------------------------------------------------------------------------
   // CREATE RAZORPAY ORDER
@@ -43,7 +45,8 @@ export class PaymentService {
     userId: string | null,
     address: IShippingAddress,
     idempotencyKey: string,
-  ): Promise<CreateOrderResult> {
+    walletAmount = 0,
+  ): Promise<CreateOrderResult | { paymentId: string; paidViaWallet: true }> {
     // Idempotency — return existing if already created
     const existing = await this.paymentRepo.findByIdempotencyKey(idempotencyKey);
     if (existing) {
@@ -68,9 +71,66 @@ export class PaymentService {
       throw new BadRequestError('Some items are out of stock');
     }
 
-    // Create Razorpay order
+    // Calculate wallet deduction (if applicable)
+    const totalPaise = Math.round(summary.total * 100);
+    let walletDeductPaise = 0;
+
+    if (walletAmount > 0 && userId) {
+      const balance = await this.walletService.getBalance(userId);
+      walletDeductPaise = Math.min(Math.round(walletAmount * 100), totalPaise, Math.round(balance * 100));
+    }
+
+    const razorpayAmountPaise = totalPaise - walletDeductPaise;
+
+    // Full wallet payment — debit wallet NOW, no Razorpay needed
+    if (razorpayAmountPaise <= 0 && userId) {
+      await this.walletService.debit(
+        userId,
+        walletDeductPaise / 100,
+        'purchase',
+        idempotencyKey,
+        `Order payment (wallet)`,
+        `wallet-debit-${idempotencyKey}`,
+      );
+      const payment = await this.paymentRepo.create({
+        sessionId,
+        userId: userId ? (userId as never) : null,
+        razorpayOrderId: `wallet_${idempotencyKey.slice(0, 20)}`,
+        amountPaise: totalPaise,
+        walletDeductPaise,
+        currency: 'INR',
+        status: 'captured',
+        checkoutSnapshot: {
+          items: summary.items.map((item) => ({
+            productId: item.productId,
+            name: item.name,
+            qty: item.qty,
+            unitPrice: item.pricing.unitPrice,
+            totalPrice: item.pricing.totalPrice,
+          })),
+          subtotal: summary.subtotal,
+          totalDiscount: summary.totalDiscount,
+          totalTax: summary.totalTax,
+          total: summary.total,
+        },
+        shippingAddress: address,
+        idempotencyKey,
+      });
+
+      await this.cartService.clearCart(sessionId);
+      await getInvoiceQueue().add(
+        InvoiceJobs.GENERATE,
+        { paymentId: payment._id.toString() },
+        { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
+      );
+
+      return { paymentId: payment._id.toString(), paidViaWallet: true };
+    }
+
+    // Partial or no wallet — create Razorpay order for remaining
+    // Wallet is NOT debited here — only after Razorpay payment is verified
+    const amountPaise = razorpayAmountPaise;
     const razorpay = getRazorpayClient();
-    const amountPaise = Math.round(summary.total * 100);
 
     // Razorpay receipt max 40 chars — use short hash of idempotencyKey
     const receipt = `rcpt_${crypto.createHash('md5').update(idempotencyKey).digest('hex').slice(0, 24)}`;
@@ -103,6 +163,7 @@ export class PaymentService {
         total: summary.total,
       },
       shippingAddress: address,
+      walletDeductPaise,
       idempotencyKey,
     });
 
@@ -167,10 +228,22 @@ export class PaymentService {
       razorpaySignature,
     });
 
-    // 4. Clear cart (purchase complete)
+    // 4. Debit wallet NOW (Razorpay confirmed — safe to deduct)
+    if (payment.walletDeductPaise > 0 && payment.userId) {
+      await this.walletService.debit(
+        payment.userId.toString(),
+        payment.walletDeductPaise / 100,
+        'purchase',
+        payment._id.toString(),
+        `Order payment (wallet portion)`,
+        `wallet-debit-${payment.idempotencyKey}`,
+      );
+    }
+
+    // 5. Clear cart (purchase complete)
     await this.cartService.clearCart(payment.sessionId);
 
-    // 5. Enqueue invoice generation
+    // 6. Enqueue invoice generation
     await getInvoiceQueue().add(
       InvoiceJobs.GENERATE,
       { paymentId: payment._id.toString() },
@@ -312,6 +385,22 @@ export class PaymentService {
 
   async getHistory(userId: string, query: { page?: number; limit?: number } = {}) {
     return this.paymentRepo.findByUserId(userId, query);
+  }
+
+  // ---------------------------------------------------------------------------
+  // ADMIN
+  // ---------------------------------------------------------------------------
+
+  async getRevenueStats() {
+    return this.paymentRepo.getRevenueStats();
+  }
+
+  async adminListPayments(query: { page?: number; limit?: number; status?: string; search?: string } = {}) {
+    return this.paymentRepo.findAllAdmin(query);
+  }
+
+  async getPaymentById(paymentId: string) {
+    return this.paymentRepo.findById(paymentId);
   }
 
   // ---------------------------------------------------------------------------

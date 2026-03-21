@@ -10,6 +10,7 @@ export const createOrderSchema = z.object({
       state: z.string().min(1),
       pincode: z.string().length(6),
     }),
+    walletAmount: z.number({ coerce: true }).min(0).optional(),
   }),
 });
 

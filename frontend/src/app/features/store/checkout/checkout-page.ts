@@ -227,6 +227,31 @@ const emptyAddress = (): AddressForm => ({
                 </div>
               }
 
+              <!-- Wallet Payment Option -->
+              @if (auth.isLoggedIn()) {
+                <div class="wallet-option">
+                  <div class="wallet-toggle-row">
+                    <label class="wallet-toggle">
+                      <input type="checkbox" [(ngModel)]="useWallet" />
+                      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                      <span class="toggle-label">Use Wallet Balance</span>
+                    </label>
+                    <span class="wallet-balance">₹{{ walletBalance() | number:'1.2-2' }} available</span>
+                  </div>
+                  @if (useWallet && walletBalance() > 0 && summary()) {
+                    <div class="wallet-deduction">
+                      <span>Wallet deduction</span>
+                      <span class="wallet-deduct-amount">−₹{{ walletDeduction() | number:'1.2-2' }}</span>
+                    </div>
+                    @if (remainingAmount() > 0) {
+                      <p class="wallet-note">Remaining ₹{{ remainingAmount() | number:'1.2-2' }} will be charged via Razorpay</p>
+                    } @else {
+                      <p class="wallet-note wallet-full">Full amount covered by wallet — no card/UPI needed!</p>
+                    }
+                  }
+                </div>
+              }
+
               <!-- Payment error -->
               @if (payment.paymentError() && payment.paymentError() !== 'Payment cancelled') {
                 <div class="stock-alert">
@@ -899,12 +924,55 @@ const emptyAddress = (): AddressForm => ({
       color: $color-text-disabled;
       line-height: $line-height-relaxed;
     }
+
+    // ── Wallet Option ─────────────────────────────────────────────────────────
+    .wallet-option {
+      margin: 0 $space-xl $space-md;
+      padding: $space-md;
+      background: $color-bg-secondary;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-lg;
+    }
+    .wallet-toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .wallet-toggle {
+      display: flex; align-items: center; gap: $space-sm; cursor: pointer;
+      input { display: none; }
+    }
+    .toggle-track {
+      width: 40px; height: 22px; border-radius: $radius-full;
+      background: $color-border; position: relative; transition: background $transition-fast;
+      input:checked + & { background: $color-success; }
+    }
+    .toggle-thumb {
+      position: absolute; top: 2px; left: 2px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: white; box-shadow: $shadow-sm; transition: transform $transition-fast;
+      input:checked ~ .toggle-track & { transform: translateX(18px); }
+    }
+    .toggle-label {
+      font-size: $font-size-sm; font-weight: $font-weight-medium; color: $color-text-primary;
+    }
+    .wallet-balance {
+      font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-success;
+    }
+    .wallet-deduction {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: $space-sm; padding-top: $space-sm; border-top: 1px solid $color-border-light;
+      font-size: $font-size-sm; color: $color-text-secondary;
+    }
+    .wallet-deduct-amount { font-weight: $font-weight-bold; color: $color-success; }
+    .wallet-note {
+      font-size: $font-size-xs; color: $color-text-tertiary; margin: $space-xs 0 0;
+      &.wallet-full { color: $color-success; font-weight: $font-weight-medium; }
+    }
   `],
 })
 export class CheckoutPageComponent implements OnInit {
   readonly cart = inject(CartStore);
   readonly payment = inject(PaymentStore);
-  private readonly auth = inject(AuthService);
+  readonly auth = inject(AuthService);
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly api = environment.apiUrl;
@@ -921,6 +989,9 @@ export class CheckoutPageComponent implements OnInit {
   readonly stockIssues = signal<StockIssueItem[]>([]);
   readonly orderPlacing = signal(false);
   readonly orderPlaced = signal(false);
+  readonly walletBalance = signal(0);
+
+  useWallet = false;
 
   address: AddressForm = emptyAddress();
 
@@ -936,6 +1007,22 @@ export class CheckoutPageComponent implements OnInit {
     } else {
       this.cart.loadCart();
     }
+    // Load wallet balance if logged in
+    if (this.auth.isLoggedIn()) {
+      this.http.get<{ data: { balance: number } }>(`${this.api}/wallet`).subscribe({
+        next: (res) => this.walletBalance.set(res.data.balance),
+      });
+    }
+  }
+
+  walletDeduction(): number {
+    const total = this.summary()?.total ?? 0;
+    return Math.min(this.walletBalance(), total);
+  }
+
+  remainingAmount(): number {
+    const total = this.summary()?.total ?? 0;
+    return Math.max(0, total - this.walletDeduction());
   }
 
   isStepDone(step: Step): boolean {
@@ -995,7 +1082,8 @@ export class CheckoutPageComponent implements OnInit {
     this.orderPlacing.set(true);
     this.stockIssues.set([]);
 
-    const success = await this.payment.pay(this.address);
+    const walletAmount = this.useWallet ? this.walletDeduction() : 0;
+    const success = await this.payment.pay(this.address, walletAmount);
 
     if (success) {
       this.orderPlacing.set(false);

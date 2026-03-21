@@ -78,6 +78,10 @@ export class InvoiceService {
     return this.invoiceRepo.findByUserId(userId, query);
   }
 
+  async getAllInvoices(query: { page?: number; limit?: number } = {}) {
+    return this.invoiceRepo.findAll(query);
+  }
+
   // ---------------------------------------------------------------------------
   // PDF GENERATION (PDFKit)
   // ---------------------------------------------------------------------------

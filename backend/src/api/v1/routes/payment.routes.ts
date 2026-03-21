@@ -61,4 +61,20 @@ router.post(
 router.get('/invoices', authenticate, ctrl.getUserInvoices);
 router.get('/invoices/:id/download', ctrl.downloadInvoice); // public — ObjectId is unguessable
 
+// ===========================================================================
+// ADMIN — Payments, Wallets, Invoices management
+// ===========================================================================
+
+const adminRouter = Router();
+adminRouter.use(authenticate);
+adminRouter.use(authorize('admin'));
+
+adminRouter.get('/payments/stats', ctrl.adminGetPaymentStats);
+adminRouter.get('/payments', ctrl.adminListPayments);
+adminRouter.get('/payments/:id', ctrl.adminGetPaymentDetail);
+adminRouter.get('/wallets/:userId', ctrl.adminGetUserWallet);
+adminRouter.get('/invoices', ctrl.adminListInvoices);
+
+router.use('/admin', adminRouter);
+
 export default router;

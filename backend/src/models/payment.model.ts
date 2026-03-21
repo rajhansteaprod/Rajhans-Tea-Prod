@@ -51,6 +51,7 @@ export interface IPaymentDoc extends Document {
   status: PaymentStatus;
   checkoutSnapshot: ICheckoutSnapshot;
   shippingAddress: IShippingAddress;
+  walletDeductPaise: number;
   refundedAmount: number;
   refunds: IRefund[];
   idempotencyKey: string;
@@ -109,6 +110,7 @@ const paymentSchema = new Schema<IPaymentDoc>(
       state: { type: String, required: true },
       pincode: { type: String, required: true },
     },
+    walletDeductPaise: { type: Number, default: 0 },
     refundedAmount: { type: Number, default: 0 },
     refunds: [refundSchema],
     idempotencyKey: { type: String, required: true },

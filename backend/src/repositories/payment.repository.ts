@@ -70,4 +70,65 @@ export class PaymentRepository {
     ]);
     return { payments, meta: buildPaginationMeta(page, limit, total) };
   }
+
+  // ─── Admin queries (all users, all statuses) ─────────────────────────────
+
+  async findAllAdmin(
+    query: { page?: number; limit?: number; status?: string; search?: string } = {},
+  ): Promise<{ payments: IPaymentDoc[]; meta: ReturnType<typeof buildPaginationMeta> }> {
+    const { page, limit, skip } = parsePagination(query);
+    const filter: Record<string, unknown> = {};
+    if (query.status) filter.status = query.status;
+    if (query.search) {
+      filter.$or = [
+        { razorpayOrderId: { $regex: query.search, $options: 'i' } },
+        { razorpayPaymentId: { $regex: query.search, $options: 'i' } },
+        { 'shippingAddress.name': { $regex: query.search, $options: 'i' } },
+        { 'shippingAddress.phone': { $regex: query.search, $options: 'i' } },
+      ];
+    }
+    const [payments, total] = await Promise.all([
+      Payment.find(filter)
+        .populate('userId', 'phone firstName lastName role')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      Payment.countDocuments(filter).exec(),
+    ]);
+    return { payments, meta: buildPaginationMeta(page, limit, total) };
+  }
+
+  async getRevenueStats(): Promise<{
+    totalRevenue: number;
+    todayRevenue: number;
+    totalOrders: number;
+    totalRefunded: number;
+  }> {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const [revenueAgg, todayAgg, totalOrders, refundAgg] = await Promise.all([
+      Payment.aggregate([
+        { $match: { status: 'captured' } },
+        { $group: { _id: null, total: { $sum: '$amountPaise' } } },
+      ]).exec(),
+      Payment.aggregate([
+        { $match: { status: 'captured', createdAt: { $gte: todayStart } } },
+        { $group: { _id: null, total: { $sum: '$amountPaise' } } },
+      ]).exec(),
+      Payment.countDocuments({ status: { $in: ['captured', 'refunded', 'partially_refunded'] } }).exec(),
+      Payment.aggregate([
+        { $match: { status: { $in: ['refunded', 'partially_refunded'] } } },
+        { $group: { _id: null, total: { $sum: '$refundedAmount' } } },
+      ]).exec(),
+    ]);
+
+    return {
+      totalRevenue: (revenueAgg[0]?.total ?? 0) / 100, // paise → rupees
+      todayRevenue: (todayAgg[0]?.total ?? 0) / 100,
+      totalOrders,
+      totalRefunded: (refundAgg[0]?.total ?? 0) / 100,
+    };
+  }
 }
