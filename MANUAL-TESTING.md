@@ -656,4 +656,51 @@ fetch('/api/v1/admin/notifications/send-bulk', {
 
 ---
 
-*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17*
+## Slice 27 — Workflow / Process Automation
+
+### TC-27.1: Create Workflow Definition
+1. `/admin/workflows` → Definitions tab → + Create Definition
+2. Name: "Return Request", States: "submitted, under_review, approved, rejected", Initial: "submitted", Final: "approved, rejected"
+3. **Expected:** Definition created with auto-generated transitions
+
+### TC-27.2: Start Workflow Instance
+```js
+fetch('/api/v1/admin/workflows/start', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') },
+  body: JSON.stringify({ definitionSlug: 'return-request', resourceType: 'order', resourceId: 'ORD-2026-00001', metadata: { reason: 'Defective product' } })
+}).then(r=>r.json()).then(console.log)
+```
+**Expected:** Instance created with state "submitted"
+
+### TC-27.3: View Pending Workflows
+1. `/admin/workflows` → Approval Queue tab
+2. **Expected:** Pending instance visible with current state, creator, timestamp
+
+### TC-27.4: Transition Workflow
+1. Click "Actions" on pending instance → Available transitions shown
+2. Click transition button (e.g., "Move to under_review")
+3. **Expected:** State updates, history entry added
+
+### TC-27.5: Complete Workflow
+1. Transition to final state (approved/rejected)
+2. **Expected:** Instance marked completed, removed from pending queue
+
+### TC-27.6: Workflow Stats
+1. `/admin/workflows` → Stats cards
+2. **Expected:** Total, Pending, Completed counts
+
+### TC-27.7: Invalid Transition
+```js
+// Try to transition to invalid state
+fetch('/api/v1/admin/workflows/instances/<ID>/transition', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') },
+  body: JSON.stringify({ toState: 'nonexistent' })
+}).then(r=>r.json()).then(console.log)
+```
+**Expected:** 400 "Invalid transition"
+
+---
+
+*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17, 27*
