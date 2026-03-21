@@ -577,4 +577,38 @@ fetch('/api/v1/admin/notifications/send-bulk', {
 
 ---
 
-*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12*
+## Slice 17 — Admin & Backoffice
+
+### TC-17.1: Sidebar Groups
+1. Go to `/admin`
+2. **Expected:** Sidebar organized into groups: MAIN, CATALOG, ORDERS & FULFILLMENT, FINANCE, MARKETING, CONTENT, PEOPLE, SYSTEM
+3. Click group header → collapses/expands
+4. Refresh page → collapsed state persisted
+
+### TC-17.2: Analytics Dashboard
+1. `/admin/analytics`
+2. **Expected:** KPI cards (Total Revenue, Orders, AOV, Avg Rating)
+3. Revenue chart (bar visualization) with period selector
+4. Orders by status breakdown
+5. Top selling products table
+6. Conversion funnel (Views → Carts → Payments → Orders)
+
+### TC-17.3: Audit Logs
+1. `/admin/audit-logs`
+2. **Expected:** Log entries (empty initially — populate by doing admin actions)
+3. Filter by action keyword, filter by resource type
+
+### TC-17.4: Settings
+1. `/admin/settings`
+2. **Expected:** Store Info (name, email, phone), Regional (currency, timezone, tax)
+3. Feature toggles: Loyalty, Referral, Review Auto-Approve, Guest Checkout
+4. Change store name → Save → "Settings saved!" message
+5. Refresh → persisted
+
+### TC-17.5: All Sidebar Links Work
+1. Click every sidebar item in every group
+2. **Expected:** All pages load without error (no "Soon" badges — all active)
+
+---
+
+*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 17*

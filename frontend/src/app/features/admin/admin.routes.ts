@@ -86,6 +86,21 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./notifications/notification-management').then((m) => m.NotificationManagementComponent),
       },
+      {
+        path: 'analytics',
+        loadComponent: () =>
+          import('./analytics/analytics-dashboard').then((m) => m.AnalyticsDashboardComponent),
+      },
+      {
+        path: 'audit-logs',
+        loadComponent: () =>
+          import('./audit-logs/audit-log-list').then((m) => m.AuditLogListComponent),
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./settings/admin-settings').then((m) => m.AdminSettingsComponent),
+      },
     ],
   },
 ];

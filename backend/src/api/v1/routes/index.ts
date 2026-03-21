@@ -12,6 +12,9 @@ import searchRoutes from '../../../modules/search/search.routes';
 import personalizationRoutes from '../../../modules/personalization/personalization.routes';
 import reviewsRoutes from '../../../modules/reviews/reviews.routes';
 import communicationRoutes from '../../../modules/communication/communication.routes';
+import auditRoutes from '../../../modules/audit/audit.routes';
+import analyticsRoutes from '../../../modules/analytics/analytics.routes';
+import settingsRoutes from '../../../modules/settings/settings.routes';
 
 const router = Router();
 
@@ -28,5 +31,8 @@ router.use(searchRoutes);
 router.use(personalizationRoutes);
 router.use(reviewsRoutes);
 router.use(communicationRoutes);
+router.use(auditRoutes);
+router.use(analyticsRoutes);
+router.use(settingsRoutes);
 
 export default router;
