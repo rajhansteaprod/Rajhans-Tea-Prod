@@ -27,6 +27,10 @@ app.use(cookieParser());
 // Rate limiting
 app.use(globalRateLimiter);
 
+// Request timeout (30s — prevents stuck requests)
+import { requestTimeout } from './middleware/timeout.middleware';
+app.use(requestTimeout(30000));
+
 // Request tracking & logging
 app.use(requestIdMiddleware);
 app.use(requestLoggerMiddleware);

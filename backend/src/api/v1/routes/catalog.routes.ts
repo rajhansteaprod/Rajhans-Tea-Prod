@@ -3,6 +3,7 @@ import { authenticate } from '../../../middleware/auth.middleware';
 import { authorize } from '../../../middleware/rbac.middleware';
 import { validate } from '../../../middleware/validate.middleware';
 import { upload } from '../../../middleware/upload.middleware';
+import { cacheResponse } from '../../../middleware/cache-response.middleware';
 import * as catalog from '../controllers/catalog.controller';
 import {
   listCategoriesSchema,
@@ -26,16 +27,16 @@ const router = Router();
 // PUBLIC — no auth required
 // ===========================================================================
 
-// Categories
-router.get('/catalog/categories', catalog.listCategoriesPublic);
-router.get('/catalog/categories/:slug', catalog.getCategoryBySlug);
+// Categories (cached 5 min)
+router.get('/catalog/categories', cacheResponse(300), catalog.listCategoriesPublic);
+router.get('/catalog/categories/:slug', cacheResponse(300), catalog.getCategoryBySlug);
 
-// Collections
-router.get('/catalog/collections', catalog.listCollectionsPublic);
-router.get('/catalog/collections/:slug', catalog.getCollectionBySlug);
+// Collections (cached 5 min)
+router.get('/catalog/collections', cacheResponse(300), catalog.listCollectionsPublic);
+router.get('/catalog/collections/:slug', cacheResponse(300), catalog.getCollectionBySlug);
 
-// Products
-router.get('/catalog/products', validate(listProductsSchema), catalog.listProducts);
+// Products (cached 2 min)
+router.get('/catalog/products', validate(listProductsSchema), cacheResponse(120), catalog.listProducts);
 router.get('/catalog/products/:slug', validate(productSlugSchema), catalog.getProductBySlug);
 
 // ===========================================================================

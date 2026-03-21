@@ -731,4 +731,29 @@ fetch('/api/v1/admin/system/health', {
 
 ---
 
-*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17, 20, 27*
+## Slice 21 — Performance & Scalability
+
+### TC-21.1: HTTP Response Cache
+1. `curl -I http://localhost/api/v1/catalog/categories` (twice)
+2. **Expected:** First: `X-Cache: MISS`, Second: `X-Cache: HIT` + `Cache-Control: public, max-age=300`
+
+### TC-21.2: Request Timeout
+1. Any API call completes within 30 seconds
+2. If server is slow/stuck → **Expected:** 503 "Request timeout" after 30s
+
+### TC-21.3: Nginx Static Caching
+1. Load any uploaded image URL
+2. **Expected:** Response has `Cache-Control: public, immutable` + `Expires` header (7 days)
+
+### TC-21.4: Gzip Compression
+1. `curl -H "Accept-Encoding: gzip" -I http://localhost/api/v1/catalog/products`
+2. **Expected:** `Content-Encoding: gzip` in response
+
+### TC-21.5: Circuit Breaker (verify via logs)
+1. If Razorpay/Shiprocket API fails 5 times → circuit opens
+2. **Expected:** Subsequent calls fail fast with "Circuit breaker OPEN" (no API call attempted)
+3. After 60s → HALF_OPEN → retries one call
+
+---
+
+*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17, 20, 21, 27*
