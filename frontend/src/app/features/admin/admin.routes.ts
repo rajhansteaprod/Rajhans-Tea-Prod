@@ -81,6 +81,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./moderation/moderation-dashboard').then((m) => m.ModerationDashboardComponent),
       },
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./notifications/notification-management').then((m) => m.NotificationManagementComponent),
+      },
     ],
   },
 ];

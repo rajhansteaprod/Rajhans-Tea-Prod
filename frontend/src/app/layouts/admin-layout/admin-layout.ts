@@ -485,6 +485,12 @@ export class AdminLayoutComponent {
       active: true,
     },
     {
+      label: 'Notifications',
+      icon: '<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2"/></svg>',
+      route: '/admin/notifications',
+      active: true,
+    },
+    {
       label: 'Analytics',
       icon: '<svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
       route: '/admin/analytics',

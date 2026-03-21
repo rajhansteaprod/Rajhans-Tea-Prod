@@ -35,6 +35,24 @@ export const config = {
     keySecret: process.env.RAZORPAY_KEY_SECRET || '',
     webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || '',
   },
+  communication: {
+    email: {
+      smtp: {
+        host: process.env.SMTP_HOST || '',
+        port: parseInt(process.env.SMTP_PORT || '587', 10),
+        user: process.env.SMTP_USER || '',
+        pass: process.env.SMTP_PASS || '',
+        from: process.env.SMTP_FROM || 'Rajhans <noreply@rajhans.com>',
+      },
+    },
+    sms: {
+      provider: process.env.SMS_PROVIDER || 'msg91',
+      msg91: {
+        authKey: process.env.MSG91_AUTH_KEY || '',
+        senderId: process.env.MSG91_SENDER_ID || 'RAJHNS',
+      },
+    },
+  },
   shipping: {
     provider: (process.env.SHIPPING_PROVIDER || 'shiprocket') as 'shiprocket',
     shiprocket: {

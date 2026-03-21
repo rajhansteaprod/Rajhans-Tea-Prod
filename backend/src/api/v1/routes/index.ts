@@ -11,6 +11,7 @@ import promotionsRoutes from '../../../modules/promotions/promotions.routes';
 import searchRoutes from '../../../modules/search/search.routes';
 import personalizationRoutes from '../../../modules/personalization/personalization.routes';
 import reviewsRoutes from '../../../modules/reviews/reviews.routes';
+import communicationRoutes from '../../../modules/communication/communication.routes';
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.use(promotionsRoutes);
 router.use(searchRoutes);
 router.use(personalizationRoutes);
 router.use(reviewsRoutes);
+router.use(communicationRoutes);
 
 export default router;

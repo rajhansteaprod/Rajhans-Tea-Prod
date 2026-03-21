@@ -1,15 +1,20 @@
 import './types/express';
+import http from 'http';
 import app from './app';
 import { config } from './config';
 import { logger } from './utils/logger';
 import { initializeLoaders, disconnectMongoDB, disconnectRedis, disconnectBullMQ } from './loaders';
 import { registerWorkers, closeWorkers } from './jobs/start-workers';
+import { initSocket } from './loaders/socket.loader';
 
 const startServer = async () => {
   await initializeLoaders();
   registerWorkers();
 
-  const server = app.listen(config.port, () => {
+  const httpServer = http.createServer(app);
+  initSocket(httpServer);
+
+  const server = httpServer.listen(config.port, () => {
     logger.info(`Server running on port ${config.port} in ${config.env} mode`);
   });
 

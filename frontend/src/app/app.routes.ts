@@ -51,6 +51,12 @@ export const routes: Routes = [
           import('./features/store/loyalty/loyalty-page').then((m) => m.LoyaltyPageComponent),
       },
       {
+        path: 'notifications',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/store/notifications/notifications-page').then((m) => m.NotificationsPageComponent),
+      },
+      {
         path: 'referral',
         canActivate: [authGuard],
         loadComponent: () =>

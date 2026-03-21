@@ -5,6 +5,7 @@ import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartStore } from '../../../core/services/cart.store';
 import { SearchStore } from '../../../core/services/search.store';
+import { NotificationStore } from '../../../core/services/notification.store';
 
 @Component({
   selector: 'app-header',
@@ -77,6 +78,19 @@ import { SearchStore } from '../../../core/services/search.store';
               <span class="icon-badge">{{ cartStore.wishlistIds().size }}</span>
             }
           </a>
+
+          <!-- Notifications Bell -->
+          @if (authService.isLoggedIn()) {
+            <button class="icon-btn" (click)="notifStore.toggleDrawer()" title="Notifications">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              @if (notifStore.unreadCount() > 0) {
+                <span class="icon-badge notif-badge">{{ notifStore.unreadCount() > 9 ? '9+' : notifStore.unreadCount() }}</span>
+              }
+            </button>
+          }
 
           <!-- Cart -->
           <button class="icon-btn" (click)="cartStore.toggleSidebar()" title="Cart">
@@ -391,6 +405,7 @@ export class HeaderComponent {
   readonly authService = inject(AuthService);
   readonly cartStore = inject(CartStore);
   readonly searchStore = inject(SearchStore);
+  readonly notifStore = inject(NotificationStore);
   private readonly router = inject(Router);
   searchQuery = '';
 

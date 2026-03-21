@@ -498,4 +498,83 @@ fetch('/api/v1/reviews/my-reviews', {
 
 ---
 
-*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11*
+## Slice 12 — Communication
+
+### TC-12.1: Unread Count
+1. Login → Check header bell icon
+2. **Expected:** Bell icon visible with unread count (or no badge if 0)
+3. Count polls every 60 seconds
+
+### TC-12.2: Notification Inbox
+1. Login → Go to `/notifications`
+2. **Expected:** Notification history list (or empty state)
+
+### TC-12.3: Mark Read
+1. Click an unread notification
+2. **Expected:** Dot disappears, unread count decreases
+
+### TC-12.4: Mark All Read
+1. Click "Mark all as read" button
+2. **Expected:** All notifications marked read, badge gone
+
+### TC-12.5: Notification Preferences
+```js
+fetch('/api/v1/notifications/preferences', {
+  headers: { 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') }
+}).then(r=>r.json()).then(console.log)
+```
+**Expected:** Default preferences (all channels ON)
+
+### TC-12.6: Update Preferences
+```js
+fetch('/api/v1/notifications/preferences', {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') },
+  body: JSON.stringify({ quietHoursStart: 22, quietHoursEnd: 8 })
+}).then(r=>r.json()).then(console.log)
+```
+**Expected:** Quiet hours set 10pm-8am
+
+### TC-12.7: Register FCM Token
+```js
+fetch('/api/v1/notifications/fcm-token', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') },
+  body: JSON.stringify({ token: 'test-fcm-token-123', deviceInfo: 'Chrome' })
+}).then(r=>r.json()).then(console.log)
+```
+**Expected:** `{ registered: true }`
+
+### TC-12.8: Admin Create Template
+1. `/admin/notifications` → Templates tab → + Create Template
+2. Type: order_confirmed, Push Title: Order Confirmed, Push Body: Your order is confirmed!
+3. **Expected:** Template in list
+
+### TC-12.9: Admin Send Bulk
+1. `/admin/notifications` → Send Bulk tab
+2. Type: announcement, Message: "Flash sale today!"
+3. Click "Send to All Users"
+4. **Expected:** "Notification queued for X users"
+
+### TC-12.10: Admin Stats
+1. `/admin/notifications` → Stats cards
+2. **Expected:** Total Sent, Last 24h, Emails, Push counts
+
+### TC-12.11: Dispatch API (internal test)
+```js
+fetch('/api/v1/admin/notifications/send-bulk', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') },
+  body: JSON.stringify({ type: 'announcement', message: 'Test notification' })
+}).then(r=>r.json()).then(console.log)
+```
+**Expected:** Notification created for all active users, appears in inbox
+
+### TC-12.12: Quiet Hours
+1. Set quiet hours 22-8 (TC-12.6)
+2. Send notification during quiet hours
+3. **Expected:** In-app notification created but push/SMS skipped
+
+---
+
+*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12*
