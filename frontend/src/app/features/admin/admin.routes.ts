@@ -66,6 +66,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./warehouses/warehouse-list').then((m) => m.WarehouseListComponent),
       },
+      {
+        path: 'coupons',
+        loadComponent: () =>
+          import('./promotions/coupon-management').then((m) => m.CouponManagementComponent),
+      },
     ],
   },
 ];

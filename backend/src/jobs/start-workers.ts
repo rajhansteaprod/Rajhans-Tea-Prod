@@ -2,6 +2,7 @@ import { startInvoiceWorker, closeInvoiceWorker } from './workers/invoice.worker
 import { startWalletWorker, closeWalletWorker } from './workers/wallet.worker';
 import { startPaymentWorker, closePaymentWorker } from './workers/payment.worker';
 import { startFulfillmentWorker, closeFulfillmentWorker } from '../modules/inventory/jobs/workers/fulfillment.worker';
+import { startPromotionsWorker, closePromotionsWorker } from '../modules/promotions/jobs/workers/promotions.worker';
 import { logger } from '../utils/logger';
 
 export const registerWorkers = (): void => {
@@ -9,6 +10,7 @@ export const registerWorkers = (): void => {
   startInvoiceWorker();
   startWalletWorker();
   startFulfillmentWorker();
+  startPromotionsWorker();
   // Future slices:
   // startNotificationWorker();
   // startAnalyticsWorker();
@@ -20,5 +22,6 @@ export const closeWorkers = async (): Promise<void> => {
   await closeInvoiceWorker();
   await closeWalletWorker();
   await closeFulfillmentWorker();
+  await closePromotionsWorker();
   logger.info('BullMQ workers closed');
 };

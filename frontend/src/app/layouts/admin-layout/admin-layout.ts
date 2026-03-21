@@ -467,6 +467,12 @@ export class AdminLayoutComponent {
       active: true,
     },
     {
+      label: 'Coupons',
+      icon: '<svg viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="18" cy="16" r="2" stroke="currentColor" stroke-width="2" fill="none"/></svg>',
+      route: '/admin/coupons',
+      active: true,
+    },
+    {
       label: 'Analytics',
       icon: '<svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
       route: '/admin/analytics',

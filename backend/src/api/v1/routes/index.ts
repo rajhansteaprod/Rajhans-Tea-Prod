@@ -7,6 +7,7 @@ import pricingRoutes from './pricing.routes';
 import cartRoutes from './cart.routes';
 import paymentRoutes from './payment.routes';
 import inventoryRoutes from '../../../modules/inventory/inventory.routes';
+import promotionsRoutes from '../../../modules/promotions/promotions.routes';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use(pricingRoutes);
 router.use(cartRoutes);
 router.use(paymentRoutes);
 router.use(inventoryRoutes);
+router.use(promotionsRoutes);
 
 export default router;

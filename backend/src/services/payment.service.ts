@@ -8,6 +8,7 @@ import { getInvoiceQueue, InvoiceJobs } from '../jobs/queues/invoice.queue';
 import { getPaymentQueue, PaymentJobs } from '../jobs/queues/payment.queue';
 import { getWalletQueue, WalletJobs } from '../jobs/queues/wallet.queue';
 import { getFulfillmentQueue, FulfillmentJobs } from '../modules/inventory/jobs/queues/fulfillment.queue';
+import { getPromotionsQueue, PromotionJobs } from '../modules/promotions/jobs/queues/promotions.queue';
 import { WalletService } from './wallet.service';
 import { BadRequestError, NotFoundError } from '../utils/api-error';
 import { IShippingAddress } from '../models/payment.model';
@@ -274,6 +275,20 @@ export class PaymentService {
       { paymentId: payment._id.toString() },
       { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
     );
+
+    // 8. Enqueue loyalty earn + referral completion (Promotions)
+    if (payment.userId) {
+      await getPromotionsQueue().add(
+        PromotionJobs.EARN_LOYALTY,
+        { userId: payment.userId.toString(), orderTotal: payment.amountPaise / 100, paymentId: payment._id.toString() },
+        { attempts: 3, backoff: { type: 'exponential', delay: 3000 } },
+      );
+      await getPromotionsQueue().add(
+        PromotionJobs.COMPLETE_REFERRAL,
+        { refereeUserId: payment.userId.toString(), paymentId: payment._id.toString() },
+        { attempts: 2, backoff: { type: 'exponential', delay: 5000 } },
+      );
+    }
 
     return {
       paymentId: payment._id.toString(),

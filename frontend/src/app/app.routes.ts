@@ -39,6 +39,18 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/store/wallet/wallet-page').then((m) => m.WalletPageComponent),
       },
+      {
+        path: 'loyalty',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/store/loyalty/loyalty-page').then((m) => m.LoyaltyPageComponent),
+      },
+      {
+        path: 'referral',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/store/referral/referral-page').then((m) => m.ReferralPageComponent),
+      },
     ],
   },
   {
