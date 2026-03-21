@@ -21,6 +21,7 @@ import observabilityRoutes from '../../../modules/observability/observability.ro
 import featureFlagRoutes from '../../../modules/feature-flags/feature-flag.routes';
 import dataPlatformRoutes from '../../../modules/data-platform/data-platform.routes';
 import cmsRoutes from '../../../modules/cms/cms.routes';
+import experimentationRoutes from '../../../modules/experimentation/experimentation.routes';
 
 const router = Router();
 
@@ -46,5 +47,6 @@ router.use(observabilityRoutes);
 router.use(featureFlagRoutes);
 router.use(dataPlatformRoutes);
 router.use(cmsRoutes);
+router.use(experimentationRoutes);
 
 export default router;

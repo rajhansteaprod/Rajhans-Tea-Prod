@@ -131,6 +131,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./cms/cms-management').then((m) => m.CmsManagementComponent),
       },
+      {
+        path: 'experiments',
+        loadComponent: () =>
+          import('./experiments/experiment-list').then((m) => m.ExperimentListComponent),
+      },
     ],
   },
 ];

@@ -934,4 +934,34 @@ fetch('/api/v1/feature-flags').then(r=>r.json()).then(console.log)
 
 ---
 
-*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 17, 20, 21, 22, 23, 24, 25, 27*
+## Slice 15 — Experimentation Platform
+
+### TC-15.1: Create Experiment
+1. `/admin/experiments` → + New Experiment
+2. Name: "Checkout Flow", Variants: control 50%, variant_a 50%, Metric: conversion_rate
+3. **Expected:** Experiment in list with "draft" status
+
+### TC-15.2: Start Experiment
+1. Click "Start" on draft experiment
+2. **Expected:** Status → "running", startDate set
+
+### TC-15.3: Get Variant Assignment
+```js
+fetch('/api/v1/experiments/checkout-flow', { headers: { 'X-Session-ID': localStorage.getItem('guestSessionId') } }).then(r=>r.json()).then(console.log)
+```
+**Expected:** `{ variant: "control" or "variant_a", experiment: "checkout-flow" }`
+
+### TC-15.4: Deterministic Assignment
+1. Call same endpoint twice with same session
+2. **Expected:** Same variant both times (hash-based, deterministic)
+
+### TC-15.5: View Results
+1. After some exposures → Click "Results" on running experiment
+2. **Expected:** Per-variant: exposures, conversions, conversion rate %, revenue
+
+### TC-15.6: Stop Experiment
+1. Click "Stop" → **Expected:** Status → "completed", endDate set
+
+---
+
+*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 20, 21, 22, 23, 24, 25, 27*
