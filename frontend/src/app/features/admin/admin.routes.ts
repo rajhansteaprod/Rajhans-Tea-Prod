@@ -76,6 +76,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./merchandising/merchandising-management').then((m) => m.MerchandisingManagementComponent),
       },
+      {
+        path: 'moderation',
+        loadComponent: () =>
+          import('./moderation/moderation-dashboard').then((m) => m.ModerationDashboardComponent),
+      },
     ],
   },
 ];

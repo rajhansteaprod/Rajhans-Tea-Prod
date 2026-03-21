@@ -402,4 +402,100 @@ fetch('/api/v1/personalization/banners').then(r=>r.json()).then(console.log)
 
 ---
 
-*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10*
+## Slice 11 — Reviews & UGC
+
+### TC-11.1: Submit Review
+```js
+fetch('/api/v1/reviews/products/<PRODUCT_ID>/reviews', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') },
+  body: JSON.stringify({ rating: 5, title: 'Great product!', body: 'Really loved the quality and taste.' })
+}).then(r=>r.json()).then(console.log)
+```
+**Expected:** 201, review created. If purchased → auto-approved + "Verified Purchase"
+
+### TC-11.2: Duplicate Review
+1. Submit review for same product again
+2. **Expected:** 409 "You have already reviewed this product"
+
+### TC-11.3: Get Product Reviews
+```js
+fetch('/api/v1/reviews/products/<PRODUCT_ID>/reviews').then(r=>r.json()).then(console.log)
+```
+**Expected:** Paginated approved reviews with user info
+
+### TC-11.4: Rating Summary
+```js
+fetch('/api/v1/reviews/products/<PRODUCT_ID>/summary').then(r=>r.json()).then(console.log)
+```
+**Expected:** `{ averageRating: 5, totalReviews: 1, distribution: { 1:0, 2:0, 3:0, 4:0, 5:1 } }`
+
+### TC-11.5: Helpful Vote (toggle)
+```js
+fetch('/api/v1/reviews/reviews/<REVIEW_ID>/vote', {
+  method: 'POST',
+  headers: { 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') }
+}).then(r=>r.json()).then(console.log)
+```
+**Expected:** First time: `{ action: "added" }`. Second time: `{ action: "removed" }`
+
+### TC-11.6: Report Review
+```js
+fetch('/api/v1/reviews/reviews/<REVIEW_ID>/report', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') },
+  body: JSON.stringify({ reason: 'spam', details: 'Looks fake' })
+}).then(r=>r.json()).then(console.log)
+```
+**Expected:** `{ reported: true }`
+
+### TC-11.7: Submit Question
+```js
+fetch('/api/v1/reviews/products/<PRODUCT_ID>/questions', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') },
+  body: JSON.stringify({ questionText: 'Is this product organic?' })
+}).then(r=>r.json()).then(console.log)
+```
+**Expected:** 201, question created (auto-approved)
+
+### TC-11.8: Submit Answer
+```js
+fetch('/api/v1/reviews/questions/<QUESTION_ID>/answers', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') },
+  body: JSON.stringify({ body: 'Yes, 100% organic certified.' })
+}).then(r=>r.json()).then(console.log)
+```
+**Expected:** `{ answered: true }`. Admin answers get `isAdminAnswer: true`
+
+### TC-11.9: Bad Words Auto-Flag
+1. Submit review with title containing "scam" or "fraud"
+2. **Expected:** Status = "pending" (not auto-approved even if verified purchaser)
+
+### TC-11.10: Admin Moderation
+1. `/admin/moderation`
+2. **Expected:** Stats cards (approved, pending, reported, avg rating)
+3. Pending reviews tab → Approve/Reject buttons
+4. Approve → review visible publicly, rating recomputed
+5. Reject → review hidden, reason stored
+
+### TC-11.11: Admin Reply
+1. Admin → Moderation → Click Reply on a review → Type reply → Send
+2. **Expected:** Admin reply visible on the review
+
+### TC-11.12: Pin Review
+1. Admin → Moderation → Click Pin on a review
+2. **Expected:** Review appears first in product reviews (isPinned: true)
+
+### TC-11.13: My Reviews
+```js
+fetch('/api/v1/reviews/my-reviews', {
+  headers: { 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') }
+}).then(r=>r.json()).then(console.log)
+```
+**Expected:** User's submitted reviews with status badges
+
+---
+
+*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11*

@@ -10,6 +10,7 @@ import inventoryRoutes from '../../../modules/inventory/inventory.routes';
 import promotionsRoutes from '../../../modules/promotions/promotions.routes';
 import searchRoutes from '../../../modules/search/search.routes';
 import personalizationRoutes from '../../../modules/personalization/personalization.routes';
+import reviewsRoutes from '../../../modules/reviews/reviews.routes';
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use(inventoryRoutes);
 router.use(promotionsRoutes);
 router.use(searchRoutes);
 router.use(personalizationRoutes);
+router.use(reviewsRoutes);
 
 export default router;
