@@ -17,6 +17,7 @@ import analyticsRoutes from '../../../modules/analytics/analytics.routes';
 import settingsRoutes from '../../../modules/settings/settings.routes';
 import workflowRoutes from '../../../modules/workflow/workflow.routes';
 import distributedRoutes from '../../../modules/distributed/distributed.routes';
+import observabilityRoutes from '../../../modules/observability/observability.routes';
 
 const router = Router();
 
@@ -38,5 +39,6 @@ router.use(analyticsRoutes);
 router.use(settingsRoutes);
 router.use(workflowRoutes);
 router.use(distributedRoutes);
+router.use(observabilityRoutes);
 
 export default router;

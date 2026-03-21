@@ -784,4 +784,24 @@ GET /api/v1/health/ready → 200 if MongoDB+Redis connected, 503 if any down
 
 ---
 
-*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17, 20, 21, 22, 27*
+## Slice 23 — Observability
+
+### TC-23.1: Trace ID in Response
+1. Make any API call → Check response headers
+2. **Expected:** `X-Trace-ID` header present
+
+### TC-23.2: Observability Dashboard
+1. Make 10+ API calls → `/admin/observability`
+2. **Expected:** Error summary cards, slowest endpoints, endpoint overview table
+
+### TC-23.3: Latency Percentiles
+1. Check slowest endpoints table
+2. **Expected:** p95/p99 columns, red if slow (>500ms/1000ms)
+
+### TC-23.4: Error Rate
+1. If errors exist → error summary shows rate %
+2. **Expected:** Red card if error rate > 5%
+
+---
+
+*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17, 20, 21, 22, 23, 27*

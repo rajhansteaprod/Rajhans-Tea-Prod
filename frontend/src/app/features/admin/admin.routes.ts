@@ -111,6 +111,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./system-health/system-health').then((m) => m.SystemHealthComponent),
       },
+      {
+        path: 'observability',
+        loadComponent: () =>
+          import('./observability/observability-dashboard').then((m) => m.ObservabilityDashboardComponent),
+      },
     ],
   },
 ];

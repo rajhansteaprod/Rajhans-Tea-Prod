@@ -36,6 +36,10 @@ app.use(requestIdMiddleware);
 app.use(requestLoggerMiddleware);
 app.use(metricsMiddleware);
 
+// Observability — trace context + latency recording
+import { observabilityMiddleware } from './middleware/observability.middleware';
+app.use(observabilityMiddleware);
+
 // Static file serving for uploaded images
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
