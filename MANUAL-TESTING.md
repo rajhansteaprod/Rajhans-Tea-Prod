@@ -756,4 +756,32 @@ fetch('/api/v1/admin/system/health', {
 
 ---
 
-*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17, 20, 21, 27*
+## Slice 22 — Reliability & Resilience
+
+### TC-22.1: Health Probes
+```
+GET /api/v1/health       → 200 (basic health)
+GET /api/v1/health/live  → 200 (liveness — always alive)
+GET /api/v1/health/ready → 200 if MongoDB+Redis connected, 503 if any down
+```
+
+### TC-22.2: Idempotency Middleware
+1. Send same POST twice with same `X-Idempotency-Key` header
+2. **Expected:** First: normal response. Second: `X-Idempotent-Replay: true` with cached response
+
+### TC-22.3: DB Retry (verify via logs)
+1. If MongoDB has a transient error during query
+2. **Expected:** Log shows "Transient DB error — retrying" with attempt count
+
+### TC-22.4: Global Error Handler (verify via logs)
+1. If any unhandled error occurs
+2. **Expected:** Log shows "UNCAUGHT EXCEPTION" or "UNHANDLED PROMISE REJECTION" — server doesn't silently die
+
+### TC-22.5: DLQ Hook
+1. Force a BullMQ job to fail (e.g., invalid paymentId)
+2. After max retries exhausted
+3. **Expected:** Entry appears in Admin → System Health → Dead Letter Queue
+
+---
+
+*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17, 20, 21, 22, 27*

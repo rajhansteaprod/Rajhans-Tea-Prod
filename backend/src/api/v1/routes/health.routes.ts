@@ -60,4 +60,9 @@ router.get('/health/ready', async (_req: Request, res: Response) => {
   });
 });
 
+// Liveness probe (Kubernetes) — always 200 if process is running
+router.get('/health/live', (_req: Request, res: Response) => {
+  res.status(200).json({ success: true, message: 'Alive' });
+});
+
 export default router;

@@ -7,8 +7,10 @@ import { initializeLoaders, disconnectMongoDB, disconnectRedis, disconnectBullMQ
 import { registerWorkers, closeWorkers } from './jobs/start-workers';
 import { initSocket } from './loaders/socket.loader';
 import { registerEventHandlers } from './core/event-handlers';
+import { registerGlobalErrorHandlers } from './core/graceful-error-handler';
 
 const startServer = async () => {
+  registerGlobalErrorHandlers();
   await initializeLoaders();
   registerWorkers();
   registerEventHandlers();
