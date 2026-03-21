@@ -18,6 +18,7 @@ import settingsRoutes from '../../../modules/settings/settings.routes';
 import workflowRoutes from '../../../modules/workflow/workflow.routes';
 import distributedRoutes from '../../../modules/distributed/distributed.routes';
 import observabilityRoutes from '../../../modules/observability/observability.routes';
+import featureFlagRoutes from '../../../modules/feature-flags/feature-flag.routes';
 
 const router = Router();
 
@@ -40,5 +41,6 @@ router.use(settingsRoutes);
 router.use(workflowRoutes);
 router.use(distributedRoutes);
 router.use(observabilityRoutes);
+router.use(featureFlagRoutes);
 
 export default router;

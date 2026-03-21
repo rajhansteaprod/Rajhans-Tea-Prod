@@ -116,6 +116,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./observability/observability-dashboard').then((m) => m.ObservabilityDashboardComponent),
       },
+      {
+        path: 'feature-flags',
+        loadComponent: () =>
+          import('./feature-flags/feature-flag-list').then((m) => m.FeatureFlagListComponent),
+      },
     ],
   },
 ];

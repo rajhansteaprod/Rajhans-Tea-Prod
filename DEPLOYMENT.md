@@ -132,3 +132,51 @@ pm2 start ecosystem.config.js --env production
 - [ ] CORS restricted to production domain (already done)
 - [ ] Helmet security headers (already done)
 - [ ] Input validation on all endpoints (Zod, already done)
+
+## Rollback Procedure
+
+### Quick Rollback (< 2 minutes)
+```bash
+# 1. Find previous working commit
+git log --oneline -10
+
+# 2. Revert to previous commit
+git revert HEAD --no-edit
+git push origin main
+
+# 3. Redeploy (PM2)
+pm2 reload rajhans-api
+
+# 4. Verify health
+curl https://yourdomain.com/api/v1/health/ready
+```
+
+### Docker Rollback
+```bash
+# 1. List previous images
+docker images rajhansecommerce-backend --format "table {{.ID}}\t{{.CreatedAt}}"
+
+# 2. Tag previous image as latest
+docker tag <previous-image-id> rajhansecommerce-backend:latest
+
+# 3. Restart
+docker compose up -d backend
+```
+
+### Feature Flag Rollback (zero deploy)
+```
+If a new feature causes issues:
+1. Go to Admin → Feature Flags
+2. Toggle OFF the problematic flag
+3. Feature instantly disabled — no deploy needed
+4. Fix the bug at your own pace
+5. Toggle ON when ready
+```
+
+## Smoke Test After Deploy
+```bash
+# Run after every deployment
+curl -f https://yourdomain.com/api/v1/health/ready || echo "DEPLOY FAILED"
+curl -f https://yourdomain.com/api/v1/health/live || echo "DEPLOY FAILED"
+curl -f https://yourdomain.com/api/v1/catalog/categories || echo "CATALOG BROKEN"
+```

@@ -804,4 +804,43 @@ GET /api/v1/health/ready → 200 if MongoDB+Redis connected, 503 if any down
 
 ---
 
-*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17, 20, 21, 22, 23, 27*
+## Slice 24 — DevOps & Release
+
+### TC-24.1: Create Feature Flag
+1. `/admin/feature-flags` → + Create Flag
+2. Name: "dark-mode", Env: all, Rollout: 50%, Enabled: true
+3. **Expected:** Flag in list with green toggle, slug auto-generated
+
+### TC-24.2: Toggle Feature Flag
+1. Click toggle on a flag
+2. **Expected:** State switches (enabled ↔ disabled), green/gray indicator
+
+### TC-24.3: Evaluate Flag (API)
+```js
+fetch('/api/v1/feature-flags/dark-mode').then(r=>r.json()).then(console.log)
+```
+**Expected:** `{ slug: "dark-mode", enabled: true/false }` based on rollout %
+
+### TC-24.4: Evaluate All Flags
+```js
+fetch('/api/v1/feature-flags').then(r=>r.json()).then(console.log)
+```
+**Expected:** `{ "dark-mode": true, "new-checkout": false, ... }` map
+
+### TC-24.5: Percentage Rollout
+1. Create flag with rollout: 50%
+2. Check for different users → ~50% get true, ~50% get false
+3. **Expected:** Deterministic per user (same user always gets same result)
+
+### TC-24.6: Environment Targeting
+1. Create flag with environment: "production"
+2. Check in development
+3. **Expected:** `false` (env doesn't match)
+
+### TC-24.7: Env Validation (startup logs)
+1. Start server → check logs
+2. **Expected:** "Environment validation complete" or warnings for missing optional vars
+
+---
+
+*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17, 20, 21, 22, 23, 24, 27*

@@ -8,8 +8,10 @@ import { registerWorkers, closeWorkers } from './jobs/start-workers';
 import { initSocket } from './loaders/socket.loader';
 import { registerEventHandlers } from './core/event-handlers';
 import { registerGlobalErrorHandlers } from './core/graceful-error-handler';
+import { validateEnvironment } from './core/env-validator';
 
 const startServer = async () => {
+  validateEnvironment();
   registerGlobalErrorHandlers();
   await initializeLoaders();
   registerWorkers();
