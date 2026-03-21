@@ -136,6 +136,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./experiments/experiment-list').then((m) => m.ExperimentListComponent),
       },
+      {
+        path: 'support',
+        loadComponent: () =>
+          import('./support/support-dashboard').then((m) => m.SupportDashboardComponent),
+      },
     ],
   },
 ];

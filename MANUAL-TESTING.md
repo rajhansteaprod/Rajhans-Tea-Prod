@@ -964,4 +964,33 @@ fetch('/api/v1/experiments/checkout-flow', { headers: { 'X-Session-ID': localSto
 
 ---
 
-*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 20, 21, 22, 23, 24, 25, 27*
+## Slice 16 — Customer Support
+
+### TC-16.1: Create Ticket
+1. Login → `/support` → + New Ticket
+2. Fill subject, priority, description → Submit
+3. **Expected:** Ticket created with TKT-2026-XXXXX number
+
+### TC-16.2: View My Tickets
+1. `/support` → ticket list visible
+2. **Expected:** All user's tickets with status badges
+
+### TC-16.3: Ticket Conversation
+1. Click ticket → conversation modal
+2. Send reply → **Expected:** message appears in chat, ticket reopens if was resolved
+
+### TC-16.4: Admin Support Dashboard
+1. `/admin/support`
+2. **Expected:** Stats (total, open, in progress, resolved, urgent), ticket list with filters
+
+### TC-16.5: Admin Reply
+1. Click ticket → type reply → Send
+2. **Expected:** Admin message in conversation, status auto-moves to in_progress
+
+### TC-16.6: Change Ticket Status
+1. Admin → select status dropdown on ticket detail
+2. **Expected:** Status updates (open → in_progress → resolved → closed)
+
+---
+
+*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 24, 25, 27*

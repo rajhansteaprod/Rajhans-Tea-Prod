@@ -22,6 +22,7 @@ import featureFlagRoutes from '../../../modules/feature-flags/feature-flag.route
 import dataPlatformRoutes from '../../../modules/data-platform/data-platform.routes';
 import cmsRoutes from '../../../modules/cms/cms.routes';
 import experimentationRoutes from '../../../modules/experimentation/experimentation.routes';
+import supportRoutes from '../../../modules/support/support.routes';
 
 const router = Router();
 
@@ -48,5 +49,6 @@ router.use(featureFlagRoutes);
 router.use(dataPlatformRoutes);
 router.use(cmsRoutes);
 router.use(experimentationRoutes);
+router.use(supportRoutes);
 
 export default router;
