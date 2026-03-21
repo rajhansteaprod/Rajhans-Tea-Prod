@@ -68,6 +68,9 @@ services:
       - CORS_ORIGIN=http://localhost:4201
       - FIREBASE_PROJECT_ID=sarara-b9eac
       - GOOGLE_APPLICATION_CREDENTIALS=/app/backend/firebase-service-account.json
+      - RAZORPAY_KEY_ID=rzp_test_STo8X60gyG9PvZ
+      - RAZORPAY_KEY_SECRET=F2V1oUFcvc6vcvbu4OP0ezur
+      - RAZORPAY_WEBHOOK_SECRET=
     depends_on:
       mongo:
         condition: service_healthy

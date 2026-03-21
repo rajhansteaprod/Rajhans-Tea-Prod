@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CartStore, CheckoutSummary } from '../../../core/services/cart.store';
+import { PaymentStore } from '../../../core/services/payment.store';
+import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
 
 type Step = 'cart' | 'address' | 'summary';
@@ -222,6 +224,18 @@ const emptyAddress = (): AddressForm => ({
                     <strong>{{ address.name }}</strong> · {{ address.phone }}<br/>
                     {{ address.street }}, {{ address.city }} {{ address.pincode }}, {{ address.state }}
                   </p>
+                </div>
+              }
+
+              <!-- Payment error -->
+              @if (payment.paymentError() && payment.paymentError() !== 'Payment cancelled') {
+                <div class="stock-alert">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  </svg>
+                  <div>
+                    <p class="alert-title">{{ payment.paymentError() }}</p>
+                  </div>
                 </div>
               }
 
@@ -889,6 +903,8 @@ const emptyAddress = (): AddressForm => ({
 })
 export class CheckoutPageComponent implements OnInit {
   readonly cart = inject(CartStore);
+  readonly payment = inject(PaymentStore);
+  private readonly auth = inject(AuthService);
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly api = environment.apiUrl;
@@ -909,7 +925,17 @@ export class CheckoutPageComponent implements OnInit {
   address: AddressForm = emptyAddress();
 
   ngOnInit(): void {
-    this.cart.loadCart();
+    // If merge is in progress (user just logged in), wait for it to finish
+    if (this.cart.merging()) {
+      const interval = setInterval(() => {
+        if (!this.cart.merging()) {
+          clearInterval(interval);
+          this.cart.loadCart();
+        }
+      }, 200);
+    } else {
+      this.cart.loadCart();
+    }
   }
 
   isStepDone(step: Step): boolean {
@@ -957,33 +983,34 @@ export class CheckoutPageComponent implements OnInit {
       });
   }
 
-  placeOrder(): void {
+  async placeOrder(): Promise<void> {
+    // Guest must login before payment
+    if (!this.auth.isLoggedIn()) {
+      // Save current URL so auth can redirect back after login
+      localStorage.setItem('redirectAfterLogin', '/checkout');
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+
     this.orderPlacing.set(true);
     this.stockIssues.set([]);
 
-    this.http
-      .post<{ success: boolean; data: { reserved: boolean; issues?: StockIssueItem[] } }>(
-        `${this.api}/checkout/reserve`,
-        {},
-        { headers: this.sessionHeaders() },
-      )
-      .subscribe({
-        next: () => {
-          this.orderPlacing.set(false);
-          this.orderPlaced.set(true);
-          // Clear cart and redirect after short delay
-          setTimeout(() => {
-            this.cart.clearCart();
-            this.router.navigate(['/']);
-          }, 2000);
-        },
-        error: (err) => {
-          this.orderPlacing.set(false);
-          if (err.status === 409 && err.error?.data?.issues) {
-            this.stockIssues.set(err.error.data.issues);
-          }
-        },
-      });
+    const success = await this.payment.pay(this.address);
+
+    if (success) {
+      this.orderPlacing.set(false);
+      this.orderPlaced.set(true);
+      setTimeout(() => {
+        this.router.navigate(['/orders']);
+      }, 2000);
+    } else {
+      this.orderPlacing.set(false);
+      const error = this.payment.paymentError();
+      if (error && error !== 'Payment cancelled') {
+        // Could be stock issue or other error
+        this.stockIssues.set([]);
+      }
+    }
   }
 
   private sessionHeaders(): HttpHeaders {

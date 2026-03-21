@@ -967,8 +967,15 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
       this.authService.verifyFirebaseToken(idToken).subscribe({
         next: (res) => {
           this.loading.set(false);
-          const redirectTo = res.data.user.role === 'admin' ? '/dashboard' : '/';
-          this.router.navigate([redirectTo]);
+          // Check if there's a saved redirect URL (e.g. from checkout)
+          const savedRedirect = localStorage.getItem('redirectAfterLogin');
+          if (savedRedirect) {
+            localStorage.removeItem('redirectAfterLogin');
+            this.router.navigate([savedRedirect]);
+          } else {
+            const redirectTo = res.data.user.role === 'admin' ? '/dashboard' : '/';
+            this.router.navigate([redirectTo]);
+          }
         },
         error: (err) => {
           this.loading.set(false);

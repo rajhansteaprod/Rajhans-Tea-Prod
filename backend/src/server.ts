@@ -2,10 +2,12 @@ import './types/express';
 import app from './app';
 import { config } from './config';
 import { logger } from './utils/logger';
-import { initializeLoaders, disconnectMongoDB, disconnectRedis } from './loaders';
+import { initializeLoaders, disconnectMongoDB, disconnectRedis, disconnectBullMQ } from './loaders';
+import { registerWorkers, closeWorkers } from './jobs/start-workers';
 
 const startServer = async () => {
   await initializeLoaders();
+  registerWorkers();
 
   const server = app.listen(config.port, () => {
     logger.info(`Server running on port ${config.port} in ${config.env} mode`);
@@ -17,6 +19,8 @@ const startServer = async () => {
 
     server.close(async () => {
       logger.info('HTTP server closed');
+      await closeWorkers();
+      await disconnectBullMQ();
       await disconnectMongoDB();
       await disconnectRedis();
       logger.info('Graceful shutdown complete');

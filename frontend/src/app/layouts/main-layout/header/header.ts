@@ -17,9 +17,10 @@ import { CartStore } from '../../../core/services/cart.store';
         </a>
         <div class="header-right">
           @if (authService.isLoggedIn()) {
-            <a routerLink="/dashboard" class="nav-link">Dashboard</a>
+            <a routerLink="/orders" class="nav-link">Orders</a>
+            <a routerLink="/wallet" class="nav-link">Wallet</a>
             @if (authService.isAdmin()) {
-              <a routerLink="/admin" class="nav-link admin-link">Admin Panel</a>
+              <a routerLink="/admin" class="nav-link admin-link">Admin</a>
             }
           }
 

@@ -30,6 +30,11 @@ export const config = {
     serviceAccountPath: process.env.FIREBASE_SERVICE_ACCOUNT_PATH || '',
     projectId: process.env.FIREBASE_PROJECT_ID || '',
   },
+  razorpay: {
+    keyId: process.env.RAZORPAY_KEY_ID || '',
+    keySecret: process.env.RAZORPAY_KEY_SECRET || '',
+    webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || '',
+  },
   log: {
     level: process.env.LOG_LEVEL || 'debug',
   },

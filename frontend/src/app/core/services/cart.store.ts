@@ -98,6 +98,7 @@ export class CartStore {
   private readonly _wishlistIds = signal<Set<string>>(new Set());
   private readonly _wishlistItems = signal<WishlistItem[]>([]);
   private readonly _wishlistLoading = signal(false);
+  private readonly _merging = signal(false);
 
   readonly cartItems = this._cartItems.asReadonly();
   readonly cartLoading = this._cartLoading.asReadonly();
@@ -105,6 +106,7 @@ export class CartStore {
   readonly wishlistIds = this._wishlistIds.asReadonly();
   readonly wishlistItems = this._wishlistItems.asReadonly();
   readonly wishlistLoading = this._wishlistLoading.asReadonly();
+  readonly merging = this._merging.asReadonly();
 
   readonly cartCount = computed(() => this._cartItems().reduce((s, i) => s + i.qty, 0));
   readonly cartSubtotal = computed(() => this._cartItems().reduce((s, i) => s + i.lineTotal, 0));
@@ -122,6 +124,7 @@ export class CartStore {
         pairwise(),
         filter(([prev, curr]) => !prev && curr),
         switchMap(() => {
+          this._merging.set(true);
           return this.http.post<ApiResponse<CartView>>(
             `${this.api}/cart/merge`,
             { guestSessionId: this.sessionId },
@@ -130,8 +133,14 @@ export class CartStore {
         }),
       )
       .subscribe({
-        next: (res) => this.applyCart(res.data),
-        error: () => {/* silent — cart state is still usable */},
+        next: (res) => {
+          this.applyCart(res.data);
+          this._merging.set(false);
+        },
+        error: () => {
+          this._merging.set(false);
+          this.loadCart(); // fallback — reload cart
+        },
       });
 
     toObservable(this.auth.isLoggedIn)
@@ -148,7 +157,7 @@ export class CartStore {
       )
       .subscribe({
         next: (res) => this.applyWishlist(res.data),
-        error: () => {/* silent */},
+        error: () => this.loadWishlist(), // fallback
       });
   }
 

@@ -27,6 +27,18 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/store/checkout/checkout-page').then((m) => m.CheckoutPageComponent),
       },
+      {
+        path: 'orders',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/store/orders/order-history-page').then((m) => m.OrderHistoryPageComponent),
+      },
+      {
+        path: 'wallet',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/store/wallet/wallet-page').then((m) => m.WalletPageComponent),
+      },
     ],
   },
   {
