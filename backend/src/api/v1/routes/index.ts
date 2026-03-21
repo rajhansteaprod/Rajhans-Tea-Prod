@@ -16,6 +16,7 @@ import auditRoutes from '../../../modules/audit/audit.routes';
 import analyticsRoutes from '../../../modules/analytics/analytics.routes';
 import settingsRoutes from '../../../modules/settings/settings.routes';
 import workflowRoutes from '../../../modules/workflow/workflow.routes';
+import distributedRoutes from '../../../modules/distributed/distributed.routes';
 
 const router = Router();
 
@@ -36,5 +37,6 @@ router.use(auditRoutes);
 router.use(analyticsRoutes);
 router.use(settingsRoutes);
 router.use(workflowRoutes);
+router.use(distributedRoutes);
 
 export default router;

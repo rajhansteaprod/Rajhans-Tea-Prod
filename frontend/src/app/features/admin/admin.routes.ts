@@ -106,6 +106,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./workflows/workflow-list').then((m) => m.WorkflowListComponent),
       },
+      {
+        path: 'system-health',
+        loadComponent: () =>
+          import('./system-health/system-health').then((m) => m.SystemHealthComponent),
+      },
     ],
   },
 ];

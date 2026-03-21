@@ -6,10 +6,12 @@ import { logger } from './utils/logger';
 import { initializeLoaders, disconnectMongoDB, disconnectRedis, disconnectBullMQ } from './loaders';
 import { registerWorkers, closeWorkers } from './jobs/start-workers';
 import { initSocket } from './loaders/socket.loader';
+import { registerEventHandlers } from './core/event-handlers';
 
 const startServer = async () => {
   await initializeLoaders();
   registerWorkers();
+  registerEventHandlers();
 
   const httpServer = http.createServer(app);
   initSocket(httpServer);

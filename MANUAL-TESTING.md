@@ -703,4 +703,32 @@ fetch('/api/v1/admin/workflows/instances/<ID>/transition', {
 
 ---
 
-*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17, 27*
+## Slice 20 — Distributed Systems
+
+### TC-20.1: System Health
+1. `/admin/system-health`
+2. **Expected:** System cards (status OK, uptime, heap, free RAM, Node version)
+
+### TC-20.2: Queue Health
+1. System Health page → Queue Health table
+2. **Expected:** 8 queues listed with waiting/active/completed/failed/delayed counts
+
+### TC-20.3: Dead Letter Queue (empty)
+1. System Health page → DLQ section
+2. **Expected:** "No failed jobs. All clear!"
+
+### TC-20.4: Event Bus (verify via logs)
+1. Docker logs → after payment capture
+2. **Expected:** `Event emitted: payment.captured` → jobs dispatched via event handlers
+
+### TC-20.5: System Health API
+```js
+fetch('/api/v1/admin/system/health', {
+  headers: { 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') }
+}).then(r=>r.json()).then(console.log)
+```
+**Expected:** `{ status: "ok", uptime, memory, os, nodeVersion }`
+
+---
+
+*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17, 20, 27*
