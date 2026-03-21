@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { CartStore } from '../../../core/services/cart.store';
 import { SearchStore } from '../../../core/services/search.store';
 import { NotificationStore } from '../../../core/services/notification.store';
+import { ThemeService } from '../../../core/services/theme.service';
 
 @Component({
   selector: 'app-header',
@@ -101,6 +102,15 @@ import { NotificationStore } from '../../../core/services/notification.store';
             </svg>
             @if (cartStore.cartCount() > 0) {
               <span class="icon-badge cart-badge">{{ cartStore.cartCount() }}</span>
+            }
+          </button>
+
+          <!-- Theme Toggle -->
+          <button class="icon-btn theme-toggle" (click)="themeService.toggle()" [title]="themeService.theme() === 'light' ? 'Dark mode' : 'Light mode'">
+            @if (themeService.theme() === 'light') {
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            } @else {
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/><line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             }
           </button>
 
@@ -406,6 +416,7 @@ export class HeaderComponent {
   readonly cartStore = inject(CartStore);
   readonly searchStore = inject(SearchStore);
   readonly notifStore = inject(NotificationStore);
+  readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
   searchQuery = '';
 

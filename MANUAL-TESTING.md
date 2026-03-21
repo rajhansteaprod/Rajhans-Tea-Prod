@@ -1017,4 +1017,43 @@ fetch('/api/v1/experiments/checkout-flow', { headers: { 'X-Session-ID': localSto
 
 ---
 
-*Last updated: 2026-03-22 — All slices: 3-5, 7-17, 19-25, 27*
+## Slice 29 — Frontend Experience
+
+### TC-29.1: Dark Mode Toggle
+1. Click moon icon in header → **Expected:** Dark theme applied (dark backgrounds, light text)
+2. Click sun icon → **Expected:** Light theme restored
+3. Refresh page → **Expected:** Theme persisted (localStorage)
+
+### TC-29.2: System Dark Mode Detection
+1. Set OS to dark mode → Open app fresh (clear localStorage theme)
+2. **Expected:** Auto-detects and applies dark mode
+
+### TC-29.3: Global Loading Bar
+1. Navigate between pages or trigger API call
+2. **Expected:** Thin animated bar at very top of page during loading
+
+### TC-29.4: Toast Notifications
+1. Add item to cart → **Expected:** Toast "Item added" appears top-right
+2. Auto-dismisses after 3 seconds
+3. Click toast → dismisses immediately
+
+### TC-29.5: Skeleton Loaders
+1. Use `<app-skeleton type="card" />` in any loading state
+2. **Expected:** Animated pulsing placeholder
+
+### TC-29.6: Focus Visible
+1. Tab through page with keyboard
+2. **Expected:** Orange focus ring on interactive elements (buttons, links, inputs)
+3. Click with mouse → **Expected:** No focus ring
+
+### TC-29.7: Skip to Content
+1. Press Tab on page load (first key press)
+2. **Expected:** "Skip to content" link appears at top-left
+
+### TC-29.8: Reduced Motion
+1. Set OS "Reduce motion" preference
+2. **Expected:** All animations disabled/minimal
+
+---
+
+*Last updated: 2026-03-22 — All slices: 3-5, 7-17, 19-25, 27, 29*
