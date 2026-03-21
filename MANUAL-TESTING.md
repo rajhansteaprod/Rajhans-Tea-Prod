@@ -611,4 +611,49 @@ fetch('/api/v1/admin/notifications/send-bulk', {
 
 ---
 
-*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 17*
+## Slice 14 — Analytics & Intelligence
+
+### TC-14.1: KPI Comparison Cards
+1. `/admin/analytics`
+2. **Expected:** 4 KPI cards with "vs last week" percentage change (↑/↓/→)
+
+### TC-14.2: Revenue Forecast
+1. Analytics → Forecast tab
+2. **Expected:** Trend indicator (📈/📉/➡️), growth rate %, forecast bars for next 7 days
+
+### TC-14.3: User Segmentation
+1. Analytics → Users & Segments tab
+2. **Expected:** 5 segment cards (VIP, Active, At Risk, Churned, New) with counts + revenue
+3. Churn Risk table below with users sorted by days since last order
+
+### TC-14.4: Product Performance
+1. Analytics → Product Performance tab
+2. **Expected:** Table: rank, name, composite score, sales qty, views, rating, stock
+
+### TC-14.5: Cohort Retention
+1. Analytics → Overview → Cohort section
+2. **Expected:** Monthly cohorts with user count + retention rate (green ≥30%, red <15%)
+
+### TC-14.6: Real-time Stats
+1. Analytics page header
+2. **Expected:** Green dot + "X online · Y active carts" (refreshes every 30s)
+
+### TC-14.7: Export Orders CSV
+1. Analytics → Export Data → Download Orders CSV
+2. **Expected:** CSV file downloads with order data
+
+### TC-14.8: Export Users CSV
+1. Download Users CSV
+2. **Expected:** CSV with phone, name, active status, join date
+
+### TC-14.9: Export Products CSV
+1. Download Products CSV
+2. **Expected:** CSV with name, price, stock, status
+
+### TC-14.10: Conversion Funnel
+1. Analytics → Overview → Funnel
+2. **Expected:** 5-step funnel: Views → Carts → Payments Initiated → Captured → Orders
+
+---
+
+*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17*
