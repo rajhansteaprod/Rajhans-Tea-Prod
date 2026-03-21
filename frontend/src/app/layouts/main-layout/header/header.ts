@@ -1,11 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { CartStore } from '../../../core/services/cart.store';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [RouterLink],
+  imports: [CommonModule, RouterLink],
   template: `
     <header class="header">
       <div class="header-inner">
@@ -19,6 +21,31 @@ import { AuthService } from '../../../core/services/auth.service';
             @if (authService.isAdmin()) {
               <a routerLink="/admin" class="nav-link admin-link">Admin Panel</a>
             }
+          }
+
+          <!-- Wishlist -->
+          <a routerLink="/wishlist" class="icon-btn" title="Wishlist">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+            @if (cartStore.wishlistIds().size > 0) {
+              <span class="icon-badge">{{ cartStore.wishlistIds().size }}</span>
+            }
+          </a>
+
+          <!-- Cart -->
+          <button class="icon-btn" (click)="cartStore.toggleSidebar()" title="Cart">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2"/>
+              <path d="M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            @if (cartStore.cartCount() > 0) {
+              <span class="icon-badge cart-badge">{{ cartStore.cartCount() }}</span>
+            }
+          </button>
+
+          @if (authService.isLoggedIn()) {
             <div class="user-pill">
               <span class="user-avatar">{{ getInitials() }}</span>
               <span class="user-phone">{{ authService.user()?.phone }}</span>
@@ -162,6 +189,50 @@ import { AuthService } from '../../../core/services/auth.service';
       }
     }
 
+    .icon-btn {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: $radius-md;
+      border: 1px solid $color-border-light;
+      background: transparent;
+      color: $color-text-secondary;
+      cursor: pointer;
+      transition: all $transition-fast;
+      text-decoration: none;
+
+      &:hover {
+        background: $color-bg-secondary;
+        color: $color-primary;
+        border-color: $color-primary;
+      }
+    }
+
+    .icon-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 4px;
+      background: $color-primary;
+      color: $color-text-inverse;
+      border-radius: $radius-full;
+      font-size: 10px;
+      font-weight: $font-weight-bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid $color-bg-tertiary;
+    }
+
+    .cart-badge {
+      background: $color-primary;
+    }
+
     .btn-login {
       display: inline-flex;
       align-items: center;
@@ -184,7 +255,8 @@ import { AuthService } from '../../../core/services/auth.service';
   `],
 })
 export class HeaderComponent {
-  constructor(public authService: AuthService) {}
+  readonly authService = inject(AuthService);
+  readonly cartStore = inject(CartStore);
 
   getInitials(): string {
     const user = this.authService.user();

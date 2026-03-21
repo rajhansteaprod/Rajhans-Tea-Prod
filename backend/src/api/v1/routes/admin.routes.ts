@@ -17,8 +17,9 @@ import * as adminSessionController from '../controllers/admin-session.controller
 const router = Router();
 
 // All admin routes require authentication + admin role
-router.use(authenticate);
-router.use(authorize('admin'));
+// Path-scoped so it only runs for /admin/* — not for public routes in other routers
+router.use('/admin', authenticate);
+router.use('/admin', authorize('admin'));
 
 // Dashboard
 router.get('/admin/dashboard/stats', adminDashboardController.getDashboardStats);

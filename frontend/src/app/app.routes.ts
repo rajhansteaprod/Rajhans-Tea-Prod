@@ -17,6 +17,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/dashboard/dashboard').then((m) => m.DashboardComponent),
       },
+      {
+        path: 'wishlist',
+        loadComponent: () =>
+          import('./features/store/wishlist/wishlist-page').then((m) => m.WishlistPageComponent),
+      },
+      {
+        path: 'checkout',
+        loadComponent: () =>
+          import('./features/store/checkout/checkout-page').then((m) => m.CheckoutPageComponent),
+      },
     ],
   },
   {

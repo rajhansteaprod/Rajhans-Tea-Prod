@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './header/header';
+import { CartSidebarComponent } from '../../features/store/cart/cart-sidebar';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent],
+  imports: [RouterOutlet, HeaderComponent, CartSidebarComponent],
   template: `
     <div class="layout">
       <app-header />
@@ -18,6 +19,7 @@ import { HeaderComponent } from './header/header';
         Rajhans Ecommerce &copy; 2026
       </footer>
     </div>
+    <app-cart-sidebar />
   `,
   styles: [`
     @use '../../core/design-tokens/tokens' as *;
