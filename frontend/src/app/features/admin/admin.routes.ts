@@ -126,6 +126,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./data-platform/data-platform').then((m) => m.DataPlatformComponent),
       },
+      {
+        path: 'cms',
+        loadComponent: () =>
+          import('./cms/cms-management').then((m) => m.CmsManagementComponent),
+      },
     ],
   },
 ];

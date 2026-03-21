@@ -867,4 +867,71 @@ fetch('/api/v1/feature-flags').then(r=>r.json()).then(console.log)
 
 ---
 
-*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17, 20, 21, 22, 23, 24, 25, 27*
+## Slice 13 — Content, SEO & User-Facing Pages
+
+### TC-13.1: Product Detail Page
+1. Navigate to `/product/<product-slug>`
+2. **Expected:** Image gallery, name, price, description, stock status, Add to Cart, Wishlist, Share buttons, breadcrumbs, recommendations
+
+### TC-13.2: Catalog Page (by category)
+1. Navigate to `/catalog/<category-slug>`
+2. **Expected:** Products filtered by category, grid layout, breadcrumbs
+
+### TC-13.3: Collections Page
+1. Navigate to `/collections`
+2. **Expected:** All collections in grid with images and names
+
+### TC-13.4: Blog List
+1. Navigate to `/blog`
+2. **Expected:** Published blog posts with cover image, title, excerpt, date
+
+### TC-13.5: Blog Post
+1. Click a blog post → `/blog/<slug>`
+2. **Expected:** Full article with cover, title, author, tags, content, breadcrumbs
+
+### TC-13.6: Static Pages
+1. Admin → CMS → Create page: title="About Us", slug="about-us", status=published
+2. Navigate to `/page/about-us`
+3. **Expected:** Page renders with title + HTML content
+
+### TC-13.7: Contact Page
+1. Navigate to `/contact`
+2. **Expected:** Contact form (name, email, subject, message) + store info
+
+### TC-13.8: Footer
+1. Scroll to bottom of any page
+2. **Expected:** Dark footer with 4 columns (Shop, Company, Support, Connect) + copyright
+
+### TC-13.9: Share Buttons (Product)
+1. Product detail page → Click "WhatsApp"
+2. **Expected:** Opens WhatsApp with product link
+3. Click "Copy Link" → **Expected:** "Copied!" feedback
+
+### TC-13.10: Sticky Add to Cart (Mobile)
+1. Open product page on mobile (or resize browser < 768px)
+2. Scroll down
+3. **Expected:** Fixed bar at bottom with price + "Add to Cart" button
+
+### TC-13.11: Sitemap
+1. `/api/v1/sitemap.xml`
+2. **Expected:** XML with all product, category, page, blog URLs
+
+### TC-13.12: Robots.txt
+1. `/api/v1/robots.txt`
+2. **Expected:** Plain text with User-agent, Allow, Sitemap, Disallow /admin
+
+### TC-13.13: SEO Meta Tags
+1. Open product page → View page source
+2. **Expected:** `<title>Product Name — Rajhans</title>`, `<meta name="description">`, OG tags
+
+### TC-13.14: Admin CMS Pages
+1. `/admin/cms` → Pages tab → Create page → Edit → Delete
+2. **Expected:** Full CRUD works
+
+### TC-13.15: Admin CMS Blog
+1. `/admin/cms` → Blog tab → Create post → Publish → Edit → Delete
+2. **Expected:** Full CRUD, published posts visible on `/blog`
+
+---
+
+*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 17, 20, 21, 22, 23, 24, 25, 27*

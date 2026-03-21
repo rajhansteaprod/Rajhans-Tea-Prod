@@ -17,6 +17,41 @@ export const routes: Routes = [
           import('./features/store/search/search-page').then((m) => m.SearchPageComponent),
       },
       {
+        path: 'product/:slug',
+        loadComponent: () =>
+          import('./features/store/product/product-detail').then((m) => m.ProductDetailComponent),
+      },
+      {
+        path: 'catalog/:slug',
+        loadComponent: () =>
+          import('./features/store/catalog/catalog-page').then((m) => m.CatalogPageComponent),
+      },
+      {
+        path: 'collections',
+        loadComponent: () =>
+          import('./features/store/collections/collections-page').then((m) => m.CollectionsPageComponent),
+      },
+      {
+        path: 'blog',
+        loadComponent: () =>
+          import('./features/store/blog/blog-list').then((m) => m.BlogListComponent),
+      },
+      {
+        path: 'blog/:slug',
+        loadComponent: () =>
+          import('./features/store/blog/blog-post').then((m) => m.BlogPostComponent),
+      },
+      {
+        path: 'page/:slug',
+        loadComponent: () =>
+          import('./features/store/pages/static-page').then((m) => m.StaticPageComponent),
+      },
+      {
+        path: 'contact',
+        loadComponent: () =>
+          import('./features/store/contact/contact-page').then((m) => m.ContactPageComponent),
+      },
+      {
         path: 'dashboard',
         canActivate: [authGuard],
         loadComponent: () =>
