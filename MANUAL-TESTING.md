@@ -255,4 +255,75 @@ fetch('/api/v1/promotions/campaigns/active').then(r=>r.json()).then(console.log)
 
 ---
 
-*Last updated: 2026-03-21 — Slices 5, 7, 8, 9, 10*
+## Slice 3 — Search & Discovery
+
+### TC-3.1: Full-Text Search
+1. Header search bar → Type "tea" → Press Enter
+2. **Expected:** Navigate to `/search?q=tea`, products matching "tea" shown
+
+### TC-3.2: Autocomplete
+1. Header search bar → Type "te" (2+ chars)
+2. **Expected:** Dropdown with product + category suggestions after 300ms
+3. Click a suggestion → navigates to search page
+
+### TC-3.3: No Results
+1. Search for "xyznonexistent"
+2. **Expected:** "No products found" with friendly illustration + "Clear all filters" if filtered
+
+### TC-3.4: Category Filter
+1. Search any term → Click a category in filter sidebar
+2. **Expected:** Results filtered to that category, result count updates
+
+### TC-3.5: Price Range Filter
+1. Enter min: 100, max: 500 → Click "Go"
+2. **Expected:** Only products in ₹100-₹500 range shown
+
+### TC-3.6: Tag Filter
+1. Click a tag pill in sidebar
+2. **Expected:** Tag becomes active (filled), results filtered
+
+### TC-3.7: Sort Options
+1. Search "tea" → Change sort to "Price: Low → High"
+2. **Expected:** Products reordered by price ascending
+
+### TC-3.8: In Stock Filter
+1. Toggle "In Stock Only"
+2. **Expected:** Only products with stock > 0 shown
+
+### TC-3.9: Pagination
+1. Search with many results → Click "Next"
+2. **Expected:** Page 2 loads, scroll to top
+
+### TC-3.10: Facets
+1. Search any term
+2. **Expected:** Sidebar shows category counts, price range, tag counts
+
+### TC-3.11: Add to Cart from Search
+1. Search → Click "Add to Cart" on a product card
+2. **Expected:** Cart sidebar opens with item added
+
+### TC-3.12: Wishlist from Search
+1. Search → Click heart on a product
+2. **Expected:** Heart fills red, product added to wishlist
+
+### TC-3.13: Popular Searches
+```js
+fetch('/api/v1/search/popular').then(r=>r.json()).then(console.log)
+```
+**Expected:** Array of popular search strings (empty initially, fills after searches)
+
+### TC-3.14: Search Analytics (Admin)
+```js
+fetch('/api/v1/admin/search-analytics', {
+  headers: { 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') }
+}).then(r=>r.json()).then(console.log)
+```
+**Expected:** `{ stats: {...}, popular: [...], zeroResults: [...] }`
+
+### TC-3.15: Browse Without Query
+1. Navigate to `/search` (no query)
+2. **Expected:** Shows all active products, filters available, sort works
+
+---
+
+*Last updated: 2026-03-21 — Slices 3, 5, 7, 8, 9, 10*

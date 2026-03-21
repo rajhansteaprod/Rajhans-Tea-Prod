@@ -8,6 +8,7 @@ import cartRoutes from './cart.routes';
 import paymentRoutes from './payment.routes';
 import inventoryRoutes from '../../../modules/inventory/inventory.routes';
 import promotionsRoutes from '../../../modules/promotions/promotions.routes';
+import searchRoutes from '../../../modules/search/search.routes';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use(cartRoutes);
 router.use(paymentRoutes);
 router.use(inventoryRoutes);
 router.use(promotionsRoutes);
+router.use(searchRoutes);
 
 export default router;

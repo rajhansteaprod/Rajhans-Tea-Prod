@@ -1,13 +1,15 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartStore } from '../../../core/services/cart.store';
+import { SearchStore } from '../../../core/services/search.store';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <header class="header">
       <div class="header-inner">
@@ -15,6 +17,48 @@ import { CartStore } from '../../../core/services/cart.store';
           <span class="logo-mark">R</span>
           <span class="logo-text">Rajhans</span>
         </a>
+        <!-- Search Bar -->
+        <div class="search-bar-wrap">
+          <div class="search-input-wrap">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+              <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input
+              class="search-input"
+              placeholder="Search products..."
+              [(ngModel)]="searchQuery"
+              (input)="searchStore.autocomplete(searchQuery)"
+              (keyup.enter)="doSearch()"
+              (focus)="searchStore.autocomplete(searchQuery)"
+              (keyup.escape)="searchStore.closeSuggestions()"
+            />
+          </div>
+          @if (searchStore.suggestionsOpen()) {
+            <div class="suggestions-dropdown">
+              @for (s of searchStore.suggestions(); track s.slug) {
+                <a class="suggestion-item" (click)="selectSuggestion(s)">
+                  @if (s.type === 'product' && s.image) {
+                    <img [src]="s.image" class="suggestion-img" />
+                  } @else {
+                    <div class="suggestion-icon">
+                      @if (s.type === 'category') {
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2"/></svg>
+                      } @else {
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/></svg>
+                      }
+                    </div>
+                  }
+                  <div class="suggestion-text">
+                    <span class="suggestion-name">{{ s.name }}</span>
+                    <span class="suggestion-type">{{ s.type }}</span>
+                  </div>
+                </a>
+              }
+            </div>
+          }
+        </div>
+
         <div class="header-right">
           @if (authService.isLoggedIn()) {
             <a routerLink="/orders" class="nav-link">Orders</a>
@@ -190,6 +234,94 @@ import { CartStore } from '../../../core/services/cart.store';
       }
     }
 
+    // ── Search Bar ──────────────────────────────────────────────────────────
+    .search-bar-wrap {
+      position: relative;
+      flex: 1;
+      max-width: 420px;
+      margin: 0 $space-lg;
+    }
+
+    .search-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: $space-xs;
+      padding: $space-xs $space-md;
+      background: $color-bg-secondary;
+      border: 1px solid $color-border-light;
+      border-radius: $radius-full;
+      transition: all $transition-fast;
+
+      &:focus-within {
+        border-color: $color-primary;
+        background: $color-bg-tertiary;
+        box-shadow: $shadow-glow;
+      }
+    }
+
+    .search-icon { color: $color-text-tertiary; flex-shrink: 0; }
+
+    .search-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: $font-size-sm;
+      color: $color-text-primary;
+      font-family: $font-family;
+
+      &::placeholder { color: $color-text-disabled; }
+    }
+
+    .suggestions-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: $color-bg-tertiary;
+      border: 1px solid $color-border;
+      border-radius: $radius-lg;
+      box-shadow: $shadow-xl;
+      z-index: $z-dropdown;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    .suggestion-item {
+      display: flex;
+      align-items: center;
+      gap: $space-sm;
+      padding: $space-sm $space-md;
+      cursor: pointer;
+      text-decoration: none;
+      color: $color-text-primary;
+      transition: background $transition-fast;
+
+      &:hover { background: $color-bg-secondary; }
+    }
+
+    .suggestion-img {
+      width: 32px;
+      height: 32px;
+      border-radius: $radius-sm;
+      object-fit: cover;
+    }
+
+    .suggestion-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: $color-bg-secondary;
+      border-radius: $radius-sm;
+      color: $color-text-tertiary;
+    }
+
+    .suggestion-text { display: flex; flex-direction: column; gap: 1px; }
+    .suggestion-name { font-size: $font-size-sm; font-weight: $font-weight-medium; }
+    .suggestion-type { font-size: 10px; color: $color-text-tertiary; text-transform: uppercase; }
+
     .icon-btn {
       position: relative;
       display: flex;
@@ -258,6 +390,26 @@ import { CartStore } from '../../../core/services/cart.store';
 export class HeaderComponent {
   readonly authService = inject(AuthService);
   readonly cartStore = inject(CartStore);
+  readonly searchStore = inject(SearchStore);
+  private readonly router = inject(Router);
+  searchQuery = '';
+
+  doSearch(): void {
+    if (this.searchQuery.trim()) {
+      this.searchStore.closeSuggestions();
+      this.router.navigate(['/search'], { queryParams: { q: this.searchQuery.trim() } });
+    }
+  }
+
+  selectSuggestion(s: { type: string; name: string; slug: string }): void {
+    this.searchStore.closeSuggestions();
+    if (s.type === 'category') {
+      this.router.navigate(['/search'], { queryParams: { category: s.slug } });
+    } else {
+      this.searchQuery = s.name;
+      this.router.navigate(['/search'], { queryParams: { q: s.name } });
+    }
+  }
 
   getInitials(): string {
     const user = this.authService.user();

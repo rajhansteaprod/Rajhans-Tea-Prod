@@ -12,6 +12,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/home/home').then((m) => m.HomeComponent),
       },
       {
+        path: 'search',
+        loadComponent: () =>
+          import('./features/store/search/search-page').then((m) => m.SearchPageComponent),
+      },
+      {
         path: 'dashboard',
         canActivate: [authGuard],
         loadComponent: () =>
