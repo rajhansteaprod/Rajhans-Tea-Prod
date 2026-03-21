@@ -326,4 +326,80 @@ fetch('/api/v1/admin/search-analytics', {
 
 ---
 
-*Last updated: 2026-03-21 — Slices 3, 5, 7, 8, 9, 10*
+## Slice 4 — Personalization & Merchandising
+
+### TC-4.1: Homepage Feed
+1. Visit `http://localhost`
+2. **Expected:** Homepage shows sections: Trending Now, New Arrivals (product rails)
+3. If no products → Hero section with "Browse Products" CTA
+
+### TC-4.2: Track Product View
+```js
+fetch('/api/v1/personalization/track-view', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'X-Session-ID': localStorage.getItem('guestSessionId') },
+  body: JSON.stringify({ productId: '<ACTIVE_PRODUCT_ID>' })
+}).then(r=>r.json()).then(console.log)
+```
+**Expected:** `202 { success: true, message: "View tracked" }`
+
+### TC-4.3: Recently Viewed
+1. Track 3-4 product views (TC-4.2)
+2. `GET /api/v1/personalization/recently-viewed` with X-Session-ID header
+3. **Expected:** Products in reverse chronological order
+
+### TC-4.4: Trending Products
+```js
+fetch('/api/v1/personalization/trending').then(r=>r.json()).then(console.log)
+```
+**Expected:** Array of products (most viewed or featured fallback)
+
+### TC-4.5: Product Recommendations
+```js
+fetch('/api/v1/personalization/product/<PRODUCT_ID>/recommendations').then(r=>r.json()).then(console.log)
+```
+**Expected:** `{ frequentlyBoughtTogether: [...], similar: [...], alsoViewed: [...] }`
+
+### TC-4.6: Upsell
+```js
+fetch('/api/v1/personalization/product/<PRODUCT_ID>/upsell').then(r=>r.json()).then(console.log)
+```
+**Expected:** Products in same category with higher price
+
+### TC-4.7: Cart Cross-sell
+```js
+fetch('/api/v1/personalization/cart/cross-sell?productIds=<ID1>,<ID2>').then(r=>r.json()).then(console.log)
+```
+**Expected:** Complementary products (empty if no co-purchase data yet)
+
+### TC-4.8: Active Banners
+```js
+fetch('/api/v1/personalization/banners').then(r=>r.json()).then(console.log)
+```
+**Expected:** Array of active banners (empty initially)
+
+### TC-4.9: Admin — Create Banner
+1. `/admin/merchandising` → Banners tab → + Add Banner
+2. Fill title, image URL, link, position
+3. **Expected:** Banner appears in list
+4. Visit homepage → banner carousel shows
+
+### TC-4.10: Admin — Create Merchandising Rule
+1. `/admin/merchandising` → Rules tab → + Create Rule
+2. Type: Automated, Section: Trending, Strategy: Most Viewed
+3. **Expected:** Rule in list with "automated" badge
+4. Click "Evaluate" → cachedProductIds populated
+
+### TC-4.11: Admin — Manual Rule
+1. Create rule: Type: Manual, Section: Recommended
+2. (Future: product picker UI — for now, products pinned via API)
+3. **Expected:** Rule active, manual badge
+
+### TC-4.12: Homepage Sections
+1. Create merchandising rules for different sections
+2. Visit homepage
+3. **Expected:** Each section shows products from its rule (cached or fallback)
+
+---
+
+*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10*
