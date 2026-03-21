@@ -121,6 +121,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./feature-flags/feature-flag-list').then((m) => m.FeatureFlagListComponent),
       },
+      {
+        path: 'data-platform',
+        loadComponent: () =>
+          import('./data-platform/data-platform').then((m) => m.DataPlatformComponent),
+      },
     ],
   },
 ];

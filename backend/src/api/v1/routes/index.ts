@@ -19,6 +19,7 @@ import workflowRoutes from '../../../modules/workflow/workflow.routes';
 import distributedRoutes from '../../../modules/distributed/distributed.routes';
 import observabilityRoutes from '../../../modules/observability/observability.routes';
 import featureFlagRoutes from '../../../modules/feature-flags/feature-flag.routes';
+import dataPlatformRoutes from '../../../modules/data-platform/data-platform.routes';
 
 const router = Router();
 
@@ -42,5 +43,6 @@ router.use(workflowRoutes);
 router.use(distributedRoutes);
 router.use(observabilityRoutes);
 router.use(featureFlagRoutes);
+router.use(dataPlatformRoutes);
 
 export default router;

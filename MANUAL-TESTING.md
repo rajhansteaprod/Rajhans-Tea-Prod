@@ -843,4 +843,28 @@ fetch('/api/v1/feature-flags').then(r=>r.json()).then(console.log)
 
 ---
 
-*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17, 20, 21, 22, 23, 24, 27*
+## Slice 25 — Data Platform
+
+### TC-25.1: Data Platform Dashboard
+1. `/admin/data-platform`
+2. **Expected:** Backup stats (completed, failed, last size, last date), archive stats, backup history
+
+### TC-25.2: Manual Backup
+1. Click "Run Backup Now"
+2. **Expected:** Button shows "Running...", then success message, history entry added
+
+### TC-25.3: Archive Old Data
+1. Click "Archive Old Data"
+2. **Expected:** Success message with counts (orders, audit, search archived)
+
+### TC-25.4: Schedule Daily Backup
+1. Click "Schedule Daily Backup"
+2. **Expected:** "Daily backup scheduled at 3am"
+
+### TC-25.5: Backup History
+1. After running backup → Check history section
+2. **Expected:** Entry with type, status (green=completed), date, size
+
+---
+
+*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 17, 20, 21, 22, 23, 24, 25, 27*
