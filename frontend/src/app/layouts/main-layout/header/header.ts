@@ -7,6 +7,7 @@ import { CartStore } from '../../../core/services/cart.store';
 import { SearchStore } from '../../../core/services/search.store';
 import { NotificationStore } from '../../../core/services/notification.store';
 import { ThemeService } from '../../../core/services/theme.service';
+import { I18nService } from '../../../core/services/i18n.service';
 
 @Component({
   selector: 'app-header',
@@ -103,6 +104,11 @@ import { ThemeService } from '../../../core/services/theme.service';
             @if (cartStore.cartCount() > 0) {
               <span class="icon-badge cart-badge">{{ cartStore.cartCount() }}</span>
             }
+          </button>
+
+          <!-- Language Toggle -->
+          <button class="lang-btn" (click)="i18n.toggle()" [title]="i18n.language() === 'en' ? 'हिन्दी' : 'English'">
+            {{ i18n.language() === 'en' ? 'हि' : 'EN' }}
           </button>
 
           <!-- Theme Toggle -->
@@ -346,6 +352,23 @@ import { ThemeService } from '../../../core/services/theme.service';
     .suggestion-name { font-size: $font-size-sm; font-weight: $font-weight-medium; }
     .suggestion-type { font-size: 10px; color: $color-text-tertiary; text-transform: uppercase; }
 
+    .lang-btn {
+      padding: 4px 8px;
+      border: 1px solid $color-border;
+      border-radius: $radius-md;
+      background: transparent;
+      font-size: $font-size-xs;
+      font-weight: $font-weight-bold;
+      color: $color-text-secondary;
+      cursor: pointer;
+      transition: all $transition-fast;
+
+      &:hover {
+        border-color: $color-primary;
+        color: $color-primary;
+      }
+    }
+
     .icon-btn {
       position: relative;
       display: flex;
@@ -417,6 +440,7 @@ export class HeaderComponent {
   readonly searchStore = inject(SearchStore);
   readonly notifStore = inject(NotificationStore);
   readonly themeService = inject(ThemeService);
+  readonly i18n = inject(I18nService);
   private readonly router = inject(Router);
   searchQuery = '';
 

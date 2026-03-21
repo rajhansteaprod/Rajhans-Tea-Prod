@@ -1056,4 +1056,38 @@ fetch('/api/v1/experiments/checkout-flow', { headers: { 'X-Session-ID': localSto
 
 ---
 
-*Last updated: 2026-03-22 — All slices: 3-5, 7-17, 19-25, 27, 29*
+## Slice 18 — Security & Compliance (GDPR)
+
+### TC-18.1: Export My Data
+```js
+fetch('/api/v1/account/my-data', {
+  headers: { 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') }
+}).then(r => r.json()).then(console.log)
+```
+**Expected:** JSON with profile, orders, payments, reviews, wallet, tickets
+
+### TC-18.2: Delete My Account
+```js
+fetch('/api/v1/account', {
+  method: 'DELETE',
+  headers: { 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') }
+}).then(r => r.json()).then(console.log)
+```
+**Expected:** Account anonymized (phone → deleted_xxx, name → Deleted User), reviews deleted, tokens revoked
+
+---
+
+## Slice 26 — Localization & i18n
+
+### TC-26.1: Language Toggle
+1. Click "हि" button in header → **Expected:** Button changes to "EN"
+2. Key UI strings should be in Hindi (future: integrate i18n.t() across components)
+3. Refresh → **Expected:** Language persisted
+
+### TC-26.2: Default Language
+1. Clear localStorage → Refresh
+2. **Expected:** Default English
+
+---
+
+*Last updated: 2026-03-22 — ALL 27 SLICES COMPLETE: 3-5, 7-29*

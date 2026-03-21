@@ -24,6 +24,7 @@ import cmsRoutes from '../../../modules/cms/cms.routes';
 import experimentationRoutes from '../../../modules/experimentation/experimentation.routes';
 import supportRoutes from '../../../modules/support/support.routes';
 import integrationsRoutes from '../../../modules/integrations/integrations.routes';
+import accountRoutes from '../../../modules/account/account.routes';
 
 const router = Router();
 
@@ -52,5 +53,6 @@ router.use(cmsRoutes);
 router.use(experimentationRoutes);
 router.use(supportRoutes);
 router.use(integrationsRoutes);
+router.use(accountRoutes);
 
 export default router;
