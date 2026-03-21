@@ -141,6 +141,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./support/support-dashboard').then((m) => m.SupportDashboardComponent),
       },
+      {
+        path: 'integrations',
+        loadComponent: () =>
+          import('./integrations/integrations-page').then((m) => m.IntegrationsPageComponent),
+      },
     ],
   },
 ];

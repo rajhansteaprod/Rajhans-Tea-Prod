@@ -23,6 +23,7 @@ import dataPlatformRoutes from '../../../modules/data-platform/data-platform.rou
 import cmsRoutes from '../../../modules/cms/cms.routes';
 import experimentationRoutes from '../../../modules/experimentation/experimentation.routes';
 import supportRoutes from '../../../modules/support/support.routes';
+import integrationsRoutes from '../../../modules/integrations/integrations.routes';
 
 const router = Router();
 
@@ -50,5 +51,6 @@ router.use(dataPlatformRoutes);
 router.use(cmsRoutes);
 router.use(experimentationRoutes);
 router.use(supportRoutes);
+router.use(integrationsRoutes);
 
 export default router;

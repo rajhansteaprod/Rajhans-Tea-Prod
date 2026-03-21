@@ -993,4 +993,28 @@ fetch('/api/v1/experiments/checkout-flow', { headers: { 'X-Session-ID': localSto
 
 ---
 
-*Last updated: 2026-03-22 — Slices 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 24, 25, 27*
+## Slice 19 — Integrations & Platform
+
+### TC-19.1: Integration Health
+1. `/admin/integrations`
+2. **Expected:** 5 service cards (Razorpay, Shiprocket, MSG91, SMTP, Firebase) with connected/not_configured status
+
+### TC-19.2: Create Webhook
+1. + Add Webhook → name, URL → Create
+2. **Expected:** Webhook in list with auto-generated secret, active toggle
+
+### TC-19.3: Test Webhook
+1. Click "Test" on a webhook
+2. **Expected:** Test event dispatched to URL (check target server logs)
+
+### TC-19.4: Toggle Webhook
+1. Click ON/OFF toggle
+2. **Expected:** Webhook enabled/disabled
+
+### TC-19.5: Auto-disable on Failures
+1. Webhook pointing to invalid URL → triggers 10 times
+2. **Expected:** Auto-disabled after 10 consecutive failures
+
+---
+
+*Last updated: 2026-03-22 — All slices: 3-5, 7-17, 19-25, 27*
