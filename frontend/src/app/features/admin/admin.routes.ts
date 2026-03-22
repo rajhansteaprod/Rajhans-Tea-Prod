@@ -38,18 +38,9 @@ export const ADMIN_ROUTES: Routes = [
           import('./collections/collection-list').then((m) => m.CollectionListComponent),
       },
       {
-        path: 'pricing',
-        loadComponent: () => import('./pricing/pricing-rules').then((m) => m.PricingRulesComponent),
-      },
-      {
         path: 'payments',
         loadComponent: () =>
           import('./payments/payment-list').then((m) => m.AdminPaymentListComponent),
-      },
-      {
-        path: 'wallets',
-        loadComponent: () =>
-          import('./wallets/wallet-management').then((m) => m.AdminWalletManagementComponent),
       },
       {
         path: 'orders',
@@ -60,26 +51,6 @@ export const ADMIN_ROUTES: Routes = [
         path: 'inventory',
         loadComponent: () =>
           import('./inventory/inventory-dashboard').then((m) => m.InventoryDashboardComponent),
-      },
-      {
-        path: 'warehouses',
-        loadComponent: () =>
-          import('./warehouses/warehouse-list').then((m) => m.WarehouseListComponent),
-      },
-      {
-        path: 'coupons',
-        loadComponent: () =>
-          import('./promotions/coupon-management').then((m) => m.CouponManagementComponent),
-      },
-      {
-        path: 'moderation',
-        loadComponent: () =>
-          import('./moderation/moderation-dashboard').then((m) => m.ModerationDashboardComponent),
-      },
-      {
-        path: 'audit-logs',
-        loadComponent: () =>
-          import('./audit-logs/audit-log-list').then((m) => m.AuditLogListComponent),
       },
       {
         path: 'settings',

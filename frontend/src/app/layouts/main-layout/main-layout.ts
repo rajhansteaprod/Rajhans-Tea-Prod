@@ -27,8 +27,7 @@ import { CartSidebarComponent } from '../../features/store/cart/cart-sidebar';
             <div class="footer-col">
               <h4>Company</h4>
               <a routerLink="/page/about-us">About Us</a>
-              <a routerLink="/blog">Blog</a>
-              <a routerLink="/contact">Contact</a>
+              <a routerLink="/page/contact-us">Contact Us</a>
             </div>
             <div class="footer-col">
               <h4>Support</h4>

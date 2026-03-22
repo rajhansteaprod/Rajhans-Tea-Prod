@@ -35,10 +35,9 @@ export class FirebaseService {
     this.recaptchaVerifier = new RecaptchaVerifier(this.auth, containerId, {
       size: 'invisible',
       callback: () => {
-        console.log('[Firebase] reCAPTCHA solved');
+        // reCAPTCHA solved
       },
       'expired-callback': () => {
-        console.warn('[Firebase] reCAPTCHA expired, re-initializing');
         this.initRecaptcha(containerId);
       },
     });
@@ -50,7 +49,6 @@ export class FirebaseService {
     }
 
     const fullNumber = `+91${phoneNumber}`;
-    console.log('[Firebase] Sending OTP to', fullNumber);
 
     try {
       this.confirmationResult = await signInWithPhoneNumber(
@@ -58,9 +56,7 @@ export class FirebaseService {
         fullNumber,
         this.recaptchaVerifier,
       );
-      console.log('[Firebase] OTP sent successfully');
     } catch (err: unknown) {
-      console.error('[Firebase] Send OTP error:', err);
 
       // Re-init recaptcha after failure
       this.initRecaptcha('recaptcha-container');
@@ -90,10 +86,8 @@ export class FirebaseService {
     try {
       const credential = await this.confirmationResult.confirm(otp);
       const idToken = await credential.user.getIdToken();
-      console.log('[Firebase] OTP verified, got ID token');
       return idToken;
     } catch (err: unknown) {
-      console.error('[Firebase] Verify OTP error:', err);
       const error = err as { code?: string };
       switch (error.code) {
         case 'auth/invalid-verification-code':

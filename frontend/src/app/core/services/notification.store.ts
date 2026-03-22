@@ -53,7 +53,7 @@ export class NotificationStore {
     });
 
     this.socket.on('connect', () => {
-      console.log('[WS] Connected');
+      // connected
     });
 
     this.socket.on('notification', (data: NotificationItem) => {
@@ -65,12 +65,10 @@ export class NotificationStore {
     });
 
     this.socket.on('disconnect', () => {
-      console.log('[WS] Disconnected');
+      // disconnected
     });
 
-    this.socket.on('connect_error', (err: Error) => {
-      console.warn('[WS] Connection error:', err.message);
-      // Fallback to polling if WebSocket fails
+    this.socket.on('connect_error', () => {
       this.startPollingFallback();
     });
   }

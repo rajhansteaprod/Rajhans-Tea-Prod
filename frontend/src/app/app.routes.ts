@@ -32,24 +32,9 @@ export const routes: Routes = [
           import('./features/store/collections/collections-page').then((m) => m.CollectionsPageComponent),
       },
       {
-        path: 'blog',
-        loadComponent: () =>
-          import('./features/store/blog/blog-list').then((m) => m.BlogListComponent),
-      },
-      {
-        path: 'blog/:slug',
-        loadComponent: () =>
-          import('./features/store/blog/blog-post').then((m) => m.BlogPostComponent),
-      },
-      {
         path: 'page/:slug',
         loadComponent: () =>
           import('./features/store/pages/static-page').then((m) => m.StaticPageComponent),
-      },
-      {
-        path: 'contact',
-        loadComponent: () =>
-          import('./features/store/contact/contact-page').then((m) => m.ContactPageComponent),
       },
       {
         path: 'dashboard',
@@ -72,24 +57,6 @@ export const routes: Routes = [
         canActivate: [authGuard],
         loadComponent: () =>
           import('./features/store/orders/order-history-page').then((m) => m.OrderHistoryPageComponent),
-      },
-      {
-        path: 'wallet',
-        canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/store/wallet/wallet-page').then((m) => m.WalletPageComponent),
-      },
-      {
-        path: 'loyalty',
-        canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/store/loyalty/loyalty-page').then((m) => m.LoyaltyPageComponent),
-      },
-      {
-        path: 'referral',
-        canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/store/referral/referral-page').then((m) => m.ReferralPageComponent),
       },
     ],
   },

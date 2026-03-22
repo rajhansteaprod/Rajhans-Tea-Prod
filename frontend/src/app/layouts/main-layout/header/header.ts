@@ -64,8 +64,8 @@ import { I18nService } from '../../../core/services/i18n.service';
 
         <div class="header-right">
           @if (authService.isLoggedIn()) {
+            <a routerLink="/dashboard" class="nav-link">Dashboard</a>
             <a routerLink="/orders" class="nav-link">Orders</a>
-            <a routerLink="/wallet" class="nav-link">Wallet</a>
             @if (authService.isAdmin()) {
               <a routerLink="/admin" class="nav-link admin-link">Admin</a>
             }

@@ -57,3 +57,28 @@
   box-shadow: $shadow-sm;
   border: 1px solid $color-border-light;
 }
+
+// --- Display Typography (Cormorant Garamond) ---
+@mixin display-text($size: $font-size-display) {
+  font-family: $font-family-display;
+  font-size: $size;
+  font-weight: 300;
+  line-height: $line-height-tight;
+  letter-spacing: $letter-spacing-display;
+  color: $color-text-primary;
+}
+
+// --- Fluid Typography ---
+@mixin fluid-type($min, $max) {
+  font-size: clamp(#{$min}, #{$min} + (#{strip-unit($max)} - #{strip-unit($min)}) * ((100vw - 390px) / (1440 - 390)), #{$max});
+}
+
+@function strip-unit($value) {
+  @return calc($value / ($value * 0 + 1px));
+}
+
+// --- Full-bleed section ---
+@mixin full-bleed {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+}

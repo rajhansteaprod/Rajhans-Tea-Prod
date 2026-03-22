@@ -72,12 +72,6 @@ export class RazorpayService {
     await this.loadScript();
 
     return new Promise<RazorpayResponse>((resolve, reject) => {
-      console.log('[Razorpay] Opening checkout with:', {
-        key: options.keyId,
-        amount: options.amountPaise,
-        currency: options.currency,
-        order_id: options.orderId,
-      });
       const rzp = new window.Razorpay({
         key: options.keyId,
         amount: options.amountPaise,
