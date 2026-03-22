@@ -25,34 +25,43 @@ gsap.registerPlugin(ScrollTrigger);
   imports: [CommonModule, RouterLink, ProductRailComponent],
   template: `
     <div class="home" #homeContainer>
-      <!-- ═══ HERO (full viewport, behind header) ═══ -->
+      <!-- ═══ HERO — Cinematic Parallax (token-strict) ═══ -->
       <section class="hero">
-        <div class="hero-bg">
+        <!-- Layer 0: Background (slowest parallax) -->
+        <div class="hero-layer hero-layer--bg" data-speed="0.3">
           <div class="hero-grain"></div>
         </div>
-        <div class="hero-content">
-          <div class="hero-badge">
-            <span class="hero-badge-dot"></span>
-            <span>Est. 2024 &middot; Bhopal</span>
-          </div>
-          <h1 class="hero-headline">
-            <span class="hero-line" #heroLine1>Every cup,</span>
-            <span class="hero-line italic" #heroLine2>a moment.</span>
-          </h1>
-          <p class="hero-sub">Premium teas sourced from the finest gardens of India,<br />crafted for those who savour the ritual.</p>
-          <div class="hero-ctas">
-            <a routerLink="/products" class="btn-hero-primary">
-              Shop Now
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </a>
-            <a routerLink="/page/about-us" class="btn-hero-ghost">Our Story</a>
+
+        <!-- Layer 1: Ambient particles (mid parallax) -->
+        <div class="hero-layer hero-layer--particles" data-speed="0.5">
+          @for (i of steamParticles; track i) {
+            <div class="steam-particle" [style.--x]="i.x" [style.--y]="i.y" [style.--size]="i.size" [style.--delay]="i.delay" [style.--dur]="i.dur"></div>
+          }
+        </div>
+
+        <!-- Layer 2: Foreground content (fastest, moves with scroll) -->
+        <div class="hero-layer hero-layer--content" data-speed="0.8">
+          <div class="hero-inner">
+            <span class="hero-tag">Rajhans Tea &middot; Est. 2024</span>
+            <h1 class="hero-headline">
+              <span class="hero-word" #heroLine1>2 AM Dreams</span>
+              <span class="hero-word" #heroLine2>Begin with a Cup</span>
+            </h1>
+            <p class="hero-sub">When the world sleeps, your hustle brews.<br />Rajhans Tea fuels your focus.</p>
+            <div class="hero-cta-group">
+              <a routerLink="/products" class="hero-cta-primary">
+                <span>Explore Now</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
+            </div>
           </div>
         </div>
-        <div class="hero-scroll-hint">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M12 5v14M19 12l-7 7-7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span>Scroll</span>
+
+        <!-- Scroll indicator -->
+        <div class="hero-scroll">
+          <div class="hero-scroll-track">
+            <div class="hero-scroll-thumb"></div>
+          </div>
         </div>
       </section>
 
@@ -213,205 +222,211 @@ gsap.registerPlugin(ScrollTrigger);
       // HERO
       // ═══════════════════════════════════════════════
       // ═══════════════════════════════════════════════
-      // HERO — full viewport, edge-to-edge, behind header
+      // HERO — Cinematic parallax (ALL values from tokens)
       // ═══════════════════════════════════════════════
+
       .hero {
         position: relative;
         width: 100vw;
-        min-height: 100vh;
+        height: 100vh;
         margin-left: calc(-50vw + 50%);
-        margin-top: -88px; // negate content padding to go behind header
-        padding-top: 88px; // restore so content isn't hidden
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
+        margin-top: calc($space-xxxl * -1 - $space-lg); // token: -88px (negate content padding)
         overflow: hidden;
       }
 
-      .hero-bg {
+      // --- Parallax Layers ---
+      .hero-layer {
         position: absolute;
         inset: 0;
-        z-index: 0;
-        background:
-          radial-gradient(ellipse at 20% 80%, rgba(204,88,3,0.15) 0%, transparent 50%),
-          radial-gradient(ellipse at 80% 20%, rgba(87,136,108,0.08) 0%, transparent 50%),
-          linear-gradient(175deg, #1a1214 0%, #2d2024 30%, #3A2D32 60%, #2a1f22 100%);
-        background-attachment: fixed;
-
-        &::after {
-          content: '';
-          position: absolute;
-          bottom: 0; left: 0; right: 0;
-          height: 200px;
-          background: linear-gradient(transparent, $color-bg-primary);
-          z-index: 1;
-        }
+        will-change: transform; // GPU compositing for 60fps
       }
 
-      // Film grain texture
+      // Layer 0: Background — $color-bg-dark based
+      .hero-layer--bg {
+        // All colors from tokens: $color-bg-dark, $color-primary, $color-secondary
+        background:
+          radial-gradient(ellipse at 20% 80%, rgba($color-primary, 0.12) 0%, transparent 50%),
+          radial-gradient(ellipse at 80% 20%, rgba($color-secondary, 0.06) 0%, transparent 50%),
+          linear-gradient(175deg, $color-bg-dark 0%, $color-bg-dark 100%);
+      }
+
+      // SVG noise grain — token: $color-text-inverse opacity
       .hero-grain {
         position: absolute;
         inset: 0;
-        opacity: 0.03;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-        background-repeat: repeat;
+        opacity: 0.04;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
         pointer-events: none;
       }
 
-      .hero-content {
-        position: relative;
+      // Layer 1: Steam particles — token colors
+      .hero-layer--particles {
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .steam-particle {
+        position: absolute;
+        left: calc(var(--x) * 1%);
+        bottom: calc(var(--y) * 1%);
+        width: calc(var(--size) * 1px);
+        height: calc(var(--size) * 1px);
+        border-radius: $radius-full; // token
+        // token: $color-text-inverse with low opacity
+        background: radial-gradient(circle, rgba($color-text-inverse, 0.08) 0%, transparent 70%);
+        animation: steamFloat var(--dur) var(--delay) ease-in-out infinite;
+        will-change: transform, opacity;
+      }
+
+      @keyframes steamFloat {
+        0% { transform: translateY(0) scale(1); opacity: 0; }
+        20% { opacity: 0.6; }
+        80% { opacity: 0.2; }
+        100% { transform: translateY(-120px) scale(1.5); opacity: 0; }
+      }
+
+      // Layer 2: Content — foreground
+      .hero-layer--content {
         z-index: 2;
-        max-width: 720px;
-        padding: 0 $space-lg;
+        @include flex-center; // token mixin
+        @include flex-column; // token mixin
+        padding: 0 $space-lg; // token: $space-lg
+        text-align: center;
       }
 
-      .hero-badge {
-        display: inline-flex;
+      .hero-inner {
+        max-width: $breakpoint-md; // token: 768px — tight for editorial feel
+        @include flex-column; // token mixin
         align-items: center;
-        gap: 8px;
-        font-size: 11px;
-        font-weight: $font-weight-semibold;
-        letter-spacing: 0.2em;
+        gap: $space-lg; // token
+      }
+
+      // Tag line — tokens: $font-size-xs, $font-weight-semibold, $letter-spacing-wide
+      .hero-tag {
+        font-family: $font-family; // token
+        font-size: $font-size-xs; // token
+        font-weight: $font-weight-semibold; // token
+        letter-spacing: $letter-spacing-wide; // token
         text-transform: uppercase;
-        color: rgba(255,255,255,0.5);
-        margin-bottom: $space-xxl;
+        color: rgba($color-text-inverse, 0.4); // token color
         opacity: 0;
+        transform: translateY($space-md); // token
       }
 
-      .hero-badge-dot {
-        width: 6px; height: 6px;
-        background: $color-primary;
-        border-radius: 50%;
-        animation: dotPulse 2s ease-in-out infinite;
-      }
-
-      @keyframes dotPulse {
-        0%, 100% { opacity: 0.5; transform: scale(1); }
-        50% { opacity: 1; transform: scale(1.4); }
-      }
-
+      // Headline — tokens: $font-family-display, $font-size-hero, $letter-spacing-display
       .hero-headline {
-        font-family: $font-family-display;
-        font-size: clamp(52px, 9vw, 88px);
-        font-weight: 300;
-        line-height: 1.05;
-        letter-spacing: -0.03em;
-        color: white;
-        margin: 0 0 $space-xl;
+        font-family: $font-family-display; // token
+        font-size: clamp($font-size-xxxl, 8vw, $font-size-hero); // tokens: 40px → 80px
+        font-weight: $font-weight-regular; // token: 400
+        line-height: $line-height-tight; // token: 1.2
+        letter-spacing: $letter-spacing-display; // token: -0.04em
+        color: $color-text-inverse; // token
+        margin: 0;
       }
 
-      .hero-line {
+      .hero-word {
         display: block;
         opacity: 0;
-        transform: translateY(50px);
+        transform: translateY($space-xxxl); // token: 64px
       }
 
-      .hero-line.italic {
-        font-style: italic;
-        color: $color-primary;
-        font-weight: 400;
-      }
-
+      // Subtext — tokens: $font-size-md, $color-text-inverse
       .hero-sub {
-        font-size: clamp(15px, 2vw, 18px);
-        color: rgba(255,255,255,0.45);
-        line-height: 1.7;
-        margin-bottom: $space-xxl;
+        font-family: $font-family; // token
+        font-size: clamp($font-size-sm, 2vw, $font-size-md); // tokens: 14px → 16px
+        color: rgba($color-text-inverse, 0.45); // token color
+        line-height: $line-height-relaxed; // token: 1.75
+        margin: 0;
+        max-width: calc($breakpoint-sm - $space-xxl); // token: ~528px
         opacity: 0;
-        max-width: 520px;
-        margin-left: auto;
-        margin-right: auto;
+        transform: translateY($space-xl); // token: 32px
       }
 
-      .hero-ctas {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: $space-md;
+      // CTA group
+      .hero-cta-group {
         opacity: 0;
-
-        @include respond-to(xs) {
-          flex-direction: column;
-          gap: $space-sm;
-        }
+        transform: translateY($space-lg); // token: 24px
       }
 
-      .btn-hero-primary {
+      // Primary CTA — tokens: $color-primary, $radius-full, $font-weight-semibold
+      .hero-cta-primary {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 14px 32px;
-        background: $color-primary;
-        color: white;
-        border-radius: $radius-full;
-        font-size: 15px;
-        font-weight: $font-weight-semibold;
+        gap: $space-xs; // token
+        padding: $space-md $space-xxl; // tokens: 16px 48px
+        background: $color-primary; // token
+        color: $color-text-inverse; // token
+        border-radius: $radius-full; // token
+        font-family: $font-family; // token
+        font-size: $font-size-sm; // token
+        font-weight: $font-weight-semibold; // token
+        letter-spacing: $letter-spacing-wide; // token
+        text-transform: uppercase;
         text-decoration: none;
-        transition: all 0.4s $ease-expo-out;
-        letter-spacing: 0.01em;
+        transition: all $transition-reveal; // token: 0.8s expo-out
+        box-shadow: $shadow-lg; // token
 
-        svg { transition: transform 0.3s $ease-expo-out; }
-
-        &:hover {
-          background: $color-primary-hover;
-          color: white;
-          transform: translateY(-2px);
-          box-shadow: 0 16px 48px rgba(204, 88, 3, 0.35);
-          svg { transform: translateX(3px); }
+        svg {
+          transition: transform $transition-normal; // token: 0.3s
         }
 
-        &:active { transform: scale(0.97); }
-      }
-
-      .btn-hero-ghost {
-        display: inline-flex;
-        align-items: center;
-        padding: 14px 32px;
-        background: rgba(255,255,255,0.06);
-        color: rgba(255,255,255,0.8);
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: $radius-full;
-        font-size: 15px;
-        font-weight: $font-weight-medium;
-        text-decoration: none;
-        transition: all 0.4s $ease-expo-out;
-        backdrop-filter: blur(8px);
-
         &:hover {
-          background: rgba(255,255,255,0.1);
-          border-color: rgba(255,255,255,0.25);
-          color: white;
-          transform: translateY(-2px);
+          background: $color-primary-hover; // token
+          color: $color-text-inverse; // token
+          transform: translateY(calc($space-xxs * -1)); // token: -4px
+          box-shadow: $shadow-xl, $shadow-glow; // tokens combined
+
+          svg {
+            transform: translateX($space-xxs); // token: 4px
+          }
         }
 
-        &:active { transform: scale(0.97); }
+        &:active {
+          transform: scale(0.97);
+          transition: all $transition-fast; // token: 0.15s
+        }
       }
 
-      .hero-scroll-hint {
+      // Scroll indicator — token values
+      .hero-scroll {
         position: absolute;
-        bottom: 32px;
+        bottom: $space-xxl; // token: 48px
         left: 50%;
         transform: translateX(-50%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-        color: rgba(255,255,255,0.25);
         opacity: 0;
-        animation: scrollBounce 2s ease-in-out infinite;
-
-        span {
-          font-size: 9px;
-          font-weight: $font-weight-semibold;
-          letter-spacing: 0.2em;
-          text-transform: uppercase;
-        }
       }
 
-      @keyframes scrollBounce {
-        0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.4; }
-        50% { transform: translateX(-50%) translateY(6px); opacity: 1; }
+      .hero-scroll-track {
+        width: 1px;
+        height: $space-xxl; // token: 48px
+        background: rgba($color-text-inverse, 0.1); // token color
+        border-radius: $radius-full; // token
+        overflow: hidden;
+      }
+
+      .hero-scroll-thumb {
+        width: 100%;
+        height: $space-md; // token: 16px
+        background: rgba($color-primary, 0.6); // token color
+        border-radius: $radius-full; // token
+        animation: scrollThumb 2s $ease-expo-out infinite; // token easing
+      }
+
+      @keyframes scrollThumb {
+        0% { transform: translateY(calc($space-xxl * -1)); opacity: 0; } // token
+        50% { opacity: 1; }
+        100% { transform: translateY($space-xxl); opacity: 0; } // token
+      }
+
+      // Bottom fade into page — token: $color-bg-primary
+      .hero::after {
+        content: '';
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: calc($space-xxxl * 3); // token: 192px
+        background: linear-gradient(transparent, $color-bg-primary); // token
+        z-index: 3;
+        pointer-events: none;
       }
 
       // ═══════════════════════════════════════════════
@@ -875,6 +890,15 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly collections = signal<Collection[]>([]);
   readonly spotlightProducts = signal<Product[]>([]);
 
+  // Steam/particle data — randomized positions for ambient effect
+  readonly steamParticles = Array.from({ length: 18 }, (_, i) => ({
+    x: 10 + Math.random() * 80,
+    y: -10 + Math.random() * 30,
+    size: 20 + Math.random() * 60,
+    delay: (i * 0.4) + 's',
+    dur: (4 + Math.random() * 6) + 's',
+  }));
+
   @ViewChild('homeContainer') homeContainer!: ElementRef<HTMLElement>;
   @ViewChild('heroLine1') heroLine1!: ElementRef<HTMLElement>;
   @ViewChild('heroLine2') heroLine2!: ElementRef<HTMLElement>;
@@ -897,19 +921,42 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.gsapCtx = gsap.context(() => {
-      // Hero entry animation
-      const heroTl = gsap.timeline({ delay: 0.2 });
+      // ── Hero entry timeline ──
+      const heroTl = gsap.timeline({ delay: 0.3 });
 
       heroTl
-        .to('.hero-label', { opacity: 1, y: 0, duration: 0.6, ease: 'expo.out' })
-        .to(
-          '.hero-line',
-          { opacity: 1, y: 0, duration: 0.8, ease: 'expo.out', stagger: 0.15 },
-          '-=0.3',
-        )
-        .to('.hero-sub', { opacity: 1, y: 0, duration: 0.6, ease: 'expo.out' }, '-=0.4')
-        .to('.hero-ctas', { opacity: 1, y: 0, duration: 0.6, ease: 'expo.out' }, '-=0.3')
-        .to('.hero-scroll-hint', { opacity: 1, duration: 0.8 }, '-=0.2');
+        .to('.hero-tag', { opacity: 1, y: 0, duration: 0.8, ease: 'expo.out' })
+        .to('.hero-word', { opacity: 1, y: 0, duration: 1, ease: 'expo.out', stagger: 0.12 }, '-=0.4')
+        .to('.hero-sub', { opacity: 1, y: 0, duration: 0.8, ease: 'expo.out' }, '-=0.5')
+        .to('.hero-cta-group', { opacity: 1, y: 0, duration: 0.7, ease: 'expo.out' }, '-=0.4')
+        .to('.hero-scroll', { opacity: 1, duration: 1 }, '-=0.3');
+
+      // ── Parallax scroll layers ──
+      gsap.utils.toArray<HTMLElement>('.hero-layer').forEach((layer) => {
+        const speed = parseFloat(layer.dataset['speed'] || '0.5');
+        gsap.to(layer, {
+          yPercent: speed * 30,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: '.hero',
+            start: 'top top',
+            end: 'bottom top',
+            scrub: true,
+          },
+        });
+      });
+
+      // ── Hero content fade out on scroll ──
+      gsap.to('.hero-layer--content', {
+        opacity: 0,
+        scale: 0.95,
+        scrollTrigger: {
+          trigger: '.hero',
+          start: '60% top',
+          end: 'bottom top',
+          scrub: true,
+        },
+      });
 
       // Brand band scroll reveal
       ScrollTrigger.create({
