@@ -2,6 +2,7 @@ import {
   Component,
   inject,
   signal,
+  computed,
   OnInit,
   OnDestroy,
   HostListener,
@@ -173,32 +174,162 @@ import {
       </div>
     }
 
-    <!-- ══════ SEARCH OVERLAY ══════ -->
+    <!-- ══════ SEARCH OVERLAY (Spotlight-style) ══════ -->
     @if (searchOpen()) {
       <div class="search-overlay" (click)="closeSearch()">
-        <div class="search-box" (click)="$event.stopPropagation()">
-          <div class="search-field">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.8"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            <input class="search-input" placeholder="Search teas, collections..." [(ngModel)]="searchQuery"
-              (input)="searchStore.autocomplete(searchQuery)" (keyup.enter)="doSearch()" (keyup.escape)="closeSearch()" #searchInput />
-            <kbd class="search-kbd" (click)="closeSearch()">ESC</kbd>
+        <div class="search-modal" (click)="$event.stopPropagation()">
+          <!-- Search Input -->
+          <div class="search-header">
+            <svg class="search-header-icon" width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <input
+              class="search-input"
+              placeholder="What are you looking for?"
+              [(ngModel)]="searchQuery"
+              (input)="searchStore.autocomplete(searchQuery)"
+              (keyup.enter)="doSearch()"
+              (keyup.escape)="closeSearch()"
+              #searchInput
+            />
+            @if (searchQuery) {
+              <button class="search-clear" (click)="searchQuery = ''; searchStore.closeSuggestions()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </button>
+            }
+            <kbd class="search-esc" (click)="closeSearch()">ESC</kbd>
           </div>
-          @if (searchStore.suggestionsOpen()) {
-            <div class="search-results">
-              @for (s of searchStore.suggestions(); track s.slug) {
-                <a class="search-result" (click)="selectSuggestion(s)">
-                  @if (s.type === 'product' && s.image) { <img [src]="s.image" class="result-thumb" /> }
-                  @else {
-                    <div class="result-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+
+          <!-- Quick Links (no query) -->
+          @if (!searchQuery) {
+            <div class="search-body">
+              <div class="search-section">
+                <span class="search-section-label">Quick Links</span>
+                <div class="search-quick-links">
+                  <button class="quick-link" (click)="navigateFromSearch('/products')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+                    All Products
+                  </button>
+                  <button class="quick-link" (click)="navigateFromSearch('/collections')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                    Collections
+                  </button>
+                  <button class="quick-link" (click)="navigateFromSearch('/page/about-us')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Our Story
+                  </button>
+                </div>
+              </div>
+              @if (featuredProducts().length > 0) {
+                <div class="search-section">
+                  <span class="search-section-label">Popular Products</span>
+                  @for (p of featuredProducts().slice(0, 3); track p._id) {
+                    <button class="search-product-item" (click)="navigateFromSearch('/product/' + p.slug)">
+                      <div class="search-product-thumb">
+                        @if (p.images?.[0]) { <img [src]="p.images[0]" [alt]="p.name" /> }
+                      </div>
+                      <div class="search-product-info">
+                        <span class="search-product-name">{{ p.name }}</span>
+                        <span class="search-product-price">&#8377;{{ p.basePrice }}</span>
+                      </div>
+                      <svg class="search-item-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
                   }
-                  <div class="result-info">
-                    <span class="result-name">{{ s.name }}</span>
-                    <span class="result-type">{{ s.type }}</span>
-                  </div>
-                </a>
+                </div>
               }
             </div>
           }
+
+          <!-- Search Results (grouped by type) -->
+          @if (searchQuery && searchStore.suggestionsOpen()) {
+            <div class="search-body">
+              <!-- Products -->
+              @if (productSuggestions().length > 0) {
+                <div class="search-section">
+                  <span class="search-section-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" stroke-width="1.5"/></svg>
+                    Products
+                  </span>
+                  @for (s of productSuggestions(); track s.slug) {
+                    <button class="search-product-item" (click)="navigateFromSearch('/product/' + s.slug)">
+                      <div class="search-product-thumb">
+                        @if (s.image) { <img [src]="s.image" [alt]="s.name" /> }
+                      </div>
+                      <div class="search-product-info">
+                        <span class="search-product-name">{{ s.name }}</span>
+                        <span class="search-product-meta">Product</span>
+                      </div>
+                      <svg class="search-item-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                  }
+                </div>
+              }
+              <!-- Categories -->
+              @if (categorySuggestions().length > 0) {
+                <div class="search-section">
+                  <span class="search-section-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.5"/></svg>
+                    Categories
+                  </span>
+                  @for (s of categorySuggestions(); track s.slug) {
+                    <button class="search-cat-item" (click)="navigateFromSearch('/catalog/' + s.slug)">
+                      <div class="search-cat-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                      </div>
+                      <span class="search-cat-name">{{ s.name }}</span>
+                      <svg class="search-item-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                  }
+                </div>
+              }
+              <!-- Blogs (coming soon) -->
+              <div class="search-section search-section--muted">
+                <span class="search-section-label">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="1.5"/><polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.5"/></svg>
+                  Journal
+                </span>
+                <p class="search-coming-soon">Blog search coming soon</p>
+              </div>
+            </div>
+          }
+
+          <!-- Loading -->
+          @if (searchQuery && searchStore.suggestionsLoading() && !searchStore.suggestionsOpen()) {
+            <div class="search-body">
+              <div class="search-loading">
+                <div class="search-spinner"></div>
+                <span>Searching...</span>
+              </div>
+            </div>
+          }
+
+          <!-- No results -->
+          @if (searchQuery && !searchStore.suggestionsLoading() && searchStore.suggestions().length === 0 && searchQuery.length >= 2) {
+            <div class="search-body">
+              <div class="search-empty">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                  <circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                  <path d="M8 11h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                <span class="search-empty-text">No results for "{{ searchQuery }}"</span>
+                <span class="search-empty-hint">Try a different search term</span>
+              </div>
+            </div>
+          }
+
+          <!-- Footer -->
+          <div class="search-footer">
+            <span class="search-footer-hint">
+              <kbd>&#8593;</kbd><kbd>&#8595;</kbd> Navigate
+              <kbd>&#8629;</kbd> Search
+              <kbd>esc</kbd> Close
+            </span>
+          </div>
         </div>
       </div>
     }
@@ -484,45 +615,192 @@ import {
       &:active { transform: scale(0.97); }
     }
 
-    // ═══ SEARCH OVERLAY ═══
+    // ═══════════════════════════════════════
+    // SEARCH OVERLAY (Apple Spotlight-style)
+    // ═══════════════════════════════════════
     .search-overlay {
       position: fixed; inset: 0; z-index: $z-modal;
-      background: rgba(58,45,50,0.35); backdrop-filter: blur(6px);
-      @include flex-center; padding: 0 $space-md; animation: fadeIn 0.2s ease;
+      background: rgba(58,45,50,0.4); backdrop-filter: blur(12px);
+      display: flex; align-items: flex-start; justify-content: center;
+      padding-top: 12vh; padding-left: $space-md; padding-right: $space-md;
+      animation: fadeIn 0.2s ease;
+
+      @include respond-to(md) { padding-top: 8vh; }
     }
-    .search-box {
-      width: 580px; max-width: 100%; background: $color-bg-tertiary;
-      border-radius: $radius-xl; box-shadow: 0 32px 80px rgba(0,0,0,0.15);
-      overflow: hidden; animation: searchPop 0.35s $ease-expo-out;
+
+    .search-modal {
+      width: 680px; max-width: 100%; max-height: 75vh;
+      background: $color-bg-tertiary;
+      border-radius: $radius-xxl;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.04);
+      display: flex; flex-direction: column;
+      animation: searchDrop 0.35s $ease-expo-out;
+      overflow: hidden;
     }
-    @keyframes searchPop { from { opacity: 0; transform: scale(0.96) translateY(12px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-    .search-field {
+
+    @keyframes searchDrop {
+      from { opacity: 0; transform: translateY(-16px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    // ── Search Header ──
+    .search-header {
       display: flex; align-items: center; gap: $space-sm;
-      padding: 18px $space-xl; border-bottom: 1px solid $color-border-light; color: $color-text-tertiary;
+      padding: $space-lg $space-xl;
+      border-bottom: 1px solid $color-border-light;
+      flex-shrink: 0;
     }
+    .search-header-icon { color: $color-primary; flex-shrink: 0; }
     .search-input {
       flex: 1; border: none; outline: none; background: none;
-      font-size: 18px; font-family: $font-family; color: $color-text-primary; font-weight: 500;
+      font-size: 20px; font-family: $font-family; color: $color-text-primary;
+      font-weight: 500; letter-spacing: -0.01em;
       &::placeholder { color: $color-text-disabled; font-weight: 400; }
     }
-    .search-kbd {
-      padding: 3px 8px; border: 1px solid $color-border; border-radius: 4px;
-      font-size: 10px; font-weight: 600; color: $color-text-tertiary;
-      cursor: pointer; font-family: $font-family; transition: all 0.2s;
-      &:hover { background: $color-bg-secondary; }
+    .search-clear {
+      @include flex-center; width: 28px; height: 28px; border: none;
+      background: none; color: $color-text-tertiary; cursor: pointer;
+      border-radius: $radius-full; transition: all 0.2s;
+      &:hover { color: $color-text-primary; background: $color-bg-secondary; }
     }
-    .search-results { max-height: 320px; overflow-y: auto; padding: $space-xs; }
-    .search-result {
-      display: flex; align-items: center; gap: $space-sm;
-      padding: 10px $space-md; border-radius: $radius-lg;
-      cursor: pointer; text-decoration: none; color: $color-text-primary; transition: all 0.2s;
-      &:hover { background: $color-bg-secondary; }
+    .search-esc {
+      padding: 3px 8px; border: 1px solid $color-border;
+      border-radius: $radius-sm; font-size: 10px; font-weight: 700;
+      color: $color-text-disabled; cursor: pointer; font-family: $font-family;
+      letter-spacing: 0.04em; transition: all 0.2s; flex-shrink: 0;
+      &:hover { background: $color-bg-secondary; color: $color-text-tertiary; }
     }
-    .result-thumb { width: 40px; height: 40px; border-radius: $radius-md; object-fit: cover; }
-    .result-icon { width: 40px; height: 40px; @include flex-center; background: $color-bg-secondary; border-radius: $radius-md; color: $color-text-tertiary; }
-    .result-info { display: flex; flex-direction: column; gap: 1px; }
-    .result-name { font-size: 14px; font-weight: 500; }
-    .result-type { font-size: 10px; color: $color-text-tertiary; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    // ── Search Body ──
+    .search-body {
+      flex: 1; overflow-y: auto; padding: $space-sm $space-md;
+    }
+
+    .search-section {
+      padding: $space-sm 0;
+      &:not(:last-child) { border-bottom: 1px solid $color-border-light; }
+    }
+    .search-section--muted { opacity: 0.5; }
+    .search-section-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: $color-text-tertiary;
+      padding: $space-xs $space-sm; margin-bottom: $space-xxs;
+
+      svg { color: $color-text-disabled; }
+    }
+
+    // Quick Links
+    .search-quick-links {
+      display: flex; gap: $space-xs; padding: $space-xs $space-sm;
+      flex-wrap: wrap;
+    }
+    .quick-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border: 1px solid $color-border-light;
+      border-radius: $radius-full; background: $color-bg-primary;
+      font-size: 13px; font-weight: 500; color: $color-text-secondary;
+      cursor: pointer; font-family: $font-family;
+      transition: all 0.25s $ease-expo-out;
+      &:hover {
+        border-color: $color-primary; color: $color-primary;
+        background: rgba(204,88,3,0.04); transform: translateY(-1px);
+      }
+      &:active { transform: scale(0.97); }
+      svg { color: $color-text-tertiary; }
+      &:hover svg { color: $color-primary; }
+    }
+
+    // Product Items
+    .search-product-item {
+      display: flex; align-items: center; gap: $space-sm; width: 100%;
+      padding: $space-sm; border: none; background: none;
+      border-radius: $radius-lg; cursor: pointer; text-align: left;
+      font-family: $font-family; transition: all 0.2s $ease-expo-out;
+      &:hover {
+        background: $color-bg-secondary;
+        .search-item-arrow { opacity: 1; transform: translateX(0); }
+      }
+    }
+    .search-product-thumb {
+      width: 44px; height: 44px; border-radius: $radius-md;
+      overflow: hidden; background: $color-bg-secondary; flex-shrink: 0;
+      img { width: 100%; height: 100%; object-fit: cover; }
+    }
+    .search-product-info { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .search-product-name {
+      font-size: 14px; font-weight: 600; color: $color-text-primary;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .search-product-price { font-size: 13px; font-weight: 600; color: $color-primary; }
+    .search-product-meta { font-size: 11px; color: $color-text-tertiary; }
+    .search-item-arrow {
+      color: $color-text-disabled; flex-shrink: 0;
+      opacity: 0; transform: translateX(-4px);
+      transition: all 0.2s $ease-expo-out;
+    }
+
+    // Category Items
+    .search-cat-item {
+      display: flex; align-items: center; gap: $space-sm; width: 100%;
+      padding: $space-sm; border: none; background: none;
+      border-radius: $radius-lg; cursor: pointer; text-align: left;
+      font-family: $font-family; transition: all 0.2s $ease-expo-out;
+      &:hover {
+        background: $color-bg-secondary;
+        .search-item-arrow { opacity: 1; transform: translateX(0); }
+      }
+    }
+    .search-cat-icon {
+      width: 36px; height: 36px; border-radius: $radius-md;
+      background: rgba(87,136,108,0.08); color: $color-secondary;
+      @include flex-center; flex-shrink: 0;
+    }
+    .search-cat-name { flex: 1; font-size: 14px; font-weight: 500; color: $color-text-primary; }
+
+    // Coming Soon
+    .search-coming-soon {
+      font-size: 13px; color: $color-text-disabled;
+      padding: $space-xs $space-sm; margin: 0;
+    }
+
+    // Loading
+    .search-loading {
+      @include flex-center; gap: $space-sm; padding: $space-xxl;
+      color: $color-text-tertiary; font-size: 13px;
+    }
+    .search-spinner {
+      width: 20px; height: 20px; border: 2px solid $color-border-light;
+      border-top-color: $color-primary; border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    // Empty
+    .search-empty {
+      @include flex-center; flex-direction: column; gap: $space-sm;
+      padding: $space-xxl; color: $color-text-disabled;
+    }
+    .search-empty-text { font-size: 15px; font-weight: 600; color: $color-text-secondary; }
+    .search-empty-hint { font-size: 13px; color: $color-text-tertiary; }
+
+    // Footer
+    .search-footer {
+      padding: $space-sm $space-xl;
+      border-top: 1px solid $color-border-light;
+      background: $color-bg-secondary; flex-shrink: 0;
+    }
+    .search-footer-hint {
+      font-size: 11px; color: $color-text-disabled;
+      display: flex; align-items: center; gap: $space-xs;
+      kbd {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 20px; height: 18px; padding: 0 4px;
+        border: 1px solid $color-border; border-radius: 3px;
+        font-size: 10px; font-weight: 600; font-family: $font-family;
+        color: $color-text-tertiary; background: $color-bg-tertiary;
+      }
+    }
 
     .mega-loading { @include flex-center; padding: $space-xxxl; }
     .mega-spinner {
@@ -557,6 +835,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   readonly categories = signal<Category[]>([]);
   readonly activeCatId = signal<string | null>(null);
   readonly megaLoading = signal(false);
+
+  readonly productSuggestions = computed(() =>
+    this.searchStore.suggestions().filter((s) => s.type === 'product'),
+  );
+  readonly categorySuggestions = computed(() =>
+    this.searchStore.suggestions().filter((s) => s.type === 'category'),
+  );
 
   private allProducts: Product[] = [];
   searchQuery = '';
@@ -650,6 +935,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
   }
   closeSearch(): void { this.searchOpen.set(false); this.searchStore.closeSuggestions(); }
+
+  navigateFromSearch(path: string): void {
+    this.closeSearch();
+    this.router.navigate([path]);
+  }
 
   doSearch(): void {
     if (this.searchQuery.trim()) {
