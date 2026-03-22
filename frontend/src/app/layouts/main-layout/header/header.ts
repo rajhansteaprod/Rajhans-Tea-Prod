@@ -364,8 +364,10 @@ import {
 
     // ═══ HAMBURGER ═══
     .burger {
-      display: none; flex-direction: column; gap: 5px;
-      width: 38px; height: 38px; @include flex-center;
+      display: none;
+      width: 38px; height: 38px;
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 5px;
       border: none; background: none; cursor: pointer;
       border-radius: $radius-full; padding: 10px;
       transition: background 0.2s;
