@@ -94,15 +94,15 @@ import {
             <aside class="mega-sidebar">
               <h3 class="mega-heading">Categories</h3>
               <!-- All (default) -->
-              <button class="mega-cat" [class.mega-cat--active]="!activeCatId()" (mouseenter)="onCatHover(null)" [style.--i]="0">
+              <a routerLink="/products" class="mega-cat" [class.mega-cat--active]="!activeCatId()" (mouseenter)="onCatHover(null)" (click)="closeMega()" [style.--i]="0">
                 <div class="mega-cat-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
                 </div>
                 <span class="mega-cat-name">All Products</span>
                 <svg class="mega-cat-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
+              </a>
               @for (cat of categories(); track cat._id; let i = $index) {
-                <button class="mega-cat" [class.mega-cat--active]="activeCatId() === cat._id" (mouseenter)="onCatHover(cat._id)" [style.--i]="i + 1">
+                <a [routerLink]="'/catalog/' + cat.slug" class="mega-cat" [class.mega-cat--active]="activeCatId() === cat._id" (mouseenter)="onCatHover(cat._id)" (click)="closeMega()" [style.--i]="i + 1">
                   @if (cat.image) {
                     <img [src]="cat.image" class="mega-cat-thumb" />
                   } @else {
@@ -112,7 +112,7 @@ import {
                   }
                   <span class="mega-cat-name">{{ cat.name }}</span>
                   <svg class="mega-cat-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </button>
+                </a>
               }
               <div class="mega-sidebar-divider"></div>
               <a routerLink="/collections" class="mega-cat mega-cat--browse" (click)="closeMega()" [style.--i]="categories().length + 2">
