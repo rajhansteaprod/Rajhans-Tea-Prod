@@ -93,6 +93,11 @@ export const listProducts = async (req: Request, res: Response) => {
   sendPaginated(res, products, meta, 'Products retrieved');
 };
 
+export const listProductsPublic = async (req: Request, res: Response) => {
+  const { products, meta } = await productService.listPublic(req.query as never);
+  sendPaginated(res, products, meta, 'Products retrieved');
+};
+
 export const getProductBySlug = async (req: Request, res: Response) => {
   const data = await productService.getBySlug(req.params['slug'] as string);
   sendSuccess(res, data);

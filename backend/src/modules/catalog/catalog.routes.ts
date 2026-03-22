@@ -40,7 +40,7 @@ router.get(
   '/catalog/products',
   validate(listProductsSchema),
   cacheResponse(120),
-  catalog.listProducts,
+  catalog.listProductsPublic,
 );
 router.get('/catalog/products/:slug', validate(productSlugSchema), catalog.getProductBySlug);
 

@@ -38,29 +38,28 @@ export class CategoryService {
     const paged = filtered.slice(start, start + limit);
 
     return {
-      categories: paged.map((c) => CategoryDTO.toView(c)),
+      categories: paged.map((c) => CategoryDTO.toAdmin(c)),
       meta: buildPaginationMeta(page, limit, total),
     };
   }
 
   async listPublic() {
     const roots = await this.repo.findRoots();
-    return roots.map((c) => CategoryDTO.toView(c));
+    return roots.map((c) => CategoryDTO.toPublic(c));
   }
 
   async getBySlug(slug: string) {
     const cat = await this.repo.findBySlug(slug);
     if (!cat) throw new NotFoundError('Category not found');
-    return CategoryDTO.toView(cat);
+    return CategoryDTO.toPublic(cat);
   }
 
   async getById(id: string) {
     const cat = await this.repo.findById(id);
     if (!cat) throw new NotFoundError('Category not found');
-    // Populate parent
     const populated = await this.repo.findAllForAdmin();
     const match = populated.find((c) => c._id.toString() === id);
-    return CategoryDTO.toView(match ?? cat);
+    return CategoryDTO.toAdmin(match ?? cat);
   }
 
   async create(data: {
@@ -94,7 +93,7 @@ export class CategoryService {
       sortOrder: data.sortOrder ?? 0,
     });
 
-    return CategoryDTO.toView(cat);
+    return CategoryDTO.toAdmin(cat);
   }
 
   async update(

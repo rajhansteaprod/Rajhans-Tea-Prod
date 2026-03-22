@@ -31,7 +31,7 @@ export class CollectionService {
     const withCounts = await Promise.all(
       collections.map(async (c) => {
         const count = await this.productRepo.countByCollection(c._id.toString());
-        return CollectionDTO.toView(c, count);
+        return CollectionDTO.toAdmin(c, count);
       }),
     );
 
@@ -40,7 +40,7 @@ export class CollectionService {
 
   async listPublic() {
     const cols = await this.repo.findActive();
-    return cols.map((c) => CollectionDTO.toView(c));
+    return cols.map((c) => CollectionDTO.toPublic(c));
   }
 
   async getBySlug(slug: string) {
@@ -53,7 +53,7 @@ export class CollectionService {
     });
 
     return {
-      collection: CollectionDTO.toView(col, products.length),
+      collection: CollectionDTO.toPublic(col, products.length),
     };
   }
 
@@ -61,7 +61,7 @@ export class CollectionService {
     const col = await this.repo.findById(id);
     if (!col) throw new NotFoundError('Collection not found');
     const count = await this.productRepo.countByCollection(id);
-    return CollectionDTO.toView(col, count);
+    return CollectionDTO.toAdmin(col, count);
   }
 
   async create(data: {
@@ -86,7 +86,7 @@ export class CollectionService {
       sortOrder: data.sortOrder ?? 0,
     });
 
-    return CollectionDTO.toView(col, 0);
+    return CollectionDTO.toAdmin(col, 0);
   }
 
   async update(

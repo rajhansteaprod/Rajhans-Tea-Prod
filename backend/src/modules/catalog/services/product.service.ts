@@ -48,7 +48,25 @@ export class ProductService {
     });
 
     return {
-      products: products.map((p) => ProductDTO.toView(p)),
+      products: products.map((p) => ProductDTO.toAdmin(p)),
+      meta: buildPaginationMeta(page, limit, total),
+    };
+  }
+
+  async listPublic(query: ProductListQuery = {}) {
+    const { page, limit, skip, sortBy, sortOrder } = parsePagination(query);
+
+    const { products, total } = await this.productRepo.findList({
+      skip, limit, sortBy, sortOrder,
+      search: query.search,
+      categoryId: query.categoryId,
+      collectionId: query.collectionId,
+      status: 'active' as ProductStatus,
+      isFeatured: query.isFeatured,
+    });
+
+    return {
+      products: products.map((p) => ProductDTO.toPublic(p)),
       meta: buildPaginationMeta(page, limit, total),
     };
   }
@@ -56,13 +74,13 @@ export class ProductService {
   async getBySlug(slug: string) {
     const product = await this.productRepo.findBySlug(slug);
     if (!product) throw new NotFoundError('Product not found');
-    return ProductDTO.toView(product);
+    return ProductDTO.toPublic(product);
   }
 
   async getById(id: string) {
     const product = await this.productRepo.findByIdPopulated(id);
     if (!product) throw new NotFoundError('Product not found');
-    return ProductDTO.toView(product);
+    return ProductDTO.toAdmin(product);
   }
 
   async create(data: {
