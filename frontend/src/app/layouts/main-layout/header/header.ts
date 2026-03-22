@@ -382,7 +382,7 @@ import {
       background: rgba(204,88,3,0.08); color: $color-primary;
       @include flex-center; flex-shrink: 0;
     }
-    .mega-cat-name { flex: 1; }
+    .mega-cat-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .mega-cat--browse { color: $color-primary; font-weight: 600;
       .mega-cat-arrow { opacity: 1; transform: translateX(0); }
       &:hover .mega-cat-arrow { transform: translateX(4px); }
