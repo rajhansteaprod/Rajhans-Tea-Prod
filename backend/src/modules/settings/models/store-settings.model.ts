@@ -19,7 +19,7 @@ export interface IStoreSettingsDoc extends Document {
 
 const storeSettingsSchema = new Schema<IStoreSettingsDoc>(
   {
-    storeName: { type: String, default: 'Rajhans Ecommerce' },
+    storeName: { type: String, default: 'RnD Ecommerce' },
     contactEmail: { type: String, default: '' },
     contactPhone: { type: String, default: '' },
     currency: { type: String, default: 'INR' },

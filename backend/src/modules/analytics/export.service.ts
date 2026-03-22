@@ -1,6 +1,6 @@
 import { Order } from '../inventory/models/order.model';
-import { User } from '../../models/user.model';
-import { Product } from '../../models/product.model';
+import { User } from '../auth/models/user.model';
+import { Product } from '../catalog/models/product.model';
 
 function toCsvRow(fields: string[]): string {
   return fields.map((f) => `"${String(f ?? '').replace(/"/g, '""')}"`).join(',');

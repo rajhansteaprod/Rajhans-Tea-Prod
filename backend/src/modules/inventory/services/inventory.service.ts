@@ -1,10 +1,10 @@
 import { Types } from 'mongoose';
-import { Product } from '../../../models/product.model';
+import { Product } from '../../catalog/models/product.model';
 import { StockMovementRepository } from '../repositories/stock-movement.repository';
 import { InventoryAlertRepository } from '../repositories/inventory-alert.repository';
 import { WarehouseRepository } from '../repositories/warehouse.repository';
 import { OrderRepository } from '../repositories/order.repository';
-import { StockReservation } from '../../../models/stock-reservation.model';
+import { StockReservation } from '../../cart/models/stock-reservation.model';
 
 const LOW_STOCK_THRESHOLD = 5;
 
@@ -58,7 +58,7 @@ export class InventoryService {
     }
 
     // Clear stock reservations for this payment session
-    const payment = await import('../../../models/payment.model').then(
+    const payment = await import('../../payments/models/payment.model').then(
       (m) => m.Payment.findById(order.paymentId).exec(),
     );
     if (payment) {

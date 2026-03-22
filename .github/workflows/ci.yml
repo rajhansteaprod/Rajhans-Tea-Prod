@@ -1,5 +1,5 @@
 # =============================================================================
-# CI PIPELINE — Rajhans Ecommerce
+# CI PIPELINE — RnD Ecommerce
 # =============================================================================
 #
 # WHAT IS A CI PIPELINE?
@@ -366,7 +366,7 @@ jobs:
         env:
           NODE_ENV: test
           # Point to our local Docker containers
-          MONGO_TEST_URI: mongodb://localhost:27017/rajhans-ecommerce-test?replicaSet=rs0
+          MONGO_TEST_URI: mongodb://localhost:27017/rnd-ecommerce-test?replicaSet=rs0
           REDIS_HOST: localhost
           REDIS_PORT: 6379
           JWT_ACCESS_SECRET: test-access-secret-for-ci

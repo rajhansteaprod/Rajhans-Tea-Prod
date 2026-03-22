@@ -24,8 +24,8 @@ Also needed:
 ## Step 1 — Clone the Repository
 
 ```bash
-git clone https://github.com/saransh-bairagi/RAJHANS-ECOMMERCE-PROD.git
-cd "RAJHANS-ECOMMERCE-PROD"
+git clone https://github.com/saransh-bairagi/RND-ECOMMERCE.git
+cd "RND-ECOMMERCE"
 ```
 
 ---
@@ -44,8 +44,8 @@ NODE_ENV=development
 PORT=3000
 
 # MongoDB — leave as-is for Docker
-MONGO_URI=mongodb://mongo:27017/rajhans-ecommerce?replicaSet=rs0
-MONGO_TEST_URI=mongodb://mongo-test:27017/rajhans-ecommerce-test?replicaSet=rs0
+MONGO_URI=mongodb://mongo:27017/rnd-ecommerce?replicaSet=rs0
+MONGO_TEST_URI=mongodb://mongo-test:27017/rnd-ecommerce-test?replicaSet=rs0
 
 # Redis — leave as-is for Docker
 REDIS_HOST=redis
@@ -147,8 +147,8 @@ Expected:
 ## Step 7 (Optional) — Create an Admin User
 
 ```bash
-docker exec rajhans-ecom-mongo mongosh \
-  "mongodb://localhost:27017/rajhans-ecommerce?replicaSet=rs0" \
+docker exec rnd-ecom-mongo mongosh \
+  "mongodb://localhost:27017/rnd-ecommerce?replicaSet=rs0" \
   /seeds/seed-admin.js
 ```
 
@@ -194,8 +194,8 @@ npm run test:all
 
 ### "Cannot connect to MongoDB"
 - Check Docker is running: `docker compose ps`
-- Check MongoDB health: `docker logs rajhans-ecom-mongo`
-- Ensure replica set initialized: `docker exec rajhans-ecom-mongo mongosh --eval "rs.status()"`
+- Check MongoDB health: `docker logs rnd-ecom-mongo`
+- Ensure replica set initialized: `docker exec rnd-ecom-mongo mongosh --eval "rs.status()"`
 
 ### "Firebase credentials not configured"
 - Check `backend/firebase-service-account.json` exists

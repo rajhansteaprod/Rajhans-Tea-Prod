@@ -224,7 +224,7 @@ export class ProductDetailComponent implements OnInit {
           this.selectedImage.set(res.data.images?.[0] || null);
 
           // SEO
-          this.titleService.setTitle(`${res.data.name} — Rajhans Ecommerce`);
+          this.titleService.setTitle(`${res.data.name} — RnD Ecommerce`);
           this.meta.updateTag({ name: 'description', content: res.data.shortDescription || res.data.name });
           this.meta.updateTag({ property: 'og:title', content: res.data.name });
           this.meta.updateTag({ property: 'og:description', content: res.data.shortDescription || '' });
@@ -257,7 +257,7 @@ export class ProductDetailComponent implements OnInit {
 
   shareWhatsApp(): void {
     const url = window.location.href;
-    const text = `Check out ${this.product()?.name} on Rajhans Ecommerce: ${url}`;
+    const text = `Check out ${this.product()?.name} on RnD Ecommerce: ${url}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
 

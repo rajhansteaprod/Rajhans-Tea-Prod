@@ -1,6 +1,6 @@
-import { startInvoiceWorker, closeInvoiceWorker } from './workers/invoice.worker';
-import { startWalletWorker, closeWalletWorker } from './workers/wallet.worker';
-import { startPaymentWorker, closePaymentWorker } from './workers/payment.worker';
+import { startInvoiceWorker, closeInvoiceWorker } from '../modules/payments/jobs/workers/invoice.worker';
+import { startWalletWorker, closeWalletWorker } from '../modules/payments/jobs/workers/wallet.worker';
+import { startPaymentWorker, closePaymentWorker } from '../modules/payments/jobs/workers/payment.worker';
 import { startFulfillmentWorker, closeFulfillmentWorker } from '../modules/inventory/jobs/workers/fulfillment.worker';
 import { startPromotionsWorker, closePromotionsWorker } from '../modules/promotions/jobs/workers/promotions.worker';
 import { startPersonalizationWorker, closePersonalizationWorker } from '../modules/personalization/jobs/workers/personalization.worker';

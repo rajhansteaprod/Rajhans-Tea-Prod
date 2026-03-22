@@ -1,5 +1,5 @@
-import { Product, IProductDoc } from '../../../models/product.model';
-import { Category } from '../../../models/category.model';
+import { Product, IProductDoc } from '../../catalog/models/product.model';
+import { Category } from '../../catalog/models/category.model';
 import { parsePagination, buildPaginationMeta } from '../../../utils/pagination';
 
 export interface SearchParams {

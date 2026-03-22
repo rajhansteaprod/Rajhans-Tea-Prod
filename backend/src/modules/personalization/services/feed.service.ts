@@ -1,8 +1,8 @@
 import { RecommendationService } from './recommendation.service';
 import { MerchandisingRuleRepository } from '../repositories/merchandising-rule.repository';
 import { BannerRepository } from '../repositories/banner.repository';
-import { Product } from '../../../models/product.model';
-import { ProductDTO } from '../../../dto';
+import { Product } from '../../catalog/models/product.model';
+import { ProductDTO } from '../../catalog/dto';
 import { RuleSection } from '../models/merchandising-rule.model';
 import { getRedisClient } from '../../../loaders/redis.loader';
 

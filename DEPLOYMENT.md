@@ -1,4 +1,4 @@
-# Production Deployment Guide — Rajhans Ecommerce
+# Production Deployment Guide — RnD Ecommerce
 
 ## Architecture for 10k+ Users
 
@@ -34,7 +34,7 @@
 ```env
 NODE_ENV=production
 PORT=3000
-MONGO_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/rajhans?retryWrites=true
+MONGO_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/rnd?retryWrites=true
 REDIS_HOST=<redis-host>
 REDIS_PORT=6379
 JWT_ACCESS_SECRET=<strong-random-256bit>
@@ -47,7 +47,7 @@ SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USER=apikey
 SMTP_PASS=SG.xxxxx
-SMTP_FROM=Rajhans <noreply@rajhans.com>
+SMTP_FROM=RnD <noreply@rnd.com>
 ```
 
 ### 2. MongoDB Indexes
@@ -70,7 +70,7 @@ Or use separate Redis instances: one for BullMQ (noeviction), one for cache (all
 # ecosystem.config.js
 module.exports = {
   apps: [{
-    name: 'rajhans-api',
+    name: 'rnd-api',
     script: 'dist/server.js',
     instances: 'max',        # Uses all CPU cores
     exec_mode: 'cluster',
@@ -145,7 +145,7 @@ git revert HEAD --no-edit
 git push origin main
 
 # 3. Redeploy (PM2)
-pm2 reload rajhans-api
+pm2 reload rnd-api
 
 # 4. Verify health
 curl https://yourdomain.com/api/v1/health/ready
@@ -154,10 +154,10 @@ curl https://yourdomain.com/api/v1/health/ready
 ### Docker Rollback
 ```bash
 # 1. List previous images
-docker images rajhansecommerce-backend --format "table {{.ID}}\t{{.CreatedAt}}"
+docker images rndecommerce-backend --format "table {{.ID}}\t{{.CreatedAt}}"
 
 # 2. Tag previous image as latest
-docker tag <previous-image-id> rajhansecommerce-backend:latest
+docker tag <previous-image-id> rndecommerce-backend:latest
 
 # 3. Restart
 docker compose up -d backend

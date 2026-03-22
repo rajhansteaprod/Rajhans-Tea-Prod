@@ -1,8 +1,8 @@
 import { Types } from 'mongoose';
 import { Page, IPageDoc } from '../models/page.model';
 import { Blog, IBlogDoc } from '../models/blog.model';
-import { Product } from '../../../models/product.model';
-import { Category } from '../../../models/category.model';
+import { Product } from '../../catalog/models/product.model';
+import { Category } from '../../catalog/models/category.model';
 import { NotFoundError } from '../../../utils/api-error';
 import { slugify } from '../../../utils/slugify';
 import { parsePagination, buildPaginationMeta } from '../../../utils/pagination';

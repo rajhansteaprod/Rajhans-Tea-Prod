@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { User } from '../../models/user.model';
+import { User } from '../auth/models/user.model';
 import { Order } from '../inventory/models/order.model';
-import { Payment } from '../../models/payment.model';
+import { Payment } from '../payments/models/payment.model';
 import { Review } from '../reviews/models/review.model';
-import { Wallet } from '../../models/wallet.model';
-import { WalletTransaction } from '../../models/wallet-transaction.model';
+import { Wallet } from '../payments/models/wallet.model';
+import { WalletTransaction } from '../payments/models/wallet-transaction.model';
 import { Ticket } from '../support/models/ticket.model';
 import { sendSuccess } from '../../utils/api-response';
 import { NotFoundError } from '../../utils/api-error';
@@ -84,7 +84,7 @@ export const deleteMyAccount = async (req: Request, res: Response) => {
   await Ticket.deleteMany({ userId }).exec();
 
   // Revoke all sessions (tokens in token collection)
-  const { Token } = await import('../../models/token.model');
+  const { Token } = await import('../auth/models/token.model');
   await Token.deleteMany({ userId }).exec();
 
   logger.info({ userId }, 'Account deleted and anonymized');

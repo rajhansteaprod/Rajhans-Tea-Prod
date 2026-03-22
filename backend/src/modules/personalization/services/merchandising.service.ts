@@ -1,7 +1,7 @@
 import { MerchandisingRuleRepository } from '../repositories/merchandising-rule.repository';
 import { BannerRepository } from '../repositories/banner.repository';
 import { ProductViewRepository } from '../repositories/product-view.repository';
-import { Product } from '../../../models/product.model';
+import { Product } from '../../catalog/models/product.model';
 import { Order } from '../../inventory/models/order.model';
 import { NotFoundError } from '../../../utils/api-error';
 import { slugify } from '../../../utils/slugify';

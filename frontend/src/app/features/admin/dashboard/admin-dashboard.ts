@@ -158,7 +158,7 @@ import { AdminService, DashboardStats, AdminUser } from '../../../core/services/
                 <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </a>
-            <div class="action-row disabled">
+            <a routerLink="/admin/products" class="action-row">
               <div class="action-icon products-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" stroke-width="1.8"/>
@@ -168,9 +168,11 @@ import { AdminService, DashboardStats, AdminUser } from '../../../core/services/
                 <span class="action-name">Add Products</span>
                 <span class="action-desc">Create and manage your catalog</span>
               </div>
-              <span class="soon-tag">Soon</span>
-            </div>
-            <div class="action-row disabled">
+              <svg class="action-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+            <a routerLink="/admin/orders" class="action-row">
               <div class="action-icon orders-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="1.8"/>
@@ -181,9 +183,11 @@ import { AdminService, DashboardStats, AdminUser } from '../../../core/services/
                 <span class="action-name">View Orders</span>
                 <span class="action-desc">Track and manage customer orders</span>
               </div>
-              <span class="soon-tag">Soon</span>
-            </div>
-            <div class="action-row disabled">
+              <svg class="action-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+            <a routerLink="/admin/analytics" class="action-row">
               <div class="action-icon analytics-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <line x1="18" y1="20" x2="18" y2="10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -195,8 +199,10 @@ import { AdminService, DashboardStats, AdminUser } from '../../../core/services/
                 <span class="action-name">Analytics</span>
                 <span class="action-desc">Revenue, traffic and insights</span>
               </div>
-              <span class="soon-tag">Soon</span>
-            </div>
+              <svg class="action-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
           </div>
         </div>
       </section>

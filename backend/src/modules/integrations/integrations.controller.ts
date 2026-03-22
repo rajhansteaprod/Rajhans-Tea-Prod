@@ -55,7 +55,7 @@ export const testWebhook = async (req: Request, res: Response) => {
   if (!webhook) throw new NotFoundError('Webhook not found');
 
   // Send test event
-  await webhookDispatcher.dispatch('test.ping', { message: 'Test webhook from Rajhans Ecommerce', timestamp: new Date().toISOString() });
+  await webhookDispatcher.dispatch('test.ping', { message: 'Test webhook from RnD Ecommerce', timestamp: new Date().toISOString() });
   sendSuccess(res, { tested: true }, 'Test event dispatched');
 };
 

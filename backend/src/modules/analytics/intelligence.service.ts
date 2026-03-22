@@ -1,7 +1,7 @@
-import { Payment } from '../../models/payment.model';
+import { Payment } from '../payments/models/payment.model';
 import { Order } from '../inventory/models/order.model';
-import { User } from '../../models/user.model';
-import { Product } from '../../models/product.model';
+import { User } from '../auth/models/user.model';
+import { Product } from '../catalog/models/product.model';
 import { Review } from '../reviews/models/review.model';
 import { ProductView } from '../personalization/models/product-view.model';
 
@@ -307,7 +307,7 @@ export class IntelligenceService {
       connectedUsers = getConnectedUserCount();
     } catch { /* socket not available */ }
 
-    const { Cart } = await import('../../models/cart.model');
+    const { Cart } = await import('../cart/models/cart.model');
     const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000);
     const activeCarts = await Cart.countDocuments({ updatedAt: { $gte: fifteenMinAgo }, 'items.0': { $exists: true } }).exec();
 

@@ -2,7 +2,7 @@ import { OrderRepository } from '../repositories/order.repository';
 import { WarehouseRepository } from '../repositories/warehouse.repository';
 import { InventoryService } from './inventory.service';
 import { getShippingProvider } from './shipping/shipping.factory';
-import { Payment } from '../../../models/payment.model';
+import { Payment } from '../../payments/models/payment.model';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../../../utils/api-error';
 import { OrderStatus, IOrderDoc } from '../models/order.model';
 import { Types } from 'mongoose';

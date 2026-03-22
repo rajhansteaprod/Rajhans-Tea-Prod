@@ -24,7 +24,7 @@ export class PushProvider implements NotificationProvider {
           await messaging.send({
             token,
             notification: {
-              title: payload.title || 'Rajhans Ecommerce',
+              title: payload.title || 'RnD Ecommerce',
               body: payload.body,
             },
             webpush: payload.link

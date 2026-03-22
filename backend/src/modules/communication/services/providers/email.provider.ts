@@ -30,7 +30,7 @@ export class EmailProvider implements NotificationProvider {
       const info = await this.getTransporter().sendMail({
         from: smtp.from,
         to: payload.to,
-        subject: payload.subject || payload.title || 'Rajhans Ecommerce',
+        subject: payload.subject || payload.title || 'RnD Ecommerce',
         html: payload.html || `<p>${payload.body}</p>`,
         text: payload.body,
       });

@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { Types } from 'mongoose';
 import { Experiment, IExperimentDoc } from '../models/experiment.model';
 import { ExperimentExposure } from '../models/experiment-exposure.model';
-import { Payment } from '../../../models/payment.model';
+import { Payment } from '../../payments/models/payment.model';
 import { NotFoundError, BadRequestError } from '../../../utils/api-error';
 import { slugify } from '../../../utils/slugify';
 

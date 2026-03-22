@@ -1,7 +1,7 @@
 import { SearchRepository, SearchParams } from '../repositories/search.repository';
 import { SearchAnalyticsRepository } from '../repositories/search-analytics.repository';
 import { SearchCacheService } from './search-cache.service';
-import { ProductDTO } from '../../../dto';
+import { ProductDTO } from '../../catalog/dto/product.dto';
 
 export class SearchService {
   private searchRepo = new SearchRepository();

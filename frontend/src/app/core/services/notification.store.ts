@@ -68,7 +68,7 @@ export class NotificationStore {
       console.log('[WS] Disconnected');
     });
 
-    this.socket.on('connect_error', (err) => {
+    this.socket.on('connect_error', (err: Error) => {
       console.warn('[WS] Connection error:', err.message);
       // Fallback to polling if WebSocket fails
       this.startPollingFallback();

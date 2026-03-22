@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { User } from '../../../models/user.model';
+import { User } from '../../auth/models/user.model';
 import { NotificationRepository } from '../repositories/notification.repository';
 import { NotificationPreferenceRepository } from '../repositories/notification-preference.repository';
 import { NotificationTemplateRepository } from '../repositories/notification-template.repository';
@@ -71,7 +71,7 @@ export class NotificationService {
         const html = renderTemplate(template.channels.email.htmlBody, vars);
         // Email requires an email address — for now use phone@placeholder since we don't store email
         // In production, add email field to User model
-        const result = await emailProvider.send({ to: `${user.phone}@user.rajhans.com`, subject, body, html });
+        const result = await emailProvider.send({ to: `${user.phone}@user.rnd.com`, subject, body, html });
         if (result.success) sentChannels.push('email');
       } catch { /* silent */ }
     }
@@ -227,7 +227,7 @@ export class NotificationService {
       loyalty_earned: `You earned ${vars.points || ''} loyalty points!`,
       low_stock_alert: `Low stock alert for ${vars.productName || ''}.`,
       review_reminder: `How was your purchase? Share your experience!`,
-      announcement: String(vars.message || 'New announcement from Rajhans'),
+      announcement: String(vars.message || 'New announcement from RnD'),
     };
     return bodies[type] || 'You have a new notification.';
   }

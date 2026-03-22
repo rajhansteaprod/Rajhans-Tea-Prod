@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import { UnauthorizedError, ForbiddenError } from '../utils/api-error';
 import { ITokenPayload } from '../types/auth.types';
-import { User } from '../models/user.model';
+import { User } from '../modules/auth/models/user.model';
 
 export const authenticate = async (req: Request, _res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;

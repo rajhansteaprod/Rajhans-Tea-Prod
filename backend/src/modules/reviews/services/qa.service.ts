@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { QuestionRepository } from '../repositories/question.repository';
-import { User } from '../../../models/user.model';
+import { User } from '../../auth/models/user.model';
 import { NotFoundError } from '../../../utils/api-error';
 
 export class QAService {

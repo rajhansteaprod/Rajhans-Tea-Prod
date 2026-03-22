@@ -60,7 +60,7 @@ export class BlogPostComponent implements OnInit {
       this.http.get<{ data: any }>(`${environment.apiUrl}/blog/${params['slug']}`).subscribe({
         next: (res) => {
           this.blog.set(res.data);
-          this.titleService.setTitle(`${res.data.title} — Rajhans Blog`);
+          this.titleService.setTitle(`${res.data.title} — RnD Blog`);
           this.meta.updateTag({ name: 'description', content: res.data.excerpt || res.data.title });
         },
       });

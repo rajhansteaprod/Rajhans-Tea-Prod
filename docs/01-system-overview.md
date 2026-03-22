@@ -1,6 +1,6 @@
 # 01 — System Overview
 
-## What Is Rajhans Ecommerce?
+## What Is RnD Ecommerce?
 
 A full-stack ecommerce platform built for Indian users. It is:
 - **Mobile-first** — login with phone number only (no passwords)
@@ -93,7 +93,7 @@ Redis Exporter (9121)
 
 ## Authentication Flow (the most important thing to understand)
 
-Rajhans uses **phone-number-only authentication**. There are no passwords. Here is the complete flow:
+RnD uses **phone-number-only authentication**. There are no passwords. Here is the complete flow:
 
 ```
 User enters phone number

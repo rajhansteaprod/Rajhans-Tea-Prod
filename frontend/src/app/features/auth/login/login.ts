@@ -37,7 +37,7 @@ import { FirebaseService } from '../../../core/services/firebase.service';
             </div>
             <h1 class="brand-title">
               <span class="title-line">Discover</span>
-              <span class="title-line accent">Rajhans</span>
+              <span class="title-line accent">RnD</span>
               <span class="title-line">Collection</span>
             </h1>
             <p class="brand-desc">

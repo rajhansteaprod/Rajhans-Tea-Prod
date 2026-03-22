@@ -1,6 +1,6 @@
 import { CouponRepository } from '../repositories/coupon.repository';
 import { NotFoundError } from '../../../utils/api-error';
-import { CheckoutSummary } from '../../../services/checkout.service';
+import { CheckoutSummary } from '../../cart/services/checkout.service';
 
 export interface CouponValidationResult {
   valid: boolean;

@@ -30,7 +30,7 @@ gsap.registerPlugin(ScrollTrigger);
         </button>
         <a class="nav-logo" href="/admin">
           <span class="logo-r">R</span>
-          <span>Rajhans</span>
+          <span>RnD</span>
         </a>
         <div class="nav-right">
           @if (product()?.status === 'draft') {

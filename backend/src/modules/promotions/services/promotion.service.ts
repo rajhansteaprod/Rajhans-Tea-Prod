@@ -1,6 +1,6 @@
 import { CouponService, CouponValidationResult } from './coupon.service';
 import { LoyaltyService } from './loyalty.service';
-import { CheckoutSummary } from '../../../services/checkout.service';
+import { CheckoutSummary } from '../../cart/services/checkout.service';
 
 export interface PromotionOptions {
   couponCode?: string;

@@ -1,7 +1,7 @@
-import { Product } from '../../../models/product.model';
+import { Product } from '../../catalog/models/product.model';
 import { ProductViewRepository } from '../repositories/product-view.repository';
 import { CoPurchaseRepository } from '../repositories/co-purchase.repository';
-import { ProductDTO } from '../../../dto';
+import { ProductDTO } from '../../catalog/dto';
 import { getRedisClient } from '../../../loaders/redis.loader';
 
 export class RecommendationService {

@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { WorkflowDefinition, IWorkflowDefinitionDoc } from '../models/workflow-definition.model';
 import { WorkflowInstance, IWorkflowInstanceDoc } from '../models/workflow-instance.model';
-import { User } from '../../../models/user.model';
+import { User } from '../../auth/models/user.model';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../../../utils/api-error';
 import { parsePagination, buildPaginationMeta } from '../../../utils/pagination';
 import { slugify } from '../../../utils/slugify';

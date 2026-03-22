@@ -13,10 +13,10 @@ How to diagnose specific problems in this codebase.
 docker compose ps
 
 # 2. What does MongoDB say?
-docker logs rajhans-ecom-mongo
+docker logs rnd-ecom-mongo
 
 # 3. Is replica set initialized?
-docker exec rajhans-ecom-mongo mongosh --eval "rs.status()"
+docker exec rnd-ecom-mongo mongosh --eval "rs.status()"
 # Should show: "stateStr": "PRIMARY"
 
 # 4. Can the backend reach Mongo?
@@ -36,7 +36,7 @@ echo "eyJhbGciOiJIUzI1NiJ9.PAYLOAD.SIG" | cut -d'.' -f2 | base64 -d
 # 3. Is the role correct?
 
 # Verify the backend env var matches what was used to sign:
-docker exec rajhans-ecom-backend env | grep JWT_ACCESS_SECRET
+docker exec rnd-ecom-backend env | grep JWT_ACCESS_SECRET
 ```
 
 ### "Rate limit 429 in dev"
@@ -58,7 +58,7 @@ Causes:
 3. Token from different Firebase project
 
 Debug:
-docker logs rajhans-ecom-backend | grep -i firebase
+docker logs rnd-ecom-backend | grep -i firebase
 ```
 
 ### "Request fails but no error in logs"
@@ -80,7 +80,7 @@ curl -v http://localhost:3100/health 2>&1 | grep "x-request-id"
 # x-request-id: abc123-...
 
 # Find all logs for that request
-docker logs rajhans-ecom-backend | grep "abc123"
+docker logs rnd-ecom-backend | grep "abc123"
 ```
 
 ---
@@ -133,11 +133,11 @@ cat frontend/src/proxy.conf.json
 docker compose ps
 
 # See logs for a specific container
-docker logs rajhans-ecom-backend --tail=50 --follow
+docker logs rnd-ecom-backend --tail=50 --follow
 
 # Enter a container shell
-docker exec -it rajhans-ecom-backend sh
-docker exec -it rajhans-ecom-mongo mongosh
+docker exec -it rnd-ecom-backend sh
+docker exec -it rnd-ecom-mongo mongosh
 
 # Restart a single container
 docker compose restart backend
@@ -171,8 +171,8 @@ gh run rerun <run-id> --failed
 
 ```bash
 # Connect to running instance
-docker exec -it rajhans-ecom-mongo mongosh \
-  "mongodb://localhost:27017/rajhans-ecommerce?replicaSet=rs0"
+docker exec -it rnd-ecom-mongo mongosh \
+  "mongodb://localhost:27017/rnd-ecommerce?replicaSet=rs0"
 
 # Common queries:
 db.users.find().pretty()

@@ -16,7 +16,7 @@ export function registerEventHandlers(): void {
 
     // These imports are lazy to avoid circular dependencies
     const { getFulfillmentQueue, FulfillmentJobs } = await import('../modules/inventory/jobs/queues/fulfillment.queue');
-    const { getInvoiceQueue, InvoiceJobs } = await import('../jobs/queues/invoice.queue');
+    const { getInvoiceQueue, InvoiceJobs } = await import('../modules/payments/jobs/queues/invoice.queue');
     const { getPromotionsQueue, PromotionJobs } = await import('../modules/promotions/jobs/queues/promotions.queue');
     const { getNotificationQueue, NotificationJobs } = await import('../modules/communication/jobs/queues/notification.queue');
 

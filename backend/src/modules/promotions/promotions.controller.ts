@@ -4,7 +4,7 @@ import { LoyaltyService } from './services/loyalty.service';
 import { ReferralService } from './services/referral.service';
 import { PromotionService } from './services/promotion.service';
 import { CampaignRepository } from './repositories/campaign.repository';
-import { CheckoutService } from '../../services/checkout.service';
+import { CheckoutService } from '../cart/services/checkout.service';
 import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../../utils/api-response';
 import { BadRequestError } from '../../utils/api-error';
 import { slugify } from '../../utils/slugify';

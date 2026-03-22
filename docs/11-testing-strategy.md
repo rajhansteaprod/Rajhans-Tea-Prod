@@ -72,7 +72,7 @@ mockFirebaseAuth.verifyIdToken.mockRejectedValue(new Error()); // simulate Fireb
 ```
 docker run mongo:7 (replica set) → :27017
 docker run redis:7-alpine        → :6379
-run tests with MONGO_TEST_URI=mongodb://localhost:27017/rajhans-ecommerce-test
+run tests with MONGO_TEST_URI=mongodb://localhost:27017/rnd-ecommerce-test
 cleanup DB after each test
 ```
 

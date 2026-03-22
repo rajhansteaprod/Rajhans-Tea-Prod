@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { NotificationService } from './services/notification.service';
-import { User } from '../../models/user.model';
+import { User } from '../auth/models/user.model';
 import { sendSuccess, sendCreated, sendPaginated } from '../../utils/api-response';
 
 const notificationService = new NotificationService();

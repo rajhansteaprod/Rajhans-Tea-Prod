@@ -11,7 +11,7 @@ import { environment } from '../../../../environments/environment';
   template: `
     <div class="page">
       <h1 class="page-title">Blog</h1>
-      <p class="page-sub">Stories, tips, and updates from Rajhans</p>
+      <p class="page-sub">Stories, tips, and updates from RnD</p>
 
       @if (blogs().length === 0) {
         <div class="empty">No blog posts yet. Check back soon!</div>

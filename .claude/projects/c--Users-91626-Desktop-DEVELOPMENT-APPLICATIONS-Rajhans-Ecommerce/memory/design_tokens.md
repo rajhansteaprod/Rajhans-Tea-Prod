@@ -1,6 +1,6 @@
 ---
 name: design_tokens
-description: Frontend design token color palette and UI tokenization for Rajhans Ecommerce
+description: Frontend design token color palette and UI tokenization for RnD Ecommerce
 type: project
 ---
 

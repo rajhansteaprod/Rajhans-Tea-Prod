@@ -1,6 +1,6 @@
-import { Payment } from '../../models/payment.model';
+import { Payment } from '../payments/models/payment.model';
 import { Order } from '../inventory/models/order.model';
-import { User } from '../../models/user.model';
+import { User } from '../auth/models/user.model';
 import { Review } from '../reviews/models/review.model';
 import { ProductView } from '../personalization/models/product-view.model';
 
@@ -54,7 +54,7 @@ export class AnalyticsService {
 
     const [views, cartsCreated, paymentsCreated, paymentsCaptured, ordersCreated] = await Promise.all([
       ProductView.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }).exec(),
-      (await import('../../models/cart.model')).Cart.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }).exec(),
+      (await import('../cart/models/cart.model')).Cart.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }).exec(),
       Payment.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }).exec(),
       Payment.countDocuments({ status: 'captured', createdAt: { $gte: thirtyDaysAgo } }).exec(),
       Order.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }).exec(),

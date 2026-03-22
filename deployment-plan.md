@@ -1,4 +1,4 @@
-# Deployment Plan — Rajhans Ecommerce
+# Deployment Plan — RnD Ecommerce
 
 ## Already Done
 

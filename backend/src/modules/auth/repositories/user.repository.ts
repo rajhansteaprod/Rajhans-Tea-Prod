@@ -1,0 +1,40 @@
+import { BaseRepository } from '../../../core/base.repository';
+import { User, IUserDoc } from '../models/user.model';
+
+export class UserRepository extends BaseRepository<IUserDoc> {
+  constructor() {
+    super(User);
+  }
+
+  async findByPhone(phone: string): Promise<IUserDoc | null> {
+    return this.model.findOne({ phone }).exec();
+  }
+
+  async findActiveByPhone(phone: string): Promise<IUserDoc | null> {
+    return this.model.findOne({ phone, isActive: true }).exec();
+  }
+
+  async updateLastLogin(userId: string): Promise<void> {
+    await this.model.findByIdAndUpdate(userId, { lastLogin: new Date() }).exec();
+  }
+
+  async banUser(userId: string, reason?: string): Promise<IUserDoc | null> {
+    return this.model
+      .findByIdAndUpdate(
+        userId,
+        { isBanned: true, bannedAt: new Date(), bannedReason: reason ?? '' },
+        { new: true },
+      )
+      .exec();
+  }
+
+  async unbanUser(userId: string): Promise<IUserDoc | null> {
+    return this.model
+      .findByIdAndUpdate(
+        userId,
+        { isBanned: false, $unset: { bannedAt: '', bannedReason: '' } },
+        { new: true },
+      )
+      .exec();
+  }
+}

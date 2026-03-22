@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { IDeviceInfo } from '../models/token.model';
+import { IDeviceInfo } from '../modules/auth/models/token.model';
 
 // ---------------------------------------------------------------------------
 // IP extraction

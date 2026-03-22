@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { ReferralRepository } from '../repositories/referral.repository';
 import { CouponRepository } from '../repositories/coupon.repository';
 import { LoyaltyService } from './loyalty.service';
-import { WalletService } from '../../../services/wallet.service';
+import { WalletService } from '../../payments/services/wallet.service';
 // utils available if needed
 
 export class ReferralService {

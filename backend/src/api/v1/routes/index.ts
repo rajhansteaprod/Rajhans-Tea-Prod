@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import healthRoutes from './health.routes';
-import authRoutes from './auth.routes';
-import adminRoutes from './admin.routes';
-import catalogRoutes from './catalog.routes';
-import pricingRoutes from './pricing.routes';
-import cartRoutes from './cart.routes';
-import paymentRoutes from './payment.routes';
+import authRoutes from '../../../modules/auth/auth.routes';
+import adminRoutes from '../../../modules/admin/admin.routes';
+import catalogRoutes from '../../../modules/catalog/catalog.routes';
+import pricingRoutes from '../../../modules/pricing/pricing.routes';
+import cartRoutes from '../../../modules/cart/cart.routes';
+import paymentRoutes from '../../../modules/payments/payment.routes';
 import inventoryRoutes from '../../../modules/inventory/inventory.routes';
 import promotionsRoutes from '../../../modules/promotions/promotions.routes';
 import searchRoutes from '../../../modules/search/search.routes';

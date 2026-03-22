@@ -32,7 +32,7 @@ interface NavSection {
             />
           </svg>
         </button>
-        <span class="mobile-title">Rajhans Admin</span>
+        <span class="mobile-title">RnD Admin</span>
       </div>
 
       <!-- Sidebar overlay -->
@@ -45,7 +45,7 @@ interface NavSection {
         <div class="sidebar-header">
           <a routerLink="/admin" class="sidebar-logo">
             <span class="logo-mark">R</span>
-            <span class="logo-text">Rajhans</span>
+            <span class="logo-text">RnD</span>
           </a>
           <span class="env-badge">Admin</span>
         </div>
