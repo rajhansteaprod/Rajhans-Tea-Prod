@@ -89,7 +89,7 @@ import {
     <!-- ══════ FULL-PAGE MEGA MENU ══════ -->
     @if (megaOpen()) {
       <div class="mega" (click)="closeMega()">
-        <div class="mega-content" (click)="$event.stopPropagation()" (mouseleave)="closeMega()">
+        <div class="mega-content" [style.top.px]="scrolled() ? 60 : 72" (click)="$event.stopPropagation()" (mouseleave)="closeMega()">
           <div class="mega-layout">
             <!-- LEFT SIDEBAR: Categories -->
             <aside class="mega-sidebar">
@@ -456,11 +456,11 @@ import {
       animation: fadeIn 0.2s ease;
     }
     .mega-content {
-      position: absolute; top: 72px; left: 0; right: 0;
+      position: absolute; left: 0; right: 0;
       background: $color-bg-tertiary; border-top: 1px solid $color-border-light;
       border-bottom: 3px solid $color-primary;
       box-shadow: 0 40px 100px rgba(58,45,50,0.12);
-      max-height: calc(100vh - 72px); overflow-y: auto;
+      overflow-y: auto;
       animation: megaSlide 0.4s $ease-expo-out both;
     }
     @keyframes megaSlide { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
