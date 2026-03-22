@@ -62,7 +62,8 @@ import { CartSidebarComponent } from '../../features/store/cart/cart-sidebar';
 
     .content {
       flex: 1;
-      padding: 88px $space-xxl $space-lg;
+      padding: 0 $space-xxl $space-lg;
+      padding-top: 72px; // header height
     }
 
     .content-inner {

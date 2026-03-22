@@ -870,7 +870,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   @HostListener('window:scroll')
   onScroll(): void {
     const y = window.scrollY;
-    this.scrolled.set(y > 32);
+    // Transparent → solid transition at 100px scroll (hero still visible above)
+    this.scrolled.set(y > 100);
     if (y > 160 && y > this.lastY && !this.megaOpen() && !this.searchOpen()) {
       this.navHidden.set(true);
     } else {
