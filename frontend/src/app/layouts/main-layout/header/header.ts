@@ -32,7 +32,7 @@ import {
         </a>
 
         <nav class="nav-links" [class.open]="mobileOpen()">
-          <button class="nav-link" [class.active]="megaOpen()" (click)="toggleMega()" (mouseenter)="onNavHover()">
+          <button class="nav-link" [class.active]="megaOpen()" (click)="navigateTo('/products')" (mouseenter)="onNavHover()">
             All Products
             <svg class="nav-chevron" [class.flip]="megaOpen()" width="10" height="10" viewBox="0 0 24 24" fill="none">
               <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -42,7 +42,7 @@ import {
           <a routerLink="/page/blog" class="nav-link" (click)="closeAll()">Journal</a>
 
           <div class="mobile-links">
-            <a routerLink="/search" class="nav-link" (click)="closeAll()">Search</a>
+            <a routerLink="/products" class="nav-link" (click)="closeAll()">Products</a>
             <a routerLink="/wishlist" class="nav-link" (click)="closeAll()">Wishlist</a>
             @if (auth.isLoggedIn()) {
               <a routerLink="/dashboard" class="nav-link" (click)="closeAll()">Account</a>
