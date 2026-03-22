@@ -5,9 +5,8 @@ import {
   computed,
   OnInit,
   OnDestroy,
-  AfterViewInit,
-  ElementRef,
   HostListener,
+  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -16,7 +15,6 @@ import { AuthService } from '../../../core/services/auth.service';
 import { CartStore } from '../../../core/services/cart.store';
 import { SearchStore } from '../../../core/services/search.store';
 import { CatalogService, Product } from '../../../core/services/catalog.service';
-import gsap from 'gsap';
 
 @Component({
   selector: 'app-header',
@@ -296,14 +294,18 @@ import gsap from 'gsap';
         align-items: center;
         padding: 0 $space-xxl;
         transition: all 0.4s $ease-expo-out;
-        background: rgba(252, 255, 247, 0);
+        background: rgba(252, 255, 247, 0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        animation: navSlideDown 0.6s $ease-expo-out both;
 
         &.scrolled {
-          background: rgba(252, 255, 247, 0.92);
+          background: rgba(252, 255, 247, 0.97);
           backdrop-filter: blur(20px) saturate(180%);
           -webkit-backdrop-filter: blur(20px) saturate(180%);
-          border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
           height: 64px;
+          box-shadow: 0 1px 8px rgba(58, 45, 50, 0.04);
 
           .logo-img {
             width: 32px;
@@ -329,6 +331,21 @@ import gsap from 'gsap';
         justify-content: space-between;
       }
 
+      @keyframes navSlideDown {
+        from { opacity: 0; transform: translateY(-12px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes navItemFadeIn {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes navIconFadeIn {
+        from { opacity: 0; transform: scale(0.85); }
+        to { opacity: 1; transform: scale(1); }
+      }
+
       // ═══ LOGO ═══
       .logo-link {
         display: flex;
@@ -337,6 +354,7 @@ import gsap from 'gsap';
         text-decoration: none;
         flex-shrink: 0;
         z-index: 2;
+        animation: navItemFadeIn 0.5s 0.1s $ease-expo-out both;
       }
 
       .logo-img {
@@ -419,6 +437,11 @@ import gsap from 'gsap';
         transition: all $transition-normal;
         letter-spacing: 0.01em;
         white-space: nowrap;
+        animation: navItemFadeIn 0.5s $ease-expo-out both;
+
+        &:nth-child(1) { animation-delay: 0.15s; }
+        &:nth-child(2) { animation-delay: 0.22s; }
+        &:nth-child(3) { animation-delay: 0.29s; }
 
         &:hover,
         &.active {
@@ -635,6 +658,12 @@ import gsap from 'gsap';
         cursor: pointer;
         transition: all $transition-normal;
         text-decoration: none;
+        animation: navIconFadeIn 0.4s $ease-expo-out both;
+
+        &:nth-child(1) { animation-delay: 0.25s; }
+        &:nth-child(2) { animation-delay: 0.3s; }
+        &:nth-child(3) { animation-delay: 0.35s; }
+        &:nth-child(4) { animation-delay: 0.4s; }
 
         &:hover {
           background: rgba(58, 45, 50, 0.06);
@@ -912,7 +941,7 @@ import gsap from 'gsap';
     `,
   ],
 })
-export class HeaderComponent implements OnInit, AfterViewInit, OnDestroy {
+export class HeaderComponent implements OnInit, OnDestroy {
   readonly authService = inject(AuthService);
   readonly cartStore = inject(CartStore);
   readonly searchStore = inject(SearchStore);
@@ -950,27 +979,6 @@ export class HeaderComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe({
         next: (res) => this.featuredProducts.set(res.data),
       });
-  }
-
-  ngAfterViewInit(): void {
-    // Subtle entry animation
-    gsap.from('.logo-link', { opacity: 0, x: -20, duration: 0.6, delay: 0.1, ease: 'expo.out' });
-    gsap.from('.nav-center .nav-link, .nav-center .nav-item', {
-      opacity: 0,
-      y: -10,
-      duration: 0.5,
-      stagger: 0.08,
-      delay: 0.2,
-      ease: 'expo.out',
-    });
-    gsap.from('.nav-right .action-btn', {
-      opacity: 0,
-      x: 20,
-      duration: 0.5,
-      stagger: 0.06,
-      delay: 0.3,
-      ease: 'expo.out',
-    });
   }
 
   ngOnDestroy(): void {
