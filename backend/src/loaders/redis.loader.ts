@@ -8,6 +8,7 @@ export const connectRedis = (): Redis => {
   redisClient = new Redis({
     host: config.redis.host,
     port: config.redis.port,
+    password: config.redis.password,
     maxRetriesPerRequest: 3,
     retryStrategy: (times) => {
       if (times > 3) {
