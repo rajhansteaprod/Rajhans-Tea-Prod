@@ -24,10 +24,10 @@
 // We only want to test the LOGIC inside AuthService itself.
 // =============================================================================
 
-import { AuthService } from '../../../src/services/auth.service';
-import { UserRepository } from '../../../src/repositories/user.repository';
-import { TokenRepository } from '../../../src/repositories/token.repository';
-import { IDeviceInfo } from '../../../src/models/token.model';
+import { AuthService } from '../../../src/modules/auth/services/auth.service';
+import { UserRepository } from '../../../src/modules/auth/repositories/user.repository';
+import { TokenRepository } from '../../../src/modules/auth/repositories/token.repository';
+import { IDeviceInfo } from '../../../src/modules/auth/models/token.model';
 import { StatusCodes } from 'http-status-codes';
 import { ApiError } from '../../../src/utils/api-error';
 
@@ -39,8 +39,8 @@ import { ApiError } from '../../../src/utils/api-error';
 //   - Does nothing by default (returns undefined)
 //   - Records every call (so we can assert it WAS called)
 //   - Can be configured to return specific values per test
-jest.mock('../../../src/repositories/user.repository');
-jest.mock('../../../src/repositories/token.repository');
+jest.mock('../../../src/modules/auth/repositories/user.repository');
+jest.mock('../../../src/modules/auth/repositories/token.repository');
 
 // We also need to mock Firebase — AuthService calls `getFirebaseAuth()`
 // which would fail in tests (no real Firebase credentials).

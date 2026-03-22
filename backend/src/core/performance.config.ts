@@ -4,11 +4,13 @@
  * These values are optimized for 10k+ concurrent users.
  */
 
+import os from 'os';
+
 export const PERFORMANCE = {
   // ─── MongoDB ──────────────────────────────────────────────────────────────
   mongo: {
     // Connection pool: 10 per CPU core, min 10, max 100
-    poolSize: Math.max(10, Math.min(100, require('os').cpus().length * 10)),
+    poolSize: Math.max(10, Math.min(100, os.cpus().length * 10)),
     // Server selection timeout: 5s (fail fast if replica unavailable)
     serverSelectionTimeoutMS: 5000,
     // Socket timeout: 45s
