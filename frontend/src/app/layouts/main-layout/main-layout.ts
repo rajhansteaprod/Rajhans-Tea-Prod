@@ -62,7 +62,7 @@ import { CartSidebarComponent } from '../../features/store/cart/cart-sidebar';
 
     .content {
       flex: 1;
-      padding: $space-lg $space-xxl;
+      padding: 88px $space-xxl $space-lg;
     }
 
     .content-inner {
