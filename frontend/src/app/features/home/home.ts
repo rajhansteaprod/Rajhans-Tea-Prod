@@ -25,23 +25,34 @@ gsap.registerPlugin(ScrollTrigger);
   imports: [CommonModule, RouterLink, ProductRailComponent],
   template: `
     <div class="home" #homeContainer>
-      <!-- ═══ HERO ═══ -->
+      <!-- ═══ HERO (full viewport, behind header) ═══ -->
       <section class="hero">
-        <div class="hero-bg"></div>
+        <div class="hero-bg">
+          <div class="hero-grain"></div>
+        </div>
         <div class="hero-content">
-          <span class="hero-label">Rajhans Tea</span>
+          <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            <span>Est. 2024 &middot; Bhopal</span>
+          </div>
           <h1 class="hero-headline">
             <span class="hero-line" #heroLine1>Every cup,</span>
             <span class="hero-line italic" #heroLine2>a moment.</span>
           </h1>
           <p class="hero-sub">Premium teas sourced from the finest gardens of India,<br />crafted for those who savour the ritual.</p>
           <div class="hero-ctas">
-            <a routerLink="/collections" class="btn-hero-primary">Shop Collection</a>
+            <a routerLink="/products" class="btn-hero-primary">
+              Shop Now
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
             <a routerLink="/page/about-us" class="btn-hero-ghost">Our Story</a>
           </div>
         </div>
         <div class="hero-scroll-hint">
-          <div class="scroll-line"></div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M12 5v14M19 12l-7 7-7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Scroll</span>
         </div>
       </section>
 
@@ -201,92 +212,116 @@ gsap.registerPlugin(ScrollTrigger);
       // ═══════════════════════════════════════════════
       // HERO
       // ═══════════════════════════════════════════════
+      // ═══════════════════════════════════════════════
+      // HERO — full viewport, edge-to-edge, behind header
+      // ═══════════════════════════════════════════════
       .hero {
         position: relative;
+        width: 100vw;
         min-height: 100vh;
+        margin-left: calc(-50vw + 50%);
+        margin-top: -88px; // negate content padding to go behind header
+        padding-top: 88px; // restore so content isn't hidden
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
-        padding: $space-xxxl $space-lg;
         overflow: hidden;
-        @include full-bleed;
       }
 
       .hero-bg {
         position: absolute;
         inset: 0;
-        background:
-          linear-gradient(160deg, rgba(58,45,50,0.85) 0%, rgba(58,45,50,0.6) 50%, rgba(204,88,3,0.3) 100%),
-          linear-gradient(to bottom, $color-bg-dark, #2a1f22);
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
         z-index: 0;
-
-        &::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(ellipse at 30% 50%, rgba(204,88,3,0.12) 0%, transparent 60%);
-        }
+        background:
+          radial-gradient(ellipse at 20% 80%, rgba(204,88,3,0.15) 0%, transparent 50%),
+          radial-gradient(ellipse at 80% 20%, rgba(87,136,108,0.08) 0%, transparent 50%),
+          linear-gradient(175deg, #1a1214 0%, #2d2024 30%, #3A2D32 60%, #2a1f22 100%);
+        background-attachment: fixed;
 
         &::after {
           content: '';
           position: absolute;
           bottom: 0; left: 0; right: 0;
-          height: 180px;
+          height: 200px;
           background: linear-gradient(transparent, $color-bg-primary);
+          z-index: 1;
         }
+      }
+
+      // Film grain texture
+      .hero-grain {
+        position: absolute;
+        inset: 0;
+        opacity: 0.03;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+        background-repeat: repeat;
+        pointer-events: none;
       }
 
       .hero-content {
         position: relative;
-        z-index: 1;
-        max-width: 800px;
+        z-index: 2;
+        max-width: 720px;
+        padding: 0 $space-lg;
       }
 
-      .hero-label {
-        display: inline-block;
-        font-size: $font-size-xs;
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
         font-weight: $font-weight-semibold;
-        letter-spacing: 0.25em;
+        letter-spacing: 0.2em;
         text-transform: uppercase;
-        color: $color-primary;
-        margin-bottom: $space-xl;
+        color: rgba(255,255,255,0.5);
+        margin-bottom: $space-xxl;
         opacity: 0;
-        padding: 6px 20px;
-        border: 1px solid rgba(204,88,3,0.3);
-        border-radius: $radius-full;
+      }
+
+      .hero-badge-dot {
+        width: 6px; height: 6px;
+        background: $color-primary;
+        border-radius: 50%;
+        animation: dotPulse 2s ease-in-out infinite;
+      }
+
+      @keyframes dotPulse {
+        0%, 100% { opacity: 0.5; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.4); }
       }
 
       .hero-headline {
         font-family: $font-family-display;
-        font-size: clamp(48px, 8vw, $font-size-hero);
+        font-size: clamp(52px, 9vw, 88px);
         font-weight: 300;
-        line-height: 1.1;
-        letter-spacing: $letter-spacing-display;
-        color: rgba(255,255,255,0.95);
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+        color: white;
         margin: 0 0 $space-xl;
       }
 
       .hero-line {
         display: block;
         opacity: 0;
-        transform: translateY(40px);
+        transform: translateY(50px);
       }
 
       .hero-line.italic {
         font-style: italic;
         color: $color-primary;
+        font-weight: 400;
       }
 
       .hero-sub {
-        font-size: clamp($font-size-md, 2vw, $font-size-lg);
-        color: rgba(255,255,255,0.6);
-        line-height: $line-height-relaxed;
+        font-size: clamp(15px, 2vw, 18px);
+        color: rgba(255,255,255,0.45);
+        line-height: 1.7;
         margin-bottom: $space-xxl;
         opacity: 0;
+        max-width: 520px;
+        margin-left: auto;
+        margin-right: auto;
       }
 
       .hero-ctas {
@@ -295,67 +330,88 @@ gsap.registerPlugin(ScrollTrigger);
         justify-content: center;
         gap: $space-md;
         opacity: 0;
+
+        @include respond-to(xs) {
+          flex-direction: column;
+          gap: $space-sm;
+        }
       }
 
       .btn-hero-primary {
         display: inline-flex;
         align-items: center;
-        padding: $space-md $space-xxl;
+        gap: 8px;
+        padding: 14px 32px;
         background: $color-primary;
         color: white;
         border-radius: $radius-full;
-        font-size: $font-size-md;
+        font-size: 15px;
         font-weight: $font-weight-semibold;
         text-decoration: none;
-        transition: all $transition-normal;
+        transition: all 0.4s $ease-expo-out;
         letter-spacing: 0.01em;
+
+        svg { transition: transform 0.3s $ease-expo-out; }
 
         &:hover {
           background: $color-primary-hover;
           color: white;
           transform: translateY(-2px);
-          box-shadow: 0 12px 40px rgba(204, 88, 3, 0.4);
+          box-shadow: 0 16px 48px rgba(204, 88, 3, 0.35);
+          svg { transform: translateX(3px); }
         }
+
+        &:active { transform: scale(0.97); }
       }
 
       .btn-hero-ghost {
         display: inline-flex;
         align-items: center;
-        padding: $space-md $space-xxl;
-        background: transparent;
-        color: rgba(255,255,255,0.85);
-        border: 1.5px solid rgba(255,255,255,0.25);
+        padding: 14px 32px;
+        background: rgba(255,255,255,0.06);
+        color: rgba(255,255,255,0.8);
+        border: 1px solid rgba(255,255,255,0.12);
         border-radius: $radius-full;
-        font-size: $font-size-md;
+        font-size: 15px;
         font-weight: $font-weight-medium;
         text-decoration: none;
-        transition: all $transition-normal;
+        transition: all 0.4s $ease-expo-out;
+        backdrop-filter: blur(8px);
 
         &:hover {
-          border-color: rgba(255,255,255,0.6);
+          background: rgba(255,255,255,0.1);
+          border-color: rgba(255,255,255,0.25);
           color: white;
           transform: translateY(-2px);
         }
+
+        &:active { transform: scale(0.97); }
       }
 
       .hero-scroll-hint {
         position: absolute;
-        bottom: $space-xxl;
+        bottom: 32px;
         left: 50%;
         transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255,255,255,0.25);
         opacity: 0;
+        animation: scrollBounce 2s ease-in-out infinite;
+
+        span {
+          font-size: 9px;
+          font-weight: $font-weight-semibold;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+        }
       }
 
-      .scroll-line {
-        width: 1px;
-        height: 48px;
-        background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent);
-        animation: scrollPulse 2s ease-in-out infinite;
-      }
-
-      @keyframes scrollPulse {
-        0%, 100% { opacity: 0.3; transform: scaleY(0.6); }
-        50% { opacity: 1; transform: scaleY(1); }
+      @keyframes scrollBounce {
+        0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.4; }
+        50% { transform: translateX(-50%) translateY(6px); opacity: 1; }
       }
 
       // ═══════════════════════════════════════════════
