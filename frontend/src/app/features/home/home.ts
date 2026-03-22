@@ -216,21 +216,26 @@ gsap.registerPlugin(ScrollTrigger);
       .hero-bg {
         position: absolute;
         inset: 0;
-        background: linear-gradient(
-          160deg,
-          $color-bg-primary 0%,
-          $color-bg-warm 40%,
-          rgba(204, 88, 3, 0.04) 100%
-        );
+        background:
+          linear-gradient(160deg, rgba(58,45,50,0.85) 0%, rgba(58,45,50,0.6) 50%, rgba(204,88,3,0.3) 100%),
+          linear-gradient(to bottom, $color-bg-dark, #2a1f22);
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
         z-index: 0;
+
+        &::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(ellipse at 30% 50%, rgba(204,88,3,0.12) 0%, transparent 60%);
+        }
 
         &::after {
           content: '';
           position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 200px;
+          bottom: 0; left: 0; right: 0;
+          height: 180px;
           background: linear-gradient(transparent, $color-bg-primary);
         }
       }
@@ -245,11 +250,14 @@ gsap.registerPlugin(ScrollTrigger);
         display: inline-block;
         font-size: $font-size-xs;
         font-weight: $font-weight-semibold;
-        letter-spacing: 0.2em;
+        letter-spacing: 0.25em;
         text-transform: uppercase;
         color: $color-primary;
         margin-bottom: $space-xl;
         opacity: 0;
+        padding: 6px 20px;
+        border: 1px solid rgba(204,88,3,0.3);
+        border-radius: $radius-full;
       }
 
       .hero-headline {
@@ -258,7 +266,7 @@ gsap.registerPlugin(ScrollTrigger);
         font-weight: 300;
         line-height: 1.1;
         letter-spacing: $letter-spacing-display;
-        color: $color-text-primary;
+        color: rgba(255,255,255,0.95);
         margin: 0 0 $space-xl;
       }
 
@@ -275,7 +283,7 @@ gsap.registerPlugin(ScrollTrigger);
 
       .hero-sub {
         font-size: clamp($font-size-md, 2vw, $font-size-lg);
-        color: $color-text-tertiary;
+        color: rgba(255,255,255,0.6);
         line-height: $line-height-relaxed;
         margin-bottom: $space-xxl;
         opacity: 0;
@@ -294,7 +302,7 @@ gsap.registerPlugin(ScrollTrigger);
         align-items: center;
         padding: $space-md $space-xxl;
         background: $color-primary;
-        color: $color-text-inverse;
+        color: white;
         border-radius: $radius-full;
         font-size: $font-size-md;
         font-weight: $font-weight-semibold;
@@ -304,9 +312,9 @@ gsap.registerPlugin(ScrollTrigger);
 
         &:hover {
           background: $color-primary-hover;
-          color: $color-text-inverse;
+          color: white;
           transform: translateY(-2px);
-          box-shadow: 0 12px 32px rgba(204, 88, 3, 0.3);
+          box-shadow: 0 12px 40px rgba(204, 88, 3, 0.4);
         }
       }
 
@@ -315,8 +323,8 @@ gsap.registerPlugin(ScrollTrigger);
         align-items: center;
         padding: $space-md $space-xxl;
         background: transparent;
-        color: $color-text-primary;
-        border: 1.5px solid $color-border;
+        color: rgba(255,255,255,0.85);
+        border: 1.5px solid rgba(255,255,255,0.25);
         border-radius: $radius-full;
         font-size: $font-size-md;
         font-weight: $font-weight-medium;
@@ -324,8 +332,8 @@ gsap.registerPlugin(ScrollTrigger);
         transition: all $transition-normal;
 
         &:hover {
-          border-color: $color-text-primary;
-          color: $color-text-primary;
+          border-color: rgba(255,255,255,0.6);
+          color: white;
           transform: translateY(-2px);
         }
       }
@@ -341,7 +349,7 @@ gsap.registerPlugin(ScrollTrigger);
       .scroll-line {
         width: 1px;
         height: 48px;
-        background: linear-gradient(to bottom, $color-text-disabled, transparent);
+        background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent);
         animation: scrollPulse 2s ease-in-out infinite;
       }
 

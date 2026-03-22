@@ -10,7 +10,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartStore } from '../../../core/services/cart.store';
 import { SearchStore } from '../../../core/services/search.store';
@@ -25,10 +26,10 @@ import {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
-    <header class="nav" [class.scrolled]="scrolled()" [class.hidden]="navHidden()" [class.mega-active]="megaOpen()">
+    <header class="nav" [class.scrolled]="scrolled()" [class.transparent]="isTransparent()" [class.hidden]="navHidden()" [class.mega-active]="megaOpen()">
       <div class="nav-inner">
         <a routerLink="/" class="logo" (click)="closeMega()">
-          <img src="/logo.png" alt="Rajhans Tea" class="logo-icon" />
+          <img [src]="isTransparent() ? '/logo-white.png' : '/logo.png'" alt="Rajhans Tea" class="logo-icon" />
           <span class="logo-name">Rajhans Tea</span>
         </a>
 
@@ -349,6 +350,19 @@ import {
       backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       transition: all 0.5s $ease-expo-out;
       animation: navReveal 0.7s $ease-expo-out both;
+      &.transparent {
+        background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none;
+        .logo-name { color: rgba(255,255,255,0.95); }
+        .nav-link { color: rgba(255,255,255,0.75);
+          &:hover, &.active { color: white; background: rgba(255,255,255,0.1); }
+          &::after { background: white; }
+        }
+        .action-icon { color: rgba(255,255,255,0.8);
+          &:hover { color: white; background: rgba(255,255,255,0.1); }
+        }
+        .badge { border: 2px solid rgba(0,0,0,0.3); }
+        .burger span { background: white; }
+      }
       &.scrolled {
         height: 60px; background: rgba(255,255,255,0.98);
         box-shadow: 0 1px 0 rgba(0,0,0,0.06);
@@ -835,6 +849,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
   readonly categories = signal<Category[]>([]);
   readonly activeCatId = signal<string | null>(null);
   readonly megaLoading = signal(false);
+  private isHomePage = signal(false);
+
+  /** Transparent header: only on homepage AND above the fold (hero visible) */
+  readonly isTransparent = computed(() =>
+    this.isHomePage() && !this.scrolled() && !this.megaOpen() && !this.searchOpen(),
+  );
 
   readonly productSuggestions = computed(() =>
     this.searchStore.suggestions().filter((s) => s.type === 'product'),
@@ -866,6 +886,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Track if we're on the homepage for transparent header
+    this.isHomePage.set(this.router.url === '/');
+    this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe((e) => {
+      this.isHomePage.set((e as NavigationEnd).urlAfterRedirects === '/');
+    });
+
     // Load all products (no isFeatured filter — show everything)
     this.catalog.getProductsPublic({ limit: 8, sortOrder: 'desc' }).subscribe({
       next: (res) => {
