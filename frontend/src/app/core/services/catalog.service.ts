@@ -209,7 +209,21 @@ export class CatalogService {
     return this.http.delete<void>(`${this.adminUrl}/collections/${id}`);
   }
 
-  // --- Products ---
+  // --- Products (Public) ---
+
+  getProductsPublic(params: ProductListParams = {}): Observable<PaginatedResponse<Product>> {
+    let httpParams = new HttpParams();
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== undefined && v !== '') httpParams = httpParams.set(k, String(v));
+    }
+    return this.http.get<PaginatedResponse<Product>>(`${this.publicUrl}/products`, { params: httpParams });
+  }
+
+  getProductBySlug(slug: string): Observable<ApiResponse<Product>> {
+    return this.http.get<ApiResponse<Product>>(`${this.publicUrl}/products/${slug}`);
+  }
+
+  // --- Products (Admin) ---
 
   getProducts(params: ProductListParams = {}): Observable<PaginatedResponse<Product>> {
     let httpParams = new HttpParams();

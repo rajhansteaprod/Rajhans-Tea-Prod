@@ -825,7 +825,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.catalogService
-      .getProducts({ isFeatured: true, limit: 3, sortBy: 'createdAt', sortOrder: 'desc' })
+      .getProductsPublic({ isFeatured: true, limit: 3, sortBy: 'createdAt', sortOrder: 'desc' })
       .subscribe({
         next: (res) => this.spotlightProducts.set(res.data),
       });
