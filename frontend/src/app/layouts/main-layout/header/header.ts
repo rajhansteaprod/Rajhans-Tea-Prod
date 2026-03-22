@@ -676,7 +676,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       next: (res) => this.categories.set(res.data),
     });
     this.catalog.getCollectionsPublic().subscribe({
-      next: (res) => this.collections.set(res.data.filter((c) => c.isActive)),
+      next: (res) => this.collections.set(res.data),
     });
   }
 

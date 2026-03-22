@@ -131,7 +131,7 @@ const emptyForm = (): ProductForm => ({
                   <td class="price-cell">₹{{ product.basePrice | number }}</td>
                   <td>
                     @if (product.trackInventory) {
-                      <span class="stock-val" [class.low]="product.stock <= 5" [class.out]="product.stock === 0">{{ product.stock }}</span>
+                      <span class="stock-val" [class.low]="(product.stock ?? 0) <= 5" [class.out]="(product.stock ?? 0) === 0">{{ product.stock ?? 0 }}</span>
                     } @else {
                       <span class="stock-off">—</span>
                     }
@@ -613,8 +613,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
       images:           [...product.images],
       attributes:       Object.entries(product.attributes).map(([key, value]) => ({ key, value })),
       tags:             product.tags.join(', '),
-      status:           product.status,
-      isFeatured:       product.isFeatured,
+      status:           product.status ?? 'draft',
+      isFeatured:       product.isFeatured ?? false,
       stock:            product.stock ?? 0,
       trackInventory:   product.trackInventory ?? false,
     });

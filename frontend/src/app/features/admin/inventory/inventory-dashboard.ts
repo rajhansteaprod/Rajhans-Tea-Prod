@@ -217,10 +217,10 @@ type ModalType = 'adjust' | 'set' | null;
             </div>
 
             @if (modalType() === 'adjust' && modalQty) {
-              <p class="preview">New stock: <strong>{{ Math.max(0, modalProduct()!.stock + modalQty) }}</strong></p>
+              <p class="preview">New stock: <strong>{{ Math.max(0, (modalProduct()!.stock ?? 0) + modalQty) }}</strong></p>
             }
             @if (modalType() === 'set' && modalSetValue !== null) {
-              <p class="preview">Change: <strong>{{ (modalSetValue ?? 0) - modalProduct()!.stock > 0 ? '+' : '' }}{{ (modalSetValue ?? 0) - modalProduct()!.stock }}</strong></p>
+              <p class="preview">Change: <strong>{{ (modalSetValue ?? 0) - (modalProduct()!.stock ?? 0) > 0 ? '+' : '' }}{{ (modalSetValue ?? 0) - (modalProduct()!.stock ?? 0) }}</strong></p>
             }
 
             <div class="modal-actions">

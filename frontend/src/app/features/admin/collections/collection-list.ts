@@ -496,9 +496,9 @@ export class CollectionListComponent implements OnInit {
       name:        col.name,
       description: col.description ?? '',
       image:       col.image ?? '',
-      isFeatured:  col.isFeatured,
-      sortOrder:   col.sortOrder,
-      isActive:    col.isActive,
+      isFeatured:  col.isFeatured ?? false,
+      sortOrder:   col.sortOrder ?? 0,
+      isActive:    col.isActive ?? true,
     });
     this.formError.set(null);
     this.showCreate.set(false);

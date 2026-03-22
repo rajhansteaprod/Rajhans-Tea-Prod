@@ -32,11 +32,11 @@ export interface CategoryRef {
 export interface Category extends CategoryRef {
   description?: string;
   image?: string;
-  parent: CategoryRef | null;
-  isActive: boolean;
-  sortOrder: number;
-  createdAt: string;
-  updatedAt: string;
+  parent?: CategoryRef | null;
+  isActive?: boolean;
+  sortOrder?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Collection {
@@ -45,12 +45,12 @@ export interface Collection {
   slug: string;
   description?: string;
   image?: string;
-  isActive: boolean;
-  isFeatured: boolean;
-  sortOrder: number;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  sortOrder?: number;
   productCount?: number;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Product {
@@ -65,12 +65,15 @@ export interface Product {
   images: string[];
   attributes: Record<string, string>;
   tags: string[];
-  status: 'draft' | 'active' | 'archived';
-  isFeatured: boolean;
-  stock: number;
-  trackInventory: boolean;
-  createdAt: string;
-  updatedAt: string;
+  // Admin-only (present in /admin/products, absent in /catalog/products)
+  status?: 'draft' | 'active' | 'archived';
+  isFeatured?: boolean;
+  stock?: number;
+  trackInventory?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  // Public-only (present in /catalog/products)
+  inStock?: boolean;
 }
 
 // ---------------------------------------------------------------------------

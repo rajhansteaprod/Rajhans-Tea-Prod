@@ -655,8 +655,8 @@ export class CategoryListComponent implements OnInit {
       description: cat.description ?? '',
       image:       cat.image ?? '',
       parentId:    cat.parent?._id ?? '',
-      sortOrder:   cat.sortOrder,
-      isActive:    cat.isActive,
+      sortOrder:   cat.sortOrder ?? 0,
+      isActive:    cat.isActive ?? true,
     });
     this.formError.set(null);
     this.showCreate.set(false);

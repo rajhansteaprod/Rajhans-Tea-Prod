@@ -821,7 +821,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.feedStore.loadHomeFeed();
 
     this.catalogService.getCollectionsPublic().subscribe({
-      next: (res) => this.collections.set(res.data.filter((c) => c.isActive)),
+      next: (res) => this.collections.set(res.data),
     });
 
     this.catalogService
