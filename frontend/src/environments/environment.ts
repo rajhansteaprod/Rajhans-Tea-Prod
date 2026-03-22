@@ -1,6 +1,8 @@
 export const environment = {
   production: false,
-  apiUrl: '/api/v1',
+  apiUrl: typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? 'https://rajhans-tea-production.up.railway.app/api/v1'
+    : '/api/v1',
   firebase: {
     apiKey: 'AIzaSyCoIDaxjf0WeEf2XQJuYfl_ffArI-ZNxpE',
     authDomain: 'sarara-b9eac.firebaseapp.com',
