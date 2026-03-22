@@ -1,0 +1,198 @@
+<div class="dash">
+  <!-- Greeting -->
+  <header class="dash-header animate-in" style="--i:0">
+    <div>
+      <p class="greeting">{{ getGreeting() }}, Admin</p>
+      <h1 class="dash-title">Overview</h1>
+    </div>
+    <div class="header-actions">
+      <div class="live-dot-container">
+        <span class="live-dot"></span>
+        <span class="live-text">Live</span>
+      </div>
+      <span class="date-text">{{ todayFormatted }}</span>
+    </div>
+  </header>
+
+  <!-- KPI Cards -->
+  <section class="kpi-grid">
+    <div class="kpi-card animate-in" style="--i:1">
+      <div class="kpi-top">
+        <span class="kpi-label">Total Users</span>
+        <div class="kpi-icon users">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="kpi-value-row">
+        <span class="kpi-value">{{ stats()?.totalUsers ?? '—' }}</span>
+        @if (stats()?.weekSignups) {
+          <span class="kpi-change up">+{{ stats()!.weekSignups }} this week</span>
+        }
+      </div>
+      <div class="kpi-bar">
+        <div class="kpi-bar-fill users" [style.width.%]="getActivePercent()"></div>
+      </div>
+      <span class="kpi-footnote">{{ getActivePercent() }}% active</span>
+    </div>
+
+    <div class="kpi-card animate-in" style="--i:2">
+      <div class="kpi-top">
+        <span class="kpi-label">Active Users</span>
+        <div class="kpi-icon active">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="kpi-value-row">
+        <span class="kpi-value">{{ stats()?.activeUsers ?? '—' }}</span>
+      </div>
+      <div class="kpi-bar">
+        <div class="kpi-bar-fill active" [style.width.%]="getActivePercent()"></div>
+      </div>
+      <span class="kpi-footnote">of {{ stats()?.totalUsers }} total</span>
+    </div>
+
+    <div class="kpi-card animate-in" style="--i:3">
+      <div class="kpi-top">
+        <span class="kpi-label">Customers</span>
+        <div class="kpi-icon customers">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="kpi-value-row">
+        <span class="kpi-value">{{ stats()?.customerUsers ?? '—' }}</span>
+      </div>
+      <div class="kpi-bar">
+        <div class="kpi-bar-fill customers" [style.width.%]="getCustomerPercent()"></div>
+      </div>
+      <span class="kpi-footnote">{{ getCustomerPercent() }}% of users</span>
+    </div>
+
+    <div class="kpi-card animate-in" style="--i:4">
+      <div class="kpi-top">
+        <span class="kpi-label">Today's Signups</span>
+        <div class="kpi-icon today">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="17 6 23 6 23 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="kpi-value-row">
+        <span class="kpi-value">{{ stats()?.todaySignups ?? '—' }}</span>
+      </div>
+      <div class="kpi-bar">
+        <div class="kpi-bar-fill today" style="width: 100%"></div>
+      </div>
+      <span class="kpi-footnote">{{ stats()?.weekSignups ?? 0 }} this week</span>
+    </div>
+  </section>
+
+  <!-- Bottom Grid -->
+  <section class="bottom-grid">
+    <!-- Recent Users -->
+    <div class="panel animate-in" style="--i:5">
+      <div class="panel-header">
+        <h2 class="panel-title">Recent Users</h2>
+        <a routerLink="/admin/users" class="panel-link">View all →</a>
+      </div>
+      <div class="user-list">
+        @for (user of recentUsers(); track user._id) {
+          <div class="user-row">
+            <div class="user-left">
+              <div class="avatar" [class.admin]="user.role === 'admin'">
+                {{ getInitials(user) }}
+              </div>
+              <div class="user-meta">
+                <span class="user-name">{{ getDisplayName(user) }}</span>
+                <span class="user-time">Joined {{ timeAgo(user.createdAt) }}</span>
+              </div>
+            </div>
+            <span class="role-pill" [class.admin]="user.role === 'admin'">{{ user.role }}</span>
+          </div>
+        }
+        @if (!recentUsers().length && !loading()) {
+          <div class="empty-state">No users yet</div>
+        }
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="panel animate-in" style="--i:6">
+      <div class="panel-header">
+        <h2 class="panel-title">Quick Actions</h2>
+      </div>
+      <div class="actions-list">
+        <a routerLink="/admin/users" class="action-row">
+          <div class="action-icon users-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/>
+            </svg>
+          </div>
+          <div class="action-meta">
+            <span class="action-name">Manage Users</span>
+            <span class="action-desc">View, search and filter all users</span>
+          </div>
+          <svg class="action-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a routerLink="/admin/products" class="action-row">
+          <div class="action-icon products-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" stroke-width="1.8"/>
+            </svg>
+          </div>
+          <div class="action-meta">
+            <span class="action-name">Add Products</span>
+            <span class="action-desc">Create and manage your catalog</span>
+          </div>
+          <svg class="action-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a routerLink="/admin/orders" class="action-row">
+          <div class="action-icon orders-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="1.8"/>
+              <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="1.8"/>
+            </svg>
+          </div>
+          <div class="action-meta">
+            <span class="action-name">View Orders</span>
+            <span class="action-desc">Track and manage customer orders</span>
+          </div>
+          <svg class="action-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a routerLink="/admin/analytics" class="action-row">
+          <div class="action-icon analytics-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <line x1="18" y1="20" x2="18" y2="10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <line x1="12" y1="20" x2="12" y2="4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <line x1="6" y1="20" x2="6" y2="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="action-meta">
+            <span class="action-name">Analytics</span>
+            <span class="action-desc">Revenue, traffic and insights</span>
+          </div>
+          <svg class="action-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+</div>

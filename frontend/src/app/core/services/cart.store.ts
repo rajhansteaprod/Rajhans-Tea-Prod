@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { pairwise, filter, switchMap } from 'rxjs';
+import { pairwise, filter, switchMap, startWith } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 
@@ -119,8 +119,10 @@ export class CartStore {
     this.loadWishlist();
 
     // Auto-merge when user logs in (false → true transition)
+    // startWith(false) ensures pairwise always has a baseline even if signal starts as true
     toObservable(this.auth.isLoggedIn)
       .pipe(
+        startWith(false),
         pairwise(),
         filter(([prev, curr]) => !prev && curr),
         switchMap(() => {
@@ -136,15 +138,17 @@ export class CartStore {
         next: (res) => {
           this.applyCart(res.data);
           this._merging.set(false);
+          this.loadWishlist(); // also refresh wishlist after merge
         },
         error: () => {
           this._merging.set(false);
-          this.loadCart(); // fallback — reload cart
+          this.loadCart();
         },
       });
 
     toObservable(this.auth.isLoggedIn)
       .pipe(
+        startWith(false),
         pairwise(),
         filter(([prev, curr]) => !prev && curr),
         switchMap(() => {
@@ -157,7 +161,7 @@ export class CartStore {
       )
       .subscribe({
         next: (res) => this.applyWishlist(res.data),
-        error: () => this.loadWishlist(), // fallback
+        error: () => this.loadWishlist(),
       });
   }
 

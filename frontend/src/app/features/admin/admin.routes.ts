@@ -53,6 +53,11 @@ export const ADMIN_ROUTES: Routes = [
           import('./inventory/inventory-dashboard').then((m) => m.InventoryDashboardComponent),
       },
       {
+        path: 'warehouses',
+        loadComponent: () =>
+          import('./warehouses/warehouse-list').then((m) => m.WarehouseListComponent),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./settings/admin-settings').then((m) => m.AdminSettingsComponent),

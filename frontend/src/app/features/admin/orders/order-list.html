@@ -1,0 +1,142 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Orders</h1>
+      <p class="page-subtitle">Manage orders and fulfillment</p>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  @if (stats()) {
+    <div class="stats-grid">
+      @for (s of statCards; track s.key) {
+        <div class="stat-card" [attr.data-key]="s.key">
+          <span class="stat-value">{{ stats()![s.key] }}</span>
+          <span class="stat-label">{{ s.label }}</span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <input class="search-input" placeholder="Search order #, name, phone..." [(ngModel)]="searchQuery" (ngModelChange)="onSearch()" />
+    <select class="status-filter" [(ngModel)]="statusFilter" (ngModelChange)="loadOrders()">
+      <option value="">All</option>
+      <option value="confirmed">Confirmed</option>
+      <option value="processing">Processing</option>
+      <option value="shipped">Shipped</option>
+      <option value="in_transit">In Transit</option>
+      <option value="delivered">Delivered</option>
+      <option value="cancelled">Cancelled</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  @if (loading()) {
+    <div class="loading"><div class="spinner"></div></div>
+  } @else if (orders().length === 0) {
+    <div class="empty">No orders found.</div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          @for (o of orders(); track o._id) {
+            <tr>
+              <td class="mono">{{ o.orderNumber }}</td>
+              <td>
+                <span class="name">{{ o.userId?.firstName || o.shippingAddress.name }}</span><br/>
+                <span class="phone">{{ o.userId?.phone || o.shippingAddress.phone }}</span>
+              </td>
+              <td>{{ o.items.length }} items</td>
+              <td class="amount">₹{{ o.total | number:'1.0-0' }}</td>
+              <td><span class="badge" [attr.data-status]="o.status">{{ o.status }}</span></td>
+              <td class="date">{{ o.createdAt | date:'dd MMM, h:mm a' }}</td>
+              <td>
+                <div class="actions">
+                  <button class="btn-sm" (click)="selectedOrder.set(o)" title="Details">👁</button>
+                  @if (o.status === 'confirmed') {
+                    <button class="btn-sm ship" (click)="shipOrder(o._id)" title="Ship">🚚</button>
+                  }
+                  @if (o.status === 'confirmed' || o.status === 'processing') {
+                    <button class="btn-sm cancel" (click)="openCancel(o)" title="Cancel">✕</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (meta()) {
+      <div class="pagination">
+        <button [disabled]="meta()!.page <= 1" (click)="loadOrders(meta()!.page - 1)">← Prev</button>
+        <span>Page {{ meta()!.page }} of {{ meta()!.totalPages }}</span>
+        <button [disabled]="meta()!.page >= meta()!.totalPages" (click)="loadOrders(meta()!.page + 1)">Next →</button>
+      </div>
+    }
+  }
+
+  <!-- Detail Modal -->
+  @if (selectedOrder()) {
+    <div class="backdrop" (click)="selectedOrder.set(null)"></div>
+    <div class="modal">
+      <div class="modal-head"><h2>{{ selectedOrder()!.orderNumber }}</h2><button (click)="selectedOrder.set(null)">✕</button></div>
+      <div class="modal-body">
+        <div class="detail-row"><span>Status</span><span class="badge" [attr.data-status]="selectedOrder()!.status">{{ selectedOrder()!.status }}</span></div>
+        <div class="detail-row"><span>Total</span><span class="amount">₹{{ selectedOrder()!.total | number:'1.2-2' }}</span></div>
+        <div class="detail-row"><span>Customer</span><span>{{ selectedOrder()!.shippingAddress.name }} · {{ selectedOrder()!.shippingAddress.phone }}</span></div>
+        <div class="detail-row"><span>Address</span><span>{{ selectedOrder()!.shippingAddress.city }}, {{ selectedOrder()!.shippingAddress.state }}</span></div>
+        @if (selectedOrder()!.shiprocket.awbCode) {
+          <div class="detail-row"><span>AWB</span><span class="mono">{{ selectedOrder()!.shiprocket.awbCode }}</span></div>
+          <div class="detail-row"><span>Courier</span><span>{{ selectedOrder()!.shiprocket.courierName }}</span></div>
+        }
+        <h3>Items</h3>
+        @for (item of selectedOrder()!.items; track item.name) {
+          <div class="detail-row"><span>{{ item.name }} x{{ item.qty }}</span><span>₹{{ item.totalPrice | number:'1.2-2' }}</span></div>
+        }
+        <h3>Status History</h3>
+        @for (h of selectedOrder()!.statusHistory; track h.timestamp) {
+          <div class="history-row">
+            <span class="badge small" [attr.data-status]="h.status">{{ h.status }}</span>
+            <span class="date">{{ h.timestamp | date:'dd MMM yyyy, h:mm a' }}</span>
+            @if (h.note) { <span class="note">{{ h.note }}</span> }
+          </div>
+        }
+
+        <!-- Status Update -->
+        @if (!['delivered','cancelled','returned'].includes(selectedOrder()!.status)) {
+          <div class="status-update">
+            <select [(ngModel)]="newStatus">
+              <option value="">Update status...</option>
+              @for (s of getNextStatuses(selectedOrder()!.status); track s) {
+                <option [value]="s">{{ s }}</option>
+              }
+            </select>
+            <input [(ngModel)]="statusNote" placeholder="Note (optional)" />
+            <button class="btn-update" [disabled]="!newStatus" (click)="updateStatus()">Update</button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Cancel Modal -->
+  @if (cancelTarget()) {
+    <div class="backdrop" (click)="cancelTarget.set(null)"></div>
+    <div class="modal small">
+      <div class="modal-head"><h2>Cancel Order</h2><button (click)="cancelTarget.set(null)">✕</button></div>
+      <div class="modal-body">
+        <p>Cancel <strong>{{ cancelTarget()!.orderNumber }}</strong>?</p>
+        <input [(ngModel)]="cancelReason" placeholder="Reason for cancellation" />
+        <div class="modal-actions">
+          <button (click)="cancelTarget.set(null)">Back</button>
+          <button class="btn-danger" [disabled]="!cancelReason" (click)="confirmCancel()">Cancel Order</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

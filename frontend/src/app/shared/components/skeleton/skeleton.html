@@ -1,0 +1,22 @@
+@switch (type) {
+  @case ('card') {
+    <div class="skeleton-card">
+      <div class="sk-image sk-pulse"></div>
+      <div class="sk-body">
+        <div class="sk-line sk-pulse" style="width:60%"></div>
+        <div class="sk-line sk-pulse short" style="width:40%"></div>
+      </div>
+    </div>
+  }
+  @case ('text') {
+    @for (i of lines; track i) {
+      <div class="sk-line sk-pulse" [style.width]="(80 + i * 5) + '%'"></div>
+    }
+  }
+  @case ('image') {
+    <div class="sk-image sk-pulse"></div>
+  }
+  @case ('circle') {
+    <div class="sk-circle sk-pulse"></div>
+  }
+}

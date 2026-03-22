@@ -1,0 +1,75 @@
+<section class="featured" #section>
+  <div class="featured__header">
+    <div class="featured__title-group">
+      <span class="featured__eyebrow">Our Teas</span>
+      <h2 class="featured__title">Crafted for your cup</h2>
+    </div>
+    <a routerLink="/products" class="featured__view-all">
+      View all
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </div>
+
+  @if (loading()) {
+    <div class="featured__grid">
+      @for (i of [1,2,3]; track i) {
+        <div class="card card--skeleton">
+          <div class="card__img-wrap skeleton-box"></div>
+          <div class="card__body">
+            <div class="skeleton-line skeleton-line--sm"></div>
+            <div class="skeleton-line skeleton-line--lg"></div>
+            <div class="skeleton-line skeleton-line--md"></div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="featured__grid">
+      @for (product of products(); track product._id; let i = $index) {
+        <article class="card" [style.--i]="i">
+          <a [routerLink]="'/product/' + product.slug" class="card__img-wrap">
+            @if (product.images?.[0]) {
+              <img
+                [src]="product.images[0]"
+                [alt]="product.name"
+                class="card__img"
+                loading="lazy"
+              />
+            } @else {
+              <div class="card__img-placeholder">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            }
+
+            @if (product.inStock === false) {
+              <span class="card__badge card__badge--oos">Sold Out</span>
+            }
+          </a>
+
+          <div class="card__body">
+            <span class="card__category">{{ product.category?.name }}</span>
+            <a [routerLink]="'/product/' + product.slug" class="card__name">{{ product.name }}</a>
+            <div class="card__footer">
+              <span class="card__price">&#8377;{{ product.basePrice }}</span>
+              <button
+                class="card__cta"
+                (click)="addToCart(product._id)"
+                [disabled]="product.inStock === false"
+              >
+                @if (product.inStock === false) {
+                  Sold Out
+                } @else {
+                  Add to Cart
+                }
+              </button>
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

@@ -12,6 +12,7 @@ import reviewsRoutes from '../../../modules/reviews/reviews.routes';
 import auditRoutes from '../../../modules/audit/audit.routes';
 import settingsRoutes from '../../../modules/settings/settings.routes';
 import cmsRoutes from '../../../modules/cms/cms.routes';
+import searchRoutes from '../../../modules/search/search.routes';
 
 const router = Router();
 
@@ -28,5 +29,6 @@ router.use(reviewsRoutes);
 router.use(auditRoutes);
 router.use(settingsRoutes);
 router.use(cmsRoutes);
+router.use(searchRoutes);
 
 export default router;

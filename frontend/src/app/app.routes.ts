@@ -14,7 +14,7 @@ export const routes: Routes = [
       {
         path: 'products',
         loadComponent: () =>
-          import('./features/store/search/search-page').then((m) => m.SearchPageComponent),
+          import('./features/store/products/products-page').then((m) => m.ProductsPageComponent),
       },
       {
         path: 'product/:slug',
@@ -30,6 +30,11 @@ export const routes: Routes = [
         path: 'collections',
         loadComponent: () =>
           import('./features/store/collections/collections-page').then((m) => m.CollectionsPageComponent),
+      },
+      {
+        path: 'page/about-us',
+        loadComponent: () =>
+          import('./features/store/pages/about/about').then((m) => m.AboutComponent),
       },
       {
         path: 'page/:slug',
@@ -49,6 +54,7 @@ export const routes: Routes = [
       },
       {
         path: 'checkout',
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./features/store/checkout/checkout-page').then((m) => m.CheckoutPageComponent),
       },
@@ -57,6 +63,12 @@ export const routes: Routes = [
         canActivate: [authGuard],
         loadComponent: () =>
           import('./features/store/orders/order-history-page').then((m) => m.OrderHistoryPageComponent),
+      },
+      {
+        path: 'wallet',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/store/wallet/wallet-page').then((m) => m.WalletPageComponent),
       },
     ],
   },

@@ -1,0 +1,291 @@
+@use '../../core/design-tokens/tokens' as *;
+@use '../../core/design-tokens/mixins' as *;
+
+// Host element breaks out of parent constraints
+:host {
+  display: block;
+  margin: -72px calc(-50vw + 50%) 0;
+  width: 100vw;
+  position: relative;
+  z-index: 0;
+}
+
+.home { overflow: hidden; }
+
+// ═══════════════════════════════════════════════
+// HERO — Bold, clean, product-focused
+// ═══════════════════════════════════════════════
+.hero {
+  position: relative;
+  width: 100%;
+  height: calc(100vh + 72px); // compensate for content padding
+  min-height: 720px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+// Full-screen frame
+.hero__frame {
+  position: absolute;
+  inset: 0;
+  background: $color-primary; // token — burnt orange
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  overflow: hidden;
+  padding: 72px clamp($space-xl, 6vw, $space-xxxl * 2) 0; // top padding for header
+
+  @include respond-to(md) {
+    grid-template-columns: 1fr;
+    padding: 100px $space-lg $space-xxl;
+    gap: $space-xl;
+  }
+}
+
+// ── Left: Product visual ──
+.hero__visual {
+  position: relative;
+  @include flex-center; // token mixin
+  height: 100%;
+
+  @include respond-to(md) { height: 280px; }
+}
+
+.hero__circle {
+  position: absolute;
+  width: 420px; height: 420px;
+  border-radius: $radius-full; // token
+  background: rgba($color-bg-dark, 0.18); // token — subtle dark circle
+  border: 1px solid rgba($color-text-inverse, 0.06);
+  transition: transform 0.8s $ease-expo-out; // token
+
+  // Decorative ring
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -$space-xl;
+    border-radius: $radius-full; // token
+    border: 1px solid rgba($color-text-inverse, 0.06);
+  }
+
+  @include respond-to(md) { width: 260px; height: 260px; &::after { inset: -$space-md; } }
+}
+
+.hero__product-img {
+  position: relative; z-index: 1;
+  width: 340px; height: 340px;
+  object-fit: cover;
+  border-radius: $radius-full; // token — circular product image
+  box-shadow:
+    0 20px 60px rgba($color-bg-dark, 0.3),
+    0 0 0 4px rgba($color-text-inverse, 0.08); // token
+  transition: transform 0.8s $ease-expo-out; // token
+
+  @include respond-to(md) { width: 220px; height: 220px; }
+}
+.hero__visual:hover {
+  .hero__product-img { transform: scale(1.04); }
+  .hero__circle { transform: scale(1.06) rotate(8deg); }
+}
+
+// CSS tea cup (fallback when no product image)
+.hero__cup {
+  position: relative; z-index: 1;
+  width: 180px; height: 180px;
+}
+.hero__cup-body {
+  position: absolute; bottom: 30px; left: 20px;
+  width: 140px; height: 100px;
+  background: $color-text-inverse; // token
+  border-radius: 0 0 $radius-xxl $radius-xxl; // token
+  box-shadow: inset 0 -20px 40px rgba($color-bg-dark, 0.08); // token
+}
+.hero__cup-handle {
+  position: absolute; bottom: 50px; right: 0;
+  width: 35px; height: 50px;
+  border: 4px solid $color-text-inverse; // token
+  border-left: none;
+  border-radius: 0 $radius-xxl $radius-xxl 0; // token
+}
+.hero__cup-saucer {
+  position: absolute; bottom: 15px; left: 0;
+  width: 180px; height: 18px;
+  background: $color-text-inverse; // token
+  border-radius: $radius-full; // token
+  opacity: 0.9;
+}
+.hero__steam {
+  position: absolute; top: -10px; left: 50px;
+  display: flex; gap: $space-sm; // token
+  span {
+    width: 3px; height: 30px;
+    background: rgba($color-text-inverse, 0.4); // token
+    border-radius: $radius-full; // token
+    animation: steamFloat 2s ease-in-out infinite;
+    &:nth-child(2) { height: 22px; animation-delay: 0.3s; }
+    &:nth-child(3) { height: 26px; animation-delay: 0.6s; }
+  }
+}
+@keyframes steamFloat {
+  0%, 100% { transform: translateY(0) scaleX(1); opacity: 0.4; }
+  50%      { transform: translateY(-12px) scaleX(1.3); opacity: 0.15; }
+}
+
+// ── Right: Content ──
+.hero__content {
+  position: relative; z-index: 2;
+  @include respond-to(md) { text-align: center; }
+}
+
+.hero__h1 {
+  font-family: $font-family-display; // token
+  font-size: clamp($font-size-display, 5.5vw, $font-size-hero); // tokens — bigger
+  font-weight: $font-weight-medium; // token — elegant, not heavy
+  line-height: 1.0;
+  letter-spacing: $letter-spacing-display; // token
+  color: $color-text-inverse; // token
+  margin: 0 0 $space-xl; // token
+
+  @include respond-to(md) {
+    font-size: clamp($font-size-xxxl, 8vw, $font-size-display);
+  }
+}
+
+.hero__line {
+  display: block;
+}
+.hero__line--accent {
+  color: rgba($color-text-inverse, 0.25); // token — subtle ghost text
+  font-style: italic;
+  font-weight: $font-weight-regular; // token — lighter
+  font-size: 1.1em;
+}
+
+.hero__sub {
+  font-family: $font-family; // token
+  font-size: $font-size-lg; // token — slightly bigger
+  color: rgba($color-text-inverse, 0.6); // token
+  line-height: $line-height-relaxed; // token
+  margin: 0 0 $space-xxl; // token
+  max-width: 420px;
+  font-weight: $font-weight-regular; // token
+
+  @include respond-to(md) { margin: 0 auto $space-xxl; font-size: $font-size-md; }
+}
+
+.hero__actions {
+  display: flex;
+  gap: $space-md; // token
+  @include respond-to(md) { justify-content: center; }
+}
+
+.hero__cta {
+  display: inline-flex;
+  align-items: center;
+  padding: $space-md $space-xxl; // tokens — taller, wider
+  background: $color-text-inverse; // token — white on orange
+  color: $color-primary; // token — orange text
+  border-radius: $radius-full; // token — fully rounded pills
+  font-family: $font-family; // token
+  font-size: $font-size-sm; // token
+  font-weight: $font-weight-semibold; // token
+  letter-spacing: $letter-spacing-wide; // token
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: all $transition-normal; // token
+  border: 2px solid $color-text-inverse;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba($color-bg-dark, 0.2); // premium shadow
+    color: $color-primary;
+  }
+  &:active { transform: scale(0.97); }
+
+  &--ghost {
+    background: transparent;
+    color: $color-text-inverse; // token
+    border: 2px solid rgba($color-text-inverse, 0.35);
+    &:hover {
+      border-color: $color-text-inverse;
+      background: rgba($color-text-inverse, 0.1);
+      color: $color-text-inverse;
+    }
+  }
+}
+
+// ── Slider controls ──
+.hero__slider {
+  display: flex;
+  align-items: center;
+  gap: $space-md; // token
+  margin-top: $space-xxl; // token
+  @include respond-to(md) { justify-content: center; }
+}
+
+.hero__arrow {
+  @include flex-center; // token mixin
+  width: 36px; height: 36px;
+  border-radius: $radius-md; // token
+  border: 2px solid rgba($color-text-inverse, 0.3);
+  background: transparent;
+  color: $color-text-inverse; // token
+  cursor: pointer;
+  transition: all $transition-fast; // token
+  &:hover { border-color: $color-text-inverse; background: rgba($color-text-inverse, 0.1); }
+}
+
+.hero__dots {
+  display: flex; align-items: center; gap: $space-xs; // token
+}
+.hero__dot {
+  width: $space-xl; height: 3px;
+  background: rgba($color-text-inverse, 0.3);
+  border-radius: $radius-full; // token
+  cursor: pointer;
+  transition: all $transition-fast; // token
+  &.active { background: $color-text-inverse; width: $space-xxl; }
+  &:hover { background: rgba($color-text-inverse, 0.6); }
+}
+
+// ── Bottom bar ──
+.hero__bottom {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-lg clamp($space-xl, 6vw, $space-xxxl * 2); // token
+  border-top: 1px solid rgba($color-text-inverse, 0.08);
+
+  @include respond-to(md) { padding: $space-md $space-lg; }
+}
+
+.hero__bottom-left, .hero__bottom-right {
+  display: flex;
+  gap: $space-lg; // token
+  @include respond-to(sm) { display: none; }
+}
+
+.hero__badge {
+  font-family: $font-family; // token
+  font-size: $font-size-xs; // token
+  font-weight: $font-weight-medium; // token
+  letter-spacing: $letter-spacing-wide; // token
+  text-transform: uppercase;
+  color: rgba($color-text-inverse, 0.35); // token
+}
+
+.hero__scroll {
+  color: rgba($color-text-inverse, 0.4); // token
+  animation: scrollBounce 2s ease-in-out infinite;
+  @include flex-center; // token mixin
+}
+@keyframes scrollBounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(5px); }
+}
+
+// Sections will be added as separate components

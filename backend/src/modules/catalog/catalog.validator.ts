@@ -103,6 +103,8 @@ export const listProductsSchema = z.object({
     search: z.string().trim().max(100).optional(),
     categoryId: z.preprocess((v) => (v === '' ? undefined : v), mongoId.optional()),
     collectionId: z.preprocess((v) => (v === '' ? undefined : v), mongoId.optional()),
+    priceMin: z.coerce.number().min(0).optional(),
+    priceMax: z.coerce.number().min(0).optional(),
     status: z.enum(['draft', 'active', 'archived', 'all']).optional(),
     isFeatured: z
       .string()

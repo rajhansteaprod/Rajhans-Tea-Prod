@@ -1,0 +1,66 @@
+<section class="story" #storySection>
+  <!-- Top separator -->
+  <div class="story__separator"></div>
+
+  <div class="story__grid">
+    <!-- Left: Large accent number + label -->
+    <div class="story__accent" #accent>
+      <div class="story__number-wrap">
+        <div class="story__ring"></div>
+        <div class="story__dots"></div>
+        <span class="story__number" #storyNumber>03</span>
+      </div>
+      <span class="story__label">Generations of<br />tea craftsmanship</span>
+    </div>
+
+    <!-- Right: Editorial content -->
+    <div class="story__editorial" #editorial>
+      <h2 class="story__headline">
+        <span class="story__line" #line1>Not just tea.</span>
+        <span class="story__line" #line2>A daily ritual,</span>
+        <span class="story__line story__line--accent" #line3>perfected.</span>
+      </h2>
+
+      <div class="story__meta" #meta>
+        <div class="story__rule"></div>
+        <p class="story__body">
+          Every cup of Rajhans is the result of obsessive attention to
+          leaf selection, blend consistency, and freshness. We don't cut
+          corners — because your morning deserves better.
+        </p>
+        <a routerLink="/page/about-us" class="story__cta">
+          Read our story
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M7 17L17 7M17 7H7M17 7v10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Stats row -->
+      <div class="story__stats" #stats>
+        <div class="story__stat">
+          <span class="story__stat-value">2024</span>
+          <span class="story__stat-label">Established</span>
+        </div>
+        <div class="story__stat-divider"></div>
+        <div class="story__stat">
+          <span class="story__stat-value">100%</span>
+          <span class="story__stat-label">CTC Assam</span>
+        </div>
+        <div class="story__stat-divider"></div>
+        <div class="story__stat">
+          <span class="story__stat-value">Bhopal</span>
+          <span class="story__stat-label">Madhya Pradesh</span>
+        </div>
+        <div class="story__stat-divider"></div>
+        <div class="story__stat">
+          <span class="story__stat-value">Pan India</span>
+          <span class="story__stat-label">Delivery</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom closer -->
+  <div class="story__closer"></div>
+</section>

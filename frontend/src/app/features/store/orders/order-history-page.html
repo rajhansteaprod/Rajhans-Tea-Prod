@@ -1,0 +1,114 @@
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">My Orders</h1>
+    <a routerLink="/" class="btn-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Continue Shopping
+    </a>
+  </div>
+
+  @if (store.loading()) {
+    <div class="loading"><div class="spinner"></div></div>
+  } @else if (store.orders().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <h2>No orders yet</h2>
+      <p>Your order history will appear here after your first purchase.</p>
+      <a class="btn-primary" routerLink="/">Start Shopping</a>
+    </div>
+  } @else {
+    <div class="order-list">
+      @for (order of store.orders(); track order._id) {
+        <div class="order-card">
+          <!-- Header -->
+          <div class="order-header">
+            <div class="order-meta">
+              <span class="order-number">{{ order.orderNumber }}</span>
+              <span class="order-date">{{ order.createdAt | date:'dd MMM yyyy, h:mm a' }}</span>
+            </div>
+            <span class="status-badge" [attr.data-status]="order.status">
+              {{ formatStatus(order.status) }}
+            </span>
+          </div>
+
+          <!-- Items -->
+          <div class="order-items">
+            @for (item of order.items; track item.productId) {
+              <div class="order-line">
+                <span class="line-name">{{ item.name }}</span>
+                <span class="line-qty">x{{ item.qty }}</span>
+                <span class="line-price">₹{{ item.totalPrice | number:'1.2-2' }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Footer -->
+          <div class="order-footer">
+            <div class="footer-left">
+              <div class="order-address">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                {{ order.shippingAddress.city }}, {{ order.shippingAddress.state }}
+              </div>
+              @if (order.shiprocket.courierName) {
+                <span class="courier-info">{{ order.shiprocket.courierName }}
+                  @if (order.shiprocket.awbCode) {
+                    · {{ order.shiprocket.awbCode }}
+                  }
+                </span>
+              }
+            </div>
+            <div class="footer-right">
+              @if (order.shiprocket.trackingUrl) {
+                <a class="btn-track" [href]="order.shiprocket.trackingUrl" target="_blank">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                    <polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  Track
+                </a>
+              }
+              <span class="order-total">₹{{ order.total | number:'1.0-0' }}</span>
+            </div>
+          </div>
+
+          <!-- Status Timeline -->
+          @if (order.statusHistory.length > 1) {
+            <div class="timeline">
+              @for (h of order.statusHistory; track h.timestamp) {
+                <div class="timeline-item">
+                  <div class="timeline-dot" [attr.data-status]="h.status"></div>
+                  <div class="timeline-content">
+                    <span class="timeline-status">{{ formatStatus(h.status) }}</span>
+                    <span class="timeline-date">{{ h.timestamp | date:'dd MMM, h:mm a' }}</span>
+                    @if (h.note) {
+                      <span class="timeline-note">{{ h.note }}</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    @if (store.meta()) {
+      <div class="pagination">
+        <button [disabled]="store.meta()!.page <= 1" (click)="store.loadOrders(store.meta()!.page - 1)">← Prev</button>
+        <span>Page {{ store.meta()!.page }} of {{ store.meta()!.totalPages }}</span>
+        <button [disabled]="store.meta()!.page >= store.meta()!.totalPages" (click)="store.loadOrders(store.meta()!.page + 1)">Next →</button>
+      </div>
+    }
+  }
+</div>

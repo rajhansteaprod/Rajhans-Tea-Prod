@@ -1,0 +1,232 @@
+<div class="payment-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Payments</h1>
+      <p class="page-subtitle">Manage all orders and payments</p>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  @if (stats()) {
+    <div class="stats-grid">
+      <div class="stat-card revenue">
+        <div class="stat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Total Revenue</span>
+          <span class="stat-value">₹{{ stats()!.totalRevenue | number:'1.0-0' }}</span>
+        </div>
+      </div>
+      <div class="stat-card today">
+        <div class="stat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Today's Revenue</span>
+          <span class="stat-value">₹{{ stats()!.todayRevenue | number:'1.0-0' }}</span>
+        </div>
+      </div>
+      <div class="stat-card orders">
+        <div class="stat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2"/></svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Total Orders</span>
+          <span class="stat-value">{{ stats()!.totalOrders }}</span>
+        </div>
+      </div>
+      <div class="stat-card refund">
+        <div class="stat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><polyline points="23 4 23 10 17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Total Refunded</span>
+          <span class="stat-value">₹{{ stats()!.totalRefunded | number:'1.0-0' }}</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <input class="search-input" placeholder="Search order ID, name, phone..." [(ngModel)]="searchQuery" (ngModelChange)="onSearch()" />
+    <select class="status-filter" [(ngModel)]="statusFilter" (ngModelChange)="loadPayments()">
+      <option value="">All Statuses</option>
+      <option value="created">Created</option>
+      <option value="captured">Captured</option>
+      <option value="failed">Failed</option>
+      <option value="refunded">Refunded</option>
+      <option value="partially_refunded">Partially Refunded</option>
+    </select>
+  </div>
+
+  <!-- Payments Table -->
+  @if (loading()) {
+    <div class="loading"><div class="spinner"></div></div>
+  } @else if (payments().length === 0) {
+    <div class="empty-state"><p>No payments found.</p></div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of payments(); track p._id) {
+            <tr>
+              <td class="date-cell">{{ p.createdAt | date:'dd MMM yyyy, h:mm a' }}</td>
+              <td class="mono">{{ p.razorpayOrderId }}</td>
+              <td>
+                <div class="customer-cell">
+                  <span class="customer-name">{{ p.userId?.firstName ? (p.userId!.firstName + ' ' + (p.userId!.lastName || '')) : p.shippingAddress.name }}</span>
+                  <span class="customer-phone">{{ p.userId?.phone || p.shippingAddress.phone }}</span>
+                </div>
+              </td>
+              <td class="amount-cell">₹{{ p.amountPaise / 100 | number:'1.2-2' }}</td>
+              <td><span class="status-badge" [attr.data-status]="p.status">{{ p.status }}</span></td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn-action" (click)="openDetail(p)" title="View Details">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>
+                  </button>
+                  @if (p.status === 'captured' || p.status === 'partially_refunded') {
+                    <button class="btn-action refund-btn" (click)="openRefund(p)" title="Refund">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="23 4 23 10 17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                  }
+                  @if (p.invoiceId) {
+                    <a class="btn-action" [href]="'/api/v1/invoices/' + p.invoiceId + '/download'" target="_blank" title="Invoice">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </a>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (meta()) {
+      <div class="pagination">
+        <button class="page-btn" [disabled]="meta()!.page <= 1" (click)="loadPayments(meta()!.page - 1)">← Prev</button>
+        <span class="page-info">Page {{ meta()!.page }} of {{ meta()!.totalPages }}</span>
+        <button class="page-btn" [disabled]="meta()!.page >= meta()!.totalPages" (click)="loadPayments(meta()!.page + 1)">Next →</button>
+      </div>
+    }
+  }
+
+  <!-- Detail Modal -->
+  @if (selectedPayment()) {
+    <div class="modal-backdrop" (click)="selectedPayment.set(null)"></div>
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Payment Details</h2>
+        <button class="close-btn" (click)="selectedPayment.set(null)">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Razorpay Order</span>
+            <span class="detail-value mono">{{ selectedPayment()!.razorpayOrderId }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Payment ID</span>
+            <span class="detail-value mono">{{ selectedPayment()!.razorpayPaymentId || '—' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Amount</span>
+            <span class="detail-value">₹{{ selectedPayment()!.amountPaise / 100 | number:'1.2-2' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Status</span>
+            <span class="status-badge" [attr.data-status]="selectedPayment()!.status">{{ selectedPayment()!.status }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Date</span>
+            <span class="detail-value">{{ selectedPayment()!.createdAt | date:'dd MMM yyyy, h:mm:ss a' }}</span>
+          </div>
+        </div>
+
+        <h3 class="section-title">Shipping Address</h3>
+        <p class="address-text">
+          {{ selectedPayment()!.shippingAddress.name }} · {{ selectedPayment()!.shippingAddress.phone }}<br/>
+          {{ selectedPayment()!.shippingAddress.street }}, {{ selectedPayment()!.shippingAddress.city }} {{ selectedPayment()!.shippingAddress.pincode }}, {{ selectedPayment()!.shippingAddress.state }}
+        </p>
+
+        <h3 class="section-title">Items</h3>
+        <div class="items-list">
+          @for (item of selectedPayment()!.checkoutSnapshot.items; track item.productId) {
+            <div class="item-row">
+              <span>{{ item.name }}</span>
+              <span>x{{ item.qty }}</span>
+              <span>₹{{ item.totalPrice | number:'1.2-2' }}</span>
+            </div>
+          }
+          <div class="item-row total-row">
+            <span>Total</span>
+            <span></span>
+            <span>₹{{ selectedPayment()!.checkoutSnapshot.total | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        @if (selectedPayment()!.refunds.length > 0) {
+          <h3 class="section-title">Refunds</h3>
+          @for (r of selectedPayment()!.refunds; track r.razorpayRefundId) {
+            <div class="refund-row">
+              <span>₹{{ r.amount / 100 | number:'1.2-2' }}</span>
+              <span>{{ r.reason }}</span>
+              <span>{{ r.createdAt | date:'dd MMM yyyy' }}</span>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Refund Modal -->
+  @if (refundTarget()) {
+    <div class="modal-backdrop" (click)="refundTarget.set(null)"></div>
+    <div class="modal refund-modal">
+      <div class="modal-header">
+        <h2>Initiate Refund</h2>
+        <button class="close-btn" (click)="refundTarget.set(null)">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="refund-info">
+          Order: <strong>{{ refundTarget()!.razorpayOrderId }}</strong><br/>
+          Paid: ₹{{ refundTarget()!.amountPaise / 100 | number:'1.2-2' }}
+          @if (refundTarget()!.refundedAmount > 0) {
+            · Already refunded: ₹{{ refundTarget()!.refundedAmount / 100 | number:'1.2-2' }}
+          }
+        </p>
+        <div class="form-group">
+          <label>Refund Amount (₹) *</label>
+          <input type="number" [(ngModel)]="refundAmount" [max]="(refundTarget()!.amountPaise - refundTarget()!.refundedAmount) / 100" min="1" />
+        </div>
+        <div class="form-group">
+          <label>Reason *</label>
+          <input type="text" [(ngModel)]="refundReason" placeholder="Customer request, defective product..." />
+        </div>
+        @if (refundError()) {
+          <div class="refund-error">{{ refundError() }}</div>
+        }
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="refundTarget.set(null)">Cancel</button>
+          <button class="btn-refund" [disabled]="!refundAmount || !refundReason || refundProcessing()" (click)="submitRefund()">
+            @if (refundProcessing()) { Processing... } @else { Confirm Refund }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

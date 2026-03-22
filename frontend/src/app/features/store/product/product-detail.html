@@ -1,0 +1,123 @@
+@if (product()) {
+  <div class="product-page">
+    <!-- Breadcrumbs -->
+    <nav class="breadcrumbs">
+      <a routerLink="/">Home</a> /
+      <a [routerLink]="'/catalog/' + product().category?.slug">{{ product().category?.name }}</a> /
+      <span>{{ product().name }}</span>
+    </nav>
+
+    <div class="product-layout">
+      <!-- Images -->
+      <div class="gallery">
+        <div class="main-image">
+          <img [src]="selectedImage() || product().images[0] || ''" [alt]="product().name" />
+        </div>
+        @if (product().images.length > 1) {
+          <div class="thumbnails">
+            @for (img of product().images; track img) {
+              <button class="thumb" [class.active]="selectedImage() === img" (click)="selectedImage.set(img)">
+                <img [src]="img" [alt]="product().name" />
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Info -->
+      <div class="product-info">
+        <p class="category-label">{{ product().category?.name }}</p>
+        <h1 class="product-name">{{ product().name }}</h1>
+
+        @if (ratingSummary()) {
+          <div class="rating-row">
+            <span class="stars">{{ '★'.repeat(Math.round(ratingSummary()!.averageRating)) }}{{ '☆'.repeat(5 - Math.round(ratingSummary()!.averageRating)) }}</span>
+            <span class="rating-text">{{ ratingSummary()!.averageRating }} ({{ ratingSummary()!.totalReviews }} reviews)</span>
+          </div>
+        }
+
+        <p class="price">₹{{ product().basePrice | number:'1.0-0' }}</p>
+
+        @if (product().shortDescription) {
+          <p class="short-desc">{{ product().shortDescription }}</p>
+        }
+
+        <!-- Stock Status -->
+        @if (product().trackInventory) {
+          @if (product().stock > 0) {
+            <p class="stock in-stock">In Stock ({{ product().stock }} left)</p>
+          } @else {
+            <p class="stock out-of-stock">Out of Stock</p>
+          }
+        }
+
+        <!-- Quantity Selector -->
+        <div class="quantity-row">
+          <span class="qty-label">Quantity</span>
+          <div class="qty-picker">
+            <button class="qty-btn" (click)="decrementQty()" [disabled]="quantity() <= 1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </button>
+            <span class="qty-value">{{ quantity() }}</span>
+            <button class="qty-btn" (click)="incrementQty()" [disabled]="product().trackInventory && quantity() >= product().stock">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+          <button class="btn-cart" [disabled]="product().stock === 0 && product().trackInventory" (click)="addToCart()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2"/></svg>
+            Add to Cart
+          </button>
+          <button class="btn-buy" [disabled]="product().stock === 0 && product().trackInventory" (click)="buyNow()">
+            Buy Now
+          </button>
+          <button class="btn-wishlist" [class.active]="cartStore.isWishlisted(product()._id)()" (click)="cartStore.toggleWishlist(product()._id)">
+            <svg width="20" height="20" viewBox="0 0 24 24" [attr.fill]="cartStore.isWishlisted(product()._id)() ? 'currentColor' : 'none'">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Share -->
+        <div class="share-row">
+          <span class="share-label">Share:</span>
+          <button class="share-btn" (click)="shareWhatsApp()">WhatsApp</button>
+          <button class="share-btn" (click)="copyLink()">{{ copied() ? 'Copied!' : 'Copy Link' }}</button>
+        </div>
+
+        <!-- Description -->
+        @if (product().description) {
+          <div class="description">
+            <h3>Description</h3>
+            <div [innerHTML]="product().description"></div>
+          </div>
+        }
+
+        <!-- Tags -->
+        @if (product().tags?.length > 0) {
+          <div class="tags">
+            @for (tag of product().tags; track tag) {
+              <a class="tag" [routerLink]="'/products'" [queryParams]="{tags: tag}">{{ tag }}</a>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Reviews & Q&A -->
+    <app-product-reviews [productId]="product()._id" />
+  </div>
+} @else {
+  <div class="loading"><div class="spinner"></div></div>
+}
+
+<!-- Sticky Add to Cart (mobile) -->
+@if (product() && !(product().stock === 0 && product().trackInventory)) {
+  <div class="sticky-bar">
+    <span class="sticky-price">₹{{ product().basePrice | number:'1.0-0' }}</span>
+    <button class="sticky-btn" (click)="addToCart()">Add to Cart</button>
+  </div>
+}

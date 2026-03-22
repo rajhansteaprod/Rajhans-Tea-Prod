@@ -9,36 +9,8 @@ import { environment } from '../../../../environments/environment';
   selector: 'app-static-page',
   standalone: true,
   imports: [CommonModule, RouterLink],
-  template: `
-    @if (page()) {
-      <div class="static-page">
-        <h1 class="page-title">{{ page().title }}</h1>
-        <div class="page-content" [innerHTML]="page().content"></div>
-      </div>
-    } @else if (notFound()) {
-      <div class="not-found">
-        <h2>Page not found</h2>
-        <p>The page you're looking for doesn't exist.</p>
-        <a routerLink="/" class="back-link">Go Home</a>
-      </div>
-    } @else {
-      <div class="loading"><div class="spinner"></div></div>
-    }
-  `,
-  styles: [`
-    @use '../../../core/design-tokens/tokens' as *;
-    .static-page { max-width:800px; margin:0 auto; padding: $space-xxl $space-lg; }
-    .page-title { font-size: $font-size-xxl; font-weight: $font-weight-bold; color: $color-text-primary; margin:0 0 $space-xl; text-align:center; }
-    .page-content { font-size: $font-size-md; color: $color-text-primary; line-height: $line-height-relaxed; }
-    .not-found { text-align:center; padding: $space-xxxl;
-      h2 { font-size: $font-size-xxl; color: $color-text-primary; margin:0 0 $space-sm; }
-      p { color: $color-text-tertiary; margin:0 0 $space-lg; }
-    }
-    .back-link { color: $color-primary; text-decoration:none; font-weight: $font-weight-semibold; }
-    .loading { display:flex; justify-content:center; padding: $space-xxxl; }
-    .spinner { width:32px; height:32px; border:2px solid $color-border; border-top-color: $color-primary; border-radius:50%; animation: spin .7s linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-  `],
+  templateUrl: './static-page.html',
+  styleUrls: ['./static-page.scss'],
 })
 export class StaticPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);

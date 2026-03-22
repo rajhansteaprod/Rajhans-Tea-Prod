@@ -1,0 +1,261 @@
+@use '../../../../core/design-tokens/tokens' as *;
+@use '../../../../core/design-tokens/mixins' as *;
+
+.ftc {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: $space-xxxl * 2 clamp($space-lg, 5vw, $space-xxxl);
+
+  @include respond-to(md) {
+    padding-top: $space-xxxl;
+    padding-bottom: $space-xxxl;
+  }
+}
+
+// ── Intro ──
+.ftc__intro {
+  text-align: center;
+  margin-bottom: $space-xxxl * 2;
+
+  @include respond-to(md) {
+    margin-bottom: $space-xxxl;
+  }
+}
+
+.ftc__eyebrow {
+  display: inline-block;
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
+  color: $color-secondary;
+  margin-bottom: $space-lg;
+}
+
+.ftc__headline {
+  font-family: $font-family-display;
+  font-size: clamp($font-size-xxl, 4vw, $font-size-display);
+  font-weight: $font-weight-regular;
+  line-height: $line-height-tight;
+  letter-spacing: $letter-spacing-display;
+  color: $color-text-primary;
+  margin: 0 0 $space-lg;
+}
+
+.ftc__headline-line {
+  display: block;
+}
+
+.ftc__headline-line--accent {
+  color: $color-primary;
+  font-style: italic;
+  opacity: 0.4;
+}
+
+.ftc__subtitle {
+  font-family: $font-family;
+  font-size: $font-size-lg;
+  color: $color-text-tertiary;
+  line-height: $line-height-relaxed;
+  margin: 0 auto;
+  max-width: 480px;
+
+  @include respond-to(md) {
+    font-size: $font-size-md;
+  }
+}
+
+// ── Journey ──
+.ftc__journey {
+  position: relative;
+  padding: $space-xxl 0;
+}
+
+// Connecting vertical line
+.ftc__line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: $color-border-light;
+  transform: translateX(-50%);
+
+  @include respond-to(md) {
+    left: $space-xl;
+  }
+}
+
+.ftc__line-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0%;
+  background: $color-primary;
+  transition: none;
+}
+
+// ── Step ──
+.ftc__step {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-xxxl;
+  align-items: center;
+  padding: $space-xxl 0;
+  position: relative;
+
+  &--reverse {
+    direction: rtl;
+
+    > * {
+      direction: ltr;
+    }
+
+    .ftc__content {
+      text-align: right;
+    }
+  }
+
+  @include respond-to(md) {
+    grid-template-columns: 1fr;
+    padding-left: $space-xxxl;
+    gap: $space-md;
+
+    &--reverse {
+      direction: ltr;
+
+      .ftc__content {
+        text-align: left;
+      }
+    }
+  }
+}
+
+// ── Visual / Icon ──
+.ftc__visual {
+  @include flex-center;
+}
+
+.ftc__icon-wrap {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  @include flex-center;
+
+  @include respond-to(md) {
+    position: absolute;
+    left: 0;
+    top: $space-xxl;
+    width: $space-xxl * 2;
+    height: $space-xxl * 2;
+  }
+}
+
+.ftc__icon-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: $radius-full;
+  background: $color-bg-warm;
+  border: 1px solid $color-border-light;
+}
+
+.ftc__icon {
+  position: relative;
+  z-index: 1;
+  color: $color-primary;
+  @include flex-center;
+
+  svg {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.ftc__step-num {
+  position: absolute;
+  top: -$space-xs;
+  right: -$space-xs;
+  z-index: 2;
+  width: $space-xl;
+  height: $space-xl;
+  @include flex-center;
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  color: $color-text-inverse;
+  background: $color-primary;
+  border-radius: $radius-full;
+  border: 2px solid $color-bg-primary;
+
+  @include respond-to(md) {
+    width: $space-lg;
+    height: $space-lg;
+    top: -$space-xxs;
+    right: -$space-xxs;
+  }
+}
+
+// ── Content ──
+.ftc__content {
+  @include flex-column;
+  gap: $space-xs;
+}
+
+.ftc__step-title {
+  font-family: $font-family-display;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  letter-spacing: $letter-spacing-tight;
+  margin: 0;
+}
+
+.ftc__step-desc {
+  font-family: $font-family;
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  line-height: $line-height-relaxed;
+  margin: 0;
+  max-width: 340px;
+
+  .ftc__step--reverse & {
+    margin-left: auto;
+  }
+
+  @include respond-to(md) {
+    .ftc__step--reverse & {
+      margin-left: 0;
+    }
+  }
+}
+
+// ── Closing ──
+.ftc__close {
+  text-align: center;
+  padding-top: $space-xxxl;
+}
+
+.ftc__close-icon {
+  @include flex-center;
+  width: $space-xxxl;
+  height: $space-xxxl;
+  margin: 0 auto $space-lg;
+  color: $color-primary;
+  opacity: 0.3;
+}
+
+.ftc__close-text {
+  font-family: $font-family-display;
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-regular;
+  color: $color-text-primary;
+  letter-spacing: $letter-spacing-display;
+  margin: 0;
+
+  em {
+    color: $color-primary;
+    font-style: italic;
+  }
+}

@@ -1,0 +1,186 @@
+<section class="reviews" *ngIf="productId">
+  <!-- Tabs -->
+  <div class="reviews__tabs">
+    <button class="reviews__tab" [class.active]="activeTab() === 'reviews'" (click)="activeTab.set('reviews')">
+      Reviews ({{ ratingSummary()?.totalReviews || 0 }})
+    </button>
+    <button class="reviews__tab" [class.active]="activeTab() === 'qa'" (click)="switchToQA()">
+      Q&A ({{ questions().length }})
+    </button>
+  </div>
+
+  <!-- ═══ REVIEWS TAB ═══ -->
+  @if (activeTab() === 'reviews') {
+    <!-- Rating Summary -->
+    @if (ratingSummary()) {
+      <div class="reviews__summary">
+        <div class="reviews__avg">
+          <span class="reviews__avg-num">{{ ratingSummary()!.averageRating | number:'1.1-1' }}</span>
+          <div class="reviews__avg-stars">
+            @for (s of [1,2,3,4,5]; track s) {
+              <svg class="reviews__star" [class.filled]="s <= Math.round(ratingSummary()!.averageRating)" width="18" height="18" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+              </svg>
+            }
+          </div>
+          <span class="reviews__avg-count">{{ ratingSummary()!.totalReviews }} reviews</span>
+        </div>
+        <div class="reviews__bars">
+          @for (rating of [5,4,3,2,1]; track rating) {
+            <div class="reviews__bar-row">
+              <span class="reviews__bar-label">{{ rating }}</span>
+              <div class="reviews__bar">
+                <div class="reviews__bar-fill" [style.width.%]="getBarWidth(rating)"></div>
+              </div>
+              <span class="reviews__bar-count">{{ getDistCount(rating) }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Write Review Button -->
+    @if (auth.isLoggedIn()) {
+      <button class="reviews__write-btn" (click)="showForm.set(!showForm())">
+        {{ showForm() ? 'Cancel' : 'Write a Review' }}
+      </button>
+    } @else {
+      <a routerLink="/auth/login" class="reviews__write-btn">Sign in to Review</a>
+    }
+
+    <!-- Review Form -->
+    @if (showForm()) {
+      <form class="reviews__form" (ngSubmit)="submitReview()">
+        <div class="reviews__form-group">
+          <label class="reviews__form-label">Rating</label>
+          <div class="reviews__form-stars">
+            @for (s of [1,2,3,4,5]; track s) {
+              <button type="button" class="reviews__form-star" [class.filled]="s <= formRating()" (click)="formRating.set(s)">
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            }
+          </div>
+        </div>
+        <div class="reviews__form-group">
+          <label class="reviews__form-label">Title</label>
+          <input class="reviews__form-input" [(ngModel)]="formTitle" name="title" placeholder="Summarize your experience" />
+        </div>
+        <div class="reviews__form-group">
+          <label class="reviews__form-label">Review</label>
+          <textarea class="reviews__form-textarea" [(ngModel)]="formBody" name="body" placeholder="Tell others what you think..." rows="4"></textarea>
+        </div>
+        <button type="submit" class="reviews__submit-btn" [disabled]="formRating() === 0 || submitting()">
+          {{ submitting() ? 'Submitting...' : 'Submit Review' }}
+        </button>
+      </form>
+    }
+
+    <!-- Review List -->
+    @if (reviewsLoading()) {
+      <div class="reviews__loading"><div class="reviews__spinner"></div></div>
+    } @else if (reviews().length === 0) {
+      <div class="reviews__empty">
+        <p>No reviews yet. Be the first to share your experience!</p>
+      </div>
+    } @else {
+      <div class="reviews__list">
+        @for (r of reviews(); track r._id) {
+          <div class="reviews__item">
+            <div class="reviews__item-header">
+              <div class="reviews__item-stars">
+                @for (s of [1,2,3,4,5]; track s) {
+                  <svg class="reviews__star-sm" [class.filled]="s <= r.rating" width="14" height="14" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                  </svg>
+                }
+              </div>
+              @if (r.isVerifiedPurchase) {
+                <span class="reviews__verified">Verified Purchase</span>
+              }
+              <span class="reviews__date">{{ r.createdAt | date:'mediumDate' }}</span>
+            </div>
+            @if (r.title) {
+              <h4 class="reviews__item-title">{{ r.title }}</h4>
+            }
+            <p class="reviews__item-body">{{ r.body }}</p>
+            <div class="reviews__item-footer">
+              <button class="reviews__helpful-btn" (click)="voteHelpful(r._id)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Helpful ({{ r.helpfulVotes }})
+              </button>
+            </div>
+            <!-- Admin Reply -->
+            @if (r.adminReply) {
+              <div class="reviews__reply">
+                <span class="reviews__reply-label">Rajhans Tea replied:</span>
+                <p class="reviews__reply-body">{{ r.adminReply.body }}</p>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- ═══ Q&A TAB ═══ -->
+  @if (activeTab() === 'qa') {
+    <!-- Ask Question -->
+    @if (auth.isLoggedIn()) {
+      <div class="qa__ask">
+        <input class="qa__ask-input" [(ngModel)]="questionText" placeholder="Ask a question about this product..." />
+        <button class="qa__ask-btn" [disabled]="!questionText.trim()" (click)="askQuestion()">Ask</button>
+      </div>
+    } @else {
+      <a routerLink="/auth/login" class="reviews__write-btn">Sign in to Ask</a>
+    }
+
+    @if (qaLoading()) {
+      <div class="reviews__loading"><div class="reviews__spinner"></div></div>
+    } @else if (questions().length === 0) {
+      <div class="reviews__empty">
+        <p>No questions yet. Ask the first question!</p>
+      </div>
+    } @else {
+      <div class="qa__list">
+        @for (q of questions(); track q._id) {
+          <div class="qa__item">
+            <div class="qa__question">
+              <span class="qa__q-badge">Q</span>
+              <div class="qa__q-content">
+                <p class="qa__q-text">{{ q.questionText }}</p>
+                <span class="qa__q-date">{{ q.createdAt | date:'mediumDate' }}</span>
+              </div>
+            </div>
+            @for (a of q.answers; track a._id) {
+              <div class="qa__answer">
+                <span class="qa__a-badge" [class.admin]="a.isAdminAnswer">A</span>
+                <div class="qa__a-content">
+                  <p class="qa__a-text">{{ a.body }}</p>
+                  @if (a.isAdminAnswer) {
+                    <span class="qa__a-admin">Official Answer</span>
+                  }
+                </div>
+              </div>
+            }
+            <!-- Answer form -->
+            @if (auth.isLoggedIn()) {
+              @if (answeringId() === q._id) {
+                <div class="qa__answer-form">
+                  <input class="qa__answer-input" [(ngModel)]="answerText" placeholder="Write your answer..." />
+                  <div class="qa__answer-actions">
+                    <button class="qa__answer-submit" [disabled]="!answerText.trim()" (click)="submitAnswer(q._id)">Submit</button>
+                    <button class="qa__answer-cancel" (click)="answeringId.set(null)">Cancel</button>
+                  </div>
+                </div>
+              } @else {
+                <button class="qa__reply-btn" (click)="answeringId.set(q._id)">Answer this question</button>
+              }
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+</section>

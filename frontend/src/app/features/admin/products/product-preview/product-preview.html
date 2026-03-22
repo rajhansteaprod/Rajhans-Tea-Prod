@@ -1,0 +1,196 @@
+<div class="preview-root" #root>
+
+  <!-- Navigation bar -->
+  <nav class="preview-nav" #navBar>
+    <button class="nav-back" onclick="window.close(); history.back();">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Back to Admin
+    </button>
+    <a class="nav-logo" href="/admin">
+      <span class="logo-r">R</span>
+      <span>Rajhans Tea</span>
+    </a>
+    <div class="nav-right">
+      @if (product()?.status === 'draft') {
+        <span class="draft-pill">Draft</span>
+      } @else if (product()?.status === 'archived') {
+        <span class="archived-pill">Archived</span>
+      }
+      <a [href]="'/admin/products'" class="nav-edit-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Edit Product
+      </a>
+    </div>
+  </nav>
+
+  @if (loading()) {
+    <div class="page-loader">
+      <div class="loader-ring"></div>
+    </div>
+  } @else if (error()) {
+    <div class="error-state">
+      <h2>Product not found</h2>
+      <p>{{ error() }}</p>
+    </div>
+  } @else if (product()) {
+    <div class="product-layout">
+
+      <!-- LEFT: Sticky image gallery -->
+      <div class="gallery-panel" #galleryPanel>
+        <div class="main-image-wrapper" #mainImageWrapper>
+          @if (activeImage()) {
+            <img class="main-image" #mainImage [src]="activeImage()" [alt]="product()!.name" />
+          } @else {
+            <div class="no-image-placeholder">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1"/>
+                <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1"/>
+                <polyline points="21 15 16 10 5 21" stroke="currentColor" stroke-width="1"/>
+              </svg>
+              <span>No images</span>
+            </div>
+          }
+          <!-- Grain overlay -->
+          <div class="grain-overlay"></div>
+          <!-- Featured badge -->
+          @if (product()!.isFeatured) {
+            <div class="featured-badge" #featuredBadge>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              Featured
+            </div>
+          }
+        </div>
+
+        @if (product()!.images.length > 1) {
+          <div class="thumbnail-strip" #thumbStrip>
+            @for (img of product()!.images; track img; let i = $index) {
+              <button
+                class="thumb"
+                [class.active]="activeIdx() === i"
+                (mouseenter)="switchImage(i)"
+              >
+                <img [src]="img" [alt]="product()!.name + ' ' + (i+1)" />
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- RIGHT: Scrolling product info -->
+      <div class="info-panel" #infoPanel>
+
+        <!-- Breadcrumb -->
+        <div class="breadcrumb" #breadcrumb>
+          <span class="breadcrumb-cat">{{ product()!.category.name }}</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span class="breadcrumb-current">{{ product()!.name }}</span>
+        </div>
+
+        <!-- Product title - word by word animation -->
+        <h1 class="product-title" #productTitle>
+          @for (word of titleWords(); track word + $index) {
+            <span class="word">{{ word }}</span>
+          }
+        </h1>
+
+        <!-- Tags row -->
+        @if (product()!.tags.length > 0) {
+          <div class="tags-row" #tagsRow>
+            @for (tag of product()!.tags; track tag) {
+              <span class="tag"># {{ tag }}</span>
+            }
+          </div>
+        }
+
+        <!-- Price -->
+        <div class="price-block" #priceBlock>
+          <span class="price-currency">₹</span>
+          <span class="price-value">{{ animatedPrice() }}</span>
+          <span class="price-label">Base price</span>
+        </div>
+
+        <!-- Divider -->
+        <div class="divider" #divider></div>
+
+        <!-- Short description -->
+        @if (product()!.shortDescription) {
+          <p class="short-desc" #shortDesc>{{ product()!.shortDescription }}</p>
+        }
+
+        <!-- Full description -->
+        @if (product()!.description) {
+          <div class="description-section" #descSection>
+            <h3 class="section-heading">About this product</h3>
+            <p class="description-text">{{ product()!.description }}</p>
+          </div>
+        }
+
+        <!-- Attributes -->
+        @if (attrEntries().length > 0) {
+          <div class="attributes-section" #attrsSection>
+            <h3 class="section-heading">Specifications</h3>
+            <div class="attr-grid">
+              @for (attr of attrEntries(); track attr.key) {
+                <div class="attr-item">
+                  <span class="attr-key">{{ attr.key }}</span>
+                  <span class="attr-val">{{ attr.value }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Collections -->
+        @if (product()!.collections.length > 0) {
+          <div class="collections-section" #collectionsSection>
+            <h3 class="section-heading">Part of</h3>
+            <div class="collection-chips">
+              @for (col of product()!.collections; track col._id) {
+                <span class="collection-chip">{{ col.name }}</span>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- CTA -->
+        <div class="cta-section" #ctaSection>
+          <button class="cta-btn" #ctaBtn>
+            <span class="cta-text">Add to Cart</span>
+            <span class="cta-arrow">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </button>
+          <p class="cta-note">Preview only · Not functional in admin panel</p>
+        </div>
+
+        <!-- 3D Product Viewer -->
+        <div class="viewer-3d-section" #viewer3dSection>
+          <div class="viewer-3d-header">
+            <h3 class="section-heading">Interactive 3D View</h3>
+            <span class="drag-hint">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L12 22M2 12L22 12M5 5L19 19M19 5L5 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+              </svg>
+              Drag to rotate
+            </span>
+          </div>
+          <div class="viewer-3d-canvas" #viewer3dCanvas></div>
+        </div>
+
+        <!-- Bottom spacing -->
+        <div style="height: 120px"></div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,34 @@
+@use '../../../core/design-tokens/tokens' as *;
+.page { padding: $space-xl; }
+.page-title { font-size: $font-size-xxl; font-weight: $font-weight-bold; color: $color-text-primary; margin:0 0 $space-xxs; }
+.page-sub { font-size: $font-size-sm; color: $color-text-tertiary; margin:0 0 $space-xl; }
+
+.settings-grid { display:grid; grid-template-columns: 1fr 1fr; gap: $space-lg; margin-bottom: $space-xl; }
+.settings-card { background: $color-bg-tertiary; border:1px solid $color-border-light; border-radius: $radius-xl; padding: $space-xl;
+  &.span-2 { grid-column: span 2; }
+}
+.card-title { font-size: $font-size-md; font-weight: $font-weight-semibold; color: $color-text-primary; margin:0 0 $space-lg; }
+.form-field { display:flex; flex-direction:column; gap: $space-xs; margin-bottom: $space-md;
+  label { font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-text-tertiary; text-transform:uppercase; }
+  input { width:100%; padding: $space-sm $space-md; border:1px solid $color-border; border-radius: $radius-md; font-size: $font-size-sm; background: $color-bg-secondary; outline:none; font-family: $font-family; box-sizing:border-box; &:focus { border-color: $color-primary; } }
+}
+
+.toggles-grid { display:grid; grid-template-columns: 1fr 1fr; gap: $space-md; }
+.toggle-item { display:flex; align-items:flex-start; gap: $space-sm; cursor:pointer; padding: $space-md; border:1px solid $color-border-light; border-radius: $radius-lg; transition: border-color $transition-fast;
+  &:hover { border-color: $color-border; }
+  input { margin-top:3px; cursor:pointer; }
+}
+.toggle-info { display:flex; flex-direction:column; gap:2px; }
+.toggle-name { font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-text-primary; }
+.toggle-desc { font-size: $font-size-xs; color: $color-text-tertiary; }
+
+.save-bar { display:flex; align-items:center; gap: $space-md; }
+.btn-save { padding: $space-sm $space-xxl; background: $color-primary; color: $color-text-inverse; border:none; border-radius: $radius-md; font-size: $font-size-md; font-weight: $font-weight-semibold; cursor:pointer; transition: all $transition-fast;
+  &:hover:not(:disabled) { background: $color-primary-hover; }
+  &:disabled { opacity:.6; }
+}
+.saved-msg { font-size: $font-size-sm; color: $color-success; font-weight: $font-weight-medium; }
+
+.loading { display:flex; justify-content:center; padding: $space-xxl; }
+.spinner { width:28px; height:28px; border:2px solid $color-border; border-top-color: $color-primary; border-radius:50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }

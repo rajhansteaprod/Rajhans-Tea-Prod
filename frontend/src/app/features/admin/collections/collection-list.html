@@ -1,0 +1,238 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Collections</h1>
+      <p class="page-subtitle">Curate product groups for your storefront</p>
+    </div>
+    <button class="btn-primary-create" (click)="openCreate()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Add Collection
+    </button>
+  </div>
+
+  <!-- Grid of collection cards -->
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <span>Loading collections…</span>
+    </div>
+  } @else if (collections().length === 0) {
+    <div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+        <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <p>No collections yet. Create your first one.</p>
+    </div>
+  } @else {
+    <div class="collection-grid">
+      @for (col of collections(); track col._id) {
+        <div class="collection-card" [class.editing]="editingId() === col._id">
+          <div class="card-image">
+            @if (col.image) {
+              <img [src]="col.image" [alt]="col.name" />
+            } @else {
+              <div class="image-placeholder">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                  <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.5"/>
+                  <polyline points="21 15 16 10 5 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+            }
+            <div class="card-badges">
+              @if (col.isFeatured) {
+                <span class="badge featured">Featured</span>
+              }
+              <span class="badge status" [class.active]="col.isActive" [class.inactive]="!col.isActive">
+                {{ col.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3 class="card-name">{{ col.name }}</h3>
+            <p class="card-meta">
+              <span class="slug-badge">{{ col.slug }}</span>
+              <span class="product-count">{{ col.productCount ?? 0 }} products</span>
+            </p>
+            @if (col.description) {
+              <p class="card-desc">{{ col.description }}</p>
+            }
+          </div>
+          <div class="card-actions">
+            <button class="icon-btn edit" (click)="openEdit(col)" title="Edit">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Edit
+            </button>
+            <button class="icon-btn delete" (click)="deleteCollection(col._id)" title="Delete">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              Delete
+            </button>
+          </div>
+
+          <!-- Inline edit panel -->
+          @if (editingId() === col._id) {
+            <div class="edit-panel">
+              <div class="form-grid">
+                <div class="form-field">
+                  <label class="form-label">Name *</label>
+                  <input class="form-input" type="text" [ngModel]="editForm().name"
+                    (ngModelChange)="editForm.update(f=>({...f,name:$event}))" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Image</label>
+                  <div class="image-upload-area">
+                    @if (editForm().image) {
+                      <div class="image-preview-wrap">
+                        <img [src]="editForm().image" class="image-preview" />
+                        <button type="button" class="remove-image" (click)="editForm.update(f=>({...f,image:''}))">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                          </svg>
+                        </button>
+                      </div>
+                    } @else {
+                      <label class="upload-btn">
+                        <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                          (change)="onImageSelect($event, 'edit')" [disabled]="uploadingImage()" />
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                          <polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                          <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        {{ uploadingImage() ? 'Uploading…' : 'Upload' }}
+                      </label>
+                    }
+                  </div>
+                </div>
+                <div class="form-field full-width">
+                  <label class="form-label">Description</label>
+                  <textarea class="form-input" rows="2" [ngModel]="editForm().description"
+                    (ngModelChange)="editForm.update(f=>({...f,description:$event}))"></textarea>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Sort Order</label>
+                  <input class="form-input" type="number" [ngModel]="editForm().sortOrder"
+                    (ngModelChange)="editForm.update(f=>({...f,sortOrder:+$event}))" min="0" />
+                </div>
+                <div class="form-field toggles">
+                  <label class="toggle-label">
+                    <input type="checkbox" [ngModel]="editForm().isFeatured"
+                      (ngModelChange)="editForm.update(f=>({...f,isFeatured:$event}))" />
+                    Featured
+                  </label>
+                  <label class="toggle-label">
+                    <input type="checkbox" [ngModel]="editForm().isActive"
+                      (ngModelChange)="editForm.update(f=>({...f,isActive:$event}))" />
+                    Active
+                  </label>
+                </div>
+              </div>
+              @if (formError()) {
+                <div class="form-error">{{ formError() }}</div>
+              }
+              <div class="edit-actions">
+                <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+                <button class="btn-save" (click)="saveEdit()" [disabled]="saving()">
+                  {{ saving() ? 'Saving…' : 'Save' }}
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Create modal -->
+@if (showCreate()) {
+  <div class="modal-overlay" (click)="showCreate.set(false)">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Add Collection</h2>
+        <button class="modal-close" (click)="showCreate.set(false)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-field">
+            <label class="form-label">Name *</label>
+            <input class="form-input" type="text" [ngModel]="createForm().name"
+              (ngModelChange)="createForm.update(f=>({...f,name:$event}))" placeholder="e.g. New Arrivals" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Image</label>
+            <div class="image-upload-area">
+              @if (createForm().image) {
+                <div class="image-preview-wrap">
+                  <img [src]="createForm().image" class="image-preview" />
+                  <button type="button" class="remove-image" (click)="createForm.update(f=>({...f,image:''}))">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                </div>
+              } @else {
+                <label class="upload-btn">
+                  <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                    (change)="onImageSelect($event, 'create')" [disabled]="uploadingImage()" />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                  {{ uploadingImage() ? 'Uploading…' : 'Upload Image' }}
+                </label>
+              }
+            </div>
+          </div>
+          <div class="form-field full-width">
+            <label class="form-label">Description</label>
+            <textarea class="form-input" rows="2" [ngModel]="createForm().description"
+              (ngModelChange)="createForm.update(f=>({...f,description:$event}))"
+              placeholder="Optional description"></textarea>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Sort Order</label>
+            <input class="form-input" type="number" [ngModel]="createForm().sortOrder"
+              (ngModelChange)="createForm.update(f=>({...f,sortOrder:+$event}))" min="0" />
+          </div>
+          <div class="form-field toggles">
+            <label class="toggle-label">
+              <input type="checkbox" [ngModel]="createForm().isFeatured"
+                (ngModelChange)="createForm.update(f=>({...f,isFeatured:$event}))" />
+              Featured
+            </label>
+            <label class="toggle-label">
+              <input type="checkbox" [ngModel]="createForm().isActive"
+                (ngModelChange)="createForm.update(f=>({...f,isActive:$event}))" />
+              Active
+            </label>
+          </div>
+        </div>
+      </div>
+      @if (formError()) {
+        <div class="modal-error">{{ formError() }}</div>
+      }
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
+        <button class="btn-save" (click)="saveCreate()" [disabled]="saving() || !createForm().name">
+          {{ saving() ? 'Creating…' : 'Create Collection' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

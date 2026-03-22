@@ -1,0 +1,326 @@
+<div class="checkout-page">
+  <!-- Step indicator -->
+  <div class="step-bar">
+    <div class="step-track">
+      @for (s of steps; track s.key; let i = $index) {
+        <div class="step" [class.active]="currentStep() === s.key" [class.done]="isStepDone(s.key)">
+          <div class="step-circle">
+            @if (isStepDone(s.key)) {
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            } @else {
+              <span>{{ i + 1 }}</span>
+            }
+          </div>
+          <span class="step-label">{{ s.label }}</span>
+        </div>
+        @if (i < steps.length - 1) {
+          <div class="step-line" [class.done]="isStepDone(s.key)"></div>
+        }
+      }
+    </div>
+  </div>
+
+  <div class="checkout-layout">
+    <!-- Main Panel -->
+    <div class="main-panel">
+
+      <!-- ── STEP 1: CART REVIEW ───────────────────────────────────── -->
+      @if (currentStep() === 'cart') {
+        <div class="panel-card">
+          <h2 class="panel-title">Review Your Cart</h2>
+
+          @if (cart.cartItems().length === 0) {
+            <div class="empty-cart">
+              <p>Your cart is empty.</p>
+              <a routerLink="/" class="btn-link">Browse products →</a>
+            </div>
+          } @else {
+            <div class="cart-items">
+              @for (item of cart.cartItems(); track item.productId) {
+                <div class="line-item">
+                  <div class="line-image">
+                    @if (item.image) {
+                      <img [src]="item.image" [alt]="item.name" />
+                    } @else {
+                      <div class="img-ph">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                      </div>
+                    }
+                  </div>
+                  <div class="line-info">
+                    <p class="line-name">{{ item.name }}</p>
+                    <p class="line-price">₹{{ item.basePrice | number:'1.0-0' }} each</p>
+                  </div>
+                  <div class="line-qty">
+                    <button class="qty-btn" (click)="cart.updateQty(item.productId, item.qty - 1)">−</button>
+                    <span>{{ item.qty }}</span>
+                    <button class="qty-btn" (click)="cart.updateQty(item.productId, item.qty + 1)" [disabled]="item.qty >= 10">+</button>
+                  </div>
+                  <p class="line-total">₹{{ item.lineTotal | number:'1.0-0' }}</p>
+                  <button class="remove-btn" (click)="cart.removeItem(item.productId)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
+
+            <div class="panel-footer">
+              <button class="btn-next" (click)="goTo('address')" [disabled]="cart.cartItems().length === 0">
+                Continue to Address
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ── STEP 2: ADDRESS ──────────────────────────────────────── -->
+      @if (currentStep() === 'address') {
+        <div class="panel-card">
+          <h2 class="panel-title">Delivery Address</h2>
+          <form class="address-form" (ngSubmit)="onAddressSubmit()">
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input [(ngModel)]="address.name" name="name" placeholder="Ramesh Kumar" required />
+              </div>
+              <div class="form-group">
+                <label>Phone *</label>
+                <input [(ngModel)]="address.phone" name="phone" placeholder="9876543210" required maxlength="10" />
+              </div>
+            </div>
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label>Pincode *</label>
+                <input [(ngModel)]="address.pincode" name="pincode" placeholder="400001" required maxlength="6" />
+              </div>
+              <div class="form-group">
+                <label>City *</label>
+                <input [(ngModel)]="address.city" name="city" placeholder="Mumbai" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Street Address *</label>
+                <input [(ngModel)]="address.street" name="street" placeholder="Flat 4B, Shanti Nagar, MG Road" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>State *</label>
+                <input [(ngModel)]="address.state" name="state" placeholder="Maharashtra" required />
+              </div>
+            </div>
+            <div class="panel-footer">
+              <button type="button" class="btn-back" (click)="goTo('cart')">← Back</button>
+              <button type="submit" class="btn-next" [disabled]="!isAddressValid()">
+                Review Order
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
+      <!-- ── STEP 3: SUMMARY ─────────────────────────────────────── -->
+      @if (currentStep() === 'summary') {
+        <div class="panel-card">
+          <h2 class="panel-title">Order Summary</h2>
+
+          @if (summaryLoading()) {
+            <div class="loading"><div class="spinner"></div></div>
+          } @else if (summary()) {
+            <!-- Items -->
+            <div class="summary-items">
+              @for (item of summary()!.items; track item.productId) {
+                <div class="summary-line">
+                  <div class="sl-image">
+                    @if (item.image) {
+                      <img [src]="item.image" [alt]="item.name" />
+                    } @else {
+                      <div class="img-ph"></div>
+                    }
+                  </div>
+                  <div class="sl-info">
+                    <p class="sl-name">{{ item.name }}</p>
+                    <p class="sl-meta">Qty: {{ item.qty }}
+                      @if (item.pricing.isOnSale) {
+                        <span class="discount-badge">−{{ item.pricing.discountPercent }}%</span>
+                      }
+                    </p>
+                  </div>
+                  <div class="sl-pricing">
+                    @if (item.pricing.isOnSale) {
+                      <p class="sl-original">₹{{ item.pricing.basePrice * item.qty | number:'1.0-0' }}</p>
+                    }
+                    <p class="sl-total">₹{{ item.pricing.totalPrice | number:'1.2-2' }}</p>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Delivery Address confirmation -->
+            <div class="address-card">
+              <div class="address-card-header">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Delivery to
+              </div>
+              <p class="address-text">
+                <strong>{{ address.name }}</strong> · {{ address.phone }}<br/>
+                {{ address.street }}, {{ address.city }} {{ address.pincode }}, {{ address.state }}
+              </p>
+            </div>
+          }
+
+          <!-- Wallet Payment Option -->
+          @if (auth.isLoggedIn()) {
+            <div class="wallet-option">
+              <div class="wallet-toggle-row">
+                <label class="wallet-toggle">
+                  <input type="checkbox" [(ngModel)]="useWallet" />
+                  <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                  <span class="toggle-label">Use Wallet Balance</span>
+                </label>
+                <span class="wallet-balance">₹{{ walletBalance() | number:'1.2-2' }} available</span>
+              </div>
+              @if (useWallet && walletBalance() > 0 && summary()) {
+                <div class="wallet-deduction">
+                  <span>Wallet deduction</span>
+                  <span class="wallet-deduct-amount">−₹{{ walletDeduction() | number:'1.2-2' }}</span>
+                </div>
+                @if (remainingAmount() > 0) {
+                  <p class="wallet-note">Remaining ₹{{ remainingAmount() | number:'1.2-2' }} will be charged via Razorpay</p>
+                } @else {
+                  <p class="wallet-note wallet-full">Full amount covered by wallet — no card/UPI needed!</p>
+                }
+              }
+            </div>
+          }
+
+          <!-- Payment error -->
+          @if (payment.paymentError() && payment.paymentError() !== 'Payment cancelled') {
+            <div class="stock-alert">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              </svg>
+              <div>
+                <p class="alert-title">{{ payment.paymentError() }}</p>
+              </div>
+            </div>
+          }
+
+          <!-- Stock issues -->
+          @if (stockIssues().length > 0) {
+            <div class="stock-alert">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                <line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <div>
+                <p class="alert-title">Stock unavailable for some items:</p>
+                @for (issue of stockIssues(); track issue.productId) {
+                  <p class="alert-item">{{ issue.name }} — only {{ issue.available }} available (you have {{ issue.requested }})</p>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="panel-footer">
+            <button type="button" class="btn-back" (click)="goTo('address')">← Back</button>
+            <button
+              class="btn-place-order"
+              (click)="placeOrder()"
+              [disabled]="orderPlaced() || stockIssues().length > 0"
+            >
+              @if (orderPlacing()) {
+                <div class="btn-spinner"></div> Reserving…
+              } @else if (orderPlaced()) {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                Order Placed!
+              } @else {
+                Place Order
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              }
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Price Panel -->
+    @if (currentStep() !== 'cart' || cart.cartItems().length > 0) {
+      <aside class="price-panel">
+        <div class="price-card">
+          <h3 class="price-title">Price Details</h3>
+          <div class="price-rows">
+            @if (summary() && currentStep() === 'summary') {
+              <div class="price-row">
+                <span>Subtotal ({{ summary()!.itemCount }} items)</span>
+                <span>₹{{ summary()!.subtotal | number:'1.0-0' }}</span>
+              </div>
+              @if (summary()!.totalDiscount > 0) {
+                <div class="price-row discount">
+                  <span>Discount</span>
+                  <span>−₹{{ summary()!.totalDiscount | number:'1.0-0' }}</span>
+                </div>
+              }
+              @if (summary()!.totalTax > 0) {
+                <div class="price-row">
+                  <span>Taxes (GST)</span>
+                  <span>₹{{ summary()!.totalTax | number:'1.0-0' }}</span>
+                </div>
+              }
+              <div class="price-row shipping">
+                <span>Delivery</span>
+                <span class="free-tag">FREE</span>
+              </div>
+              <div class="price-divider"></div>
+              <div class="price-row total">
+                <span>Total</span>
+                <span>₹{{ summary()!.total | number:'1.2-2' }}</span>
+              </div>
+              @if (summary()!.totalDiscount > 0) {
+                <p class="savings-note">
+                  You save ₹{{ summary()!.totalDiscount | number:'1.0-0' }} on this order 🎉
+                </p>
+              }
+            } @else {
+              <div class="price-row">
+                <span>Subtotal ({{ cart.cartCount() }} items)</span>
+                <span>₹{{ cart.cartSubtotal() | number:'1.0-0' }}</span>
+              </div>
+              <div class="price-row shipping">
+                <span>Delivery</span>
+                <span class="free-tag">FREE</span>
+              </div>
+              <div class="price-divider"></div>
+              <div class="price-row total">
+                <span>Total (approx.)</span>
+                <span>₹{{ cart.cartSubtotal() | number:'1.0-0' }}</span>
+              </div>
+              <p class="tax-note">Final price with discounts & taxes shown in Step 3</p>
+            }
+          </div>
+        </div>
+      </aside>
+    }
+  </div>
+</div>

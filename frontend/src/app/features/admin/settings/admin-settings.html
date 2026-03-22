@@ -1,0 +1,72 @@
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">Settings</h1>
+    <p class="page-sub">Store configuration and feature toggles</p>
+  </div>
+
+  @if (settings()) {
+    <div class="settings-grid">
+      <!-- Store Info -->
+      <div class="settings-card">
+        <h3 class="card-title">Store Information</h3>
+        <div class="form-field"><label>Store Name</label><input [(ngModel)]="settings().storeName" /></div>
+        <div class="form-field"><label>Contact Email</label><input [(ngModel)]="settings().contactEmail" type="email" /></div>
+        <div class="form-field"><label>Contact Phone</label><input [(ngModel)]="settings().contactPhone" /></div>
+      </div>
+
+      <!-- Regional -->
+      <div class="settings-card">
+        <h3 class="card-title">Regional</h3>
+        <div class="form-field"><label>Currency</label><input [(ngModel)]="settings().currency" /></div>
+        <div class="form-field"><label>Timezone</label><input [(ngModel)]="settings().timezone" /></div>
+        <div class="form-field"><label>Default Tax %</label><input type="number" [(ngModel)]="settings().defaultTaxPercent" min="0" max="100" /></div>
+      </div>
+
+      <!-- Feature Toggles -->
+      <div class="settings-card span-2">
+        <h3 class="card-title">Feature Toggles</h3>
+        <div class="toggles-grid">
+          <label class="toggle-item">
+            <input type="checkbox" [(ngModel)]="settings().features.loyaltyEnabled" />
+            <div class="toggle-info">
+              <span class="toggle-name">Loyalty Program</span>
+              <span class="toggle-desc">Points earn/redeem on purchases</span>
+            </div>
+          </label>
+          <label class="toggle-item">
+            <input type="checkbox" [(ngModel)]="settings().features.referralEnabled" />
+            <div class="toggle-info">
+              <span class="toggle-name">Referral System</span>
+              <span class="toggle-desc">Share code, both get rewards</span>
+            </div>
+          </label>
+          <label class="toggle-item">
+            <input type="checkbox" [(ngModel)]="settings().features.reviewAutoApprove" />
+            <div class="toggle-info">
+              <span class="toggle-name">Auto-Approve Reviews</span>
+              <span class="toggle-desc">Verified purchases auto-approved</span>
+            </div>
+          </label>
+          <label class="toggle-item">
+            <input type="checkbox" [(ngModel)]="settings().features.guestCheckout" />
+            <div class="toggle-info">
+              <span class="toggle-name">Guest Checkout</span>
+              <span class="toggle-desc">Allow purchase without login</span>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="save-bar">
+      <button class="btn-save" (click)="save()" [disabled]="saving()">
+        {{ saving() ? 'Saving...' : 'Save Settings' }}
+      </button>
+      @if (saved()) {
+        <span class="saved-msg">Settings saved!</span>
+      }
+    </div>
+  } @else {
+    <div class="loading"><div class="spinner"></div></div>
+  }
+</div>

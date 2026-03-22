@@ -1,0 +1,60 @@
+@use '../../core/design-tokens/tokens' as *;
+
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: $color-bg-primary;
+}
+
+.content {
+  flex: 1;
+  padding: 72px $space-xxl $space-lg;
+}
+
+.content-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 280px;
+}
+
+.footer {
+  background: $color-bg-dark;
+  color: rgba(252, 255, 247, 0.7);
+  padding: $space-xxl $space-xxl $space-lg;
+}
+
+.footer-inner { max-width: 1200px; margin: 0 auto; }
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $space-xxl;
+  margin-bottom: $space-xxl;
+}
+
+@media (max-width: 768px) {
+  .footer-grid { grid-template-columns: repeat(2, 1fr); gap: $space-lg; }
+}
+
+.footer-col {
+  display: flex; flex-direction: column; gap: $space-xs;
+  h4 {
+    font-size: $font-size-sm; font-weight: $font-weight-bold;
+    color: rgba(252, 255, 247, 0.9); text-transform: uppercase;
+    letter-spacing: 0.06em; margin: 0 0 $space-sm;
+  }
+  a {
+    font-size: $font-size-sm; color: rgba(252, 255, 247, 0.6);
+    text-decoration: none; transition: color $transition-fast;
+    &:hover { color: $color-primary; }
+  }
+}
+
+.footer-text { font-size: $font-size-sm; margin: 0; color: rgba(252, 255, 247, 0.5); }
+
+.footer-bottom {
+  border-top: 1px solid rgba(252, 255, 247, 0.1);
+  padding-top: $space-lg; text-align: center;
+  font-size: $font-size-xs; color: rgba(252, 255, 247, 0.4);
+}

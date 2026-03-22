@@ -1,0 +1,51 @@
+<section class="ftc" #ftcSection>
+  <!-- Intro -->
+  <div class="ftc__intro" #intro>
+    <span class="ftc__eyebrow">The Journey</span>
+    <h2 class="ftc__headline">
+      <span class="ftc__headline-line">Every leaf tells</span>
+      <span class="ftc__headline-line ftc__headline-line--accent">a story.</span>
+    </h2>
+    <p class="ftc__subtitle">From high-altitude gardens to your morning ritual — traced, transparent, honest.</p>
+  </div>
+
+  <!-- Journey steps -->
+  <div class="ftc__journey">
+    <!-- Connecting line -->
+    <div class="ftc__line" #ftcLine>
+      <div class="ftc__line-fill" #ftcLineFill></div>
+    </div>
+
+    @for (step of steps; track step.id; let i = $index) {
+      <div class="ftc__step" [class.ftc__step--reverse]="i % 2 !== 0" [attr.data-step]="i" #ftcStep>
+        <!-- Visual side -->
+        <div class="ftc__visual">
+          <div class="ftc__icon-wrap">
+            <div class="ftc__icon-bg"></div>
+            <span class="ftc__step-num">{{ step.num }}</span>
+            <div class="ftc__icon" [innerHTML]="step.icon"></div>
+          </div>
+        </div>
+
+        <!-- Content side -->
+        <div class="ftc__content">
+          <h3 class="ftc__step-title">{{ step.title }}</h3>
+          <p class="ftc__step-desc">{{ step.desc }}</p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Closing statement -->
+  <div class="ftc__close" #ftcClose>
+    <div class="ftc__close-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+        <path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M6 1v3M10 1v3M14 1v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <p class="ftc__close-text">
+      Not just tea. <em>Crafted.</em>
+    </p>
+  </div>
+</section>

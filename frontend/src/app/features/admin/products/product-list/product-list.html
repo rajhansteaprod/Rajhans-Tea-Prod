@@ -1,0 +1,323 @@
+<div class="page">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Products</h1>
+      <p class="page-subtitle">
+        @if (meta()) { {{ meta()!.total }} products in your catalog }
+      </p>
+    </div>
+    <button class="btn-primary-create" (click)="openCreate()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Add Product
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <div class="search-box">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+        <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <input type="text" class="search-input" placeholder="Search products…"
+        [ngModel]="search()" (ngModelChange)="onSearch($event)" />
+    </div>
+    <select class="filter-select" [ngModel]="statusFilter()"
+      (ngModelChange)="statusFilter.set($event); currentPage.set(1)">
+      <option value="all">All statuses</option>
+      <option value="draft">Draft</option>
+      <option value="active">Active</option>
+      <option value="archived">Archived</option>
+    </select>
+    <select class="filter-select" [ngModel]="categoryFilter()"
+      (ngModelChange)="categoryFilter.set($event); currentPage.set(1)">
+      <option value="">All categories</option>
+      @for (cat of categories(); track cat._id) {
+        <option [value]="cat._id">{{ cat.name }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    @if (loading()) {
+      <div class="loading-state"><div class="spinner"></div><span>Loading…</span></div>
+    } @else if (products().length === 0) {
+      <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+        <p>No products found.</p>
+      </div>
+    } @else {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Status</th>
+            <th>Featured</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (product of products(); track product._id) {
+            <tr>
+              <td>
+                <div class="product-cell">
+                  <div class="product-thumb">
+                    @if (product.images[0]) {
+                      <img [src]="product.images[0]" [alt]="product.name" />
+                    } @else {
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                        <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.5"/>
+                        <polyline points="21 15 16 10 5 21" stroke="currentColor" stroke-width="1.5"/>
+                      </svg>
+                    }
+                  </div>
+                  <div>
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-slug">{{ product.slug }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ product.category.name }}</td>
+              <td class="price-cell">₹{{ product.basePrice | number }}</td>
+              <td>
+                @if (product.trackInventory) {
+                  <span class="stock-val" [class.low]="(product.stock ?? 0) <= 5" [class.out]="(product.stock ?? 0) === 0">{{ product.stock ?? 0 }}</span>
+                } @else {
+                  <span class="stock-off">—</span>
+                }
+              </td>
+              <td>
+                <span class="status-badge" [class]="product.status">{{ product.status }}</span>
+              </td>
+              <td>
+                @if (product.isFeatured) {
+                  <span class="featured-dot" title="Featured">★</span>
+                }
+              </td>
+              <td>
+                <div class="action-btns">
+                  <button class="icon-btn preview" (click)="previewProduct(product._id)" title="Preview">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
+                      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </button>
+                  <button class="icon-btn edit" (click)="openEdit(product)" title="Edit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                  <button class="icon-btn delete" (click)="deleteProduct(product._id)" title="Delete">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      @if (meta() && meta()!.totalPages > 1) {
+        <div class="pagination">
+          <button class="page-btn" (click)="currentPage.update(p => p - 1)"
+            [disabled]="currentPage() === 1">‹ Prev</button>
+          <span class="page-info">{{ currentPage() }} / {{ meta()!.totalPages }}</span>
+          <button class="page-btn" (click)="currentPage.update(p => p + 1)"
+            [disabled]="currentPage() === meta()!.totalPages">Next ›</button>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<!-- Product Form Modal (Create / Edit) -->
+@if (showForm()) {
+  <div class="modal-overlay" (click)="closeForm()">
+    <div class="modal-box large" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">{{ editingId() ? 'Edit Product' : 'Add Product' }}</h2>
+        <button class="modal-close" (click)="closeForm()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body scrollable">
+        <div class="form-section">
+          <h3 class="section-title">Basic Info</h3>
+          <div class="form-grid-3">
+            <div class="form-field span-2">
+              <label class="form-label">Name *</label>
+              <input class="form-input" type="text" [ngModel]="form().name"
+                (ngModelChange)="form.update(f=>({...f,name:$event}))" placeholder="Product name" />
+            </div>
+            <div class="form-field">
+              <label class="form-label">Status</label>
+              <select class="form-select" [ngModel]="form().status"
+                (ngModelChange)="form.update(f=>({...f,status:$event}))">
+                <option value="draft">Draft</option>
+                <option value="active">Active</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
+            <div class="form-field span-3">
+              <label class="form-label">Short Description</label>
+              <input class="form-input" type="text" [ngModel]="form().shortDescription"
+                (ngModelChange)="form.update(f=>({...f,shortDescription:$event}))"
+                placeholder="One-line summary (max 300 chars)" maxlength="300" />
+            </div>
+            <div class="form-field">
+              <label class="form-label">Base Price (₹) *</label>
+              <input class="form-input" type="number" min="0" [ngModel]="form().basePrice"
+                (ngModelChange)="form.update(f=>({...f,basePrice:$event}))" placeholder="0" />
+            </div>
+            <div class="form-field">
+              <label class="form-label">Stock Quantity</label>
+              <input class="form-input" type="number" min="0" [ngModel]="form().stock"
+                (ngModelChange)="form.update(f=>({...f,stock:$event}))" placeholder="0" />
+            </div>
+            <div class="form-field">
+              <label class="form-label">Inventory Tracking</label>
+              <label class="toggle-label">
+                <input type="checkbox" [ngModel]="form().trackInventory"
+                  (ngModelChange)="form.update(f=>({...f,trackInventory:$event}))" />
+                Enable
+              </label>
+            </div>
+            <div class="form-field span-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-input" rows="4" [ngModel]="form().description"
+                (ngModelChange)="form.update(f=>({...f,description:$event}))"
+                placeholder="Full product description…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-title">Classification</h3>
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label class="form-label">Category *</label>
+              <select class="form-select" [ngModel]="form().categoryId"
+                (ngModelChange)="form.update(f=>({...f,categoryId:$event}))">
+                <option value="">Select category…</option>
+                @for (cat of categories(); track cat._id) {
+                  <option [value]="cat._id">{{ cat.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Tags <span class="hint">(comma separated)</span></label>
+              <input class="form-input" type="text" [ngModel]="form().tags"
+                (ngModelChange)="form.update(f=>({...f,tags:$event}))"
+                placeholder="cotton, organic, summer" />
+            </div>
+            <div class="form-field span-2">
+              <label class="form-label">Collections</label>
+              <div class="collection-picker">
+                @for (col of collections(); track col._id) {
+                  <label class="collection-chip-label" [class.selected]="form().collectionIds.includes(col._id)">
+                    <input type="checkbox" [checked]="form().collectionIds.includes(col._id)"
+                      (change)="toggleCollection(col._id)" style="display:none" />
+                    {{ col.name }}
+                  </label>
+                }
+              </div>
+            </div>
+            <div class="form-field">
+              <label class="toggle-label">
+                <input type="checkbox" [ngModel]="form().isFeatured"
+                  (ngModelChange)="form.update(f=>({...f,isFeatured:$event}))" />
+                Featured product
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-title">Images</h3>
+          <div class="image-upload-area">
+            <div class="upload-btn-wrap">
+              <label class="upload-btn" [class.loading]="uploadingImage()">
+                @if (uploadingImage()) {
+                  <div class="spinner-sm"></div> Uploading…
+                } @else {
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  Upload Image
+                }
+                <input type="file" accept="image/jpeg,image/png,image/webp" style="display:none"
+                  (change)="onFileSelect($event)" [disabled]="uploadingImage()" />
+              </label>
+              <span class="upload-hint">JPEG, PNG, WebP · Max 5 MB</span>
+            </div>
+            @if (form().images.length > 0) {
+              <div class="image-grid">
+                @for (img of form().images; track img; let i = $index) {
+                  <div class="image-item">
+                    <img [src]="img" alt="Product image" />
+                    <button class="remove-img" (click)="removeImage(i)" title="Remove">×</button>
+                    @if (i === 0) { <span class="primary-badge">Main</span> }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="section-header">
+            <h3 class="section-title">Attributes</h3>
+            <button class="btn-add-attr" (click)="addAttribute()">+ Add</button>
+          </div>
+          @if (form().attributes.length > 0) {
+            <div class="attr-list">
+              @for (attr of form().attributes; track $index; let i = $index) {
+                <div class="attr-row">
+                  <input class="form-input attr-key" type="text" [ngModel]="attr.key"
+                    (ngModelChange)="updateAttrKey(i, $event)" placeholder="Key (e.g. Material)" />
+                  <input class="form-input attr-val" type="text" [ngModel]="attr.value"
+                    (ngModelChange)="updateAttrVal(i, $event)" placeholder="Value (e.g. Cotton)" />
+                  <button class="remove-attr" (click)="removeAttribute(i)">×</button>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-attrs">No attributes yet. Click "+ Add" to add specifications.</p>
+          }
+        </div>
+      </div>
+
+      @if (formError()) {
+        <div class="modal-error">{{ formError() }}</div>
+      }
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeForm()">Cancel</button>
+        <button class="btn-save" (click)="saveForm()"
+          [disabled]="saving() || !form().name || !form().categoryId || form().basePrice === ''">
+          {{ saving() ? (editingId() ? 'Saving…' : 'Creating…') : (editingId() ? 'Save Changes' : 'Create Product') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

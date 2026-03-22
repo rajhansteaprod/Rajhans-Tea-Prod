@@ -2,7 +2,23 @@
   "permissions": {
     "allow": [
       "Bash(docker compose:*)",
-      "Bash(npm audit:*)"
+      "Bash(npm audit:*)",
+      "Bash(wc -l backend/src/modules/*/models/*.ts)",
+      "Bash(while read:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/91626/Desktop/DEVELOPMENT APPLICATIONS/Rajhans Tea/**)",
+      "Bash(done)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost/logo.png)",
+      "Bash(docker ps:*)",
+      "WebFetch(domain:www.meesho.com)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost/)",
+      "Bash(curl -s http://localhost/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost/main.js)",
+      "WebSearch",
+      "Bash(curl -s \"http://localhost/api/v1/catalog/products?priceMin=500&priceMax=600\")",
+      "Bash(curl -s \"http://localhost/api/v1/search/autocomplete?q=Raj&limit=8\")",
+      "Bash(curl -s \"http://localhost/api/v1/search?q=&page=1&limit=20&sort=relevance\")",
+      "Bash(grep -rl \"template: \\\\`\" --include=\"*.ts\")"
     ]
   }
 }

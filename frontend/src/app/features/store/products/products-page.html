@@ -1,0 +1,157 @@
+<div class="products">
+  <!-- Page Header -->
+  <header class="products__header">
+    <div class="products__header-left">
+      <h1 class="products__title">All Products</h1>
+      <span class="products__count">{{ totalProducts() }} products</span>
+    </div>
+    <div class="products__header-right">
+      <!-- Mobile filter toggle -->
+      <button class="products__filter-btn" (click)="filterOpen.set(!filterOpen())">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Filters</span>
+        @if (isFiltered()) { <span class="products__filter-badge">{{ activeFilterCount() }}</span> }
+      </button>
+      <!-- Sort -->
+      <div class="products__sort">
+        <label class="products__sort-label">Sort by</label>
+        <select class="products__sort-select" [ngModel]="sortBy()" (ngModelChange)="onSort($event)">
+          <option value="createdAt:desc">Newest</option>
+          <option value="basePrice:asc">Price: Low to High</option>
+          <option value="basePrice:desc">Price: High to Low</option>
+          <option value="name:asc">Name A–Z</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <div class="products__layout">
+    <!-- Filter Sidebar (Desktop) / Drawer (Mobile) -->
+    <aside class="products__sidebar" [class.open]="filterOpen()">
+      <div class="products__sidebar-head">
+        <h3 class="products__sidebar-title">Filters</h3>
+        @if (isFiltered()) {
+          <button class="products__clear-all" (click)="clearFilters()">Clear all</button>
+        }
+        <button class="products__sidebar-close" (click)="filterOpen.set(false)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <!-- Category filter -->
+      <div class="filter-group">
+        <h4 class="filter-group__title">Category</h4>
+        <button class="filter-option" [class.active]="!selectedCategory()" (click)="selectCategory(null)">
+          <span>All Categories</span>
+        </button>
+        @for (cat of categories(); track cat._id) {
+          <button class="filter-option" [class.active]="selectedCategory() === cat._id" (click)="selectCategory(cat._id)">
+            <span>{{ cat.name }}</span>
+          </button>
+        }
+      </div>
+
+      <!-- Price filter -->
+      <div class="filter-group">
+        <h4 class="filter-group__title">Price Range</h4>
+        <div class="filter-price">
+          <input type="number" class="filter-price__input" placeholder="Min" [(ngModel)]="priceMin" min="0" />
+          <span class="filter-price__sep">—</span>
+          <input type="number" class="filter-price__input" placeholder="Max" [(ngModel)]="priceMax" min="0" />
+          <button class="filter-price__apply" (click)="applyPriceFilter()">Go</button>
+        </div>
+      </div>
+
+      <!-- Tags filter -->
+      @if (allTags().length > 0) {
+        <div class="filter-group">
+          <h4 class="filter-group__title">Tags</h4>
+          <div class="filter-tags">
+            @for (tag of allTags(); track tag) {
+              <button class="filter-tag" [class.active]="selectedTags().includes(tag)" (click)="toggleTag(tag)">{{ tag }}</button>
+            }
+          </div>
+        </div>
+      }
+    </aside>
+
+    <!-- Mobile backdrop -->
+    @if (filterOpen()) {
+      <div class="products__backdrop" (click)="filterOpen.set(false)"></div>
+    }
+
+    <!-- Product Grid -->
+    <main class="products__main">
+      @if (loading()) {
+        <div class="products__loading">
+          <div class="products__spinner"></div>
+        </div>
+      } @else if (products().length === 0) {
+        <div class="products__empty">
+          <div class="products__empty-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <h2 class="products__empty-title">No products found</h2>
+          <p class="products__empty-sub">Try adjusting your filters or browse all products.</p>
+          @if (isFiltered()) {
+            <button class="products__empty-btn" (click)="clearFilters()">Clear Filters</button>
+          }
+        </div>
+      } @else {
+        <div class="products__grid">
+          @for (p of products(); track p._id; let i = $index) {
+            <div class="card" [style.--i]="i">
+              <!-- Image -->
+              <a [routerLink]="'/product/' + p.slug" class="card__img-wrap">
+                @if (p.images?.[0]) {
+                  <img [src]="p.images[0]" [alt]="p.name" loading="lazy" class="card__img" />
+                } @else {
+                  <div class="card__img-placeholder">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="1.5"/></svg>
+                  </div>
+                }
+                <!-- Quick actions overlay -->
+                <div class="card__actions">
+                  <button class="card__action" (click)="addToCart($event, p._id)" aria-label="Add to cart">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="1.5"/><path d="M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="1.5"/></svg>
+                  </button>
+                  <button class="card__action" [class.card__action--active]="isWishlisted(p._id)" (click)="toggleWishlist($event, p._id)" aria-label="Wishlist">
+                    <svg width="18" height="18" viewBox="0 0 24 24" [attr.fill]="isWishlisted(p._id) ? 'currentColor' : 'none'"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                  </button>
+                </div>
+                @if (p.isFeatured) {
+                  <span class="card__badge">Featured</span>
+                }
+              </a>
+
+              <!-- Info -->
+              <div class="card__body">
+                <span class="card__category">{{ p.category?.name || 'Tea' }}</span>
+                <a [routerLink]="'/product/' + p.slug" class="card__name">{{ p.name }}</a>
+                <div class="card__bottom">
+                  <span class="card__price">&#8377;{{ p.basePrice }}</span>
+                  <a [routerLink]="'/product/' + p.slug" class="card__cta">View</a>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages() > 1) {
+          <div class="products__pagination">
+            <button class="page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            @for (p of pageNumbers(); track p) {
+              <button class="page-btn" [class.active]="p === currentPage()" (click)="goToPage(p)">{{ p }}</button>
+            }
+            <button class="page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        }
+      }
+    </main>
+  </div>
+</div>

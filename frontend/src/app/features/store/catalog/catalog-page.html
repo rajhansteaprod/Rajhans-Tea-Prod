@@ -1,0 +1,26 @@
+<div class="catalog-page">
+  <nav class="breadcrumbs"><a routerLink="/">Home</a> / <span>{{ categoryName || 'All Products' }}</span></nav>
+  <h1 class="page-title">{{ categoryName || 'All Products' }}</h1>
+  <p class="result-count">{{ store.resultCount() }} products</p>
+
+  @if (store.loading()) {
+    <div class="loading"><div class="spinner"></div></div>
+  } @else if (!store.hasResults()) {
+    <div class="empty">No products in this category.</div>
+  } @else {
+    <div class="product-grid">
+      @for (p of store.results(); track p._id) {
+        <a [routerLink]="'/product/' + p.slug" class="product-card">
+          <div class="card-image">
+            @if (p.images?.[0]) { <img [src]="p.images[0]" [alt]="p.name" loading="lazy" /> }
+            @else { <div class="img-ph"></div> }
+          </div>
+          <div class="card-body">
+            <p class="card-name">{{ p.name }}</p>
+            <p class="card-price">₹{{ p.basePrice | number:'1.0-0' }}</p>
+          </div>
+        </a>
+      }
+    </div>
+  }
+</div>

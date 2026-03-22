@@ -12,6 +12,8 @@ interface ProductListOptions {
   collectionId?: string;
   status?: ProductStatus | ProductStatus[];
   isFeatured?: boolean;
+  priceMin?: number;
+  priceMax?: number;
 }
 
 export class ProductRepository extends BaseRepository<IProductDoc> {
@@ -75,6 +77,12 @@ export class ProductRepository extends BaseRepository<IProductDoc> {
     }
 
     if (isFeatured !== undefined) filter.isFeatured = isFeatured;
+
+    if (options.priceMin !== undefined || options.priceMax !== undefined) {
+      filter.basePrice = {};
+      if (options.priceMin !== undefined) (filter.basePrice as Record<string, number>).$gte = options.priceMin;
+      if (options.priceMax !== undefined) (filter.basePrice as Record<string, number>).$lte = options.priceMax;
+    }
 
     const [products, total] = await Promise.all([
       this.model

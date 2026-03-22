@@ -1,0 +1,502 @@
+@use '../../../../core/design-tokens/tokens' as *;
+@use '../../../../core/design-tokens/mixins' as *;
+
+.reviews {
+  margin-top: $space-xxl;
+  border-top: 1px solid $color-border-light;
+  padding-top: $space-xl;
+}
+
+// ═══ Tabs ═══
+.reviews__tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid $color-border-light;
+  margin-bottom: $space-xl;
+}
+
+.reviews__tab {
+  padding: $space-sm $space-xl;
+  border: none;
+  background: none;
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-tertiary;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all $transition-fast;
+
+  &:hover { color: $color-text-primary; }
+  &.active {
+    color: $color-primary;
+    border-bottom-color: $color-primary;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+// ═══ Rating Summary ═══
+.reviews__summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: $space-xxl;
+  margin-bottom: $space-xl;
+  padding: $space-xl;
+  background: $color-bg-secondary;
+  border-radius: $radius-lg;
+
+  @include respond-to(sm) {
+    grid-template-columns: 1fr;
+    gap: $space-lg;
+  }
+}
+
+.reviews__avg {
+  text-align: center;
+  @include flex-column;
+  align-items: center;
+  gap: $space-xs;
+}
+
+.reviews__avg-num {
+  font-family: $font-family-display;
+  font-size: $font-size-display;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  line-height: 1;
+}
+
+.reviews__avg-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.reviews__star, .reviews__star-sm {
+  fill: none;
+  color: $color-border;
+  &.filled { fill: $color-primary; color: $color-primary; }
+}
+
+.reviews__avg-count {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.reviews__bars {
+  @include flex-column;
+  gap: $space-xs;
+  justify-content: center;
+}
+
+.reviews__bar-row {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+}
+
+.reviews__bar-label {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $color-text-secondary;
+  width: 14px;
+  text-align: right;
+}
+
+.reviews__bar {
+  flex: 1;
+  height: 8px;
+  background: $color-border-light;
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.reviews__bar-fill {
+  height: 100%;
+  background: $color-primary;
+  border-radius: $radius-full;
+  transition: width $transition-normal;
+}
+
+.reviews__bar-count {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  width: 24px;
+}
+
+// ═══ Write Review Button ═══
+.reviews__write-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: $space-sm $space-xl;
+  border: 1px solid $color-primary;
+  border-radius: $radius-md;
+  background: transparent;
+  color: $color-primary;
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all $transition-fast;
+  margin-bottom: $space-xl;
+
+  &:hover {
+    background: $color-primary;
+    color: $color-text-inverse;
+  }
+}
+
+// ═══ Review Form ═══
+.reviews__form {
+  padding: $space-xl;
+  background: $color-bg-secondary;
+  border-radius: $radius-lg;
+  margin-bottom: $space-xl;
+  @include flex-column;
+  gap: $space-lg;
+}
+
+.reviews__form-group {
+  @include flex-column;
+  gap: $space-xs;
+}
+
+.reviews__form-label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.reviews__form-stars {
+  display: flex;
+  gap: $space-xxs;
+}
+
+.reviews__form-star {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: $color-border;
+  padding: 0;
+  transition: color $transition-fast;
+
+  &.filled { fill: $color-primary; color: $color-primary; }
+  &:hover { color: $color-primary; }
+
+  svg { fill: currentColor; }
+}
+
+.reviews__form-input {
+  padding: $space-sm $space-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  outline: none;
+
+  &:focus { border-color: $color-primary; box-shadow: $shadow-glow; }
+}
+
+.reviews__form-textarea {
+  padding: $space-sm $space-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  resize: vertical;
+  outline: none;
+
+  &:focus { border-color: $color-primary; box-shadow: $shadow-glow; }
+}
+
+.reviews__submit-btn {
+  align-self: flex-start;
+  padding: $space-sm $space-xxl;
+  background: $color-primary;
+  color: $color-text-inverse;
+  border: none;
+  border-radius: $radius-md;
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover { background: $color-primary-hover; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// ═══ Review List ═══
+.reviews__list {
+  @include flex-column;
+  gap: 0;
+}
+
+.reviews__item {
+  padding: $space-lg 0;
+  border-bottom: 1px solid $color-border-light;
+
+  &:last-child { border-bottom: none; }
+}
+
+.reviews__item-header {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  margin-bottom: $space-xs;
+  flex-wrap: wrap;
+}
+
+.reviews__item-stars { display: flex; gap: 1px; }
+
+.reviews__verified {
+  font-size: 10px;
+  font-weight: $font-weight-semibold;
+  color: $color-secondary;
+  background: rgba($color-secondary, 0.08);
+  padding: 1px $space-xs;
+  border-radius: $radius-sm;
+}
+
+.reviews__date {
+  font-size: $font-size-xs;
+  color: $color-text-disabled;
+  margin-left: auto;
+}
+
+.reviews__item-title {
+  font-family: $font-family;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin: 0 0 $space-xxs;
+}
+
+.reviews__item-body {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-relaxed;
+  margin: 0;
+}
+
+.reviews__item-footer {
+  margin-top: $space-sm;
+}
+
+.reviews__helpful-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xxs;
+  border: none;
+  background: none;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  cursor: pointer;
+  transition: color $transition-fast;
+
+  &:hover { color: $color-primary; }
+}
+
+.reviews__reply {
+  margin-top: $space-sm;
+  padding: $space-sm $space-md;
+  background: $color-bg-warm;
+  border-radius: $radius-md;
+  border-left: 3px solid $color-primary;
+}
+
+.reviews__reply-label {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  display: block;
+  margin-bottom: $space-xxs;
+}
+
+.reviews__reply-body {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin: 0;
+}
+
+// ═══ Loading / Empty ═══
+.reviews__loading {
+  @include flex-center;
+  padding: $space-xxl;
+}
+
+.reviews__spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid $color-border-light;
+  border-top-color: $color-primary;
+  border-radius: $radius-full;
+  animation: reviewSpin 0.7s linear infinite;
+}
+
+@keyframes reviewSpin { to { transform: rotate(360deg); } }
+
+.reviews__empty {
+  text-align: center;
+  padding: $space-xxl;
+  color: $color-text-tertiary;
+  font-size: $font-size-sm;
+}
+
+// ═══ Q&A ═══
+.qa__ask {
+  display: flex;
+  gap: $space-sm;
+  margin-bottom: $space-xl;
+}
+
+.qa__ask-input {
+  flex: 1;
+  padding: $space-sm $space-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  outline: none;
+
+  &:focus { border-color: $color-primary; }
+}
+
+.qa__ask-btn {
+  padding: $space-sm $space-xl;
+  background: $color-primary;
+  color: $color-text-inverse;
+  border: none;
+  border-radius: $radius-md;
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+
+  &:hover { background: $color-primary-hover; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.qa__list {
+  @include flex-column;
+  gap: 0;
+}
+
+.qa__item {
+  padding: $space-lg 0;
+  border-bottom: 1px solid $color-border-light;
+
+  &:last-child { border-bottom: none; }
+}
+
+.qa__question, .qa__answer {
+  display: flex;
+  gap: $space-md;
+}
+
+.qa__answer {
+  margin-top: $space-md;
+  padding-left: $space-xl;
+}
+
+.qa__q-badge, .qa__a-badge {
+  width: 28px;
+  height: 28px;
+  @include flex-center;
+  flex-shrink: 0;
+  border-radius: $radius-full;
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+}
+
+.qa__q-badge {
+  background: $color-primary-light;
+  color: $color-primary;
+}
+
+.qa__a-badge {
+  background: $color-bg-secondary;
+  color: $color-text-tertiary;
+
+  &.admin {
+    background: $color-secondary;
+    color: $color-text-inverse;
+  }
+}
+
+.qa__q-text, .qa__a-text {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  line-height: $line-height-relaxed;
+  margin: 0;
+}
+
+.qa__q-date {
+  font-size: $font-size-xs;
+  color: $color-text-disabled;
+}
+
+.qa__a-admin {
+  font-size: 10px;
+  font-weight: $font-weight-semibold;
+  color: $color-secondary;
+}
+
+.qa__reply-btn {
+  margin-top: $space-sm;
+  margin-left: $space-xl + 28px;
+  border: none;
+  background: none;
+  font-size: $font-size-xs;
+  color: $color-primary;
+  cursor: pointer;
+
+  &:hover { text-decoration: underline; }
+}
+
+.qa__answer-form {
+  margin-top: $space-sm;
+  padding-left: $space-xl + 28px;
+  @include flex-column;
+  gap: $space-sm;
+}
+
+.qa__answer-input {
+  padding: $space-sm $space-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  outline: none;
+
+  &:focus { border-color: $color-primary; }
+}
+
+.qa__answer-actions {
+  display: flex;
+  gap: $space-sm;
+}
+
+.qa__answer-submit {
+  padding: $space-xs $space-lg;
+  background: $color-primary;
+  color: $color-text-inverse;
+  border: none;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.5; }
+}
+
+.qa__answer-cancel {
+  padding: $space-xs $space-lg;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  background: transparent;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  cursor: pointer;
+}

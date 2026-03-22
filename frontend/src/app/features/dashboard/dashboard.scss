@@ -1,0 +1,251 @@
+@use '../../core/design-tokens/tokens' as *;
+@use '../../core/design-tokens/mixins' as *;
+
+.dashboard {
+  padding: $space-xl 0;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.animate-in {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: fadeUp 0.5s ease forwards;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// === Welcome ===
+.welcome-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $space-xl;
+  gap: $space-lg;
+}
+
+.greeting-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $space-sm;
+}
+
+.welcome-title {
+  font-family: $font-family-display;
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  letter-spacing: $letter-spacing-tight;
+  margin-bottom: $space-xs;
+
+  @include respond-to(sm) {
+    font-size: $font-size-xl;
+  }
+}
+
+.welcome-subtitle {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+.welcome-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-xs;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: $radius-xl;
+  background: $color-bg-secondary;
+  color: $color-text-secondary;
+  @include flex-center;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  border: 2px solid $color-border-light;
+
+  &.admin {
+    background: $color-primary-light;
+    color: $color-primary;
+    border-color: rgba(204, 88, 3, 0.2);
+  }
+}
+
+.role-badge {
+  font-size: 10px;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+  color: $color-primary;
+  background: $color-primary-light;
+  padding: 2px $space-xs;
+  border-radius: $radius-full;
+}
+
+// === Stats ===
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $space-md;
+  margin-bottom: $space-xl;
+}
+
+.stat-card {
+  @include card;
+  padding: $space-lg;
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  transition: all $transition-normal;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: $radius-lg;
+  @include flex-center;
+  flex-shrink: 0;
+
+  ::ng-deep svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  ::ng-deep path, ::ng-deep circle, ::ng-deep rect {
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  letter-spacing: $letter-spacing-tight;
+}
+
+.stat-label {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+// === Sections ===
+.section {
+  margin-bottom: $space-xl;
+}
+
+.section-title {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $space-md;
+}
+
+// === Actions ===
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $space-sm;
+}
+
+.action-card {
+  @include card;
+  padding: $space-md $space-lg;
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  border: none;
+  cursor: pointer;
+  font-family: $font-family;
+  transition: all $transition-normal;
+  text-align: left;
+  width: 100%;
+
+  &:hover {
+    background: $color-bg-secondary;
+    transform: translateX(4px);
+
+    .action-arrow {
+      transform: translateX(4px);
+      color: $color-primary;
+    }
+  }
+}
+
+.action-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.action-label {
+  flex: 1;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.action-arrow {
+  color: $color-text-disabled;
+  transition: all $transition-fast;
+  flex-shrink: 0;
+}
+
+// === Info Card ===
+.info-card {
+  @include card;
+  padding: 0;
+  overflow: hidden;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $space-md $space-lg;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid $color-border-light;
+  }
+}
+
+.info-label {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.info-value {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+
+  &.capitalize {
+    text-transform: capitalize;
+  }
+
+  &.mono {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+  }
+}

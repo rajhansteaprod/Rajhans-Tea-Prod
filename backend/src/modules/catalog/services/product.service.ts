@@ -17,6 +17,8 @@ interface ProductListQuery {
   collectionId?: string;
   status?: ProductStatus | 'all';
   isFeatured?: boolean;
+  priceMin?: number;
+  priceMax?: number;
 }
 
 export class ProductService {
@@ -45,6 +47,8 @@ export class ProductService {
       collectionId: query.collectionId,
       status,
       isFeatured: query.isFeatured,
+      priceMin: query.priceMin,
+      priceMax: query.priceMax,
     });
 
     return {
@@ -63,6 +67,8 @@ export class ProductService {
       collectionId: query.collectionId,
       status: 'active' as ProductStatus,
       isFeatured: query.isFeatured,
+      priceMin: query.priceMin,
+      priceMax: query.priceMax,
     });
 
     return {

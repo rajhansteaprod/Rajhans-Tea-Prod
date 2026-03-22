@@ -1,0 +1,19 @@
+<div class="page">
+  <h1 class="page-title">Collections</h1>
+  <p class="page-sub">Explore our curated collections</p>
+
+  <div class="collections-grid">
+    @for (c of collections(); track c._id) {
+      <a [routerLink]="'/collections/' + c.slug" class="collection-card">
+        <div class="card-image">
+          @if (c.image) { <img [src]="c.image" [alt]="c.name" loading="lazy" /> }
+          @else { <div class="img-ph"><span>{{ c.name[0] }}</span></div> }
+        </div>
+        <div class="card-body">
+          <h3 class="card-name">{{ c.name }}</h3>
+          @if (c.description) { <p class="card-desc">{{ c.description }}</p> }
+        </div>
+      </a>
+    }
+  </div>
+</div>
