@@ -93,8 +93,16 @@ import {
             <!-- LEFT SIDEBAR: Categories -->
             <aside class="mega-sidebar">
               <h3 class="mega-heading">Categories</h3>
+              <!-- All (default) -->
+              <button class="mega-cat" [class.mega-cat--active]="!activeCatId()" (mouseenter)="onCatHover(null)" [style.--i]="0">
+                <div class="mega-cat-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+                </div>
+                <span class="mega-cat-name">All Products</span>
+                <svg class="mega-cat-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
               @for (cat of categories(); track cat._id; let i = $index) {
-                <a [routerLink]="'/catalog/' + cat.slug" class="mega-cat" [style.--i]="i" (click)="closeMega()">
+                <button class="mega-cat" [class.mega-cat--active]="activeCatId() === cat._id" (mouseenter)="onCatHover(cat._id)" [style.--i]="i + 1">
                   @if (cat.image) {
                     <img [src]="cat.image" class="mega-cat-thumb" />
                   } @else {
@@ -104,29 +112,33 @@ import {
                   }
                   <span class="mega-cat-name">{{ cat.name }}</span>
                   <svg class="mega-cat-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </a>
+                </button>
               }
               <div class="mega-sidebar-divider"></div>
-              <a routerLink="/collections" class="mega-cat mega-cat--browse" (click)="closeMega()" [style.--i]="categories().length">
+              <a routerLink="/collections" class="mega-cat mega-cat--browse" (click)="closeMega()" [style.--i]="categories().length + 2">
                 <div class="mega-cat-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
                 </div>
-                <span class="mega-cat-name">All Collections</span>
-                <svg class="mega-cat-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </a>
-              <a routerLink="/search" class="mega-cat mega-cat--browse" (click)="closeMega()" [style.--i]="categories().length + 1">
-                <div class="mega-cat-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.5"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                </div>
-                <span class="mega-cat-name">Browse All</span>
+                <span class="mega-cat-name">Collections</span>
                 <svg class="mega-cat-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </a>
             </aside>
 
-            <!-- RIGHT: Featured Products (big cards) -->
+            <!-- RIGHT: Products -->
             <section class="mega-main">
-              <h3 class="mega-heading">Featured Products</h3>
-              <div class="mega-products">
+              <h3 class="mega-heading">{{ activeCatId() ? 'Products' : 'All Products' }}</h3>
+              @if (megaLoading()) {
+                <div class="mega-loading">
+                  <div class="mega-spinner"></div>
+                </div>
+              }
+              @if (!megaLoading() && featuredProducts().length === 0) {
+                <div class="mega-empty">
+                  <p>No products found in this category.</p>
+                  <a routerLink="/search" class="btn-buy" (click)="closeMega()">Browse All</a>
+                </div>
+              }
+              <div class="mega-products" [class.loading]="megaLoading()">
                 @for (p of featuredProducts(); track p._id; let i = $index) {
                   <div class="mega-card" [style.--i]="i">
                     <a [routerLink]="'/product/' + p.slug" class="mega-card-image" (click)="closeMega()">
@@ -342,19 +354,22 @@ import {
     }
 
     .mega-cat {
-      display: flex; align-items: center; gap: $space-sm;
-      padding: 10px $space-sm; border-radius: $radius-md;
-      text-decoration: none; color: $color-text-primary;
-      font-size: 14px; font-weight: 500;
+      display: flex; align-items: center; gap: $space-sm; width: 100%;
+      padding: 10px $space-sm; border-radius: $radius-md; border: none;
+      text-decoration: none; color: $color-text-primary; background: none;
+      font-size: 14px; font-weight: 500; cursor: pointer;
+      font-family: $font-family; text-align: left;
       transition: all 0.3s $ease-expo-out;
       animation: catSlideIn 0.35s $ease-expo-out both;
       animation-delay: calc(var(--i) * 0.04s);
 
       .mega-cat-arrow { opacity: 0; transform: translateX(-6px); transition: all 0.25s $ease-expo-out; margin-left: auto; }
-      &:hover {
+      &:hover, &.mega-cat--active {
         background: rgba(204,88,3,0.06); color: $color-primary; padding-left: 14px;
         .mega-cat-arrow { opacity: 1; transform: translateX(0); color: $color-primary; }
+        .mega-cat-icon { background: rgba(204,88,3,0.15); }
       }
+      &.mega-cat--active { font-weight: 600; }
     }
     @keyframes catSlideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
 
@@ -508,6 +523,19 @@ import {
     .result-name { font-size: 14px; font-weight: 500; }
     .result-type { font-size: 10px; color: $color-text-tertiary; text-transform: uppercase; letter-spacing: 0.06em; }
 
+    .mega-loading { @include flex-center; padding: $space-xxxl; }
+    .mega-spinner {
+      width: 28px; height: 28px; border: 2px solid $color-border-light;
+      border-top-color: $color-primary; border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .mega-empty {
+      @include flex-center; flex-direction: column; gap: $space-md;
+      padding: $space-xxxl; color: $color-text-tertiary; font-size: 14px;
+    }
+    .mega-products.loading { opacity: 0.3; pointer-events: none; }
+
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   `],
 })
@@ -526,7 +554,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
   readonly mobileOpen = signal(false);
   readonly featuredProducts = signal<Product[]>([]);
   readonly categories = signal<Category[]>([]);
+  readonly activeCatId = signal<string | null>(null);
+  readonly megaLoading = signal(false);
 
+  private allProducts: Product[] = [];
   searchQuery = '';
   private lastY = 0;
 
@@ -549,8 +580,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.catalog.getProductsPublic({ isFeatured: true, limit: 4, sortOrder: 'desc' }).subscribe({
-      next: (res) => this.featuredProducts.set(res.data),
+    // Load all products (no isFeatured filter — show everything)
+    this.catalog.getProductsPublic({ limit: 8, sortOrder: 'desc' }).subscribe({
+      next: (res) => {
+        this.allProducts = res.data;
+        this.featuredProducts.set(res.data);
+      },
     });
     this.catalog.getCategoriesPublic().subscribe({
       next: (res) => this.categories.set(res.data),
@@ -565,8 +600,29 @@ export class HeaderComponent implements OnInit, OnDestroy {
     if (window.innerWidth > 768) this.megaOpen.set(true);
   }
 
+  onCatHover(catId: string | null): void {
+    this.activeCatId.set(catId);
+    if (!catId) {
+      // "All" — show all products
+      this.featuredProducts.set(this.allProducts);
+    } else {
+      // Filter by category from cached products first
+      const filtered = this.allProducts.filter((p) => p.category?._id === catId);
+      if (filtered.length > 0) {
+        this.featuredProducts.set(filtered);
+      } else {
+        // Fetch from API if no cached results
+        this.megaLoading.set(true);
+        this.catalog.getProductsPublic({ categoryId: catId, limit: 8 }).subscribe({
+          next: (res) => { this.featuredProducts.set(res.data); this.megaLoading.set(false); },
+          error: () => this.megaLoading.set(false),
+        });
+      }
+    }
+  }
+
   toggleMega(): void { this.megaOpen.set(!this.megaOpen()); this.lockScroll(this.megaOpen()); }
-  closeMega(): void { this.megaOpen.set(false); this.lockScroll(false); }
+  closeMega(): void { this.megaOpen.set(false); this.lockScroll(false); this.activeCatId.set(null); }
 
   addToCart(productId: string, event: Event): void {
     event.stopPropagation();
