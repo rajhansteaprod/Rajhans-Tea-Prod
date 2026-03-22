@@ -71,9 +71,16 @@ export class NotificationService {
         const html = renderTemplate(template.channels.email.htmlBody, vars);
         // Email requires an email address — for now use phone@placeholder since we don't store email
         // In production, add email field to User model
-        const result = await emailProvider.send({ to: `${user.phone}@user.rnd.com`, subject, body, html });
+        const result = await emailProvider.send({
+          to: `${user.phone}@user.rnd.com`,
+          subject,
+          body,
+          html,
+        });
         if (result.success) sentChannels.push('email');
-      } catch { /* silent */ }
+      } catch {
+        /* silent */
+      }
     }
 
     // SMS (skip during quiet hours)
@@ -83,7 +90,9 @@ export class NotificationService {
         const smsBody = renderTemplate(template.channels.sms.body, vars);
         const result = await smsProvider.send({ to: user.phone, body: smsBody });
         if (result.success) sentChannels.push('sms');
-      } catch { /* silent */ }
+      } catch {
+        /* silent */
+      }
     }
 
     // Push (skip during quiet hours)
@@ -97,7 +106,9 @@ export class NotificationService {
           link: (metadata.link as string) || undefined,
         });
         if (result.success) sentChannels.push('push');
-      } catch { /* silent */ }
+      } catch {
+        /* silent */
+      }
     }
 
     // Update notification with sent channels
@@ -123,20 +134,29 @@ export class NotificationService {
 
   // ─── Bulk dispatch (announcements) ────────────────────────────────────────
 
-  async dispatchBulk(type: NotificationType, userIds: string[], metadata: Record<string, unknown> = {}): Promise<number> {
+  async dispatchBulk(
+    type: NotificationType,
+    userIds: string[],
+    metadata: Record<string, unknown> = {},
+  ): Promise<number> {
     let sent = 0;
     for (const userId of userIds) {
       try {
         await this.dispatch(type, userId, metadata);
         sent++;
-      } catch { /* continue */ }
+      } catch {
+        /* continue */
+      }
     }
     return sent;
   }
 
   // ─── Inbox ────────────────────────────────────────────────────────────────
 
-  async getInbox(userId: string, query: { page?: number; limit?: number; unreadOnly?: boolean } = {}) {
+  async getInbox(
+    userId: string,
+    query: { page?: number; limit?: number; unreadOnly?: boolean } = {},
+  ) {
     return this.notifRepo.findByUser(userId, query);
   }
 

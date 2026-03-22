@@ -27,7 +27,13 @@ const stockMovementSchema = new Schema<IStockMovementDoc>(
     warehouseId: { type: Schema.Types.ObjectId, ref: 'Warehouse', required: true },
     type: {
       type: String,
-      enum: ['purchase_deduction', 'manual_adjustment', 'return_restock', 'initial_stock', 'damage_writeoff'],
+      enum: [
+        'purchase_deduction',
+        'manual_adjustment',
+        'return_restock',
+        'initial_stock',
+        'damage_writeoff',
+      ],
       required: true,
     },
     qty: { type: Number, required: true },
@@ -45,4 +51,7 @@ stockMovementSchema.index({ productId: 1, createdAt: -1 });
 stockMovementSchema.index({ warehouseId: 1 });
 stockMovementSchema.index({ referenceId: 1 });
 
-export const StockMovement = mongoose.model<IStockMovementDoc>('StockMovement', stockMovementSchema);
+export const StockMovement = mongoose.model<IStockMovementDoc>(
+  'StockMovement',
+  stockMovementSchema,
+);

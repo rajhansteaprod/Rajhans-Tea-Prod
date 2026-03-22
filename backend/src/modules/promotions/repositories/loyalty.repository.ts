@@ -16,7 +16,11 @@ export class LoyaltyRepository {
   }
 
   async updateSettings(data: Partial<ILoyaltySettingsDoc>): Promise<ILoyaltySettingsDoc> {
-    return LoyaltySettings.findOneAndUpdate({}, { $set: data }, { new: true, upsert: true }).exec() as Promise<ILoyaltySettingsDoc>;
+    return LoyaltySettings.findOneAndUpdate(
+      {},
+      { $set: data },
+      { new: true, upsert: true },
+    ).exec() as Promise<ILoyaltySettingsDoc>;
   }
 
   // ─── Account ──────────────────────────────────────────────────────────────
@@ -58,17 +62,19 @@ export class LoyaltyRepository {
       ).exec();
 
       const [txn] = await LoyaltyTransaction.create(
-        [{
-          userId: new Types.ObjectId(userId),
-          type: 'earn',
-          points,
-          balanceAfter: account!.balance,
-          source,
-          referenceId,
-          description,
-          expiresAt,
-          idempotencyKey,
-        }],
+        [
+          {
+            userId: new Types.ObjectId(userId),
+            type: 'earn',
+            points,
+            balanceAfter: account!.balance,
+            source,
+            referenceId,
+            description,
+            expiresAt,
+            idempotencyKey,
+          },
+        ],
         { session },
       );
 
@@ -104,16 +110,18 @@ export class LoyaltyRepository {
       if (!account) throw new Error('Insufficient loyalty points');
 
       const [txn] = await LoyaltyTransaction.create(
-        [{
-          userId: new Types.ObjectId(userId),
-          type: 'redeem',
-          points: -points,
-          balanceAfter: account.balance,
-          source: 'redemption',
-          referenceId,
-          description,
-          idempotencyKey,
-        }],
+        [
+          {
+            userId: new Types.ObjectId(userId),
+            type: 'redeem',
+            points: -points,
+            balanceAfter: account.balance,
+            source: 'redemption',
+            referenceId,
+            description,
+            idempotencyKey,
+          },
+        ],
         { session },
       );
 
@@ -127,11 +135,7 @@ export class LoyaltyRepository {
     }
   }
 
-  async revertRedeem(
-    userId: string,
-    points: number,
-    idempotencyKey: string,
-  ): Promise<void> {
+  async revertRedeem(userId: string, points: number, idempotencyKey: string): Promise<void> {
     const existing = await LoyaltyTransaction.findOne({ idempotencyKey }).exec();
     if (existing) return;
 
@@ -144,7 +148,7 @@ export class LoyaltyRepository {
       userId: new Types.ObjectId(userId),
       type: 'admin_adjust',
       points,
-      balanceAfter: (await this.getBalance(userId)),
+      balanceAfter: await this.getBalance(userId),
       source: 'admin',
       referenceId: null,
       description: 'Reverted redemption (payment failed)',

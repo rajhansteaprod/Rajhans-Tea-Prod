@@ -58,7 +58,10 @@ export class FeatureFlagService {
 
       return true;
     } catch (err: any) {
-      logger.warn({ flagSlug, err: err.message }, 'Feature flag evaluation failed — defaulting to false');
+      logger.warn(
+        { flagSlug, err: err.message },
+        'Feature flag evaluation failed — defaulting to false',
+      );
       return false;
     }
   }
@@ -67,7 +70,9 @@ export class FeatureFlagService {
    * Evaluate all flags for a user (returns map of slug → boolean).
    * Useful for frontend to batch-fetch all flags on login.
    */
-  async evaluateAll(context: { userId?: string; role?: string } = {}): Promise<Record<string, boolean>> {
+  async evaluateAll(
+    context: { userId?: string; role?: string } = {},
+  ): Promise<Record<string, boolean>> {
     const flags = await this.listAll();
     const result: Record<string, boolean> = {};
     for (const flag of flags) {
@@ -86,7 +91,11 @@ export class FeatureFlagService {
     return flag as IFeatureFlagDoc;
   }
 
-  async update(id: string, data: Partial<IFeatureFlagDoc>, adminUserId: string): Promise<IFeatureFlagDoc | null> {
+  async update(
+    id: string,
+    data: Partial<IFeatureFlagDoc>,
+    adminUserId: string,
+  ): Promise<IFeatureFlagDoc | null> {
     const flag = await FeatureFlag.findById(id).exec();
     if (!flag) throw new NotFoundError('Feature flag not found');
     data.updatedBy = new Types.ObjectId(adminUserId);
@@ -127,13 +136,17 @@ export class FeatureFlagService {
       const redis = getRedisClient();
       const cached = await redis.get(`${CACHE_PREFIX}${slug}`);
       if (cached) return JSON.parse(cached);
-    } catch { /* cache miss */ }
+    } catch {
+      /* cache miss */
+    }
 
     const flag = await FeatureFlag.findOne({ slug }).lean().exec();
     if (flag) {
       try {
         await getRedisClient().set(`${CACHE_PREFIX}${slug}`, JSON.stringify(flag), 'EX', CACHE_TTL);
-      } catch { /* silent */ }
+      } catch {
+        /* silent */
+      }
     }
     return flag as IFeatureFlagDoc | null;
   }
@@ -143,6 +156,8 @@ export class FeatureFlagService {
       const redis = getRedisClient();
       const keys = await redis.keys(`${CACHE_PREFIX}*`);
       if (keys.length > 0) await redis.del(...keys);
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   }
 }

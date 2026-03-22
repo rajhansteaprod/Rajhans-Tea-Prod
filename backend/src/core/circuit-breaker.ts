@@ -13,8 +13,8 @@ import { logger } from '../utils/logger';
 type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
 
 interface CircuitBreakerOptions {
-  failureThreshold?: number;  // failures before opening (default: 5)
-  resetTimeout?: number;      // ms to wait before half-open (default: 60s)
+  failureThreshold?: number; // failures before opening (default: 5)
+  resetTimeout?: number; // ms to wait before half-open (default: 60s)
 }
 
 export class CircuitBreaker {
@@ -76,6 +76,12 @@ export class CircuitBreaker {
 
 // ─── Pre-configured breakers for external services ──────────────────────────
 
-export const razorpayBreaker = new CircuitBreaker('razorpay', { failureThreshold: 5, resetTimeout: 60000 });
-export const shiprocketBreaker = new CircuitBreaker('shiprocket', { failureThreshold: 3, resetTimeout: 120000 });
+export const razorpayBreaker = new CircuitBreaker('razorpay', {
+  failureThreshold: 5,
+  resetTimeout: 60000,
+});
+export const shiprocketBreaker = new CircuitBreaker('shiprocket', {
+  failureThreshold: 3,
+  resetTimeout: 120000,
+});
 export const smsBreaker = new CircuitBreaker('sms', { failureThreshold: 5, resetTimeout: 60000 });

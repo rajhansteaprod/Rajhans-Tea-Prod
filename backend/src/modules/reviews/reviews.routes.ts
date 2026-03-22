@@ -21,21 +21,64 @@ const router = Router();
 // PUBLIC
 // ===========================================================================
 
-router.get('/reviews/products/:productId/reviews', validate(productIdSchema), ctrl.getProductReviews);
-router.get('/reviews/products/:productId/summary', validate(productIdSchema), ctrl.getRatingSummary);
+router.get(
+  '/reviews/products/:productId/reviews',
+  validate(productIdSchema),
+  ctrl.getProductReviews,
+);
+router.get(
+  '/reviews/products/:productId/summary',
+  validate(productIdSchema),
+  ctrl.getRatingSummary,
+);
 router.get('/reviews/products/:productId/qa', validate(productIdSchema), ctrl.getProductQA);
 
 // ===========================================================================
 // AUTHENTICATED
 // ===========================================================================
 
-router.post('/reviews/products/:productId/reviews', authenticate, validate(submitReviewSchema), ctrl.submitReview);
-router.delete('/reviews/reviews/:reviewId', authenticate, validate(reviewIdSchema), ctrl.deleteReview);
-router.post('/reviews/reviews/:reviewId/vote', authenticate, validate(reviewIdSchema), ctrl.voteHelpful);
-router.post('/reviews/reviews/:reviewId/report', authenticate, validate(reportSchema), ctrl.reportReview);
-router.post('/reviews/products/:productId/questions', authenticate, validate(submitQuestionSchema), ctrl.submitQuestion);
-router.post('/reviews/questions/:questionId/answers', authenticate, validate(submitAnswerSchema), ctrl.submitAnswer);
-router.post('/reviews/questions/:questionId/vote', authenticate, validate(questionIdSchema), ctrl.voteQuestion);
+router.post(
+  '/reviews/products/:productId/reviews',
+  authenticate,
+  validate(submitReviewSchema),
+  ctrl.submitReview,
+);
+router.delete(
+  '/reviews/reviews/:reviewId',
+  authenticate,
+  validate(reviewIdSchema),
+  ctrl.deleteReview,
+);
+router.post(
+  '/reviews/reviews/:reviewId/vote',
+  authenticate,
+  validate(reviewIdSchema),
+  ctrl.voteHelpful,
+);
+router.post(
+  '/reviews/reviews/:reviewId/report',
+  authenticate,
+  validate(reportSchema),
+  ctrl.reportReview,
+);
+router.post(
+  '/reviews/products/:productId/questions',
+  authenticate,
+  validate(submitQuestionSchema),
+  ctrl.submitQuestion,
+);
+router.post(
+  '/reviews/questions/:questionId/answers',
+  authenticate,
+  validate(submitAnswerSchema),
+  ctrl.submitAnswer,
+);
+router.post(
+  '/reviews/questions/:questionId/vote',
+  authenticate,
+  validate(questionIdSchema),
+  ctrl.voteQuestion,
+);
 router.get('/reviews/my-reviews', authenticate, ctrl.getMyReviews);
 
 // ===========================================================================

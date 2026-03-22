@@ -12,13 +12,13 @@ export class ProductViewRepository {
     // Increment real-time view counter in Redis
     try {
       await getRedisClient().zincrby('product:views:daily', 1, productId);
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   }
 
   async getRecentlyViewed(userId: string | null, sessionId: string, limit = 12): Promise<string[]> {
-    const filter = userId
-      ? { userId: new Types.ObjectId(userId) }
-      : { sessionId };
+    const filter = userId ? { userId: new Types.ObjectId(userId) } : { sessionId };
 
     const views = await ProductView.aggregate([
       { $match: filter },

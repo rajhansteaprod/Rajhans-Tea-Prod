@@ -22,7 +22,11 @@ const loyaltyTransactionSchema = new Schema<ILoyaltyTransactionDoc>(
     type: { type: String, enum: ['earn', 'redeem', 'expire', 'admin_adjust'], required: true },
     points: { type: Number, required: true },
     balanceAfter: { type: Number, required: true },
-    source: { type: String, enum: ['purchase', 'referral', 'admin', 'redemption', 'expiry'], required: true },
+    source: {
+      type: String,
+      enum: ['purchase', 'referral', 'admin', 'redemption', 'expiry'],
+      required: true,
+    },
     referenceId: { type: String, default: null },
     description: { type: String, required: true },
     expiresAt: { type: Date, default: null },
@@ -35,4 +39,7 @@ loyaltyTransactionSchema.index({ userId: 1, createdAt: -1 });
 loyaltyTransactionSchema.index({ type: 1, expiresAt: 1 });
 loyaltyTransactionSchema.index({ idempotencyKey: 1 }, { unique: true });
 
-export const LoyaltyTransaction = mongoose.model<ILoyaltyTransactionDoc>('LoyaltyTransaction', loyaltyTransactionSchema);
+export const LoyaltyTransaction = mongoose.model<ILoyaltyTransactionDoc>(
+  'LoyaltyTransaction',
+  loyaltyTransactionSchema,
+);

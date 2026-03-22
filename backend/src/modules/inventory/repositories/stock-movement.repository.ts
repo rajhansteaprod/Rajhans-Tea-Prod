@@ -7,10 +7,7 @@ export class StockMovementRepository {
     return StockMovement.create(data) as Promise<IStockMovementDoc>;
   }
 
-  async findByProduct(
-    productId: string,
-    query: { page?: number; limit?: number } = {},
-  ) {
+  async findByProduct(productId: string, query: { page?: number; limit?: number } = {}) {
     const { page, limit, skip } = parsePagination(query);
     const filter = { productId: new Types.ObjectId(productId) };
     const [movements, total] = await Promise.all([

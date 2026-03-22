@@ -22,7 +22,10 @@ export class WarehouseRepository {
 
   async update(id: string, data: Partial<IWarehouseDoc>): Promise<IWarehouseDoc | null> {
     if (data.isDefault) {
-      await Warehouse.updateMany({ _id: { $ne: id }, isDefault: true }, { $set: { isDefault: false } }).exec();
+      await Warehouse.updateMany(
+        { _id: { $ne: id }, isDefault: true },
+        { $set: { isDefault: false } },
+      ).exec();
     }
     return Warehouse.findByIdAndUpdate(id, { $set: data }, { new: true }).exec();
   }

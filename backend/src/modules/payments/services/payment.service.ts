@@ -7,7 +7,10 @@ import { CartService } from '../../cart/services/cart.service';
 import { getInvoiceQueue, InvoiceJobs } from '../jobs/queues/invoice.queue';
 import { getPaymentQueue, PaymentJobs } from '../jobs/queues/payment.queue';
 import { getWalletQueue, WalletJobs } from '../jobs/queues/wallet.queue';
-import { getFulfillmentQueue, FulfillmentJobs } from '../../inventory/jobs/queues/fulfillment.queue';
+import {
+  getFulfillmentQueue,
+  FulfillmentJobs,
+} from '../../inventory/jobs/queues/fulfillment.queue';
 import { getPromotionsQueue, PromotionJobs } from '../../promotions/jobs/queues/promotions.queue';
 import { WalletService } from './wallet.service';
 import { BadRequestError, NotFoundError } from '../../../utils/api-error';
@@ -91,7 +94,11 @@ export class PaymentService {
 
     if (walletAmount > 0 && userId) {
       const balance = await this.walletService.getBalance(userId);
-      walletDeductPaise = Math.min(Math.round(walletAmount * 100), totalPaise, Math.round(balance * 100));
+      walletDeductPaise = Math.min(
+        Math.round(walletAmount * 100),
+        totalPaise,
+        Math.round(balance * 100),
+      );
     }
 
     const razorpayAmountPaise = totalPaise - walletDeductPaise;
@@ -280,7 +287,11 @@ export class PaymentService {
     if (payment.userId) {
       await getPromotionsQueue().add(
         PromotionJobs.EARN_LOYALTY,
-        { userId: payment.userId.toString(), orderTotal: payment.amountPaise / 100, paymentId: payment._id.toString() },
+        {
+          userId: payment.userId.toString(),
+          orderTotal: payment.amountPaise / 100,
+          paymentId: payment._id.toString(),
+        },
         { attempts: 3, backoff: { type: 'exponential', delay: 3000 } },
       );
       await getPromotionsQueue().add(
@@ -308,10 +319,7 @@ export class PaymentService {
       .update(rawBody)
       .digest('hex');
 
-    const isValid = crypto.timingSafeEqual(
-      Buffer.from(expectedSignature),
-      Buffer.from(signature),
-    );
+    const isValid = crypto.timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(signature));
 
     if (!isValid) {
       throw new BadRequestError('Webhook signature invalid');
@@ -435,7 +443,9 @@ export class PaymentService {
     return this.paymentRepo.getRevenueStats();
   }
 
-  async adminListPayments(query: { page?: number; limit?: number; status?: string; search?: string } = {}) {
+  async adminListPayments(
+    query: { page?: number; limit?: number; status?: string; search?: string } = {},
+  ) {
     return this.paymentRepo.findAllAdmin(query);
   }
 

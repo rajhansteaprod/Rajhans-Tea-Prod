@@ -8,7 +8,10 @@ export class QuestionRepository {
   }
 
   async findById(id: string): Promise<IQuestionDoc | null> {
-    return Question.findById(id).populate('userId', 'phone firstName lastName').populate('answers.userId', 'phone firstName lastName role').exec();
+    return Question.findById(id)
+      .populate('userId', 'phone firstName lastName')
+      .populate('answers.userId', 'phone firstName lastName role')
+      .exec();
   }
 
   async findByProduct(productId: string, query: { page?: number; limit?: number } = {}) {
@@ -27,7 +30,10 @@ export class QuestionRepository {
     return { questions, meta: buildPaginationMeta(page, limit, total) };
   }
 
-  async addAnswer(questionId: string, answer: { userId: string; body: string; isAdminAnswer: boolean }): Promise<void> {
+  async addAnswer(
+    questionId: string,
+    answer: { userId: string; body: string; isAdminAnswer: boolean },
+  ): Promise<void> {
     await Question.findByIdAndUpdate(questionId, {
       $push: {
         answers: {
@@ -52,7 +58,13 @@ export class QuestionRepository {
     const { page, limit, skip } = parsePagination(query);
     const filter = { status: 'pending' };
     const [questions, total] = await Promise.all([
-      Question.find(filter).populate('userId', 'phone firstName').populate('productId', 'name slug').sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+      Question.find(filter)
+        .populate('userId', 'phone firstName')
+        .populate('productId', 'name slug')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
       Question.countDocuments(filter).exec(),
     ]);
     return { questions, meta: buildPaginationMeta(page, limit, total) };

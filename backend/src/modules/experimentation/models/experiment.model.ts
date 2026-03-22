@@ -20,7 +20,11 @@ export interface IExperimentDoc extends Document {
 }
 
 const variantSchema = new Schema<IVariant>(
-  { key: { type: String, required: true }, weight: { type: Number, required: true, min: 0, max: 100 }, description: { type: String, default: '' } },
+  {
+    key: { type: String, required: true },
+    weight: { type: Number, required: true, min: 0, max: 100 },
+    description: { type: String, default: '' },
+  },
   { _id: false },
 );
 

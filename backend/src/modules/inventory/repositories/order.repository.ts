@@ -1,5 +1,11 @@
 import { Types } from 'mongoose';
-import { Order, IOrderDoc, OrderStatus, IStatusHistoryEntry, IShiprocketInfo } from '../models/order.model';
+import {
+  Order,
+  IOrderDoc,
+  OrderStatus,
+  IStatusHistoryEntry,
+  IShiprocketInfo,
+} from '../models/order.model';
 import { parsePagination, buildPaginationMeta } from '../../../utils/pagination';
 
 export class OrderRepository {
@@ -116,7 +122,8 @@ export class OrderRepository {
       total: Object.values(counts).reduce((s, c) => s + c, 0),
       confirmed: counts['confirmed'] ?? 0,
       processing: counts['processing'] ?? 0,
-      shipped: (counts['shipped'] ?? 0) + (counts['in_transit'] ?? 0) + (counts['out_for_delivery'] ?? 0),
+      shipped:
+        (counts['shipped'] ?? 0) + (counts['in_transit'] ?? 0) + (counts['out_for_delivery'] ?? 0),
       delivered: counts['delivered'] ?? 0,
       cancelled: counts['cancelled'] ?? 0,
     };

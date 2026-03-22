@@ -22,4 +22,7 @@ experimentExposureSchema.index({ experimentSlug: 1, sessionId: 1 });
 experimentExposureSchema.index({ experimentSlug: 1, variant: 1 });
 experimentExposureSchema.index({ createdAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 });
 
-export const ExperimentExposure = mongoose.model<IExperimentExposureDoc>('ExperimentExposure', experimentExposureSchema);
+export const ExperimentExposure = mongoose.model<IExperimentExposureDoc>(
+  'ExperimentExposure',
+  experimentExposureSchema,
+);

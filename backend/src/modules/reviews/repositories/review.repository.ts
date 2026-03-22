@@ -13,7 +13,10 @@ export class ReviewRepository {
   }
 
   async findByUserAndProduct(userId: string, productId: string): Promise<IReviewDoc | null> {
-    return Review.findOne({ userId: new Types.ObjectId(userId), productId: new Types.ObjectId(productId) }).exec();
+    return Review.findOne({
+      userId: new Types.ObjectId(userId),
+      productId: new Types.ObjectId(productId),
+    }).exec();
   }
 
   async findByProduct(
@@ -21,7 +24,10 @@ export class ReviewRepository {
     query: { page?: number; limit?: number; sort?: string; rating?: number } = {},
   ) {
     const { page, limit, skip } = parsePagination(query);
-    const filter: Record<string, unknown> = { productId: new Types.ObjectId(productId), status: 'approved' };
+    const filter: Record<string, unknown> = {
+      productId: new Types.ObjectId(productId),
+      status: 'approved',
+    };
     if (query.rating) filter.rating = query.rating;
 
     let sort: Record<string, 1 | -1> = { isPinned: -1, createdAt: -1 };
@@ -45,7 +51,12 @@ export class ReviewRepository {
     const { page, limit, skip } = parsePagination(query);
     const filter = { userId: new Types.ObjectId(userId) };
     const [reviews, total] = await Promise.all([
-      Review.find(filter).populate('productId', 'name slug images').sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+      Review.find(filter)
+        .populate('productId', 'name slug images')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
       Review.countDocuments(filter).exec(),
     ]);
     return { reviews, meta: buildPaginationMeta(page, limit, total) };
@@ -141,7 +152,9 @@ export class ReviewRepository {
   }
 
   async getRatingSummary(productId: string) {
-    const summary = await RatingSummary.findOne({ productId: new Types.ObjectId(productId) }).exec();
+    const summary = await RatingSummary.findOne({
+      productId: new Types.ObjectId(productId),
+    }).exec();
     if (summary) return summary;
     return this.computeRatingSummary(productId);
   }
@@ -150,7 +163,13 @@ export class ReviewRepository {
     const { page, limit, skip } = parsePagination(query);
     const filter = { reportCount: { $gt: 0 } };
     const [reviews, total] = await Promise.all([
-      Review.find(filter).populate('userId', 'phone firstName').populate('productId', 'name slug').sort({ reportCount: -1 }).skip(skip).limit(limit).exec(),
+      Review.find(filter)
+        .populate('userId', 'phone firstName')
+        .populate('productId', 'name slug')
+        .sort({ reportCount: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
       Review.countDocuments(filter).exec(),
     ]);
     return { reviews, meta: buildPaginationMeta(page, limit, total) };

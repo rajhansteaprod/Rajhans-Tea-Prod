@@ -26,4 +26,7 @@ const ratingSummarySchema = new Schema<IRatingSummaryDoc>(
 
 ratingSummarySchema.index({ productId: 1 }, { unique: true });
 
-export const RatingSummary = mongoose.model<IRatingSummaryDoc>('RatingSummary', ratingSummarySchema);
+export const RatingSummary = mongoose.model<IRatingSummaryDoc>(
+  'RatingSummary',
+  ratingSummarySchema,
+);

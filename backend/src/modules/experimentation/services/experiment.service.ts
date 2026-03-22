@@ -38,7 +38,9 @@ export class ExperimentService {
       userId: context.userId ? new Types.ObjectId(context.userId) : null,
       sessionId: context.sessionId,
       variant: assignedVariant,
-    }).catch(() => {/* silent */});
+    }).catch(() => {
+      /* silent */
+    });
 
     return { variant: assignedVariant, experiment: experimentSlug };
   }
@@ -46,7 +48,10 @@ export class ExperimentService {
   /**
    * Get all running experiments + assigned variants for a user.
    */
-  async getActiveExperiments(context: { userId?: string; sessionId: string }): Promise<Record<string, string>> {
+  async getActiveExperiments(context: {
+    userId?: string;
+    sessionId: string;
+  }): Promise<Record<string, string>> {
     const running = await Experiment.find({ status: 'running' }).exec();
     const assignments: Record<string, string> = {};
 
@@ -62,7 +67,13 @@ export class ExperimentService {
 
   async getResults(experimentSlug: string): Promise<{
     experiment: IExperimentDoc;
-    variants: { key: string; exposures: number; conversions: number; conversionRate: number; revenue: number }[];
+    variants: {
+      key: string;
+      exposures: number;
+      conversions: number;
+      conversionRate: number;
+      revenue: number;
+    }[];
   }> {
     const exp = await Experiment.findOne({ slug: experimentSlug }).exec();
     if (!exp) throw new NotFoundError('Experiment not found');
@@ -91,14 +102,26 @@ export class ExperimentService {
 
       // Revenue from these sessions
       const revenueAgg = await Payment.aggregate([
-        { $match: { sessionId: { $in: exposedSessions }, status: 'captured', createdAt: { $gte: exp.startDate || new Date(0) } } },
+        {
+          $match: {
+            sessionId: { $in: exposedSessions },
+            status: 'captured',
+            createdAt: { $gte: exp.startDate || new Date(0) },
+          },
+        },
         { $group: { _id: null, total: { $sum: '$amountPaise' } } },
       ]).exec();
 
       const revenue = (revenueAgg[0]?.total ?? 0) / 100;
       const conversionRate = exposures > 0 ? +((conversions / exposures) * 100).toFixed(2) : 0;
 
-      variantResults.push({ key: v.key, exposures, conversions, conversionRate, revenue: +revenue.toFixed(2) });
+      variantResults.push({
+        key: v.key,
+        exposures,
+        conversions,
+        conversionRate,
+        revenue: +revenue.toFixed(2),
+      });
     }
 
     return { experiment: exp, variants: variantResults };

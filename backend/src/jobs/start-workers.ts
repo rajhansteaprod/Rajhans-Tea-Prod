@@ -1,12 +1,39 @@
-import { startInvoiceWorker, closeInvoiceWorker } from '../modules/payments/jobs/workers/invoice.worker';
-import { startWalletWorker, closeWalletWorker } from '../modules/payments/jobs/workers/wallet.worker';
-import { startPaymentWorker, closePaymentWorker } from '../modules/payments/jobs/workers/payment.worker';
-import { startFulfillmentWorker, closeFulfillmentWorker } from '../modules/inventory/jobs/workers/fulfillment.worker';
-import { startPromotionsWorker, closePromotionsWorker } from '../modules/promotions/jobs/workers/promotions.worker';
-import { startPersonalizationWorker, closePersonalizationWorker } from '../modules/personalization/jobs/workers/personalization.worker';
-import { startReviewsWorker, closeReviewsWorker } from '../modules/reviews/jobs/workers/reviews.worker';
-import { startNotificationWorker, closeNotificationWorker } from '../modules/communication/jobs/workers/notification.worker';
-import { startDataPlatformWorker, closeDataPlatformWorker } from '../modules/data-platform/jobs/workers/data-platform.worker';
+import {
+  startInvoiceWorker,
+  closeInvoiceWorker,
+} from '../modules/payments/jobs/workers/invoice.worker';
+import {
+  startWalletWorker,
+  closeWalletWorker,
+} from '../modules/payments/jobs/workers/wallet.worker';
+import {
+  startPaymentWorker,
+  closePaymentWorker,
+} from '../modules/payments/jobs/workers/payment.worker';
+import {
+  startFulfillmentWorker,
+  closeFulfillmentWorker,
+} from '../modules/inventory/jobs/workers/fulfillment.worker';
+import {
+  startPromotionsWorker,
+  closePromotionsWorker,
+} from '../modules/promotions/jobs/workers/promotions.worker';
+import {
+  startPersonalizationWorker,
+  closePersonalizationWorker,
+} from '../modules/personalization/jobs/workers/personalization.worker';
+import {
+  startReviewsWorker,
+  closeReviewsWorker,
+} from '../modules/reviews/jobs/workers/reviews.worker';
+import {
+  startNotificationWorker,
+  closeNotificationWorker,
+} from '../modules/communication/jobs/workers/notification.worker';
+import {
+  startDataPlatformWorker,
+  closeDataPlatformWorker,
+} from '../modules/data-platform/jobs/workers/data-platform.worker';
 import { logger } from '../utils/logger';
 
 export const registerWorkers = (): void => {

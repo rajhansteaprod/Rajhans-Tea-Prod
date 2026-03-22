@@ -1,12 +1,7 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export type WalletTxnType = 'credit' | 'debit';
-export type WalletTxnSource =
-  | 'refund'
-  | 'cashback'
-  | 'admin_credit'
-  | 'purchase'
-  | 'admin_debit';
+export type WalletTxnSource = 'refund' | 'cashback' | 'admin_credit' | 'purchase' | 'admin_debit';
 
 export interface IWalletTransactionDoc extends Document {
   walletId: Types.ObjectId;

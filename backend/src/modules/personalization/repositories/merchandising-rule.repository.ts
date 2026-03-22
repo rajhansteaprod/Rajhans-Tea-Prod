@@ -1,4 +1,8 @@
-import { MerchandisingRule, IMerchandisingRuleDoc, RuleSection } from '../models/merchandising-rule.model';
+import {
+  MerchandisingRule,
+  IMerchandisingRuleDoc,
+  RuleSection,
+} from '../models/merchandising-rule.model';
 import { Types } from 'mongoose';
 import { parsePagination, buildPaginationMeta } from '../../../utils/pagination';
 
@@ -32,7 +36,10 @@ export class MerchandisingRuleRepository {
     return MerchandisingRule.create(data) as Promise<IMerchandisingRuleDoc>;
   }
 
-  async update(id: string, data: Partial<IMerchandisingRuleDoc>): Promise<IMerchandisingRuleDoc | null> {
+  async update(
+    id: string,
+    data: Partial<IMerchandisingRuleDoc>,
+  ): Promise<IMerchandisingRuleDoc | null> {
     return MerchandisingRule.findByIdAndUpdate(id, { $set: data }, { new: true }).exec();
   }
 
@@ -42,7 +49,10 @@ export class MerchandisingRuleRepository {
 
   async updateCachedProducts(id: string, productIds: string[]): Promise<void> {
     await MerchandisingRule.findByIdAndUpdate(id, {
-      $set: { cachedProductIds: productIds.map((p) => new Types.ObjectId(p)), cachedAt: new Date() },
+      $set: {
+        cachedProductIds: productIds.map((p) => new Types.ObjectId(p)),
+        cachedAt: new Date(),
+      },
     }).exec();
   }
 

@@ -117,11 +117,14 @@ export class RecommendationService {
     const allRecos = new Set<string>();
     for (const pid of purchasedIds) {
       const fbt = await this.coPurchaseRepo.getFrequentlyBoughtTogether(pid, 4);
-      fbt.forEach((id) => { if (!purchasedIds.has(id)) allRecos.add(id); });
+      fbt.forEach((id) => {
+        if (!purchasedIds.has(id)) allRecos.add(id);
+      });
     }
 
     const ids = Array.from(allRecos).slice(0, limit);
-    const products = ids.length > 0 ? await this.hydrateProducts(ids) : await this.getTrendingNow(limit);
+    const products =
+      ids.length > 0 ? await this.hydrateProducts(ids) : await this.getTrendingNow(limit);
     await this.setCache(`reco:forYou:${userId}`, products, 1800);
     return products;
   }
@@ -163,19 +166,26 @@ export class RecommendationService {
 
     // Maintain order from ids
     const map = new Map(products.map((p) => [p._id.toString(), p]));
-    return ids.map((id) => map.get(id)).filter(Boolean).map((p) => ProductDTO.toView(p!));
+    return ids
+      .map((id) => map.get(id))
+      .filter(Boolean)
+      .map((p) => ProductDTO.toView(p!));
   }
 
   private async getCache(key: string): Promise<any | null> {
     try {
       const data = await getRedisClient().get(key);
       return data ? JSON.parse(data) : null;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   }
 
   private async setCache(key: string, data: unknown, ttl: number): Promise<void> {
     try {
       await getRedisClient().set(key, JSON.stringify(data), 'EX', ttl);
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   }
 }

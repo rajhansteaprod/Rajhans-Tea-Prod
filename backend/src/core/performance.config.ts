@@ -26,29 +26,29 @@ export const PERFORMANCE = {
 
   // ─── HTTP Cache TTLs (seconds) ────────────────────────────────────────────
   cache: {
-    categories: 300,          // 5 min — rarely changes
-    collections: 300,         // 5 min
-    productList: 120,         // 2 min — changes with stock
-    productDetail: 60,        // 1 min
-    search: 60,               // 1 min — already cached in SearchCacheService
-    homeFeed: 120,            // 2 min
-    trending: 300,            // 5 min
-    activeCampaigns: 300,     // 5 min
+    categories: 300, // 5 min — rarely changes
+    collections: 300, // 5 min
+    productList: 120, // 2 min — changes with stock
+    productDetail: 60, // 1 min
+    search: 60, // 1 min — already cached in SearchCacheService
+    homeFeed: 120, // 2 min
+    trending: 300, // 5 min
+    activeCampaigns: 300, // 5 min
   },
 
   // ─── Request Limits ───────────────────────────────────────────────────────
   request: {
-    timeout: 30000,           // 30s max per request
-    maxBodySize: '10mb',      // already set in app.ts
-    maxFileSize: 5 * 1024 * 1024,  // 5MB upload limit
+    timeout: 30000, // 30s max per request
+    maxBodySize: '10mb', // already set in app.ts
+    maxFileSize: 5 * 1024 * 1024, // 5MB upload limit
   },
 
   // ─── Rate Limiting ────────────────────────────────────────────────────────
   rateLimit: {
-    global: { windowMs: 60000, max: 100 },    // 100 req/min (already configured)
-    auth: { windowMs: 60000, max: 10 },       // 10 auth req/min
-    search: { windowMs: 60000, max: 60 },     // 60 search/min
-    api: { windowMs: 60000, max: 200 },       // 200 api/min for authenticated
+    global: { windowMs: 60000, max: 100 }, // 100 req/min (already configured)
+    auth: { windowMs: 60000, max: 10 }, // 10 auth req/min
+    search: { windowMs: 60000, max: 60 }, // 60 search/min
+    api: { windowMs: 60000, max: 200 }, // 200 api/min for authenticated
   },
 
   // ─── BullMQ ───────────────────────────────────────────────────────────────

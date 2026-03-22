@@ -23,4 +23,7 @@ const loyaltyAccountSchema = new Schema<ILoyaltyAccountDoc>(
 
 loyaltyAccountSchema.index({ userId: 1 }, { unique: true });
 
-export const LoyaltyAccount = mongoose.model<ILoyaltyAccountDoc>('LoyaltyAccount', loyaltyAccountSchema);
+export const LoyaltyAccount = mongoose.model<ILoyaltyAccountDoc>(
+  'LoyaltyAccount',
+  loyaltyAccountSchema,
+);

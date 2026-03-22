@@ -10,7 +10,8 @@ export function observabilityMiddleware(req: Request, res: Response, next: NextF
   const startTime = Date.now();
 
   // Wrap request in trace context
-  const traceId = (req.headers['x-trace-id'] as string) || req.requestId || requestTracer.generateTraceId();
+  const traceId =
+    (req.headers['x-trace-id'] as string) || req.requestId || requestTracer.generateTraceId();
   res.setHeader('X-Trace-ID', traceId);
 
   // Record metrics on response finish

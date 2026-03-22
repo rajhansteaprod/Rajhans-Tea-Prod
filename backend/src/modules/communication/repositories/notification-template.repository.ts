@@ -1,4 +1,7 @@
-import { NotificationTemplate, INotificationTemplateDoc } from '../models/notification-template.model';
+import {
+  NotificationTemplate,
+  INotificationTemplateDoc,
+} from '../models/notification-template.model';
 
 export class NotificationTemplateRepository {
   async findByType(type: string): Promise<INotificationTemplateDoc | null> {
@@ -17,7 +20,10 @@ export class NotificationTemplateRepository {
     return NotificationTemplate.create(data) as Promise<INotificationTemplateDoc>;
   }
 
-  async update(id: string, data: Partial<INotificationTemplateDoc>): Promise<INotificationTemplateDoc | null> {
+  async update(
+    id: string,
+    data: Partial<INotificationTemplateDoc>,
+  ): Promise<INotificationTemplateDoc | null> {
     return NotificationTemplate.findByIdAndUpdate(id, { $set: data }, { new: true }).exec();
   }
 

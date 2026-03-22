@@ -134,7 +134,10 @@ export class SearchRepository {
     };
   }
 
-  async autocomplete(query: string, limit = 8): Promise<{ type: 'product' | 'category'; name: string; slug: string; image?: string }[]> {
+  async autocomplete(
+    query: string,
+    limit = 8,
+  ): Promise<{ type: 'product' | 'category'; name: string; slug: string; image?: string }[]> {
     const regex = { $regex: `^${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, $options: 'i' };
 
     const [products, categories] = await Promise.all([
@@ -148,7 +151,12 @@ export class SearchRepository {
         .exec(),
     ]);
 
-    const suggestions: { type: 'product' | 'category'; name: string; slug: string; image?: string }[] = [];
+    const suggestions: {
+      type: 'product' | 'category';
+      name: string;
+      slug: string;
+      image?: string;
+    }[] = [];
 
     for (const p of products) {
       suggestions.push({ type: 'product', name: p.name, slug: p.slug, image: p.images?.[0] });
@@ -162,18 +170,28 @@ export class SearchRepository {
 
   private buildSort(sort: string | undefined, hasTextScore: boolean): Record<string, any> {
     switch (sort) {
-      case 'price_asc': return { basePrice: 1 };
-      case 'price_desc': return { basePrice: -1 };
-      case 'newest': return { createdAt: -1 };
-      case 'name_asc': return { name: 1 };
-      case 'featured': return { isFeatured: -1, createdAt: -1 };
+      case 'price_asc':
+        return { basePrice: 1 };
+      case 'price_desc':
+        return { basePrice: -1 };
+      case 'newest':
+        return { createdAt: -1 };
+      case 'name_asc':
+        return { name: 1 };
+      case 'featured':
+        return { isFeatured: -1, createdAt: -1 };
       case 'relevance':
       default:
-        return hasTextScore ? { score: { $meta: 'textScore' }, isFeatured: -1 } : { isFeatured: -1, createdAt: -1 };
+        return hasTextScore
+          ? { score: { $meta: 'textScore' }, isFeatured: -1 }
+          : { isFeatured: -1, createdAt: -1 };
     }
   }
 
-  private async buildFacets(_baseFilter: Record<string, unknown>, query?: string): Promise<SearchFacets> {
+  private async buildFacets(
+    _baseFilter: Record<string, unknown>,
+    query?: string,
+  ): Promise<SearchFacets> {
     const activeFilter: Record<string, unknown> = { status: 'active' };
     if (query) {
       try {
@@ -196,7 +214,9 @@ export class SearchRepository {
           },
         },
         { $unwind: '$cat' },
-        { $project: { _id: { $toString: '$_id' }, name: '$cat.name', slug: '$cat.slug', count: 1 } },
+        {
+          $project: { _id: { $toString: '$_id' }, name: '$cat.name', slug: '$cat.slug', count: 1 },
+        },
         { $sort: { count: -1 } },
         { $limit: 20 },
       ]).exec(),

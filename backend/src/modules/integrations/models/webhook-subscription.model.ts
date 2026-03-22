@@ -31,4 +31,7 @@ const webhookSubscriptionSchema = new Schema<IWebhookSubscriptionDoc>(
 
 webhookSubscriptionSchema.index({ isActive: 1, events: 1 });
 
-export const WebhookSubscription = mongoose.model<IWebhookSubscriptionDoc>('WebhookSubscription', webhookSubscriptionSchema);
+export const WebhookSubscription = mongoose.model<IWebhookSubscriptionDoc>(
+  'WebhookSubscription',
+  webhookSubscriptionSchema,
+);

@@ -31,7 +31,11 @@ export const deleteDefinition = async (req: Request, res: Response) => {
 export const startWorkflow = async (req: Request, res: Response) => {
   const { definitionSlug, resourceType, resourceId, metadata } = req.body;
   const instance = await workflowService.startWorkflow(
-    definitionSlug, resourceType, resourceId, req.user!.userId, metadata || {},
+    definitionSlug,
+    resourceType,
+    resourceId,
+    req.user!.userId,
+    metadata || {},
   );
   sendCreated(res, instance, 'Workflow started');
 };
@@ -39,7 +43,10 @@ export const startWorkflow = async (req: Request, res: Response) => {
 export const transitionWorkflow = async (req: Request, res: Response) => {
   const { toState, note } = req.body;
   const instance = await workflowService.transition(
-    req.params['id'] as string, toState, req.user!.userId, note || null,
+    req.params['id'] as string,
+    toState,
+    req.user!.userId,
+    note || null,
   );
   sendSuccess(res, instance, 'Transition applied');
 };

@@ -51,11 +51,19 @@ adminRouter.delete('/promotions/campaigns/:id', ctrl.adminDeleteCampaign);
 
 // Loyalty
 adminRouter.get('/promotions/loyalty/settings', ctrl.adminGetLoyaltySettings);
-adminRouter.put('/promotions/loyalty/settings', validate(loyaltySettingsSchema), ctrl.adminUpdateLoyaltySettings);
+adminRouter.put(
+  '/promotions/loyalty/settings',
+  validate(loyaltySettingsSchema),
+  ctrl.adminUpdateLoyaltySettings,
+);
 
 // Referrals
 adminRouter.get('/promotions/referral/settings', ctrl.adminGetReferralSettings);
-adminRouter.put('/promotions/referral/settings', validate(referralSettingsSchema), ctrl.adminUpdateReferralSettings);
+adminRouter.put(
+  '/promotions/referral/settings',
+  validate(referralSettingsSchema),
+  ctrl.adminUpdateReferralSettings,
+);
 adminRouter.get('/promotions/referral/list', ctrl.adminListReferrals);
 
 router.use('/admin', adminRouter);

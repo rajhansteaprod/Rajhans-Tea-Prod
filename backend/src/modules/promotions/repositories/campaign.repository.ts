@@ -40,7 +40,11 @@ export class CampaignRepository {
 
   async findPendingActivation(): Promise<ICampaignDoc[]> {
     const now = new Date();
-    return Campaign.find({ isActive: false, startsAt: { $lte: now }, endsAt: { $gte: now } }).exec();
+    return Campaign.find({
+      isActive: false,
+      startsAt: { $lte: now },
+      endsAt: { $gte: now },
+    }).exec();
   }
 
   async findExpired(): Promise<ICampaignDoc[]> {

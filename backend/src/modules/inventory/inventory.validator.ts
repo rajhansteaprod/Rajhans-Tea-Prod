@@ -48,8 +48,15 @@ export const updateOrderStatusSchema = z.object({
   params: z.object({ orderId: mongoId }),
   body: z.object({
     status: z.enum([
-      'confirmed', 'processing', 'shipped', 'in_transit',
-      'out_for_delivery', 'delivered', 'cancelled', 'return_requested', 'returned',
+      'confirmed',
+      'processing',
+      'shipped',
+      'in_transit',
+      'out_for_delivery',
+      'delivered',
+      'cancelled',
+      'return_requested',
+      'returned',
     ]),
     note: z.string().max(500).optional(),
   }),

@@ -49,7 +49,10 @@ export class IntelligenceService {
       },
     ]).exec();
 
-    const orderMap = new Map<string, { totalOrders: number; totalSpent: number; lastOrderDate: Date }>();
+    const orderMap = new Map<
+      string,
+      { totalOrders: number; totalSpent: number; lastOrderDate: Date }
+    >();
     for (const stat of orderStats) {
       orderMap.set(stat._id.toString(), stat);
     }
@@ -120,7 +123,12 @@ export class IntelligenceService {
 
     const historical = await Payment.aggregate([
       { $match: { status: 'captured', createdAt: { $gte: thirtyDaysAgo } } },
-      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, revenue: { $sum: { $divide: ['$amountPaise', 100] } } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          revenue: { $sum: { $divide: ['$amountPaise', 100] } },
+        },
+      },
       { $sort: { _id: 1 } },
       { $project: { _id: 0, date: '$_id', revenue: { $round: ['$revenue', 2] } } },
     ]).exec();
@@ -157,8 +165,10 @@ export class IntelligenceService {
     // Determine trend
     const firstWeekAvg = ys.slice(0, 7).reduce((a, b) => a + b, 0) / Math.min(7, n);
     const lastWeekAvg = ys.slice(-7).reduce((a, b) => a + b, 0) / Math.min(7, n);
-    const growthRate = firstWeekAvg > 0 ? +(((lastWeekAvg - firstWeekAvg) / firstWeekAvg) * 100).toFixed(1) : 0;
-    const trend: 'up' | 'down' | 'stable' = growthRate > 5 ? 'up' : growthRate < -5 ? 'down' : 'stable';
+    const growthRate =
+      firstWeekAvg > 0 ? +(((lastWeekAvg - firstWeekAvg) / firstWeekAvg) * 100).toFixed(1) : 0;
+    const trend: 'up' | 'down' | 'stable' =
+      growthRate > 5 ? 'up' : growthRate < -5 ? 'down' : 'stable';
 
     return { historical, forecast, trend, growthRate };
   }
@@ -177,15 +187,47 @@ export class IntelligenceService {
     const lastWeekStart = new Date(now);
     lastWeekStart.setDate(now.getDate() - 14);
 
-    const [thisRevenue, lastRevenue, thisOrders, lastOrders, thisUsers, lastUsers, thisAOV, lastAOV] = await Promise.all([
-      Payment.aggregate([{ $match: { status: 'captured', createdAt: { $gte: thisWeekStart } } }, { $group: { _id: null, total: { $sum: '$amountPaise' } } }]).exec(),
-      Payment.aggregate([{ $match: { status: 'captured', createdAt: { $gte: lastWeekStart, $lt: thisWeekStart } } }, { $group: { _id: null, total: { $sum: '$amountPaise' } } }]).exec(),
-      Order.countDocuments({ createdAt: { $gte: thisWeekStart }, status: { $nin: ['cancelled'] } }).exec(),
-      Order.countDocuments({ createdAt: { $gte: lastWeekStart, $lt: thisWeekStart }, status: { $nin: ['cancelled'] } }).exec(),
+    const [
+      thisRevenue,
+      lastRevenue,
+      thisOrders,
+      lastOrders,
+      thisUsers,
+      lastUsers,
+      thisAOV,
+      lastAOV,
+    ] = await Promise.all([
+      Payment.aggregate([
+        { $match: { status: 'captured', createdAt: { $gte: thisWeekStart } } },
+        { $group: { _id: null, total: { $sum: '$amountPaise' } } },
+      ]).exec(),
+      Payment.aggregate([
+        { $match: { status: 'captured', createdAt: { $gte: lastWeekStart, $lt: thisWeekStart } } },
+        { $group: { _id: null, total: { $sum: '$amountPaise' } } },
+      ]).exec(),
+      Order.countDocuments({
+        createdAt: { $gte: thisWeekStart },
+        status: { $nin: ['cancelled'] },
+      }).exec(),
+      Order.countDocuments({
+        createdAt: { $gte: lastWeekStart, $lt: thisWeekStart },
+        status: { $nin: ['cancelled'] },
+      }).exec(),
       User.countDocuments({ createdAt: { $gte: thisWeekStart } }).exec(),
       User.countDocuments({ createdAt: { $gte: lastWeekStart, $lt: thisWeekStart } }).exec(),
-      Order.aggregate([{ $match: { createdAt: { $gte: thisWeekStart }, status: { $nin: ['cancelled'] } } }, { $group: { _id: null, avg: { $avg: '$total' } } }]).exec(),
-      Order.aggregate([{ $match: { createdAt: { $gte: lastWeekStart, $lt: thisWeekStart }, status: { $nin: ['cancelled'] } } }, { $group: { _id: null, avg: { $avg: '$total' } } }]).exec(),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: thisWeekStart }, status: { $nin: ['cancelled'] } } },
+        { $group: { _id: null, avg: { $avg: '$total' } } },
+      ]).exec(),
+      Order.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: lastWeekStart, $lt: thisWeekStart },
+            status: { $nin: ['cancelled'] },
+          },
+        },
+        { $group: { _id: null, avg: { $avg: '$total' } } },
+      ]).exec(),
     ]);
 
     const calc = (curr: number, prev: number) => ({
@@ -204,15 +246,24 @@ export class IntelligenceService {
 
   // ─── Product Performance Score ────────────────────────────────────────
 
-  async getProductPerformance(limit = 20): Promise<{
-    _id: string; name: string; score: number;
-    salesQty: number; viewCount: number; avgRating: number; stock: number;
-  }[]> {
+  async getProductPerformance(limit = 20): Promise<
+    {
+      _id: string;
+      name: string;
+      score: number;
+      salesQty: number;
+      viewCount: number;
+      avgRating: number;
+      stock: number;
+    }[]
+  > {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
     // Sales
     const sales = await Order.aggregate([
-      { $match: { status: { $nin: ['cancelled', 'returned'] }, createdAt: { $gte: thirtyDaysAgo } } },
+      {
+        $match: { status: { $nin: ['cancelled', 'returned'] }, createdAt: { $gte: thirtyDaysAgo } },
+      },
       { $unwind: '$items' },
       { $group: { _id: '$items.productId', salesQty: { $sum: '$items.qty' } } },
     ]).exec();
@@ -261,23 +312,36 @@ export class IntelligenceService {
 
   // ─── Cohort Analysis ──────────────────────────────────────────────────
 
-  async getCohortAnalysis(): Promise<{
-    cohort: string;
-    totalUsers: number;
-    orderedUsers: number;
-    retentionRate: number;
-  }[]> {
+  async getCohortAnalysis(): Promise<
+    {
+      cohort: string;
+      totalUsers: number;
+      orderedUsers: number;
+      retentionRate: number;
+    }[]
+  > {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
     // Users grouped by signup month
     const userCohorts = await User.aggregate([
       { $match: { createdAt: { $gte: sixMonthsAgo }, role: 'user' } },
-      { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } }, users: { $push: '$_id' }, totalUsers: { $sum: 1 } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
+          users: { $push: '$_id' },
+          totalUsers: { $sum: 1 },
+        },
+      },
       { $sort: { _id: 1 } },
     ]).exec();
 
-    const cohorts: { cohort: string; totalUsers: number; orderedUsers: number; retentionRate: number }[] = [];
+    const cohorts: {
+      cohort: string;
+      totalUsers: number;
+      orderedUsers: number;
+      retentionRate: number;
+    }[] = [];
 
     for (const cohort of userCohorts) {
       const orderedUsers = await Order.aggregate([
@@ -285,7 +349,8 @@ export class IntelligenceService {
         { $group: { _id: '$userId' } },
       ]).exec();
 
-      const retentionRate = cohort.totalUsers > 0 ? +((orderedUsers.length / cohort.totalUsers) * 100).toFixed(1) : 0;
+      const retentionRate =
+        cohort.totalUsers > 0 ? +((orderedUsers.length / cohort.totalUsers) * 100).toFixed(1) : 0;
 
       cohorts.push({
         cohort: cohort._id,
@@ -305,11 +370,16 @@ export class IntelligenceService {
     try {
       const { getConnectedUserCount } = await import('../../loaders/socket.loader');
       connectedUsers = getConnectedUserCount();
-    } catch { /* socket not available */ }
+    } catch {
+      /* socket not available */
+    }
 
     const { Cart } = await import('../cart/models/cart.model');
     const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000);
-    const activeCarts = await Cart.countDocuments({ updatedAt: { $gte: fifteenMinAgo }, 'items.0': { $exists: true } }).exec();
+    const activeCarts = await Cart.countDocuments({
+      updatedAt: { $gte: fifteenMinAgo },
+      'items.0': { $exists: true },
+    }).exec();
 
     return { connectedUsers, activeCarts };
   }

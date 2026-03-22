@@ -26,16 +26,19 @@ function getSessionId(req: Request): string {
 
 export const getActiveCampaigns = async (_req: Request, res: Response) => {
   const campaigns = await campaignRepo.findActive();
-  sendSuccess(res, campaigns.map((c) => ({
-    _id: c._id,
-    name: c.name,
-    slug: c.slug,
-    type: c.type,
-    description: c.description,
-    bannerImage: c.bannerImage,
-    bannerLink: c.bannerLink,
-    endsAt: c.endsAt,
-  })));
+  sendSuccess(
+    res,
+    campaigns.map((c) => ({
+      _id: c._id,
+      name: c.name,
+      slug: c.slug,
+      type: c.type,
+      description: c.description,
+      bannerImage: c.bannerImage,
+      bannerLink: c.bannerLink,
+      endsAt: c.endsAt,
+    })),
+  );
 };
 
 export const validateCoupon = async (req: Request, res: Response) => {

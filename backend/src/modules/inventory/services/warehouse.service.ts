@@ -24,7 +24,10 @@ export class WarehouseService {
     return this.repo.create(data);
   }
 
-  async update(id: string, data: Partial<{ name: string; address: any; isDefault: boolean; isActive: boolean }>) {
+  async update(
+    id: string,
+    data: Partial<{ name: string; address: any; isDefault: boolean; isActive: boolean }>,
+  ) {
     const warehouse = await this.repo.findById(id);
     if (!warehouse) throw new NotFoundError('Warehouse not found');
     return this.repo.update(id, data);

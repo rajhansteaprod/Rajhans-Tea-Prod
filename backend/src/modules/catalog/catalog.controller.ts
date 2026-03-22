@@ -2,12 +2,7 @@ import { Request, Response } from 'express';
 import { CategoryService } from './services/category.service';
 import { CollectionService } from './services/collection.service';
 import { ProductService } from './services/product.service';
-import {
-  sendSuccess,
-  sendCreated,
-  sendPaginated,
-  sendNoContent,
-} from '../../utils/api-response';
+import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../../utils/api-response';
 import { BadRequestError } from '../../utils/api-error';
 
 const categoryService = new CategoryService();

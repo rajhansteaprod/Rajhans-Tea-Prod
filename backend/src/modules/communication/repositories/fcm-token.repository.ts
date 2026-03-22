@@ -15,7 +15,9 @@ export class FcmTokenRepository {
   }
 
   async getTokensForUser(userId: string): Promise<string[]> {
-    const docs = await FcmToken.find({ userId: new Types.ObjectId(userId) }).select('token').exec();
+    const docs = await FcmToken.find({ userId: new Types.ObjectId(userId) })
+      .select('token')
+      .exec();
     return docs.map((d) => d.token);
   }
 

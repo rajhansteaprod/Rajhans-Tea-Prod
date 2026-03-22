@@ -12,9 +12,21 @@ const BACKUP_DIR = path.join(process.cwd(), 'backups');
 
 // Core collections to backup
 const COLLECTIONS = [
-  'users', 'products', 'categories', 'collections', 'orders', 'payments',
-  'carts', 'wishlists', 'wallets', 'wallettransactions', 'invoices',
-  'reviews', 'coupons', 'storesettings', 'featureflags',
+  'users',
+  'products',
+  'categories',
+  'collections',
+  'orders',
+  'payments',
+  'carts',
+  'wishlists',
+  'wallets',
+  'wallettransactions',
+  'invoices',
+  'reviews',
+  'coupons',
+  'storesettings',
+  'featureflags',
 ];
 
 export class BackupService {
@@ -53,7 +65,9 @@ export class BackupService {
       try {
         const files = this.getFilesRecursive(backupPath);
         totalSize = files.reduce((sum, f) => sum + fs.statSync(f).size, 0);
-      } catch { /* size unknown */ }
+      } catch {
+        /* size unknown */
+      }
 
       record.status = 'completed';
       record.path = backupPath;
@@ -98,11 +112,13 @@ export class BackupService {
       total,
       completed,
       failed,
-      lastBackup: latest ? {
-        date: latest.completedAt,
-        sizeMB: +(latest.sizeBytes / 1024 / 1024).toFixed(2),
-        type: latest.type,
-      } : null,
+      lastBackup: latest
+        ? {
+            date: latest.completedAt,
+            sizeMB: +(latest.sizeBytes / 1024 / 1024).toFixed(2),
+            type: latest.type,
+          }
+        : null,
     };
   }
 

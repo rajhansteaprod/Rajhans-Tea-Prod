@@ -59,18 +59,23 @@ export class WorkflowService {
       resourceId,
       currentState: def.initialState,
       isCompleted: false,
-      history: [{
-        fromState: '_start',
-        toState: def.initialState,
-        performedBy: new Types.ObjectId(createdByUserId),
-        note: 'Workflow started',
-        timestamp: new Date(),
-      }],
+      history: [
+        {
+          fromState: '_start',
+          toState: def.initialState,
+          performedBy: new Types.ObjectId(createdByUserId),
+          note: 'Workflow started',
+          timestamp: new Date(),
+        },
+      ],
       metadata,
       createdBy: new Types.ObjectId(createdByUserId),
     });
 
-    logger.info({ definitionSlug, resourceType, resourceId, instanceId: instance._id }, 'Workflow started');
+    logger.info(
+      { definitionSlug, resourceType, resourceId, instanceId: instance._id },
+      'Workflow started',
+    );
     return instance;
   }
 
@@ -88,11 +93,11 @@ export class WorkflowService {
     if (!def) throw new NotFoundError('Workflow definition not found');
 
     // Validate transition
-    const rule = def.transitions.find(
-      (t) => t.from === instance.currentState && t.to === toState,
-    );
+    const rule = def.transitions.find((t) => t.from === instance.currentState && t.to === toState);
     if (!rule) {
-      throw new BadRequestError(`Invalid transition from "${instance.currentState}" to "${toState}"`);
+      throw new BadRequestError(
+        `Invalid transition from "${instance.currentState}" to "${toState}"`,
+      );
     }
 
     // Validate role
@@ -121,7 +126,9 @@ export class WorkflowService {
 
   // ─── Queries ──────────────────────────────────────────────────────────────
 
-  async getPendingInstances(query: { page?: number; limit?: number; definitionSlug?: string } = {}) {
+  async getPendingInstances(
+    query: { page?: number; limit?: number; definitionSlug?: string } = {},
+  ) {
     const { page, limit, skip } = parsePagination(query);
     const filter: Record<string, unknown> = { isCompleted: false };
     if (query.definitionSlug) filter.definitionSlug = query.definitionSlug;
@@ -168,13 +175,21 @@ export class WorkflowService {
       WorkflowInstance.countDocuments({ isCompleted: false }).exec(),
       WorkflowInstance.countDocuments({ isCompleted: true }).exec(),
       WorkflowInstance.aggregate([
-        { $group: { _id: '$definitionSlug', total: { $sum: 1 }, pending: { $sum: { $cond: ['$isCompleted', 0, 1] } } } },
+        {
+          $group: {
+            _id: '$definitionSlug',
+            total: { $sum: 1 },
+            pending: { $sum: { $cond: ['$isCompleted', 0, 1] } },
+          },
+        },
       ]).exec(),
     ]);
     return { total, pending, completed, byDefinition };
   }
 
-  async getAvailableTransitions(instanceId: string): Promise<{ to: string; label: string; requiredRole: string }[]> {
+  async getAvailableTransitions(
+    instanceId: string,
+  ): Promise<{ to: string; label: string; requiredRole: string }[]> {
     const instance = await WorkflowInstance.findById(instanceId).exec();
     if (!instance || instance.isCompleted) return [];
 

@@ -29,4 +29,7 @@ const inventoryAlertSchema = new Schema<IInventoryAlertDoc>(
 inventoryAlertSchema.index({ productId: 1, isResolved: 1 });
 inventoryAlertSchema.index({ isResolved: 1, createdAt: -1 });
 
-export const InventoryAlert = mongoose.model<IInventoryAlertDoc>('InventoryAlert', inventoryAlertSchema);
+export const InventoryAlert = mongoose.model<IInventoryAlertDoc>(
+  'InventoryAlert',
+  inventoryAlertSchema,
+);

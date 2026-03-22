@@ -61,7 +61,10 @@ export const getShippingRates = async (req: Request, res: Response) => {
 
 export const handleShiprocketWebhook = async (req: Request, res: Response) => {
   const token = req.headers['x-api-key'] as string;
-  if (config.shipping.shiprocket.webhookToken && token !== config.shipping.shiprocket.webhookToken) {
+  if (
+    config.shipping.shiprocket.webhookToken &&
+    token !== config.shipping.shiprocket.webhookToken
+  ) {
     throw new BadRequestError('Invalid webhook token');
   }
 
@@ -75,7 +78,7 @@ export const handleShiprocketWebhook = async (req: Request, res: Response) => {
       'PICKED UP': 'in_transit',
       'IN TRANSIT': 'in_transit',
       'OUT FOR DELIVERY': 'out_for_delivery',
-      'DELIVERED': 'delivered',
+      DELIVERED: 'delivered',
     };
 
     const newStatus = statusMap[currentStatus.toUpperCase()];

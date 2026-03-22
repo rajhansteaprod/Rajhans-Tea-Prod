@@ -4,11 +4,7 @@ import { StockReservation, IStockReservationDoc } from '../models/stock-reservat
 const RESERVATION_TTL_MINUTES = 15;
 
 export class StockReservationRepository {
-  async reserve(
-    sessionId: string,
-    productId: string,
-    qty: number,
-  ): Promise<IStockReservationDoc> {
+  async reserve(sessionId: string, productId: string, qty: number): Promise<IStockReservationDoc> {
     const expiresAt = new Date(Date.now() + RESERVATION_TTL_MINUTES * 60 * 1000);
 
     return StockReservation.findOneAndUpdate(

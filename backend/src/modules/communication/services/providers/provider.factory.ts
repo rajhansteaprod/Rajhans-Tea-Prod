@@ -10,9 +10,15 @@ export function getNotificationProvider(channel: 'email' | 'sms' | 'push'): Noti
 
   let provider: NotificationProvider;
   switch (channel) {
-    case 'email': provider = new EmailProvider(); break;
-    case 'sms': provider = new SMSProvider(); break;
-    case 'push': provider = new PushProvider(); break;
+    case 'email':
+      provider = new EmailProvider();
+      break;
+    case 'sms':
+      provider = new SMSProvider();
+      break;
+    case 'push':
+      provider = new PushProvider();
+      break;
   }
 
   cache.set(channel, provider);

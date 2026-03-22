@@ -50,18 +50,30 @@ export const deleteReview = async (req: Request, res: Response) => {
 };
 
 export const voteHelpful = async (req: Request, res: Response) => {
-  const action = await reviewService.voteHelpful(req.user!.userId, req.params['reviewId'] as string);
+  const action = await reviewService.voteHelpful(
+    req.user!.userId,
+    req.params['reviewId'] as string,
+  );
   sendSuccess(res, { action }, action === 'added' ? 'Vote added' : 'Vote removed');
 };
 
 export const reportReview = async (req: Request, res: Response) => {
   const { reason, details } = req.body;
-  await reviewService.reportReview(req.user!.userId, req.params['reviewId'] as string, reason, details);
+  await reviewService.reportReview(
+    req.user!.userId,
+    req.params['reviewId'] as string,
+    reason,
+    details,
+  );
   sendSuccess(res, { reported: true }, 'Review reported');
 };
 
 export const submitQuestion = async (req: Request, res: Response) => {
-  const question = await qaService.submitQuestion(req.user!.userId, req.params['productId'] as string, req.body.questionText);
+  const question = await qaService.submitQuestion(
+    req.user!.userId,
+    req.params['productId'] as string,
+    req.body.questionText,
+  );
   sendCreated(res, question, 'Question submitted');
 };
 
@@ -89,10 +101,16 @@ export const getMyReviews = async (req: Request, res: Response) => {
 export const adminGetModeration = async (req: Request, res: Response) => {
   const { page, limit, type } = req.query as Record<string, string | undefined>;
   if (type === 'questions') {
-    const result = await qaService.getModerationQueue({ page: page ? parseInt(page, 10) : undefined, limit: limit ? parseInt(limit, 10) : undefined });
+    const result = await qaService.getModerationQueue({
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
     sendPaginated(res, result.questions, result.meta, 'Questions moderation');
   } else {
-    const result = await reviewService.getModerationQueue({ page: page ? parseInt(page, 10) : undefined, limit: limit ? parseInt(limit, 10) : undefined });
+    const result = await reviewService.getModerationQueue({
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
     sendPaginated(res, result.reviews, result.meta, 'Reviews moderation');
   }
 };

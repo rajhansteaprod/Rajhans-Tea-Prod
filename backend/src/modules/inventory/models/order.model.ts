@@ -116,8 +116,15 @@ const orderSchema = new Schema<IOrderDoc>(
     status: {
       type: String,
       enum: [
-        'confirmed', 'processing', 'shipped', 'in_transit',
-        'out_for_delivery', 'delivered', 'cancelled', 'return_requested', 'returned',
+        'confirmed',
+        'processing',
+        'shipped',
+        'in_transit',
+        'out_for_delivery',
+        'delivered',
+        'cancelled',
+        'return_requested',
+        'returned',
       ],
       default: 'confirmed',
     },

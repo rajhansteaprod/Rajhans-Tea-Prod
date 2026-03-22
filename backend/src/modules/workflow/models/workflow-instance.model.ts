@@ -55,4 +55,7 @@ workflowInstanceSchema.index({ resourceType: 1, resourceId: 1 });
 workflowInstanceSchema.index({ assignedTo: 1, isCompleted: 1 });
 workflowInstanceSchema.index({ createdBy: 1 });
 
-export const WorkflowInstance = mongoose.model<IWorkflowInstanceDoc>('WorkflowInstance', workflowInstanceSchema);
+export const WorkflowInstance = mongoose.model<IWorkflowInstanceDoc>(
+  'WorkflowInstance',
+  workflowInstanceSchema,
+);

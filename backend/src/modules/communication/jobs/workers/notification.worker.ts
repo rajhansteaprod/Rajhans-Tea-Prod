@@ -13,7 +13,9 @@ export const startNotificationWorker = (): void => {
     async (job: Job) => {
       if (job.name === 'notification:send') {
         const { type, userId, metadata } = job.data as {
-          type: string; userId: string; metadata: Record<string, unknown>;
+          type: string;
+          userId: string;
+          metadata: Record<string, unknown>;
         };
         logger.info({ type, userId, jobId: job.id }, 'Sending notification');
         await notificationService.dispatch(type as any, userId, metadata);
@@ -21,7 +23,9 @@ export const startNotificationWorker = (): void => {
 
       if (job.name === 'notification:send-bulk') {
         const { type, userIds, metadata } = job.data as {
-          type: string; userIds: string[]; metadata: Record<string, unknown>;
+          type: string;
+          userIds: string[];
+          metadata: Record<string, unknown>;
         };
         logger.info({ type, count: userIds.length, jobId: job.id }, 'Sending bulk notification');
         await notificationService.dispatchBulk(type as any, userIds, metadata);

@@ -56,7 +56,10 @@ export class ReviewService {
     return review;
   }
 
-  async getProductReviews(productId: string, query: { page?: number; limit?: number; sort?: string; rating?: number } = {}) {
+  async getProductReviews(
+    productId: string,
+    query: { page?: number; limit?: number; sort?: string; rating?: number } = {},
+  ) {
     return this.repo.findByProduct(productId, query);
   }
 
@@ -80,12 +83,20 @@ export class ReviewService {
       return 'removed';
     }
 
-    await ReviewVote.create({ userId: new Types.ObjectId(userId), reviewId: new Types.ObjectId(reviewId) });
+    await ReviewVote.create({
+      userId: new Types.ObjectId(userId),
+      reviewId: new Types.ObjectId(reviewId),
+    });
     await this.repo.incrementHelpfulVotes(reviewId, 1);
     return 'added';
   }
 
-  async reportReview(userId: string, reviewId: string, reason: string, details?: string): Promise<void> {
+  async reportReview(
+    userId: string,
+    reviewId: string,
+    reason: string,
+    details?: string,
+  ): Promise<void> {
     const exists = await ReviewReport.findOne({
       userId: new Types.ObjectId(userId),
       reviewId: new Types.ObjectId(reviewId),
@@ -104,7 +115,8 @@ export class ReviewService {
   async deleteReview(userId: string, reviewId: string): Promise<void> {
     const review = await this.repo.findById(reviewId);
     if (!review) throw new NotFoundError('Review not found');
-    if (review.userId.toString() !== userId) throw new ForbiddenError('Cannot delete another user\'s review');
+    if (review.userId.toString() !== userId)
+      throw new ForbiddenError("Cannot delete another user's review");
 
     const productId = review.productId.toString();
     await this.repo.deleteById(reviewId);

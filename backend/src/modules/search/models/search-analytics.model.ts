@@ -25,4 +25,7 @@ const searchAnalyticsSchema = new Schema<ISearchAnalyticsDoc>(
 searchAnalyticsSchema.index({ normalizedQuery: 1, createdAt: -1 });
 searchAnalyticsSchema.index({ createdAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 }); // 90 days TTL
 
-export const SearchAnalytics = mongoose.model<ISearchAnalyticsDoc>('SearchAnalytics', searchAnalyticsSchema);
+export const SearchAnalytics = mongoose.model<ISearchAnalyticsDoc>(
+  'SearchAnalytics',
+  searchAnalyticsSchema,
+);

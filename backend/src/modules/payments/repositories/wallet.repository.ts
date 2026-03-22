@@ -1,6 +1,10 @@
 import mongoose, { Types } from 'mongoose';
 import { Wallet, IWalletDoc } from '../models/wallet.model';
-import { WalletTransaction, IWalletTransactionDoc, WalletTxnSource } from '../models/wallet-transaction.model';
+import {
+  WalletTransaction,
+  IWalletTransactionDoc,
+  WalletTxnSource,
+} from '../models/wallet-transaction.model';
 import { BadRequestError } from '../../../utils/api-error';
 import { parsePagination, buildPaginationMeta } from '../../../utils/pagination';
 

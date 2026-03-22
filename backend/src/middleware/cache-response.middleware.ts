@@ -41,7 +41,9 @@ export function cacheResponse(ttlSeconds = 300, options: { varyByUser?: boolean 
       res.json = function (body: unknown) {
         // Only cache successful responses
         if (res.statusCode >= 200 && res.statusCode < 300) {
-          redis.set(cacheKey, JSON.stringify(body), 'EX', ttlSeconds).catch(() => {/* silent */});
+          redis.set(cacheKey, JSON.stringify(body), 'EX', ttlSeconds).catch(() => {
+            /* silent */
+          });
         }
         res.setHeader('X-Cache', 'MISS');
         res.setHeader('Cache-Control', `public, max-age=${ttlSeconds}`);
@@ -67,5 +69,7 @@ export async function invalidateCache(pattern: string): Promise<void> {
     if (keys.length > 0) {
       await redis.del(...keys);
     }
-  } catch {/* silent */}
+  } catch {
+    /* silent */
+  }
 }

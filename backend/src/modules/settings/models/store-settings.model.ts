@@ -36,4 +36,7 @@ const storeSettingsSchema = new Schema<IStoreSettingsDoc>(
   { timestamps: true },
 );
 
-export const StoreSettings = mongoose.model<IStoreSettingsDoc>('StoreSettings', storeSettingsSchema);
+export const StoreSettings = mongoose.model<IStoreSettingsDoc>(
+  'StoreSettings',
+  storeSettingsSchema,
+);

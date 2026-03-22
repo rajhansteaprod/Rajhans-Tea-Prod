@@ -17,7 +17,9 @@ export class WebhookDispatcherService {
     }).exec();
 
     for (const sub of subscribers) {
-      this.send(sub, event, payload).catch(() => {/* fire and forget */});
+      this.send(sub, event, payload).catch(() => {
+        /* fire and forget */
+      });
     }
   }
 
@@ -47,7 +49,10 @@ export class WebhookDispatcherService {
         sub.failCount = 0;
       } else {
         sub.failCount += 1;
-        logger.warn({ webhookId: sub._id, url: sub.url, status: res.status }, 'Webhook delivery failed');
+        logger.warn(
+          { webhookId: sub._id, url: sub.url, status: res.status },
+          'Webhook delivery failed',
+        );
       }
       await sub.save();
 
@@ -68,11 +73,13 @@ export class WebhookDispatcherService {
 
   // ─── Integration Health ───────────────────────────────────────────────────
 
-  async getIntegrationHealth(): Promise<{
-    name: string;
-    status: 'connected' | 'error' | 'not_configured';
-    lastCheck?: string;
-  }[]> {
+  async getIntegrationHealth(): Promise<
+    {
+      name: string;
+      status: 'connected' | 'error' | 'not_configured';
+      lastCheck?: string;
+    }[]
+  > {
     const integrations = [
       { name: 'Razorpay', envKey: 'RAZORPAY_KEY_ID' },
       { name: 'Shiprocket', envKey: 'SHIPROCKET_EMAIL' },
@@ -83,7 +90,7 @@ export class WebhookDispatcherService {
 
     return integrations.map((i) => ({
       name: i.name,
-      status: process.env[i.envKey] ? 'connected' as const : 'not_configured' as const,
+      status: process.env[i.envKey] ? ('connected' as const) : ('not_configured' as const),
     }));
   }
 }

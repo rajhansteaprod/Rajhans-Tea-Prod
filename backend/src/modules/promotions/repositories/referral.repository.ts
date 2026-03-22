@@ -15,13 +15,19 @@ export class ReferralRepository {
   }
 
   async updateSettings(data: Partial<IReferralSettingsDoc>): Promise<IReferralSettingsDoc> {
-    return ReferralSettings.findOneAndUpdate({}, { $set: data }, { new: true, upsert: true }).exec() as Promise<IReferralSettingsDoc>;
+    return ReferralSettings.findOneAndUpdate(
+      {},
+      { $set: data },
+      { new: true, upsert: true },
+    ).exec() as Promise<IReferralSettingsDoc>;
   }
 
   // ─── Referral CRUD ────────────────────────────────────────────────────────
 
   async findByCode(code: string): Promise<IReferralDoc[]> {
-    return Referral.find({ referralCode: code }).populate('refereeUserId', 'phone firstName').exec();
+    return Referral.find({ referralCode: code })
+      .populate('refereeUserId', 'phone firstName')
+      .exec();
   }
 
   async findByReferrer(userId: string): Promise<IReferralDoc[]> {
@@ -69,7 +75,9 @@ export class ReferralRepository {
     return { referrals, meta: buildPaginationMeta(page, limit, total) };
   }
 
-  async getReferrerStats(userId: string): Promise<{ total: number; completed: number; pending: number }> {
+  async getReferrerStats(
+    userId: string,
+  ): Promise<{ total: number; completed: number; pending: number }> {
     const referrals = await Referral.find({ referrerUserId: new Types.ObjectId(userId) }).exec();
     return {
       total: referrals.length,

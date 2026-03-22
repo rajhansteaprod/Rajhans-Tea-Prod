@@ -23,13 +23,18 @@ export const createRuleSchema = z.object({
     type: z.enum(['manual', 'automated']),
     section: z.enum(['trending', 'recommended', 'featured_collections', 'new_arrivals', 'banner']),
     pinnedProducts: z.array(mongoId).optional(),
-    strategy: z.enum(['top_selling', 'new_arrivals', 'low_stock', 'most_viewed', 'category_top']).nullable().optional(),
-    strategyConfig: z.object({
-      categoryId: mongoId.optional(),
-      lookbackDays: z.number({ coerce: true }).int().min(1).optional(),
-      limit: z.number({ coerce: true }).int().min(1).max(50).optional(),
-      minStock: z.number({ coerce: true }).int().min(1).optional(),
-    }).optional(),
+    strategy: z
+      .enum(['top_selling', 'new_arrivals', 'low_stock', 'most_viewed', 'category_top'])
+      .nullable()
+      .optional(),
+    strategyConfig: z
+      .object({
+        categoryId: mongoId.optional(),
+        lookbackDays: z.number({ coerce: true }).int().min(1).optional(),
+        limit: z.number({ coerce: true }).int().min(1).max(50).optional(),
+        minStock: z.number({ coerce: true }).int().min(1).optional(),
+      })
+      .optional(),
     priority: z.number({ coerce: true }).int().min(0).optional(),
     isActive: z.boolean().optional(),
     startDate: z.string().nullable().optional(),

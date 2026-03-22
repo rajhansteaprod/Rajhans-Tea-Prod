@@ -29,10 +29,24 @@ export class SearchAnalyticsRepository {
     ]).exec();
   }
 
-  async getZeroResultQueries(limit = 50): Promise<{ query: string; count: number; lastSearched: Date }[]> {
+  async getZeroResultQueries(
+    limit = 50,
+  ): Promise<{ query: string; count: number; lastSearched: Date }[]> {
     return SearchAnalytics.aggregate([
-      { $match: { resultCount: 0, createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } } },
-      { $group: { _id: '$normalizedQuery', count: { $sum: 1 }, query: { $first: '$query' }, lastSearched: { $max: '$createdAt' } } },
+      {
+        $match: {
+          resultCount: 0,
+          createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+        },
+      },
+      {
+        $group: {
+          _id: '$normalizedQuery',
+          count: { $sum: 1 },
+          query: { $first: '$query' },
+          lastSearched: { $max: '$createdAt' },
+        },
+      },
       { $sort: { count: -1 } },
       { $limit: limit },
       { $project: { _id: 0, query: 1, count: 1, lastSearched: 1 } },

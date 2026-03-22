@@ -37,7 +37,11 @@ export interface ShippingProvider {
   generateAWB(shipmentId: number, courierId?: number): Promise<AWBResult>;
   trackShipment(shipmentId: number): Promise<TrackingResult>;
   cancelOrder(providerOrderId: number): Promise<void>;
-  getShippingRates(pickupPincode: string, deliveryPincode: string, weight: number): Promise<ShippingRate[]>;
+  getShippingRates(
+    pickupPincode: string,
+    deliveryPincode: string,
+    weight: number,
+  ): Promise<ShippingRate[]>;
   generateLabel(shipmentId: number): Promise<string>;
   schedulePickup(shipmentId: number): Promise<PickupResult>;
 }

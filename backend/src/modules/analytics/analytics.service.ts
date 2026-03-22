@@ -15,7 +15,13 @@ export class AnalyticsService {
 
     return Payment.aggregate([
       { $match: { status: 'captured', createdAt: { $gte: since } } },
-      { $group: { _id: { $dateToString: { format: dateFormat, date: '$createdAt' } }, revenue: { $sum: { $divide: ['$amountPaise', 100] } }, count: { $sum: 1 } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: dateFormat, date: '$createdAt' } },
+          revenue: { $sum: { $divide: ['$amountPaise', 100] } },
+          count: { $sum: 1 },
+        },
+      },
       { $sort: { _id: 1 } },
       { $project: { _id: 0, date: '$_id', revenue: { $round: ['$revenue', 2] }, count: 1 } },
     ]).exec();
@@ -32,10 +38,25 @@ export class AnalyticsService {
     return Order.aggregate([
       { $match: { status: { $nin: ['cancelled', 'returned'] } } },
       { $unwind: '$items' },
-      { $group: { _id: '$items.productId', name: { $first: '$items.name' }, totalQty: { $sum: '$items.qty' }, totalRevenue: { $sum: '$items.totalPrice' } } },
+      {
+        $group: {
+          _id: '$items.productId',
+          name: { $first: '$items.name' },
+          totalQty: { $sum: '$items.qty' },
+          totalRevenue: { $sum: '$items.totalPrice' },
+        },
+      },
       { $sort: { totalQty: -1 } },
       { $limit: limit },
-      { $project: { _id: 0, productId: '$_id', name: 1, totalQty: 1, totalRevenue: { $round: ['$totalRevenue', 2] } } },
+      {
+        $project: {
+          _id: 0,
+          productId: '$_id',
+          name: 1,
+          totalQty: 1,
+          totalRevenue: { $round: ['$totalRevenue', 2] },
+        },
+      },
     ]).exec();
   }
 
@@ -43,7 +64,12 @@ export class AnalyticsService {
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
     return User.aggregate([
       { $match: { createdAt: { $gte: since } } },
-      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, count: { $sum: 1 } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          count: { $sum: 1 },
+        },
+      },
       { $sort: { _id: 1 } },
       { $project: { _id: 0, date: '$_id', count: 1 } },
     ]).exec();
@@ -52,13 +78,16 @@ export class AnalyticsService {
   async getConversionFunnel() {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-    const [views, cartsCreated, paymentsCreated, paymentsCaptured, ordersCreated] = await Promise.all([
-      ProductView.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }).exec(),
-      (await import('../cart/models/cart.model')).Cart.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }).exec(),
-      Payment.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }).exec(),
-      Payment.countDocuments({ status: 'captured', createdAt: { $gte: thirtyDaysAgo } }).exec(),
-      Order.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }).exec(),
-    ]);
+    const [views, cartsCreated, paymentsCreated, paymentsCaptured, ordersCreated] =
+      await Promise.all([
+        ProductView.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }).exec(),
+        (await import('../cart/models/cart.model')).Cart.countDocuments({
+          createdAt: { $gte: thirtyDaysAgo },
+        }).exec(),
+        Payment.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }).exec(),
+        Payment.countDocuments({ status: 'captured', createdAt: { $gte: thirtyDaysAgo } }).exec(),
+        Order.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }).exec(),
+      ]);
 
     return [
       { stage: 'Product Views', count: views },
@@ -73,14 +102,27 @@ export class AnalyticsService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [totalRevenue, todayRevenue, totalOrders, todayOrders, aov, avgRating] = await Promise.all([
-      Payment.aggregate([{ $match: { status: 'captured' } }, { $group: { _id: null, total: { $sum: '$amountPaise' } } }]).exec(),
-      Payment.aggregate([{ $match: { status: 'captured', createdAt: { $gte: today } } }, { $group: { _id: null, total: { $sum: '$amountPaise' } } }]).exec(),
-      Order.countDocuments({ status: { $nin: ['cancelled'] } }).exec(),
-      Order.countDocuments({ createdAt: { $gte: today } }).exec(),
-      Order.aggregate([{ $match: { status: { $nin: ['cancelled', 'returned'] } } }, { $group: { _id: null, avg: { $avg: '$total' } } }]).exec(),
-      Review.aggregate([{ $match: { status: 'approved' } }, { $group: { _id: null, avg: { $avg: '$rating' } } }]).exec(),
-    ]);
+    const [totalRevenue, todayRevenue, totalOrders, todayOrders, aov, avgRating] =
+      await Promise.all([
+        Payment.aggregate([
+          { $match: { status: 'captured' } },
+          { $group: { _id: null, total: { $sum: '$amountPaise' } } },
+        ]).exec(),
+        Payment.aggregate([
+          { $match: { status: 'captured', createdAt: { $gte: today } } },
+          { $group: { _id: null, total: { $sum: '$amountPaise' } } },
+        ]).exec(),
+        Order.countDocuments({ status: { $nin: ['cancelled'] } }).exec(),
+        Order.countDocuments({ createdAt: { $gte: today } }).exec(),
+        Order.aggregate([
+          { $match: { status: { $nin: ['cancelled', 'returned'] } } },
+          { $group: { _id: null, avg: { $avg: '$total' } } },
+        ]).exec(),
+        Review.aggregate([
+          { $match: { status: 'approved' } },
+          { $group: { _id: null, avg: { $avg: '$rating' } } },
+        ]).exec(),
+      ]);
 
     return {
       totalRevenue: (totalRevenue[0]?.total ?? 0) / 100,

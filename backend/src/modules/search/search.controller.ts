@@ -7,10 +7,26 @@ const searchService = new SearchService();
 // ─── Public ──────────────────────────────────────────────────────────────────
 
 export const searchProducts = async (req: Request, res: Response) => {
-  const { q, page, limit, sort, categoryId, categorySlug, collectionId, priceMin, priceMax, inStock, tags } =
-    req.query as Record<string, string | undefined>;
+  const {
+    q,
+    page,
+    limit,
+    sort,
+    categoryId,
+    categorySlug,
+    collectionId,
+    priceMin,
+    priceMax,
+    inStock,
+    tags,
+  } = req.query as Record<string, string | undefined>;
 
-  const parsedTags = tags ? tags.split(',').map((t) => t.trim()).filter(Boolean) : undefined;
+  const parsedTags = tags
+    ? tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
+    : undefined;
 
   const result = await searchService.search(
     {

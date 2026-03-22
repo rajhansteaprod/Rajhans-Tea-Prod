@@ -12,7 +12,11 @@ export interface IReferralSettingsDoc extends Document {
 const referralSettingsSchema = new Schema<IReferralSettingsDoc>(
   {
     isActive: { type: Boolean, default: true },
-    referrerRewardType: { type: String, enum: ['loyalty_points', 'wallet_credit'], default: 'loyalty_points' },
+    referrerRewardType: {
+      type: String,
+      enum: ['loyalty_points', 'wallet_credit'],
+      default: 'loyalty_points',
+    },
     referrerRewardAmount: { type: Number, default: 500 },
     refereeCouponValue: { type: Number, default: 100 },
     refereeCouponMinOrder: { type: Number, default: 500 },
@@ -21,4 +25,7 @@ const referralSettingsSchema = new Schema<IReferralSettingsDoc>(
   { timestamps: true },
 );
 
-export const ReferralSettings = mongoose.model<IReferralSettingsDoc>('ReferralSettings', referralSettingsSchema);
+export const ReferralSettings = mongoose.model<IReferralSettingsDoc>(
+  'ReferralSettings',
+  referralSettingsSchema,
+);

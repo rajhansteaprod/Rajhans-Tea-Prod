@@ -73,7 +73,8 @@ export const adminSendBulk = async (req: Request, res: Response) => {
   const users = await User.find(filter).select('_id').limit(10000).exec();
   const userIds = users.map((u) => u._id.toString());
 
-  const { getNotificationQueue, NotificationJobs } = await import('./jobs/queues/notification.queue');
+  const { getNotificationQueue, NotificationJobs } =
+    await import('./jobs/queues/notification.queue');
   await getNotificationQueue().add(
     NotificationJobs.SEND_BULK,
     { type: type || 'announcement', userIds, metadata: { message } },

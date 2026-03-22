@@ -27,21 +27,25 @@ export class PushProvider implements NotificationProvider {
               title: payload.title || 'RnD Ecommerce',
               body: payload.body,
             },
-            webpush: payload.link
-              ? { fcmOptions: { link: payload.link } }
-              : undefined,
+            webpush: payload.link ? { fcmOptions: { link: payload.link } } : undefined,
           });
           successCount++;
         } catch (err: any) {
           // Token might be stale
-          if (err.code === 'messaging/registration-token-not-registered' || err.code === 'messaging/invalid-registration-token') {
+          if (
+            err.code === 'messaging/registration-token-not-registered' ||
+            err.code === 'messaging/invalid-registration-token'
+          ) {
             await this.fcmTokenRepo.removeStaleToken(token);
           }
           logger.warn({ token: token.slice(0, 10), err: err.message }, 'FCM send failed for token');
         }
       }
 
-      return { success: successCount > 0, providerMessageId: `fcm-${successCount}/${tokens.length}` };
+      return {
+        success: successCount > 0,
+        providerMessageId: `fcm-${successCount}/${tokens.length}`,
+      };
     } catch (err: any) {
       logger.error({ err: err.message }, 'Push notification failed');
       return { success: false, error: err.message };

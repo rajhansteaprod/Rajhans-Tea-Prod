@@ -28,12 +28,26 @@ export const createOrder = async (req: Request, res: Response) => {
   const { address, walletAmount } = req.body;
 
   // Idempotency key: derived from sessionId + address hash (prevents double payment for same cart)
-  const addressHash = crypto.createHash('md5').update(JSON.stringify(address)).digest('hex').slice(0, 12);
+  const addressHash = crypto
+    .createHash('md5')
+    .update(JSON.stringify(address))
+    .digest('hex')
+    .slice(0, 12);
   const idempotencyKey =
     (req.headers['x-idempotency-key'] as string) || `${sessionId}-${addressHash}`;
 
-  const result = await paymentService.createOrder(sessionId, userId, address, idempotencyKey, walletAmount || 0);
-  sendCreated(res, result, 'paidViaWallet' in result ? 'Paid via wallet' : 'Razorpay order created');
+  const result = await paymentService.createOrder(
+    sessionId,
+    userId,
+    address,
+    idempotencyKey,
+    walletAmount || 0,
+  );
+  sendCreated(
+    res,
+    result,
+    'paidViaWallet' in result ? 'Paid via wallet' : 'Razorpay order created',
+  );
 };
 
 export const verifyPayment = async (req: Request, res: Response) => {
@@ -144,7 +158,10 @@ export const adminGetPaymentStats = async (_req: Request, res: Response) => {
 
 export const adminListPayments = async (req: Request, res: Response) => {
   const { page, limit, status, search } = req.query as {
-    page?: string; limit?: string; status?: string; search?: string;
+    page?: string;
+    limit?: string;
+    status?: string;
+    search?: string;
   };
   const result = await paymentService.adminListPayments({
     page: page ? parseInt(page, 10) : undefined,

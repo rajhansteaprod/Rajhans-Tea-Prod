@@ -72,10 +72,6 @@ export class CartRepository {
     sessionId: string,
     items: { productId: Types.ObjectId; qty: number; addedAt: Date }[],
   ): Promise<void> {
-    await Cart.findOneAndUpdate(
-      { sessionId },
-      { $set: { items } },
-      { upsert: true },
-    ).exec();
+    await Cart.findOneAndUpdate({ sessionId }, { $set: { items } }, { upsert: true }).exec();
   }
 }

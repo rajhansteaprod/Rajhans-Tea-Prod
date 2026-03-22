@@ -21,7 +21,12 @@ const router = Router();
 
 router.get('/orders/user', authenticate, ctrl.getUserOrders);
 router.get('/orders/user/:orderId', authenticate, validate(orderIdSchema), ctrl.getOrderDetail);
-router.get('/orders/user/:orderId/tracking', authenticate, validate(orderIdSchema), ctrl.getOrderTracking);
+router.get(
+  '/orders/user/:orderId/tracking',
+  authenticate,
+  validate(orderIdSchema),
+  ctrl.getOrderTracking,
+);
 router.get('/shipping/rates', validate(shippingRateSchema), ctrl.getShippingRates);
 
 // ===========================================================================
@@ -42,7 +47,11 @@ adminRouter.use(authorize('admin'));
 adminRouter.get('/orders', ctrl.adminListOrders);
 adminRouter.get('/orders/stats', ctrl.adminGetOrderStats);
 adminRouter.get('/orders/:orderId', validate(orderIdSchema), ctrl.adminGetOrderDetail);
-adminRouter.patch('/orders/:orderId/status', validate(updateOrderStatusSchema), ctrl.adminUpdateOrderStatus);
+adminRouter.patch(
+  '/orders/:orderId/status',
+  validate(updateOrderStatusSchema),
+  ctrl.adminUpdateOrderStatus,
+);
 adminRouter.post('/orders/:orderId/cancel', validate(cancelOrderSchema), ctrl.adminCancelOrder);
 adminRouter.post('/orders/:orderId/ship', validate(orderIdSchema), ctrl.adminShipOrder);
 
@@ -53,7 +62,11 @@ adminRouter.get('/inventory/low-stock', ctrl.adminGetLowStockProducts);
 adminRouter.get('/inventory/movements', ctrl.adminGetAllMovements);
 adminRouter.get('/inventory/alerts', ctrl.adminGetAlerts);
 adminRouter.post('/inventory/alerts/:alertId/resolve', ctrl.adminResolveAlert);
-adminRouter.post('/inventory/:productId/adjust', validate(adjustStockSchema), ctrl.adminAdjustStock);
+adminRouter.post(
+  '/inventory/:productId/adjust',
+  validate(adjustStockSchema),
+  ctrl.adminAdjustStock,
+);
 adminRouter.post('/inventory/:productId/set-stock', ctrl.adminSetStock);
 adminRouter.get('/inventory/:productId/movements', ctrl.adminGetStockMovements);
 

@@ -19,8 +19,16 @@ export class CouponService {
     userId: string | null,
   ): Promise<CouponValidationResult> {
     const coupon = await this.repo.findByCode(code);
-    if (!coupon) return { valid: false, couponId: '', code, discountAmount: 0, message: 'Invalid coupon code' };
-    if (!coupon.isActive) return { valid: false, couponId: '', code, discountAmount: 0, message: 'Coupon is inactive' };
+    if (!coupon)
+      return {
+        valid: false,
+        couponId: '',
+        code,
+        discountAmount: 0,
+        message: 'Invalid coupon code',
+      };
+    if (!coupon.isActive)
+      return { valid: false, couponId: '', code, discountAmount: 0, message: 'Coupon is inactive' };
 
     const now = new Date();
     if (now < coupon.validFrom || now > coupon.validUntil) {
@@ -28,19 +36,34 @@ export class CouponService {
     }
 
     if (coupon.usageLimitTotal !== null && coupon.usedCount >= coupon.usageLimitTotal) {
-      return { valid: false, couponId: '', code, discountAmount: 0, message: 'Coupon usage limit reached' };
+      return {
+        valid: false,
+        couponId: '',
+        code,
+        discountAmount: 0,
+        message: 'Coupon usage limit reached',
+      };
     }
 
     if (userId) {
       const userUsage = await this.repo.getUserUsageCount(coupon._id.toString(), userId);
       if (userUsage >= coupon.usageLimitPerUser) {
-        return { valid: false, couponId: '', code, discountAmount: 0, message: 'You have already used this coupon' };
+        return {
+          valid: false,
+          couponId: '',
+          code,
+          discountAmount: 0,
+          message: 'You have already used this coupon',
+        };
       }
     }
 
     if (summary.total < coupon.minOrderAmount) {
       return {
-        valid: false, couponId: '', code, discountAmount: 0,
+        valid: false,
+        couponId: '',
+        code,
+        discountAmount: 0,
         message: `Minimum order amount is ₹${coupon.minOrderAmount}`,
       };
     }
@@ -50,7 +73,13 @@ export class CouponService {
       const cartProductIds = summary.items.map((i) => i.productId);
       const hasMatch = coupon.productIds.some((pid) => cartProductIds.includes(pid.toString()));
       if (!hasMatch) {
-        return { valid: false, couponId: '', code, discountAmount: 0, message: 'Coupon not applicable to items in cart' };
+        return {
+          valid: false,
+          couponId: '',
+          code,
+          discountAmount: 0,
+          message: 'Coupon not applicable to items in cart',
+        };
       }
     }
 
@@ -80,7 +109,13 @@ export class CouponService {
     };
   }
 
-  async recordUsage(couponId: string, userId: string | null, sessionId: string, paymentId: string, discountApplied: number): Promise<void> {
+  async recordUsage(
+    couponId: string,
+    userId: string | null,
+    sessionId: string,
+    paymentId: string,
+    discountApplied: number,
+  ): Promise<void> {
     await this.repo.incrementUsedCount(couponId);
     await this.repo.recordUsage({
       couponId: couponId as any,

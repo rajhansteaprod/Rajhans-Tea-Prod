@@ -46,7 +46,10 @@ export class MerchandisingService {
     switch (rule.strategy) {
       case 'top_selling': {
         const since = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
-        const filter: Record<string, unknown> = { status: { $nin: ['cancelled', 'returned'] }, createdAt: { $gte: since } };
+        const filter: Record<string, unknown> = {
+          status: { $nin: ['cancelled', 'returned'] },
+          createdAt: { $gte: since },
+        };
         const result = await Order.aggregate([
           { $match: filter },
           { $unwind: '$items' },
@@ -125,13 +128,21 @@ export class MerchandisingService {
 
   // ─── Banners CRUD ─────────────────────────────────────────────────────────
 
-  async listBanners() { return this.bannerRepo.findAll(); }
-  async getActiveBanners() { return this.bannerRepo.findActive(); }
-  async createBanner(data: any) { return this.bannerRepo.create(data); }
+  async listBanners() {
+    return this.bannerRepo.findAll();
+  }
+  async getActiveBanners() {
+    return this.bannerRepo.findActive();
+  }
+  async createBanner(data: any) {
+    return this.bannerRepo.create(data);
+  }
   async updateBanner(id: string, data: any) {
     const banner = await this.bannerRepo.findById(id);
     if (!banner) throw new NotFoundError('Banner not found');
     return this.bannerRepo.update(id, data);
   }
-  async deleteBanner(id: string) { await this.bannerRepo.delete(id); }
+  async deleteBanner(id: string) {
+    await this.bannerRepo.delete(id);
+  }
 }

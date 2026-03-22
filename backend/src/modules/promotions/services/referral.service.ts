@@ -101,7 +101,11 @@ export class ReferralService {
 
     // Credit referrer
     if (referral.referrerReward.type === 'loyalty_points') {
-      await this.loyaltyService.earnFromPurchase(referrerId, referral.referrerReward.amount * 100, paymentId);
+      await this.loyaltyService.earnFromPurchase(
+        referrerId,
+        referral.referrerReward.amount * 100,
+        paymentId,
+      );
     } else if (referral.referrerReward.type === 'wallet_credit') {
       await this.walletService.credit(
         referrerId,

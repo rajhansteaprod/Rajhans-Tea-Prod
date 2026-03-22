@@ -58,8 +58,8 @@ export class InventoryService {
     }
 
     // Clear stock reservations for this payment session
-    const payment = await import('../../payments/models/payment.model').then(
-      (m) => m.Payment.findById(order.paymentId).exec(),
+    const payment = await import('../../payments/models/payment.model').then((m) =>
+      m.Payment.findById(order.paymentId).exec(),
     );
     if (payment) {
       await StockReservation.deleteMany({ sessionId: payment.sessionId }).exec();
@@ -107,7 +107,10 @@ export class InventoryService {
 
   // ─── Restock from return ──────────────────────────────────────────────────
 
-  async restockFromReturn(orderId: string, items: { productId: string; qty: number }[]): Promise<void> {
+  async restockFromReturn(
+    orderId: string,
+    items: { productId: string; qty: number }[],
+  ): Promise<void> {
     const warehouse = await this.warehouseRepo.findDefault();
     if (!warehouse) return;
 
@@ -155,7 +158,10 @@ export class InventoryService {
   async getInventoryStats() {
     const [totalProducts, lowStock, outOfStock, unresolvedAlerts] = await Promise.all([
       Product.countDocuments({ trackInventory: true }).exec(),
-      Product.countDocuments({ trackInventory: true, stock: { $gt: 0, $lte: LOW_STOCK_THRESHOLD } }).exec(),
+      Product.countDocuments({
+        trackInventory: true,
+        stock: { $gt: 0, $lte: LOW_STOCK_THRESHOLD },
+      }).exec(),
       Product.countDocuments({ trackInventory: true, stock: 0 }).exec(),
       this.alertRepo.findUnresolved({ limit: 100 }),
     ]);
@@ -229,7 +235,13 @@ export class InventoryService {
       await this.alertRepo.resolveByProduct(productId);
     } else {
       const alertType = newStockValue === 0 ? 'out_of_stock' : 'low_stock';
-      await this.alertRepo.upsertAlert(productId, warehouse._id.toString(), alertType, newStockValue, LOW_STOCK_THRESHOLD);
+      await this.alertRepo.upsertAlert(
+        productId,
+        warehouse._id.toString(),
+        alertType,
+        newStockValue,
+        LOW_STOCK_THRESHOLD,
+      );
     }
 
     return { previousStock, newStock: newStockValue };

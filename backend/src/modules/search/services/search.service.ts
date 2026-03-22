@@ -8,10 +8,7 @@ export class SearchService {
   private analyticsRepo = new SearchAnalyticsRepository();
   private cache = new SearchCacheService();
 
-  async search(
-    params: SearchParams,
-    meta?: { userId?: string | null; sessionId?: string | null },
-  ) {
+  async search(params: SearchParams, meta?: { userId?: string | null; sessionId?: string | null }) {
     // Check cache
     const cacheKey = { ...params };
     const cached = await this.cache.getSearchResult(cacheKey);
@@ -32,21 +29,25 @@ export class SearchService {
     await this.cache.setSearchResult(cacheKey, response);
 
     // Log analytics (fire-and-forget)
-    this.analyticsRepo.log({
-      query: params.q || '',
-      resultCount: result.meta.total,
-      filters: {
-        categoryId: params.categoryId,
-        collectionId: params.collectionId,
-        priceMin: params.priceMin,
-        priceMax: params.priceMax,
-        inStock: params.inStock,
-        tags: params.tags,
-        sort: params.sort,
-      },
-      userId: meta?.userId,
-      sessionId: meta?.sessionId,
-    }).catch(() => {/* silent */});
+    this.analyticsRepo
+      .log({
+        query: params.q || '',
+        resultCount: result.meta.total,
+        filters: {
+          categoryId: params.categoryId,
+          collectionId: params.collectionId,
+          priceMin: params.priceMin,
+          priceMax: params.priceMax,
+          inStock: params.inStock,
+          tags: params.tags,
+          sort: params.sort,
+        },
+        userId: meta?.userId,
+        sessionId: meta?.sessionId,
+      })
+      .catch(() => {
+        /* silent */
+      });
 
     return response;
   }

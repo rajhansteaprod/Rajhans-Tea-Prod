@@ -117,7 +117,9 @@ export class PaymentRepository {
         { $match: { status: 'captured', createdAt: { $gte: todayStart } } },
         { $group: { _id: null, total: { $sum: '$amountPaise' } } },
       ]).exec(),
-      Payment.countDocuments({ status: { $in: ['captured', 'refunded', 'partially_refunded'] } }).exec(),
+      Payment.countDocuments({
+        status: { $in: ['captured', 'refunded', 'partially_refunded'] },
+      }).exec(),
       Payment.aggregate([
         { $match: { status: { $in: ['refunded', 'partially_refunded'] } } },
         { $group: { _id: null, total: { $sum: '$refundedAmount' } } },

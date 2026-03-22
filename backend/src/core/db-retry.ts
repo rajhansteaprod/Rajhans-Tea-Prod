@@ -1,11 +1,6 @@
 import { logger } from '../utils/logger';
 
-const TRANSIENT_CODES = new Set([
-  'ECONNRESET',
-  'ECONNREFUSED',
-  'ETIMEDOUT',
-  'EPIPE',
-]);
+const TRANSIENT_CODES = new Set(['ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT', 'EPIPE']);
 
 const TRANSIENT_MESSAGES = [
   'not primary',

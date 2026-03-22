@@ -17,7 +17,9 @@ export const unregisterFcmTokenSchema = z.object({
 
 export const updatePreferencesSchema = z.object({
   body: z.object({
-    preferences: z.record(z.object({ email: z.boolean(), sms: z.boolean(), push: z.boolean() })).optional(),
+    preferences: z
+      .record(z.object({ email: z.boolean(), sms: z.boolean(), push: z.boolean() }))
+      .optional(),
     quietHoursStart: z.number().int().min(0).max(23).nullable().optional(),
     quietHoursEnd: z.number().int().min(0).max(23).nullable().optional(),
   }),
@@ -36,7 +38,10 @@ export const createTemplateSchema = z.object({
     type: z.string().min(1).max(50),
     channels: z.object({
       email: z.object({ subject: z.string(), htmlBody: z.string() }).nullable().optional(),
-      sms: z.object({ body: z.string().max(160) }).nullable().optional(),
+      sms: z
+        .object({ body: z.string().max(160) })
+        .nullable()
+        .optional(),
       push: z.object({ title: z.string(), body: z.string() }).nullable().optional(),
     }),
     variables: z.array(z.string()).optional(),

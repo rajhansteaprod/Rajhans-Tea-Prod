@@ -19,7 +19,10 @@ export const startReviewsWorker = (): void => {
 
       if (job.name === 'reviews:review-reminder') {
         const { userId, orderId } = job.data as { userId: string; orderId: string };
-        logger.info({ userId, orderId, jobId: job.id }, 'Review reminder triggered (notification integration point)');
+        logger.info(
+          { userId, orderId, jobId: job.id },
+          'Review reminder triggered (notification integration point)',
+        );
         // Future: create notification for user to review purchased products
       }
     },

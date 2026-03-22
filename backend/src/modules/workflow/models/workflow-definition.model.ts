@@ -46,4 +46,7 @@ const workflowDefinitionSchema = new Schema<IWorkflowDefinitionDoc>(
 
 workflowDefinitionSchema.index({ slug: 1 }, { unique: true });
 
-export const WorkflowDefinition = mongoose.model<IWorkflowDefinitionDoc>('WorkflowDefinition', workflowDefinitionSchema);
+export const WorkflowDefinition = mongoose.model<IWorkflowDefinitionDoc>(
+  'WorkflowDefinition',
+  workflowDefinitionSchema,
+);

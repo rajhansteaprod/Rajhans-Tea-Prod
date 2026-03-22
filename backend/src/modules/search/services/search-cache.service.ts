@@ -2,9 +2,9 @@ import crypto from 'crypto';
 import { getRedisClient } from '../../../loaders/redis.loader';
 import { logger } from '../../../utils/logger';
 
-const SEARCH_TTL = 300;       // 5 minutes
+const SEARCH_TTL = 300; // 5 minutes
 const AUTOCOMPLETE_TTL = 600; // 10 minutes
-const POPULAR_TTL = 3600;     // 1 hour
+const POPULAR_TTL = 3600; // 1 hour
 
 export class SearchCacheService {
   private hashKey(params: Record<string, unknown>): string {

@@ -36,7 +36,12 @@ router.get('/catalog/collections', cacheResponse(300), catalog.listCollectionsPu
 router.get('/catalog/collections/:slug', cacheResponse(300), catalog.getCollectionBySlug);
 
 // Products (cached 2 min)
-router.get('/catalog/products', validate(listProductsSchema), cacheResponse(120), catalog.listProducts);
+router.get(
+  '/catalog/products',
+  validate(listProductsSchema),
+  cacheResponse(120),
+  catalog.listProducts,
+);
 router.get('/catalog/products/:slug', validate(productSlugSchema), catalog.getProductBySlug);
 
 // ===========================================================================

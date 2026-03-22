@@ -45,7 +45,9 @@ export function idempotency(ttlSeconds = IDEM_TTL) {
         // Cache successful responses
         if (res.statusCode >= 200 && res.statusCode < 300) {
           const toCache = JSON.stringify({ statusCode: res.statusCode, body });
-          redis.set(cacheKey, toCache, 'EX', ttlSeconds).catch(() => {/* silent */});
+          redis.set(cacheKey, toCache, 'EX', ttlSeconds).catch(() => {
+            /* silent */
+          });
         }
         return originalJson(body);
       } as any;

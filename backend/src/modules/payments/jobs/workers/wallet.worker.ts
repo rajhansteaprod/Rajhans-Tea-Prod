@@ -24,7 +24,14 @@ export const startWalletWorker = (): void => {
       logger.info({ userId, amount, source, jobId: job.id }, `Processing wallet ${job.name}`);
 
       if (job.name === 'wallet:credit') {
-        await walletService.credit(userId, amount, source, referenceId, description, idempotencyKey);
+        await walletService.credit(
+          userId,
+          amount,
+          source,
+          referenceId,
+          description,
+          idempotencyKey,
+        );
       } else if (job.name === 'wallet:debit') {
         await walletService.debit(userId, amount, source, referenceId, description, idempotencyKey);
       }

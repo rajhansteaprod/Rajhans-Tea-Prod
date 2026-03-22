@@ -5,7 +5,10 @@ import { sendSuccess, sendPaginated } from '../../utils/api-response';
 const auditService = new AuditService();
 
 export const getAuditLogs = async (req: Request, res: Response) => {
-  const { action, resource, userId, startDate, endDate, page, limit } = req.query as Record<string, string | undefined>;
+  const { action, resource, userId, startDate, endDate, page, limit } = req.query as Record<
+    string,
+    string | undefined
+  >;
   const result = await auditService.search(
     { action, resource, userId, startDate, endDate },
     { page: page ? parseInt(page, 10) : undefined, limit: limit ? parseInt(limit, 10) : undefined },

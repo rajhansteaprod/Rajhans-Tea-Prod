@@ -18,10 +18,12 @@ export class ArchiveService {
     const source = db.collection('orders');
     const archive = db.collection('orders_archive');
 
-    const docs = await source.find({
-      status: 'delivered',
-      createdAt: { $lt: cutoff },
-    }).toArray();
+    const docs = await source
+      .find({
+        status: 'delivered',
+        createdAt: { $lt: cutoff },
+      })
+      .toArray();
 
     if (docs.length === 0) return { archived: 0 };
 

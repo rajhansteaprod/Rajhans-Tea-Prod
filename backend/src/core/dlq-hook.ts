@@ -19,7 +19,13 @@ export function attachDLQHook(worker: Worker, queueName: string): void {
     const maxAttempts = (job.opts?.attempts as number) || 1;
     if (job.attemptsMade >= maxAttempts) {
       logger.warn(
-        { queueName, jobName: job.name, jobId: job.id, attempts: job.attemptsMade, error: err.message },
+        {
+          queueName,
+          jobName: job.name,
+          jobId: job.id,
+          attempts: job.attemptsMade,
+          error: err.message,
+        },
         'Job exhausted retries → writing to DLQ',
       );
 

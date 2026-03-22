@@ -34,7 +34,13 @@ export class AuditService {
   }
 
   async search(
-    filters: { action?: string; resource?: string; userId?: string; startDate?: string; endDate?: string },
+    filters: {
+      action?: string;
+      resource?: string;
+      userId?: string;
+      startDate?: string;
+      endDate?: string;
+    },
     query: { page?: number; limit?: number } = {},
   ) {
     const { page, limit, skip } = parsePagination(query);

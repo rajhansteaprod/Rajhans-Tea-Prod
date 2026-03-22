@@ -17,7 +17,9 @@ export const startPersonalizationWorker = (): void => {
     async (job: Job) => {
       if (job.name === 'personalization:track-view') {
         const { productId, userId, sessionId } = job.data as {
-          productId: string; userId: string | null; sessionId: string;
+          productId: string;
+          userId: string | null;
+          sessionId: string;
         };
         await viewRepo.logView(productId, userId, sessionId);
       }

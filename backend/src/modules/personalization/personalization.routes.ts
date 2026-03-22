@@ -21,8 +21,16 @@ router.get('/personalization/feed', ctrl.getHomepageFeed);
 router.get('/personalization/trending', ctrl.getTrending);
 router.get('/personalization/recently-viewed', ctrl.getRecentlyViewed);
 router.post('/personalization/track-view', validate(trackViewSchema), ctrl.trackView);
-router.get('/personalization/product/:productId/recommendations', validate(productIdParamSchema), ctrl.getProductRecommendations);
-router.get('/personalization/product/:productId/upsell', validate(productIdParamSchema), ctrl.getUpsell);
+router.get(
+  '/personalization/product/:productId/recommendations',
+  validate(productIdParamSchema),
+  ctrl.getProductRecommendations,
+);
+router.get(
+  '/personalization/product/:productId/upsell',
+  validate(productIdParamSchema),
+  ctrl.getUpsell,
+);
 router.get('/personalization/cart/cross-sell', validate(crossSellSchema), ctrl.getCrossSell);
 router.get('/personalization/banners', ctrl.getBanners);
 

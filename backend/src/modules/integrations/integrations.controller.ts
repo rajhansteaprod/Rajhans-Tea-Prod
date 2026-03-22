@@ -8,9 +8,14 @@ import { NotFoundError } from '../../utils/api-error';
 
 // Available webhook events
 const WEBHOOK_EVENTS = [
-  'order.created', 'order.shipped', 'order.delivered', 'order.cancelled',
-  'payment.captured', 'payment.refunded',
-  'review.approved', 'user.registered',
+  'order.created',
+  'order.shipped',
+  'order.delivered',
+  'order.cancelled',
+  'payment.captured',
+  'payment.refunded',
+  'review.approved',
+  'user.registered',
 ];
 
 export const listWebhooks = async (_req: Request, res: Response) => {
@@ -22,7 +27,10 @@ export const createWebhook = async (req: Request, res: Response) => {
   const { name, url, events } = req.body;
   const secret = crypto.randomBytes(32).toString('hex');
   const webhook = await WebhookSubscription.create({
-    name, url, secret, events: events || WEBHOOK_EVENTS,
+    name,
+    url,
+    secret,
+    events: events || WEBHOOK_EVENTS,
     createdBy: new Types.ObjectId(req.user!.userId),
   });
   sendCreated(res, webhook, 'Webhook created');
@@ -30,7 +38,9 @@ export const createWebhook = async (req: Request, res: Response) => {
 
 export const updateWebhook = async (req: Request, res: Response) => {
   const webhook = await WebhookSubscription.findByIdAndUpdate(
-    req.params['id'], { $set: req.body }, { new: true },
+    req.params['id'],
+    { $set: req.body },
+    { new: true },
   ).exec();
   if (!webhook) throw new NotFoundError('Webhook not found');
   sendSuccess(res, webhook, 'Webhook updated');
@@ -55,7 +65,10 @@ export const testWebhook = async (req: Request, res: Response) => {
   if (!webhook) throw new NotFoundError('Webhook not found');
 
   // Send test event
-  await webhookDispatcher.dispatch('test.ping', { message: 'Test webhook from RnD Ecommerce', timestamp: new Date().toISOString() });
+  await webhookDispatcher.dispatch('test.ping', {
+    message: 'Test webhook from RnD Ecommerce',
+    timestamp: new Date().toISOString(),
+  });
   sendSuccess(res, { tested: true }, 'Test event dispatched');
 };
 

@@ -46,7 +46,11 @@ export class ShiprocketProvider implements ShippingProvider {
     return this.token!;
   }
 
-  private async request(method: string, path: string, body?: unknown): Promise<Record<string, any>> {
+  private async request(
+    method: string,
+    path: string,
+    body?: unknown,
+  ): Promise<Record<string, any>> {
     const token = await this.getToken();
     const res = await fetch(`${this.baseUrl}${path}`, {
       method,
@@ -136,7 +140,11 @@ export class ShiprocketProvider implements ShippingProvider {
     await this.request('POST', '/orders/cancel', { ids: [providerOrderId] });
   }
 
-  async getShippingRates(pickupPincode: string, deliveryPincode: string, weight: number): Promise<ShippingRate[]> {
+  async getShippingRates(
+    pickupPincode: string,
+    deliveryPincode: string,
+    weight: number,
+  ): Promise<ShippingRate[]> {
     const data = await this.request(
       'GET',
       `/courier/serviceability/?pickup_postcode=${pickupPincode}&delivery_postcode=${deliveryPincode}&weight=${weight}&cod=0`,

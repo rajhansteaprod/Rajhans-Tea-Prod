@@ -4,7 +4,16 @@ import { DeadLetter } from '../models/dead-letter.model';
 import { parsePagination, buildPaginationMeta } from '../../../utils/pagination';
 
 // All queue names in the system
-const QUEUE_NAMES = ['payment', 'invoice', 'wallet', 'fulfillment', 'promotions', 'personalization', 'reviews', 'notifications'];
+const QUEUE_NAMES = [
+  'payment',
+  'invoice',
+  'wallet',
+  'fulfillment',
+  'promotions',
+  'personalization',
+  'reviews',
+  'notifications',
+];
 
 export class QueueMonitorService {
   private queues: Map<string, Queue> = new Map();
@@ -17,19 +26,46 @@ export class QueueMonitorService {
   }
 
   async getQueueHealth(): Promise<{
-    queues: { name: string; waiting: number; active: number; completed: number; failed: number; delayed: number }[];
+    queues: {
+      name: string;
+      waiting: number;
+      active: number;
+      completed: number;
+      failed: number;
+      delayed: number;
+    }[];
     totalPending: number;
     totalFailed: number;
   }> {
-    const results: { name: string; waiting: number; active: number; completed: number; failed: number; delayed: number }[] = [];
+    const results: {
+      name: string;
+      waiting: number;
+      active: number;
+      completed: number;
+      failed: number;
+      delayed: number;
+    }[] = [];
     let totalPending = 0;
     let totalFailed = 0;
 
     for (const name of QUEUE_NAMES) {
       try {
         const queue = this.getQueue(name);
-        const counts = await queue.getJobCounts('waiting', 'active', 'completed', 'failed', 'delayed');
-        const entry = { name, waiting: counts.waiting || 0, active: counts.active || 0, completed: counts.completed || 0, failed: counts.failed || 0, delayed: counts.delayed || 0 };
+        const counts = await queue.getJobCounts(
+          'waiting',
+          'active',
+          'completed',
+          'failed',
+          'delayed',
+        );
+        const entry = {
+          name,
+          waiting: counts.waiting || 0,
+          active: counts.active || 0,
+          completed: counts.completed || 0,
+          failed: counts.failed || 0,
+          delayed: counts.delayed || 0,
+        };
         results.push(entry);
         totalPending += entry.waiting + entry.active;
         totalFailed += entry.failed;
@@ -72,7 +108,10 @@ export class QueueMonitorService {
 
     try {
       const queue = this.getQueue(dl.queueName);
-      await queue.add(dl.jobName, dl.jobData, { attempts: 3, backoff: { type: 'exponential', delay: 5000 } });
+      await queue.add(dl.jobName, dl.jobData, {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 5000 },
+      });
       dl.resolvedAt = new Date();
       await dl.save();
       return true;

@@ -1,10 +1,17 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export type NotificationType =
-  | 'order_confirmed' | 'order_shipped' | 'order_delivered' | 'order_cancelled'
-  | 'payment_captured' | 'payment_refunded'
-  | 'review_approved' | 'review_replied'
-  | 'loyalty_earned' | 'low_stock_alert' | 'review_reminder'
+  | 'order_confirmed'
+  | 'order_shipped'
+  | 'order_delivered'
+  | 'order_cancelled'
+  | 'payment_captured'
+  | 'payment_refunded'
+  | 'review_approved'
+  | 'review_replied'
+  | 'loyalty_earned'
+  | 'low_stock_alert'
+  | 'review_reminder'
   | 'announcement';
 
 export interface INotificationDoc extends Document {

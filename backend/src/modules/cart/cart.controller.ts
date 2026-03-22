@@ -80,7 +80,11 @@ export const toggleWishlist = async (req: Request, res: Response) => {
   const sessionId = getSessionId(req);
   const productId = req.params['productId'] as string;
   const result = await wishlistService.toggle(sessionId, productId);
-  sendSuccess(res, result.wishlist, result.action === 'added' ? 'Added to wishlist' : 'Removed from wishlist');
+  sendSuccess(
+    res,
+    result.wishlist,
+    result.action === 'added' ? 'Added to wishlist' : 'Removed from wishlist',
+  );
 };
 
 export const mergeWishlist = async (req: Request, res: Response) => {

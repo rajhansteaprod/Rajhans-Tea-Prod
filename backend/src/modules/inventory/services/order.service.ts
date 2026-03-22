@@ -36,7 +36,10 @@ export class OrderService {
     if (!payment.userId) throw new BadRequestError('Payment has no userId');
 
     const warehouse = await this.warehouseRepo.findDefault();
-    if (!warehouse) throw new BadRequestError('No default warehouse configured. Create one in Admin → Warehouses.');
+    if (!warehouse)
+      throw new BadRequestError(
+        'No default warehouse configured. Create one in Admin → Warehouses.',
+      );
 
     const orderNumber = await this.orderRepo.generateOrderNumber();
     const snapshot = payment.checkoutSnapshot;
@@ -144,9 +147,7 @@ export class OrderService {
     if (!order) throw new NotFoundError('Order not found');
 
     if (!this.isValidTransition(order.status, newStatus)) {
-      throw new BadRequestError(
-        `Cannot transition from "${order.status}" to "${newStatus}"`,
-      );
+      throw new BadRequestError(`Cannot transition from "${order.status}" to "${newStatus}"`);
     }
 
     const extra: Record<string, unknown> = {};
@@ -253,11 +254,16 @@ export class OrderService {
     return order;
   }
 
-  async getUserOrders(userId: string, query: { page?: number; limit?: number; status?: string } = {}) {
+  async getUserOrders(
+    userId: string,
+    query: { page?: number; limit?: number; status?: string } = {},
+  ) {
     return this.orderRepo.findByUserId(userId, query);
   }
 
-  async adminListOrders(query: { page?: number; limit?: number; status?: string; search?: string } = {}) {
+  async adminListOrders(
+    query: { page?: number; limit?: number; status?: string; search?: string } = {},
+  ) {
     return this.orderRepo.findAllAdmin(query);
   }
 

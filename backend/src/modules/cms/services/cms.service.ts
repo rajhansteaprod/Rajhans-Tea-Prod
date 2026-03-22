@@ -67,7 +67,12 @@ export class CmsService {
   async listAllBlogs(query: { page?: number; limit?: number } = {}) {
     const { page, limit, skip } = parsePagination(query);
     const [blogs, total] = await Promise.all([
-      Blog.find().populate('author', 'firstName lastName').sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+      Blog.find()
+        .populate('author', 'firstName lastName')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
       Blog.countDocuments().exec(),
     ]);
     return { blogs, meta: buildPaginationMeta(page, limit, total) };

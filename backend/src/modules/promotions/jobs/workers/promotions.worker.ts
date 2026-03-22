@@ -18,7 +18,9 @@ export const startPromotionsWorker = (): void => {
     async (job: Job) => {
       if (job.name === 'promotions:earn-loyalty') {
         const { userId, orderTotal, paymentId } = job.data as {
-          userId: string; orderTotal: number; paymentId: string;
+          userId: string;
+          orderTotal: number;
+          paymentId: string;
         };
         logger.info({ userId, orderTotal, jobId: job.id }, 'Earning loyalty points');
         const points = await loyaltyService.earnFromPurchase(userId, orderTotal, paymentId);
@@ -26,7 +28,10 @@ export const startPromotionsWorker = (): void => {
       }
 
       if (job.name === 'promotions:complete-referral') {
-        const { refereeUserId, paymentId } = job.data as { refereeUserId: string; paymentId: string };
+        const { refereeUserId, paymentId } = job.data as {
+          refereeUserId: string;
+          paymentId: string;
+        };
         logger.info({ refereeUserId, jobId: job.id }, 'Completing referral');
         await referralService.completeReferral(refereeUserId, paymentId);
         logger.info({ refereeUserId, jobId: job.id }, 'Referral completed');
@@ -34,7 +39,9 @@ export const startPromotionsWorker = (): void => {
 
       if (job.name === 'promotions:revert-loyalty') {
         const { userId, points, paymentId } = job.data as {
-          userId: string; points: number; paymentId: string;
+          userId: string;
+          points: number;
+          paymentId: string;
         };
         logger.info({ userId, points, jobId: job.id }, 'Reverting loyalty redemption');
         await loyaltyService.revertRedemption(userId, points, paymentId);

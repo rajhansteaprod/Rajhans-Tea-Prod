@@ -17,7 +17,10 @@ export const getAssignedVariants = async (req: Request, res: Response) => {
 export const getVariant = async (req: Request, res: Response) => {
   const slug = req.params['slug'] as string;
   const sessionId = (req.headers['x-session-id'] as string) || '';
-  const result = await experimentService.assignVariant(slug, { userId: req.user?.userId, sessionId });
+  const result = await experimentService.assignVariant(slug, {
+    userId: req.user?.userId,
+    sessionId,
+  });
   sendSuccess(res, result || { variant: null, experiment: slug });
 };
 

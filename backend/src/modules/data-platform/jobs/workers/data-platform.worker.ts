@@ -25,7 +25,10 @@ export const startDataPlatformWorker = (): void => {
           archiveService.archiveOldAuditLogs(90),
           archiveService.archiveOldSearchAnalytics(90),
         ]);
-        logger.info({ orders: orders.archived, audit: audit.archived, search: search.archived }, 'Archival complete');
+        logger.info(
+          { orders: orders.archived, audit: audit.archived, search: search.archived },
+          'Archival complete',
+        );
       }
     },
     {

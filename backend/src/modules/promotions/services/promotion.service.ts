@@ -68,7 +68,10 @@ export class PromotionService {
       }
     }
 
-    const adjustedTotal = Math.max(0, +(summary.total - couponDiscount - loyaltyDiscount).toFixed(2));
+    const adjustedTotal = Math.max(
+      0,
+      +(summary.total - couponDiscount - loyaltyDiscount).toFixed(2),
+    );
 
     return {
       ...summary,

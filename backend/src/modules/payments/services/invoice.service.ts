@@ -148,10 +148,7 @@ export class InvoiceService {
         y += 20;
       }
 
-      doc
-        .moveTo(50, y)
-        .lineTo(545, y)
-        .stroke();
+      doc.moveTo(50, y).lineTo(545, y).stroke();
       y += 10;
 
       // ── Totals ──────────────────────────────────────────────────

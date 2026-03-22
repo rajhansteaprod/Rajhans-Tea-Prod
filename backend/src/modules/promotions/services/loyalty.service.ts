@@ -69,7 +69,12 @@ export class LoyaltyService {
     }
 
     if (pointsToRedeem < settings.minRedeemPoints) {
-      return { valid: false, points: 0, discount: 0, message: `Minimum ${settings.minRedeemPoints} points required` };
+      return {
+        valid: false,
+        points: 0,
+        discount: 0,
+        message: `Minimum ${settings.minRedeemPoints} points required`,
+      };
     }
 
     const maxDiscount = (orderTotal * settings.maxRedeemPercent) / 100;

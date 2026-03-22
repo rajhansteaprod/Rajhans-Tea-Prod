@@ -1,8 +1,18 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export type RuleType = 'manual' | 'automated';
-export type RuleSection = 'trending' | 'recommended' | 'featured_collections' | 'new_arrivals' | 'banner';
-export type RuleStrategy = 'top_selling' | 'new_arrivals' | 'low_stock' | 'most_viewed' | 'category_top';
+export type RuleSection =
+  | 'trending'
+  | 'recommended'
+  | 'featured_collections'
+  | 'new_arrivals'
+  | 'banner';
+export type RuleStrategy =
+  | 'top_selling'
+  | 'new_arrivals'
+  | 'low_stock'
+  | 'most_viewed'
+  | 'category_top';
 
 export interface IMerchandisingRuleDoc extends Document {
   name: string;
@@ -32,9 +42,17 @@ const merchandisingRuleSchema = new Schema<IMerchandisingRuleDoc>(
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     type: { type: String, enum: ['manual', 'automated'], required: true },
-    section: { type: String, enum: ['trending', 'recommended', 'featured_collections', 'new_arrivals', 'banner'], required: true },
+    section: {
+      type: String,
+      enum: ['trending', 'recommended', 'featured_collections', 'new_arrivals', 'banner'],
+      required: true,
+    },
     pinnedProducts: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
-    strategy: { type: String, enum: ['top_selling', 'new_arrivals', 'low_stock', 'most_viewed', 'category_top'], default: null },
+    strategy: {
+      type: String,
+      enum: ['top_selling', 'new_arrivals', 'low_stock', 'most_viewed', 'category_top'],
+      default: null,
+    },
     strategyConfig: {
       categoryId: { type: Schema.Types.ObjectId, ref: 'Category' },
       lookbackDays: { type: Number, default: 7 },
@@ -54,4 +72,7 @@ const merchandisingRuleSchema = new Schema<IMerchandisingRuleDoc>(
 merchandisingRuleSchema.index({ section: 1, isActive: 1, priority: -1 });
 merchandisingRuleSchema.index({ slug: 1 }, { unique: true });
 
-export const MerchandisingRule = mongoose.model<IMerchandisingRuleDoc>('MerchandisingRule', merchandisingRuleSchema);
+export const MerchandisingRule = mongoose.model<IMerchandisingRuleDoc>(
+  'MerchandisingRule',
+  merchandisingRuleSchema,
+);

@@ -20,12 +20,32 @@ const router = Router();
 
 router.get('/notifications', authenticate, ctrl.getInbox);
 router.get('/notifications/unread-count', authenticate, ctrl.getUnreadCount);
-router.patch('/notifications/:id/read', authenticate, validate(notificationIdSchema), ctrl.markRead);
+router.patch(
+  '/notifications/:id/read',
+  authenticate,
+  validate(notificationIdSchema),
+  ctrl.markRead,
+);
 router.patch('/notifications/read-all', authenticate, ctrl.markAllRead);
 router.get('/notifications/preferences', authenticate, ctrl.getPreferences);
-router.put('/notifications/preferences', authenticate, validate(updatePreferencesSchema), ctrl.updatePreferences);
-router.post('/notifications/fcm-token', authenticate, validate(registerFcmTokenSchema), ctrl.registerFcmToken);
-router.delete('/notifications/fcm-token', authenticate, validate(unregisterFcmTokenSchema), ctrl.unregisterFcmToken);
+router.put(
+  '/notifications/preferences',
+  authenticate,
+  validate(updatePreferencesSchema),
+  ctrl.updatePreferences,
+);
+router.post(
+  '/notifications/fcm-token',
+  authenticate,
+  validate(registerFcmTokenSchema),
+  ctrl.registerFcmToken,
+);
+router.delete(
+  '/notifications/fcm-token',
+  authenticate,
+  validate(unregisterFcmTokenSchema),
+  ctrl.unregisterFcmToken,
+);
 
 // ===========================================================================
 // ADMIN
@@ -38,7 +58,11 @@ adminRouter.use(authorize('admin'));
 adminRouter.get('/notifications/stats', ctrl.adminGetStats);
 adminRouter.post('/notifications/send-bulk', validate(sendBulkSchema), ctrl.adminSendBulk);
 adminRouter.get('/notifications/templates', ctrl.adminListTemplates);
-adminRouter.post('/notifications/templates', validate(createTemplateSchema), ctrl.adminCreateTemplate);
+adminRouter.post(
+  '/notifications/templates',
+  validate(createTemplateSchema),
+  ctrl.adminCreateTemplate,
+);
 adminRouter.put('/notifications/templates/:id', ctrl.adminUpdateTemplate);
 adminRouter.delete('/notifications/templates/:id', ctrl.adminDeleteTemplate);
 

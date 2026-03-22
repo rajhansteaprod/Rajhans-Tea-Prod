@@ -12,7 +12,12 @@ export class MetricsCollector {
   /**
    * Record an API response. Called from middleware.
    */
-  async recordRequest(method: string, path: string, statusCode: number, durationMs: number): Promise<void> {
+  async recordRequest(
+    method: string,
+    path: string,
+    statusCode: number,
+    durationMs: number,
+  ): Promise<void> {
     try {
       const redis = getRedisClient();
       const now = Date.now();
@@ -34,13 +39,17 @@ export class MetricsCollector {
       const countKey = `${METRICS_PREFIX}count:${endpoint}`;
       await redis.incr(countKey);
       await redis.expire(countKey, WINDOW_SECONDS);
-    } catch { /* silent — metrics should never break the app */ }
+    } catch {
+      /* silent — metrics should never break the app */
+    }
   }
 
   /**
    * Get latency percentiles for an endpoint (last 1 hour).
    */
-  async getLatencyStats(endpoint: string): Promise<{ p50: number; p95: number; p99: number; avg: number; count: number }> {
+  async getLatencyStats(
+    endpoint: string,
+  ): Promise<{ p50: number; p95: number; p99: number; avg: number; count: number }> {
     try {
       const redis = getRedisClient();
       const key = `${METRICS_PREFIX}latency:${endpoint}`;
@@ -59,24 +68,39 @@ export class MetricsCollector {
         avg: Math.round(durations.reduce((a, b) => a + b, 0) / count),
         count,
       };
-    } catch { return { p50: 0, p95: 0, p99: 0, avg: 0, count: 0 }; }
+    } catch {
+      return { p50: 0, p95: 0, p99: 0, avg: 0, count: 0 };
+    }
   }
 
   /**
    * Get overview of all endpoints: request count, error count, avg latency.
    */
-  async getEndpointOverview(): Promise<{
-    endpoint: string; requests: number; errors: number; avgLatencyMs: number;
-  }[]> {
+  async getEndpointOverview(): Promise<
+    {
+      endpoint: string;
+      requests: number;
+      errors: number;
+      avgLatencyMs: number;
+    }[]
+  > {
     try {
       const redis = getRedisClient();
       const countKeys = await redis.keys(`${METRICS_PREFIX}count:*`);
-      const results: { endpoint: string; requests: number; errors: number; avgLatencyMs: number }[] = [];
+      const results: {
+        endpoint: string;
+        requests: number;
+        errors: number;
+        avgLatencyMs: number;
+      }[] = [];
 
       for (const countKey of countKeys) {
         const endpoint = countKey.replace(`${METRICS_PREFIX}count:`, '');
-        const requests = parseInt(await redis.get(countKey) || '0', 10);
-        const errors = parseInt(await redis.get(`${METRICS_PREFIX}errors:${endpoint}`) || '0', 10);
+        const requests = parseInt((await redis.get(countKey)) || '0', 10);
+        const errors = parseInt(
+          (await redis.get(`${METRICS_PREFIX}errors:${endpoint}`)) || '0',
+          10,
+        );
 
         const latency = await this.getLatencyStats(endpoint);
 
@@ -85,13 +109,17 @@ export class MetricsCollector {
 
       results.sort((a, b) => b.requests - a.requests);
       return results.slice(0, 30);
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   }
 
   /**
    * Get slowest endpoints (by p95 latency).
    */
-  async getSlowestEndpoints(limit = 10): Promise<{ endpoint: string; p95: number; p99: number; avg: number }[]> {
+  async getSlowestEndpoints(
+    limit = 10,
+  ): Promise<{ endpoint: string; p95: number; p99: number; avg: number }[]> {
     const overview = await this.getEndpointOverview();
     const withLatency: { endpoint: string; p95: number; p99: number; avg: number }[] = [];
 
@@ -109,7 +137,12 @@ export class MetricsCollector {
   /**
    * Get error rate summary.
    */
-  async getErrorSummary(): Promise<{ totalRequests: number; totalErrors: number; errorRate: number; topErrors: { endpoint: string; errors: number }[] }> {
+  async getErrorSummary(): Promise<{
+    totalRequests: number;
+    totalErrors: number;
+    errorRate: number;
+    topErrors: { endpoint: string; errors: number }[];
+  }> {
     const overview = await this.getEndpointOverview();
     const totalRequests = overview.reduce((s, e) => s + e.requests, 0);
     const totalErrors = overview.reduce((s, e) => s + e.errors, 0);
@@ -130,9 +163,9 @@ export class MetricsCollector {
    */
   private normalizePath(path: string): string {
     return path
-      .replace(/\/[a-f0-9]{24}/gi, '/:id')   // MongoDB ObjectIds
-      .replace(/\/\d+/g, '/:num')              // numeric IDs
-      .replace(/\?.*$/, '');                    // strip query params
+      .replace(/\/[a-f0-9]{24}/gi, '/:id') // MongoDB ObjectIds
+      .replace(/\/\d+/g, '/:num') // numeric IDs
+      .replace(/\?.*$/, ''); // strip query params
   }
 }
 

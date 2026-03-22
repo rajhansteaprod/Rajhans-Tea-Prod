@@ -1,5 +1,9 @@
 import { Types } from 'mongoose';
-import { NotificationPreference, INotificationPreferenceDoc, IChannelPrefs } from '../models/notification-preference.model';
+import {
+  NotificationPreference,
+  INotificationPreferenceDoc,
+  IChannelPrefs,
+} from '../models/notification-preference.model';
 
 const DEFAULT_PREFS: IChannelPrefs = { email: true, sms: true, push: true };
 
@@ -18,7 +22,10 @@ export class NotificationPreferenceRepository {
     return typePrefs || DEFAULT_PREFS;
   }
 
-  async update(userId: string, data: Partial<INotificationPreferenceDoc>): Promise<INotificationPreferenceDoc> {
+  async update(
+    userId: string,
+    data: Partial<INotificationPreferenceDoc>,
+  ): Promise<INotificationPreferenceDoc> {
     return NotificationPreference.findOneAndUpdate(
       { userId: new Types.ObjectId(userId) },
       { $set: data },

@@ -39,7 +39,11 @@ const ticketSchema = new Schema<ITicketDoc>(
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     subject: { type: String, required: true, trim: true, maxlength: 200 },
     description: { type: String, required: true, maxlength: 5000 },
-    status: { type: String, enum: ['open', 'in_progress', 'waiting', 'resolved', 'closed'], default: 'open' },
+    status: {
+      type: String,
+      enum: ['open', 'in_progress', 'waiting', 'resolved', 'closed'],
+      default: 'open',
+    },
     priority: { type: String, enum: ['low', 'medium', 'high', 'urgent'], default: 'medium' },
     assignedTo: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     messages: [ticketMessageSchema],

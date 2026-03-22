@@ -23,7 +23,17 @@ export class ExportService {
       .lean()
       .exec();
 
-    const header = toCsvRow(['Order Number', 'Date', 'Customer', 'Phone', 'Status', 'Items', 'Total', 'City', 'State']);
+    const header = toCsvRow([
+      'Order Number',
+      'Date',
+      'Customer',
+      'Phone',
+      'Status',
+      'Items',
+      'Total',
+      'City',
+      'State',
+    ]);
     const rows = orders.map((o: any) =>
       toCsvRow([
         o.orderNumber,
@@ -71,7 +81,16 @@ export class ExportService {
       .lean()
       .exec();
 
-    const header = toCsvRow(['Name', 'Slug', 'Price', 'Stock', 'Status', 'Featured', 'Tracking', 'Created']);
+    const header = toCsvRow([
+      'Name',
+      'Slug',
+      'Price',
+      'Stock',
+      'Status',
+      'Featured',
+      'Tracking',
+      'Created',
+    ]);
     const rows = products.map((p) =>
       toCsvRow([
         p.name,

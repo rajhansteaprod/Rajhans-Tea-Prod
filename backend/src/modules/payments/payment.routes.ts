@@ -20,11 +20,7 @@ router.post('/payments/orders', authenticate, validate(createOrderSchema), ctrl.
 router.post('/payments/verify', authenticate, validate(verifyPaymentSchema), ctrl.verifyPayment);
 
 // Razorpay webhook — raw body for signature verification, no auth
-router.post(
-  '/payments/webhook',
-  raw({ type: 'application/json' }),
-  ctrl.handleWebhook,
-);
+router.post('/payments/webhook', raw({ type: 'application/json' }), ctrl.handleWebhook);
 
 // Payment history — authenticated
 router.get('/payments/history', authenticate, ctrl.getPaymentHistory);

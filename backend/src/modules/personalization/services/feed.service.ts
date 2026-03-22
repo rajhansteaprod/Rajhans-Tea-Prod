@@ -16,23 +16,35 @@ export class FeedService {
     try {
       const cached = await getRedisClient().get(cacheKey);
       if (cached) return JSON.parse(cached);
-    } catch { /* miss */ }
+    } catch {
+      /* miss */
+    }
 
     const [banners, trending, recentlyViewed, recommended, newArrivals] = await Promise.all([
       this.bannerRepo.findActive(),
       this.getSectionProducts('trending', userId, sessionId),
-      userId || sessionId ? this.recoService.getRecentlyViewed(userId, sessionId, 12) : Promise.resolve([]),
-      userId ? this.recoService.getBasedOnOrders(userId, 12) : this.getSectionProducts('recommended', null, sessionId),
+      userId || sessionId
+        ? this.recoService.getRecentlyViewed(userId, sessionId, 12)
+        : Promise.resolve([]),
+      userId
+        ? this.recoService.getBasedOnOrders(userId, 12)
+        : this.getSectionProducts('recommended', null, sessionId),
       this.getSectionProducts('new_arrivals', userId, sessionId),
     ]);
 
     const feed = {
       banners: banners.map((b) => ({
-        _id: b._id, title: b.title, subtitle: b.subtitle, image: b.image, link: b.link,
+        _id: b._id,
+        title: b.title,
+        subtitle: b.subtitle,
+        image: b.image,
+        link: b.link,
       })),
       sections: [
         { key: 'trending', title: 'Trending Now', products: trending },
-        ...(recentlyViewed.length > 0 ? [{ key: 'recently_viewed', title: 'Recently Viewed', products: recentlyViewed }] : []),
+        ...(recentlyViewed.length > 0
+          ? [{ key: 'recently_viewed', title: 'Recently Viewed', products: recentlyViewed }]
+          : []),
         { key: 'recommended', title: 'Recommended For You', products: recommended },
         { key: 'new_arrivals', title: 'New Arrivals', products: newArrivals },
       ],
@@ -40,12 +52,18 @@ export class FeedService {
 
     try {
       await getRedisClient().set(cacheKey, JSON.stringify(feed), 'EX', 300);
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
 
     return feed;
   }
 
-  private async getSectionProducts(section: RuleSection, _userId: string | null, _sessionId: string) {
+  private async getSectionProducts(
+    section: RuleSection,
+    _userId: string | null,
+    _sessionId: string,
+  ) {
     // Check merchandising rules first
     const rules = await this.ruleRepo.getActiveForSection(section);
 
