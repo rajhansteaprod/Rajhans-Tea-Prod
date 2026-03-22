@@ -1,7 +1,7 @@
 {
-  "name": "@rnd/backend",
+  "name": "@rajhans-tea/backend",
   "version": "1.0.0",
-  "description": "RnD Ecommerce Backend API",
+  "description": "Rajhans Tea Backend API",
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon",

@@ -1,6 +1,6 @@
 # 01 — System Overview
 
-## What Is RnD Ecommerce?
+## What Is Rajhans Tea?
 
 A full-stack ecommerce platform built for Indian users. It is:
 - **Mobile-first** — login with phone number only (no passwords)
@@ -93,7 +93,7 @@ Redis Exporter (9121)
 
 ## Authentication Flow (the most important thing to understand)
 
-RnD uses **phone-number-only authentication**. There are no passwords. Here is the complete flow:
+Rajhans Tea uses **phone-number-only authentication**. There are no passwords. Here is the complete flow:
 
 ```
 User enters phone number

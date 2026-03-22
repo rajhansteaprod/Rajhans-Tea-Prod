@@ -18,7 +18,7 @@ import { I18nService } from '../../../core/services/i18n.service';
       <div class="header-inner">
         <a routerLink="/" class="logo">
           <span class="logo-mark">R</span>
-          <span class="logo-text">RnD</span>
+          <span class="logo-text">Rajhans Tea</span>
         </a>
         <!-- Search Bar -->
         <div class="search-bar-wrap">

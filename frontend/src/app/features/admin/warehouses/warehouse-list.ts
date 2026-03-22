@@ -68,7 +68,7 @@ interface Warehouse {
               <div class="form-group"><label>Pincode *</label><input [(ngModel)]="form.pincode" maxlength="6" placeholder="462001" /></div>
               <div class="form-group"><label>Phone *</label><input [(ngModel)]="form.phone" maxlength="10" placeholder="9876543210" /></div>
             </div>
-            <div class="form-group"><label>Email *</label><input [(ngModel)]="form.email" placeholder="warehouse@rnd.com" /></div>
+            <div class="form-group"><label>Email *</label><input [(ngModel)]="form.email" placeholder="warehouse@rajhanstea.com" /></div>
             <label class="checkbox-row"><input type="checkbox" [(ngModel)]="form.isDefault" /> Set as default warehouse</label>
             <div class="modal-actions">
               <button (click)="showModal.set(false)">Cancel</button>

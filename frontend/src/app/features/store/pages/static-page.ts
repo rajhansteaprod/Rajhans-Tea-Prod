@@ -53,7 +53,7 @@ export class StaticPageComponent implements OnInit {
       this.http.get<{ data: any }>(`${environment.apiUrl}/pages/${params['slug']}`).subscribe({
         next: (res) => {
           this.page.set(res.data);
-          this.titleService.setTitle(`${res.data.metaTitle || res.data.title} — RnD`);
+          this.titleService.setTitle(`${res.data.metaTitle || res.data.title} — Rajhans Tea`);
           if (res.data.metaDescription) this.meta.updateTag({ name: 'description', content: res.data.metaDescription });
         },
         error: () => this.notFound.set(true),

@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "RnD Ecommerce — Device Tracking & Session Management",
+    "name": "Rajhans Tea — Device Tracking & Session Management",
     "description": "Manual test collection for TC-001 through TC-012. Run in order. Set ACCESS_TOKEN and ADMIN_TOKEN variables after TC-000 Login calls.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },

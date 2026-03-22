@@ -3,7 +3,7 @@ import { logger } from '../utils/logger';
 
 export const initMetrics = (): void => {
   client.collectDefaultMetrics({
-    prefix: 'rnd_',
+    prefix: 'rajhans_tea_',
   });
   logger.info('Prometheus metrics initialized');
 };

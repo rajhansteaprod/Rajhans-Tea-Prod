@@ -279,7 +279,7 @@ If you run MongoDB without replica set initialization:
 # "Transaction numbers are only allowed on a replica set member or mongos"
 
 # Fix: initialize the replica set:
-docker exec rnd-ecom-mongo mongosh --eval "rs.initiate()"
+docker exec rajhans-tea-mongo mongosh --eval "rs.initiate()"
 ```
 
 The `docker-compose.yml` uses `--replSet rs0` flag. The init container handles `rs.initiate()`. If you use a fresh MongoDB without this, transactions will fail.

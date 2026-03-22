@@ -14,9 +14,9 @@ import { FormsModule } from '@angular/forms';
       <div class="contact-layout">
         <div class="contact-info">
           <div class="info-card">
-            <h3>RnD Ecommerce</h3>
+            <h3>Rajhans Tea</h3>
             <p>Bhopal, Madhya Pradesh, India</p>
-            <p>support&#64;rnd.com</p>
+            <p>support&#64;rajhanstea.com</p>
             <p>+91 98765 43210</p>
           </div>
           <div class="info-card">

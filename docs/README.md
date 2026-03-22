@@ -1,4 +1,4 @@
-# RnD Ecommerce — Living Engineering Knowledge Book
+# Rajhans Tea — Living Engineering Knowledge Book
 
 > **This is a living document.** Every time new code is added, the relevant section below is updated.
 > Last updated: 2026-03-17 | Version: v1
@@ -7,7 +7,7 @@
 
 ## What Is This?
 
-This knowledge book turns the entire RnD Ecommerce codebase into a self-explanatory system.
+This knowledge book turns the entire Rajhans Tea codebase into a self-explanatory system.
 A beginner can read it and understand everything. An experienced engineer can trust it.
 
 ---
@@ -56,8 +56,8 @@ A beginner can read it and understand everything. An experienced engineer can tr
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/saransh-bairagi/RND-ECOMMERCE.git
-cd RND-ECOMMERCE
+git clone https://github.com/saransh-bairagi/RAJHANS-TEA.git
+cd RAJHANS-TEA
 
 # 2. Set up environment
 cp backend/.env.example backend/.env

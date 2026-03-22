@@ -38,13 +38,13 @@ import { CartSidebarComponent } from '../../features/store/cart/cart-sidebar';
             </div>
             <div class="footer-col">
               <h4>Connect</h4>
-              <p class="footer-text">RnD Ecommerce</p>
+              <p class="footer-text">Rajhans Tea</p>
               <p class="footer-text">Bhopal, Madhya Pradesh</p>
-              <p class="footer-text">support&#64;rnd.com</p>
+              <p class="footer-text">support&#64;rajhanstea.com</p>
             </div>
           </div>
           <div class="footer-bottom">
-            <span>&copy; 2026 RnD Ecommerce. All rights reserved.</span>
+            <span>&copy; 2026 Rajhans Tea. All rights reserved.</span>
           </div>
         </div>
       </footer>

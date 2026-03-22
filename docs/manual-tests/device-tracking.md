@@ -30,7 +30,7 @@ ADMIN_TOKEN="<paste admin accessToken here>"
 1. Login via `POST /api/v1/auth/verify-token`
 2. Connect to MongoDB:
    ```bash
-   docker exec -it rnd-ecom-mongo mongosh "mongodb://localhost:27017/rnd-ecommerce?replicaSet=rs0"
+   docker exec -it rajhans-tea-mongo mongosh "mongodb://localhost:27017/rajhans-tea?replicaSet=rs0"
    ```
 3. Run:
    ```js

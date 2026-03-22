@@ -1,4 +1,4 @@
-# Manual Testing Guide — RnD Ecommerce
+# Manual Testing Guide — Rajhans Tea
 
 > Run all tests in browser at `http://localhost` with Docker up.
 > Admin panel: `http://localhost/admin`
@@ -922,7 +922,7 @@ fetch('/api/v1/feature-flags').then(r=>r.json()).then(console.log)
 
 ### TC-13.13: SEO Meta Tags
 1. Open product page → View page source
-2. **Expected:** `<title>Product Name — RnD</title>`, `<meta name="description">`, OG tags
+2. **Expected:** `<title>Product Name — Rajhans Tea</title>`, `<meta name="description">`, OG tags
 
 ### TC-13.14: Admin CMS Pages
 1. `/admin/cms` → Pages tab → Create page → Edit → Delete

@@ -123,7 +123,7 @@ Prometheus is configured to scrape the backend every 15 seconds:
 ```yaml
 # infrastructure/docker/prometheus/prometheus.yml
 scrape_configs:
-  - job_name: 'rnd-backend'
+  - job_name: 'rajhans-tea-backend'
     scrape_interval: 15s
     static_configs:
       - targets: ['backend:3000']

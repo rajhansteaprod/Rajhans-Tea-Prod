@@ -167,7 +167,7 @@ All colors, spacing, fonts, shadows are defined as SCSS variables in `core/desig
 
 ```scss
 // Colors
-$color-primary: #CC5803;          // RnD orange
+$color-primary: #CC5803;          // Rajhans Tea orange
 $color-primary-hover: #A84500;
 $color-bg-primary: #1A1410;       // dark background
 $color-text-primary: #FCFFF7;     // light text

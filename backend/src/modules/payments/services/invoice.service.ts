@@ -105,7 +105,7 @@ export class InvoiceService {
       const addr = payment.shippingAddress;
 
       // ── Header ──────────────────────────────────────────────────
-      doc.fontSize(22).font('Helvetica-Bold').text('RnD Ecommerce', { align: 'left' });
+      doc.fontSize(22).font('Helvetica-Bold').text('Rajhans Tea', { align: 'left' });
       doc.fontSize(10).font('Helvetica').text('Tax Invoice / Receipt', { align: 'left' });
       doc.moveDown(0.5);
 

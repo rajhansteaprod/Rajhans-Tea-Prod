@@ -160,8 +160,8 @@ There is no admin registration via the app. To make a user an admin:
 
 ```bash
 # Connect to the running MongoDB container
-docker exec rnd-ecom-mongo mongosh \
-  "mongodb://localhost:27017/rnd-ecommerce?replicaSet=rs0" \
+docker exec rajhans-tea-mongo mongosh \
+  "mongodb://localhost:27017/rajhans-tea?replicaSet=rs0" \
   /seeds/seed-admin.js
 ```
 

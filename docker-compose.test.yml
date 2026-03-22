@@ -2,7 +2,7 @@ services:
   backend:
     environment:
       - NODE_ENV=test
-      - MONGO_URI=mongodb://mongo-test:27017/rnd-ecommerce-test?replicaSet=rs0
+      - MONGO_URI=mongodb://mongo-test:27017/rajhans-tea-test?replicaSet=rs0
     command: ["npm", "run", "test:integration"]
     depends_on:
       mongo-test:

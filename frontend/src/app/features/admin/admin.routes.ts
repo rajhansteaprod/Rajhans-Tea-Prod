@@ -72,24 +72,9 @@ export const ADMIN_ROUTES: Routes = [
           import('./promotions/coupon-management').then((m) => m.CouponManagementComponent),
       },
       {
-        path: 'merchandising',
-        loadComponent: () =>
-          import('./merchandising/merchandising-management').then((m) => m.MerchandisingManagementComponent),
-      },
-      {
         path: 'moderation',
         loadComponent: () =>
           import('./moderation/moderation-dashboard').then((m) => m.ModerationDashboardComponent),
-      },
-      {
-        path: 'notifications',
-        loadComponent: () =>
-          import('./notifications/notification-management').then((m) => m.NotificationManagementComponent),
-      },
-      {
-        path: 'analytics',
-        loadComponent: () =>
-          import('./analytics/analytics-dashboard').then((m) => m.AnalyticsDashboardComponent),
       },
       {
         path: 'audit-logs',
@@ -102,49 +87,9 @@ export const ADMIN_ROUTES: Routes = [
           import('./settings/admin-settings').then((m) => m.AdminSettingsComponent),
       },
       {
-        path: 'workflows',
-        loadComponent: () =>
-          import('./workflows/workflow-list').then((m) => m.WorkflowListComponent),
-      },
-      {
-        path: 'system-health',
-        loadComponent: () =>
-          import('./system-health/system-health').then((m) => m.SystemHealthComponent),
-      },
-      {
-        path: 'observability',
-        loadComponent: () =>
-          import('./observability/observability-dashboard').then((m) => m.ObservabilityDashboardComponent),
-      },
-      {
-        path: 'feature-flags',
-        loadComponent: () =>
-          import('./feature-flags/feature-flag-list').then((m) => m.FeatureFlagListComponent),
-      },
-      {
-        path: 'data-platform',
-        loadComponent: () =>
-          import('./data-platform/data-platform').then((m) => m.DataPlatformComponent),
-      },
-      {
         path: 'cms',
         loadComponent: () =>
           import('./cms/cms-management').then((m) => m.CmsManagementComponent),
-      },
-      {
-        path: 'experiments',
-        loadComponent: () =>
-          import('./experiments/experiment-list').then((m) => m.ExperimentListComponent),
-      },
-      {
-        path: 'support',
-        loadComponent: () =>
-          import('./support/support-dashboard').then((m) => m.SupportDashboardComponent),
-      },
-      {
-        path: 'integrations',
-        loadComponent: () =>
-          import('./integrations/integrations-page').then((m) => m.IntegrationsPageComponent),
       },
     ],
   },

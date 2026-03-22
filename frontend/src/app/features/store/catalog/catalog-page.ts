@@ -73,7 +73,7 @@ export class CatalogPageComponent implements OnInit {
     this.route.params.subscribe((params) => {
       const slug = params['slug'];
       this.categoryName = slug?.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) || '';
-      this.titleService.setTitle(`${this.categoryName || 'Catalog'} — RnD Ecommerce`);
+      this.titleService.setTitle(`${this.categoryName || 'Catalog'} — Rajhans Tea`);
       this.store.search('', { categorySlug: slug });
     });
   }

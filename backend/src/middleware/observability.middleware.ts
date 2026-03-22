@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import { metricsCollector } from '../modules/observability/services/metrics-collector';
 import { requestTracer } from '../core/request-tracer';
+import { logger } from '../utils/logger';
 
 /**
- * Observability middleware — records request metrics and wraps in trace context.
+ * Observability middleware — wraps requests in trace context and logs latency.
  * Place after request-id middleware but before routes.
  */
 export function observabilityMiddleware(req: Request, res: Response, next: NextFunction): void {
@@ -14,10 +14,14 @@ export function observabilityMiddleware(req: Request, res: Response, next: NextF
     (req.headers['x-trace-id'] as string) || req.requestId || requestTracer.generateTraceId();
   res.setHeader('X-Trace-ID', traceId);
 
-  // Record metrics on response finish
+  // Log latency on response finish
   res.on('finish', () => {
     const duration = Date.now() - startTime;
-    metricsCollector.recordRequest(req.method, req.path, res.statusCode, duration).catch(() => {});
+    logger.debug(
+      { method: req.method, path: req.path, statusCode: res.statusCode, duration },
+      'Request completed',
+    );
+    // TODO: re-add metricsCollector when observability module is added
   });
 
   // Run within trace context

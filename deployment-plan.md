@@ -1,4 +1,4 @@
-# Deployment Plan — RnD Ecommerce
+# Deployment Plan — Rajhans Tea
 
 ## Already Done
 

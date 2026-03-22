@@ -1,12 +1,9 @@
 import { Job, Worker } from 'bullmq';
-import { QueueMonitorService } from '../modules/distributed/services/queue-monitor.service';
 import { logger } from '../utils/logger';
-
-const monitorService = new QueueMonitorService();
 
 /**
  * Attaches a DLQ hook to a BullMQ worker.
- * When a job exhausts all retries, it gets written to the DeadLetter collection.
+ * When a job exhausts all retries, it logs the failure.
  *
  * Usage:
  *   const worker = new Worker('payment', processor, opts);
@@ -26,21 +23,9 @@ export function attachDLQHook(worker: Worker, queueName: string): void {
           attempts: job.attemptsMade,
           error: err.message,
         },
-        'Job exhausted retries → writing to DLQ',
+        'Job exhausted retries → DLQ',
       );
-
-      try {
-        await monitorService.addToDeadLetter({
-          queueName,
-          jobName: job.name,
-          jobData: job.data as Record<string, unknown>,
-          failedReason: err.message,
-          attemptsMade: job.attemptsMade,
-          originalJobId: job.id || '',
-        });
-      } catch (dlqErr: any) {
-        logger.error({ error: dlqErr.message }, 'Failed to write to DLQ');
-      }
+      // TODO: re-add QueueMonitorService.addToDeadLetter when distributed module is added
     }
   });
 }

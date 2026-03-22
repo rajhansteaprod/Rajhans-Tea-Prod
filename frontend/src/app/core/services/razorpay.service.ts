@@ -83,7 +83,7 @@ export class RazorpayService {
         amount: options.amountPaise,
         currency: options.currency,
         order_id: options.orderId,
-        name: 'RnD Ecommerce',
+        name: 'Rajhans Tea',
         description: 'Order Payment',
         prefill: options.prefill,
         theme: { color: '#CC5803' },

@@ -7,7 +7,7 @@ Every file in this repo explained. Beginners: read top to bottom. Experienced en
 ## Root Level
 
 ```
-RnD Ecommerce/
+Rajhans Tea/
 ├── backend/                  ← Node.js API server
 ├── frontend/                 ← Angular web app
 ├── infrastructure/           ← Docker configs, seeds, nginx

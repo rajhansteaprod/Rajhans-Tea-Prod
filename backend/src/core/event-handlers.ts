@@ -9,7 +9,7 @@ import { logger } from '../utils/logger';
  * This decouples modules: emitters don't need to know about consumers.
  */
 export function registerEventHandlers(): void {
-  // ─── Payment Captured → Fulfillment + Invoice + Loyalty + Notification ──
+  // ─── Payment Captured → Fulfillment + Invoice + Loyalty ──────────────
   eventBus.onEvent(Events.PAYMENT_CAPTURED, async (data) => {
     const { paymentId, userId, amount } = data;
     logger.info({ paymentId }, 'Event: payment.captured → dispatching jobs');
@@ -21,8 +21,6 @@ export function registerEventHandlers(): void {
       await import('../modules/payments/jobs/queues/invoice.queue');
     const { getPromotionsQueue, PromotionJobs } =
       await import('../modules/promotions/jobs/queues/promotions.queue');
-    const { getNotificationQueue, NotificationJobs } =
-      await import('../modules/communication/jobs/queues/notification.queue');
 
     await getFulfillmentQueue().add(
       FulfillmentJobs.CREATE_ORDER,
@@ -46,53 +44,34 @@ export function registerEventHandlers(): void {
         { refereeUserId: userId, paymentId },
         { attempts: 2 },
       );
-      await getNotificationQueue().add(
-        NotificationJobs.SEND,
-        { type: 'payment_captured', userId, metadata: { paymentId, amount } },
-        { attempts: 2 },
-      );
+      // TODO: re-add notification when communication module is added
     }
   });
 
-  // ─── Order Delivered → Notification ────────────────────────────────────
+  // ─── Order Delivered ─────────────────────────────────────────────────
   eventBus.onEvent(Events.ORDER_DELIVERED, async (data) => {
     const { userId, orderNumber } = data;
     if (userId) {
-      const { getNotificationQueue, NotificationJobs } =
-        await import('../modules/communication/jobs/queues/notification.queue');
-      await getNotificationQueue().add(
-        NotificationJobs.SEND,
-        { type: 'order_delivered', userId, metadata: { orderNumber } },
-        { attempts: 2 },
-      );
+      logger.info({ userId, orderNumber }, 'Event: order.delivered');
+      // TODO: re-add notification when communication module is added
     }
   });
 
-  // ─── Order Cancelled → Notification ────────────────────────────────────
+  // ─── Order Cancelled ─────────────────────────────────────────────────
   eventBus.onEvent(Events.ORDER_CANCELLED, async (data) => {
     const { userId, orderNumber } = data;
     if (userId) {
-      const { getNotificationQueue, NotificationJobs } =
-        await import('../modules/communication/jobs/queues/notification.queue');
-      await getNotificationQueue().add(
-        NotificationJobs.SEND,
-        { type: 'order_cancelled', userId, metadata: { orderNumber } },
-        { attempts: 2 },
-      );
+      logger.info({ userId, orderNumber }, 'Event: order.cancelled');
+      // TODO: re-add notification when communication module is added
     }
   });
 
-  // ─── Review Approved → Notification ────────────────────────────────────
+  // ─── Review Approved ─────────────────────────────────────────────────
   eventBus.onEvent(Events.REVIEW_APPROVED, async (data) => {
     const { userId, productName } = data;
     if (userId) {
-      const { getNotificationQueue, NotificationJobs } =
-        await import('../modules/communication/jobs/queues/notification.queue');
-      await getNotificationQueue().add(
-        NotificationJobs.SEND,
-        { type: 'review_approved', userId, metadata: { productName } },
-        { attempts: 2 },
-      );
+      logger.info({ userId, productName }, 'Event: review.approved');
+      // TODO: re-add notification when communication module is added
     }
   });
 

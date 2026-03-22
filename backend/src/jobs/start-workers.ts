@@ -19,21 +19,9 @@ import {
   closePromotionsWorker,
 } from '../modules/promotions/jobs/workers/promotions.worker';
 import {
-  startPersonalizationWorker,
-  closePersonalizationWorker,
-} from '../modules/personalization/jobs/workers/personalization.worker';
-import {
   startReviewsWorker,
   closeReviewsWorker,
 } from '../modules/reviews/jobs/workers/reviews.worker';
-import {
-  startNotificationWorker,
-  closeNotificationWorker,
-} from '../modules/communication/jobs/workers/notification.worker';
-import {
-  startDataPlatformWorker,
-  closeDataPlatformWorker,
-} from '../modules/data-platform/jobs/workers/data-platform.worker';
 import { logger } from '../utils/logger';
 
 export const registerWorkers = (): void => {
@@ -42,10 +30,7 @@ export const registerWorkers = (): void => {
   startWalletWorker();
   startFulfillmentWorker();
   startPromotionsWorker();
-  startPersonalizationWorker();
   startReviewsWorker();
-  startNotificationWorker();
-  startDataPlatformWorker();
   logger.info('BullMQ workers registered');
 };
 
@@ -55,9 +40,6 @@ export const closeWorkers = async (): Promise<void> => {
   await closeWalletWorker();
   await closeFulfillmentWorker();
   await closePromotionsWorker();
-  await closePersonalizationWorker();
   await closeReviewsWorker();
-  await closeNotificationWorker();
-  await closeDataPlatformWorker();
   logger.info('BullMQ workers closed');
 };
