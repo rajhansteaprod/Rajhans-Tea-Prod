@@ -20,7 +20,7 @@ import { CartSidebarComponent } from '../../features/store/cart/cart-sidebar';
           <div class="footer-grid">
             <div class="footer-col">
               <h4>Shop</h4>
-              <a routerLink="/search">All Products</a>
+              <a routerLink="/products">All Products</a>
               <a routerLink="/collections">Collections</a>
               <a routerLink="/search?sort=newest">New Arrivals</a>
             </div>

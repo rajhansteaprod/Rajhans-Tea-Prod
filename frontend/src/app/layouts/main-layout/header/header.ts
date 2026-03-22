@@ -88,7 +88,7 @@ import {
     <!-- ══════ FULL-PAGE MEGA MENU ══════ -->
     @if (megaOpen()) {
       <div class="mega" (click)="closeMega()">
-        <div class="mega-content" (click)="$event.stopPropagation()">
+        <div class="mega-content" (click)="$event.stopPropagation()" (mouseleave)="closeMega()">
           <div class="mega-layout">
             <!-- LEFT SIDEBAR: Categories -->
             <aside class="mega-sidebar">
@@ -327,6 +327,7 @@ import {
     .mega-content {
       position: absolute; top: 72px; left: 0; right: 0;
       background: $color-bg-tertiary; border-top: 1px solid $color-border-light;
+      border-bottom: 3px solid $color-primary;
       box-shadow: 0 40px 100px rgba(58,45,50,0.12);
       max-height: calc(100vh - 72px); overflow-y: auto;
       animation: megaSlide 0.4s $ease-expo-out both;
@@ -642,14 +643,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
   doSearch(): void {
     if (this.searchQuery.trim()) {
       this.searchStore.closeSuggestions();
-      this.router.navigate(['/search'], { queryParams: { q: this.searchQuery.trim() } });
+      this.router.navigate(['/products'], { queryParams: { q: this.searchQuery.trim() } });
       this.closeSearch();
     }
   }
 
   selectSuggestion(s: { type: string; name: string; slug: string }): void {
     this.searchStore.closeSuggestions();
-    this.router.navigate(s.type === 'category' ? ['/search'] : ['/product/' + s.slug],
+    this.router.navigate(s.type === 'category' ? ['/products'] : ['/product/' + s.slug],
       s.type === 'category' ? { queryParams: { category: s.slug } } : undefined);
     this.closeSearch();
   }

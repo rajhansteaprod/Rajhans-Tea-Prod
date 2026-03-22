@@ -139,7 +139,7 @@ gsap.registerPlugin(ScrollTrigger);
             <app-product-rail
               [title]="section.title"
               [products]="section.products"
-              [viewAllLink]="'/search'"
+              [viewAllLink]="'/products'"
             />
           </section>
         }

@@ -99,7 +99,7 @@ import { environment } from '../../../../environments/environment';
             @if (product().tags?.length > 0) {
               <div class="tags">
                 @for (tag of product().tags; track tag) {
-                  <a class="tag" [routerLink]="'/search'" [queryParams]="{tags: tag}">{{ tag }}</a>
+                  <a class="tag" [routerLink]="'/products'" [queryParams]="{tags: tag}">{{ tag }}</a>
                 }
               </div>
             }
