@@ -94,15 +94,15 @@ import {
             <aside class="mega-sidebar">
               <h3 class="mega-heading">Categories</h3>
               <!-- All (default) -->
-              <a routerLink="/products" class="mega-cat" [class.mega-cat--active]="!activeCatId()" (mouseenter)="onCatHover(null)" (click)="closeMega()" [style.--i]="0">
+              <button class="mega-cat" [class.mega-cat--active]="!activeCatId()" (mouseenter)="onCatHover(null)" (click)="navigateTo('/products')" [style.--i]="0">
                 <div class="mega-cat-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
                 </div>
                 <span class="mega-cat-name">All Products</span>
                 <svg class="mega-cat-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </a>
+              </button>
               @for (cat of categories(); track cat._id; let i = $index) {
-                <a [routerLink]="'/catalog/' + cat.slug" class="mega-cat" [class.mega-cat--active]="activeCatId() === cat._id" (mouseenter)="onCatHover(cat._id)" (click)="closeMega()" [style.--i]="i + 1">
+                <button class="mega-cat" [class.mega-cat--active]="activeCatId() === cat._id" (mouseenter)="onCatHover(cat._id)" (click)="navigateTo('/catalog/' + cat.slug)" [style.--i]="i + 1">
                   @if (cat.image) {
                     <img [src]="cat.image" class="mega-cat-thumb" />
                   } @else {
@@ -112,16 +112,16 @@ import {
                   }
                   <span class="mega-cat-name">{{ cat.name }}</span>
                   <svg class="mega-cat-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </a>
+                </button>
               }
               <div class="mega-sidebar-divider"></div>
-              <a routerLink="/collections" class="mega-cat mega-cat--browse" (click)="closeMega()" [style.--i]="categories().length + 2">
+              <button class="mega-cat mega-cat--browse" (click)="navigateTo('/collections')" [style.--i]="categories().length + 2">
                 <div class="mega-cat-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
                 </div>
                 <span class="mega-cat-name">Collections</span>
                 <svg class="mega-cat-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </a>
+              </button>
             </aside>
 
             <!-- RIGHT: Products -->
@@ -135,13 +135,13 @@ import {
               @if (!megaLoading() && featuredProducts().length === 0) {
                 <div class="mega-empty">
                   <p>No products found in this category.</p>
-                  <a routerLink="/search" class="btn-buy" (click)="closeMega()">Browse All</a>
+                  <button class="btn-buy" (click)="navigateTo('/products')">Browse All</button>
                 </div>
               }
               <div class="mega-products" [class.loading]="megaLoading()">
                 @for (p of featuredProducts(); track p._id; let i = $index) {
                   <div class="mega-card" [style.--i]="i">
-                    <a [routerLink]="'/product/' + p.slug" class="mega-card-image" (click)="closeMega()">
+                    <a [routerLink]="'/product/' + p.slug" class="mega-card-image" (click)="closeMegaDelayed()">
                       @if (p.images?.[0]) {
                         <img [src]="p.images[0]" [alt]="p.name" loading="lazy" />
                       }
@@ -151,7 +151,7 @@ import {
                     </a>
                     <div class="mega-card-info">
                       <span class="mega-card-cat">{{ p.category?.name || 'Tea' }}</span>
-                      <a [routerLink]="'/product/' + p.slug" class="mega-card-name" (click)="closeMega()">{{ p.name }}</a>
+                      <a [routerLink]="'/product/' + p.slug" class="mega-card-name" (click)="closeMegaDelayed()">{{ p.name }}</a>
                       @if (p.shortDescription) {
                         <p class="mega-card-desc">{{ p.shortDescription }}</p>
                       }
@@ -161,7 +161,7 @@ import {
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="1.8"/></svg>
                           Add to Cart
                         </button>
-                        <a [routerLink]="'/product/' + p.slug" class="btn-buy" (click)="closeMega()">Buy Now</a>
+                        <a [routerLink]="'/product/' + p.slug" class="btn-buy" (click)="closeMegaDelayed()">Buy Now</a>
                       </div>
                     </div>
                   </div>
@@ -624,6 +624,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   toggleMega(): void { this.megaOpen.set(!this.megaOpen()); this.lockScroll(this.megaOpen()); }
   closeMega(): void { this.megaOpen.set(false); this.lockScroll(false); this.activeCatId.set(null); }
+
+  /** Delay close so routerLink navigation fires before @if destroys the DOM */
+  closeMegaDelayed(): void {
+    setTimeout(() => this.closeMega(), 50);
+  }
+
+  /** Navigate programmatically then close — for buttons without routerLink */
+  navigateTo(path: string): void {
+    this.router.navigate([path]);
+    this.closeMega();
+  }
 
   addToCart(productId: string, event: Event): void {
     event.stopPropagation();
