@@ -1,33 +1,61 @@
 @use '../../../core/design-tokens/tokens' as *;
+@use '../../../core/design-tokens/mixins' as *;
 
-.page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: $space-xxl $space-lg;
+// ═══════════════════════════════════════════
+// WISHLIST — Product grid with clean cards
+// ═══════════════════════════════════════════
+
+.wishlist {
+  @include content-container($max-width-content);
+  padding-top: $space-section-sm;
+  padding-bottom: $space-section-sm;
+
+  @include respond-to(md) {
+    padding-top: $space-xxl;
+    padding-bottom: $space-xxl;
+  }
 }
 
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+// ═══ Header ═══
+.wishlist__header {
+  @include flex-between;
   margin-bottom: $space-xxl;
+  gap: $space-lg;
+
+  @include respond-to(sm) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
-.page-title {
-  font-size: $font-size-xxl;
+.wishlist__eyebrow {
+  @include eyebrow-text;
+  display: block;
+  margin-bottom: $space-xs;
+  color: $color-primary;
+}
+
+.wishlist__title {
+  font-family: $font-family-display;
+  font-size: $font-size-display;
   font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-display;
   color: $color-text-primary;
-  margin: 0 0 $space-xxs;
-  letter-spacing: $letter-spacing-tight;
+  margin: 0;
+  line-height: 1;
+
+  @include respond-to(md) {
+    font-size: $font-size-xxxl;
+  }
 }
 
-.page-subtitle {
+.wishlist__count {
   font-size: $font-size-sm;
   color: $color-text-tertiary;
-  margin: 0;
+  margin: $space-xs 0 0;
 }
 
-.btn-back {
+.wishlist__back {
   display: inline-flex;
   align-items: center;
   gap: $space-xs;
@@ -35,78 +63,82 @@
   font-weight: $font-weight-medium;
   color: $color-text-secondary;
   text-decoration: none;
-  padding: $space-xs $space-md;
-  border: 1px solid $color-border;
-  border-radius: $radius-md;
+  padding: $space-sm $space-lg;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-full;
   transition: all $transition-fast;
+  white-space: nowrap;
+  flex-shrink: 0;
 
   &:hover {
     color: $color-primary;
     border-color: $color-primary;
-    background: $color-primary-light;
   }
 }
 
-.loading {
-  display: flex;
-  justify-content: center;
-  padding: $space-xxxl 0;
+// ═══ Loading ═══
+.wishlist__loading {
+  @include flex-center;
+  padding: $space-section-sm 0;
 }
 
-.spinner {
+.wishlist__spinner {
   width: 32px;
   height: 32px;
-  border: 2px solid $color-border;
+  border: 2px solid $color-border-light;
   border-top-color: $color-primary;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+  border-radius: $radius-full;
+  animation: wishSpin 0.7s linear infinite;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes wishSpin { to { transform: rotate(360deg); } }
 
-.empty-state {
-  display: flex;
-  flex-direction: column;
+// ═══ Empty State ═══
+.wishlist__empty {
+  @include flex-column;
   align-items: center;
-  gap: $space-md;
-  padding: $space-xxxl 0;
   text-align: center;
+  padding: $space-section-sm 0;
+  gap: $space-md;
 }
 
-.empty-icon {
+.wishlist__empty-icon {
   width: 100px;
   height: 100px;
-  border-radius: $radius-xxl;
-  background: $color-bg-secondary;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include flex-center;
+  border-radius: $radius-full;
+  background: $color-bg-warm;
   color: $color-text-disabled;
+  margin-bottom: $space-sm;
 }
 
-.empty-title {
-  font-size: $font-size-xl;
+.wishlist__empty-title {
+  font-family: $font-family-display;
+  font-size: $font-size-xxl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
   margin: 0;
 }
 
-.empty-sub {
-  font-size: $font-size-sm;
+.wishlist__empty-desc {
+  font-size: $font-size-md;
   color: $color-text-tertiary;
   margin: 0;
 }
 
-.btn-primary {
-  margin-top: $space-sm;
-  padding: $space-sm $space-xl;
+.wishlist__btn-primary {
+  display: inline-flex;
+  padding: $space-sm $space-xxl;
   background: $color-primary;
   color: $color-text-inverse;
-  border-radius: $radius-md;
+  border-radius: $radius-full;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
   text-decoration: none;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
   transition: all $transition-fast;
+  margin-top: $space-sm;
 
   &:hover {
     background: $color-primary-hover;
@@ -114,41 +146,35 @@
   }
 }
 
-.product-grid {
+// ═══ Grid ═══
+.wishlist__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: $space-lg;
 }
 
-.product-card {
+// ═══ Card ═══
+.wishlist__card {
   position: relative;
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
   border-radius: $radius-xl;
   overflow: hidden;
-  transition: all $transition-normal;
-
-  &:hover {
-    border-color: $color-border;
-    box-shadow: $shadow-lg;
-    transform: translateY(-2px);
-  }
+  @include hover-lift(-3px, $shadow-lg);
 }
 
-.heart-btn {
+.wishlist__heart {
   position: absolute;
   top: $space-sm;
   right: $space-sm;
-  z-index: 1;
+  z-index: 2;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: $radius-full;
   border: none;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include flex-center;
   cursor: pointer;
   transition: all $transition-fast;
   color: $color-text-disabled;
@@ -164,16 +190,15 @@
   }
 }
 
-.card-image {
+.wishlist__card-image {
+  display: block;
   position: relative;
   aspect-ratio: 1;
   background: $color-bg-secondary;
   overflow: hidden;
 
   img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    @include image-cover;
     transition: transform $transition-slow;
   }
 
@@ -182,79 +207,79 @@
   }
 }
 
-.img-placeholder {
+.wishlist__img-placeholder {
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include flex-center;
   color: $color-text-disabled;
 }
 
-.status-badge {
+.wishlist__badge-archived {
   position: absolute;
   bottom: $space-sm;
   left: $space-sm;
-  padding: 2px $space-xs;
+  padding: $space-xxs $space-sm;
   border-radius: $radius-full;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
-
-  &.archived {
-    background: rgba(58, 45, 50, 0.8);
-    color: $color-text-inverse;
-  }
+  background: rgba($color-bg-dark, 0.85);
+  color: $color-text-inverse;
+  letter-spacing: $letter-spacing-wide;
 }
 
-.card-info {
-  padding: $space-md $space-md $space-xs;
+.wishlist__card-body {
+  padding: $space-md $space-lg $space-xs;
 }
 
-.product-name {
+.wishlist__product-name {
   font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   margin: 0 0 $space-xxs;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  @include truncate(1);
 }
 
-.product-price {
-  font-size: $font-size-md;
+.wishlist__product-price {
+  font-family: $font-family-display;
+  font-size: $font-size-lg;
   font-weight: $font-weight-bold;
   color: $color-primary;
   margin: 0;
 }
 
-.card-actions {
-  padding: $space-xs $space-md $space-md;
+.wishlist__card-footer {
+  padding: $space-sm $space-lg $space-lg;
 }
 
-.btn-add-cart {
+.wishlist__btn-cart {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: $space-xs;
   width: 100%;
   padding: $space-sm;
-  background: $color-primary;
+  background: $color-bg-dark;
   color: $color-text-inverse;
   border: none;
   border-radius: $radius-md;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
+  font-family: $font-family;
   cursor: pointer;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
   transition: all $transition-fast;
 
   &:disabled {
     background: $color-border;
     color: $color-text-disabled;
     cursor: not-allowed;
+    text-transform: none;
+    letter-spacing: 0;
   }
 
   &:not(:disabled):hover {
-    background: $color-primary-hover;
+    background: $color-primary;
     transform: translateY(-1px);
   }
 }

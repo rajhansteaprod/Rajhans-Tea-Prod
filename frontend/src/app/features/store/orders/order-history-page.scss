@@ -1,112 +1,320 @@
 @use '../../../core/design-tokens/tokens' as *;
+@use '../../../core/design-tokens/mixins' as *;
 
-.page { max-width: 800px; margin: 0 auto; padding: $space-xxl $space-lg; }
+// ═══════════════════════════════════════════
+// ORDER HISTORY — Clean order cards with status
+// ═══════════════════════════════════════════
 
-.page-header {
-  display: flex; align-items: center; justify-content: space-between;
+.orders {
+  @include content-container($max-width-narrow);
+  padding-top: $space-section-sm;
+  padding-bottom: $space-section-sm;
+
+  @include respond-to(md) {
+    padding-top: $space-xxl;
+    padding-bottom: $space-xxl;
+  }
+}
+
+// ═══ Header ═══
+.orders__header {
+  @include flex-between;
   margin-bottom: $space-xxl;
+  gap: $space-lg;
+
+  @include respond-to(sm) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
-.page-title { font-size: $font-size-xxl; font-weight: $font-weight-bold; color: $color-text-primary; margin: 0; }
-.btn-back {
-  display: inline-flex; align-items: center; gap: $space-xs;
-  font-size: $font-size-sm; color: $color-text-secondary; text-decoration: none;
-  padding: $space-xs $space-md; border: 1px solid $color-border; border-radius: $radius-md;
+
+.orders__eyebrow {
+  @include eyebrow-text;
+  display: block;
+  margin-bottom: $space-xs;
+  color: $color-primary;
+}
+
+.orders__title {
+  font-family: $font-family-display;
+  font-size: $font-size-display;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-display;
+  color: $color-text-primary;
+  margin: 0;
+  line-height: 1;
+
+  @include respond-to(md) {
+    font-size: $font-size-xxxl;
+  }
+}
+
+.orders__back {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+  text-decoration: none;
+  padding: $space-sm $space-lg;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-full;
   transition: all $transition-fast;
-  &:hover { color: $color-primary; border-color: $color-primary; }
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover {
+    color: $color-primary;
+    border-color: $color-primary;
+  }
 }
 
-.loading { display: flex; justify-content: center; padding: $space-xxxl; }
-.spinner { width: 32px; height: 32px; border: 2px solid $color-border; border-top-color: $color-primary; border-radius: 50%; animation: spin 0.7s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+// ═══ Loading ═══
+.orders__loading {
+  @include flex-center;
+  padding: $space-section-sm 0;
+}
 
-.empty-state {
-  display: flex; flex-direction: column; align-items: center; gap: $space-md;
-  padding: $space-xxxl 0; text-align: center;
-  h2 { font-size: $font-size-xl; font-weight: $font-weight-bold; color: $color-text-primary; margin: 0; }
-  p { font-size: $font-size-sm; color: $color-text-tertiary; margin: 0; }
+.orders__spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid $color-border-light;
+  border-top-color: $color-primary;
+  border-radius: $radius-full;
+  animation: orderSpin 0.7s linear infinite;
 }
-.empty-icon {
-  width: 80px; height: 80px; border-radius: $radius-xxl; background: $color-bg-secondary;
-  display: flex; align-items: center; justify-content: center; color: $color-text-disabled;
+
+@keyframes orderSpin { to { transform: rotate(360deg); } }
+
+// ═══ Empty State ═══
+.orders__empty {
+  @include flex-column;
+  align-items: center;
+  text-align: center;
+  padding: $space-section-sm 0;
+  gap: $space-md;
 }
-.btn-primary {
-  margin-top: $space-sm; padding: $space-sm $space-xl;
-  background: $color-primary; color: $color-text-inverse; border-radius: $radius-md;
-  font-size: $font-size-sm; font-weight: $font-weight-semibold; text-decoration: none;
+
+.orders__empty-icon {
+  width: 96px;
+  height: 96px;
+  @include flex-center;
+  border-radius: $radius-full;
+  background: $color-bg-warm;
+  color: $color-text-disabled;
+  margin-bottom: $space-sm;
+}
+
+.orders__empty-title {
+  font-family: $font-family-display;
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin: 0;
+}
+
+.orders__empty-desc {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  margin: 0;
+  max-width: 360px;
+}
+
+.orders__btn-primary {
+  display: inline-flex;
+  padding: $space-sm $space-xxl;
+  background: $color-primary;
+  color: $color-text-inverse;
+  border-radius: $radius-full;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-decoration: none;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
   transition: all $transition-fast;
-  &:hover { background: $color-primary-hover; transform: translateY(-1px); }
+  margin-top: $space-sm;
+
+  &:hover {
+    background: $color-primary-hover;
+    transform: translateY(-1px);
+  }
 }
 
-.order-list { display: flex; flex-direction: column; gap: $space-lg; }
-
-.order-card {
-  background: $color-bg-tertiary; border: 1px solid $color-border-light;
-  border-radius: $radius-xl; overflow: hidden;
-  transition: border-color $transition-fast;
-  &:hover { border-color: $color-border; box-shadow: $shadow-md; }
+// ═══ Order List ═══
+.orders__list {
+  @include flex-column;
+  gap: $space-lg;
 }
 
-.order-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: $space-md $space-xl; background: $color-bg-secondary;
+// ═══ Order Card ═══
+.orders__card {
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-xl;
+  overflow: hidden;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+
+  &:hover {
+    border-color: $color-border;
+    box-shadow: $shadow-md;
+  }
+}
+
+.orders__card-header {
+  @include flex-between;
+  padding: $space-lg $space-xl;
+  background: $color-bg-warm;
   border-bottom: 1px solid $color-border-light;
-}
-.order-meta { display: flex; flex-direction: column; gap: 2px; }
-.order-number { font-size: $font-size-md; font-weight: $font-weight-bold; color: $color-text-primary; font-family: monospace; }
-.order-date { font-size: $font-size-xs; color: $color-text-tertiary; }
 
-.status-badge {
-  padding: $space-xxs $space-sm; border-radius: $radius-full;
-  font-size: $font-size-xs; font-weight: $font-weight-bold;
-  text-transform: uppercase; letter-spacing: 0.04em;
-
-  &[data-status="confirmed"] { background: rgba(204, 88, 3, 0.1); color: $color-primary; }
-  &[data-status="processing"] { background: rgba(162, 126, 142, 0.12); color: $color-accent; }
-  &[data-status="shipped"], &[data-status="in_transit"], &[data-status="out_for_delivery"] { background: rgba(70, 130, 180, 0.1); color: #4682B4; }
-  &[data-status="delivered"] { background: rgba(87, 136, 108, 0.12); color: $color-success; }
-  &[data-status="cancelled"], &[data-status="returned"] { background: rgba(192, 57, 43, 0.1); color: $color-error; }
+  @include respond-to(sm) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $space-sm;
+  }
 }
 
-.order-items { padding: $space-md $space-xl; }
-.order-line {
-  display: grid; grid-template-columns: 1fr auto auto; gap: $space-md;
-  padding: $space-xs 0; font-size: $font-size-sm;
+.orders__card-meta {
+  @include flex-column;
+  gap: 2px;
+}
+
+.orders__card-number {
+  font-family: $font-family-display;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  letter-spacing: $letter-spacing-tight;
+}
+
+.orders__card-date {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.orders__status {
+  padding: $space-xxs $space-md;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+
+  &[data-status="confirmed"] { background: rgba($color-primary, 0.1); color: $color-primary; }
+  &[data-status="processing"] { background: $color-accent-light; color: $color-accent; }
+  &[data-status="shipped"],
+  &[data-status="in_transit"],
+  &[data-status="out_for_delivery"] { background: rgba(70, 130, 180, 0.1); color: #4682B4; }
+  &[data-status="delivered"] { background: rgba($color-success, 0.12); color: $color-success; }
+  &[data-status="cancelled"],
+  &[data-status="returned"] { background: rgba($color-error, 0.1); color: $color-error; }
+}
+
+// ═══ Items ═══
+.orders__items {
+  padding: $space-md $space-xl;
+}
+
+.orders__line {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: $space-lg;
+  padding: $space-sm 0;
+  font-size: $font-size-sm;
   border-bottom: 1px solid $color-border-light;
+
   &:last-child { border-bottom: none; }
 }
-.line-name { color: $color-text-primary; font-weight: $font-weight-medium; }
-.line-qty { color: $color-text-tertiary; }
-.line-price { color: $color-primary; font-weight: $font-weight-semibold; }
 
-.order-footer {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: $space-md $space-xl; border-top: 1px solid $color-border-light;
+.orders__line-name {
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.orders__line-qty {
+  color: $color-text-tertiary;
+  font-size: $font-size-xs;
+}
+
+.orders__line-price {
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}
+
+// ═══ Footer ═══
+.orders__card-footer {
+  @include flex-between;
+  padding: $space-md $space-xl;
+  border-top: 1px solid $color-border-light;
   background: $color-bg-secondary;
-}
-.footer-left { display: flex; flex-direction: column; gap: $space-xxs; }
-.order-address {
-  display: flex; align-items: center; gap: $space-xs;
-  font-size: $font-size-xs; color: $color-text-tertiary;
-}
-.courier-info { font-size: $font-size-xs; color: $color-accent; font-family: monospace; }
-.footer-right { display: flex; align-items: center; gap: $space-md; }
-.order-total { font-size: $font-size-lg; font-weight: $font-weight-bold; color: $color-text-primary; }
 
-.btn-track {
-  display: inline-flex; align-items: center; gap: $space-xxs;
-  font-size: $font-size-xs; font-weight: $font-weight-semibold;
-  color: #4682B4; text-decoration: none;
-  padding: $space-xxs $space-sm; border: 1px solid #4682B4;
-  border-radius: $radius-md; transition: all $transition-fast;
-  &:hover { background: rgba(70, 130, 180, 0.08); }
+  @include respond-to(sm) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $space-sm;
+  }
 }
 
-.timeline {
+.orders__footer-left {
+  @include flex-column;
+  gap: $space-xxs;
+}
+
+.orders__address {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.orders__courier {
+  font-size: $font-size-xs;
+  color: $color-accent;
+  font-family: monospace;
+}
+
+.orders__footer-right {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+}
+
+.orders__total {
+  font-family: $font-family-display;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+}
+
+.orders__btn-track {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xxs;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: #4682B4;
+  text-decoration: none;
+  padding: $space-xxs $space-md;
+  border: 1px solid #4682B4;
+  border-radius: $radius-full;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(70, 130, 180, 0.08);
+  }
+}
+
+// ═══ Timeline ═══
+.orders__timeline {
   padding: $space-md $space-xl $space-lg;
   border-top: 1px solid $color-border-light;
 }
-.timeline-item {
-  display: flex; align-items: flex-start; gap: $space-sm;
+
+.orders__timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-sm;
   padding: $space-xs 0;
   position: relative;
   padding-left: $space-lg;
@@ -121,33 +329,78 @@
     background: $color-border-light;
   }
 }
-.timeline-dot {
+
+.orders__timeline-dot {
   position: absolute;
   left: 0;
   top: 4px;
-  width: 12px; height: 12px;
-  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: $radius-full;
   border: 2px solid $color-border;
   background: $color-bg-tertiary;
 
   &[data-status="confirmed"] { border-color: $color-primary; background: $color-primary; }
   &[data-status="processing"] { border-color: $color-accent; background: $color-accent; }
-  &[data-status="shipped"], &[data-status="in_transit"], &[data-status="out_for_delivery"] { border-color: #4682B4; background: #4682B4; }
+  &[data-status="shipped"],
+  &[data-status="in_transit"],
+  &[data-status="out_for_delivery"] { border-color: #4682B4; background: #4682B4; }
   &[data-status="delivered"] { border-color: $color-success; background: $color-success; }
   &[data-status="cancelled"] { border-color: $color-error; background: $color-error; }
 }
-.timeline-content { display: flex; flex-direction: column; gap: 1px; }
-.timeline-status { font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-text-primary; }
-.timeline-date { font-size: $font-size-xs; color: $color-text-tertiary; }
-.timeline-note { font-size: $font-size-xs; color: $color-text-secondary; font-style: italic; }
 
-.pagination {
-  display: flex; align-items: center; justify-content: center; gap: $space-md;
-  padding: $space-xl 0;
-  button {
-    padding: $space-xs $space-md; border: 1px solid $color-border; border-radius: $radius-md;
-    background: transparent; font-size: $font-size-sm; cursor: pointer;
-    &:disabled { opacity: 0.4; cursor: not-allowed; }
+.orders__timeline-content {
+  @include flex-column;
+  gap: 1px;
+}
+
+.orders__timeline-status {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.orders__timeline-date {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.orders__timeline-note {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  font-style: italic;
+}
+
+// ═══ Pagination ═══
+.orders__pagination {
+  @include flex-center;
+  gap: $space-lg;
+  margin-top: $space-xxl;
+}
+
+.orders__page-btn {
+  width: 40px;
+  height: 40px;
+  @include flex-center;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-full;
+  background: transparent;
+  color: $color-text-secondary;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover:not(:disabled) {
+    border-color: $color-primary;
+    color: $color-primary;
   }
-  span { font-size: $font-size-sm; color: $color-text-tertiary; }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+}
+
+.orders__page-info {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
 }

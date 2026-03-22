@@ -1,67 +1,65 @@
-<div class="checkout-page">
-  <!-- Step indicator -->
-  <div class="step-bar">
-    <div class="step-track">
-      @for (s of steps; track s.key; let i = $index) {
-        <div class="step" [class.active]="currentStep() === s.key" [class.done]="isStepDone(s.key)">
-          <div class="step-circle">
-            @if (isStepDone(s.key)) {
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            } @else {
-              <span>{{ i + 1 }}</span>
-            }
-          </div>
-          <span class="step-label">{{ s.label }}</span>
+<section class="checkout">
+  <!-- Step Indicator -->
+  <div class="checkout__steps">
+    @for (s of steps; track s.key; let i = $index) {
+      <div class="checkout__step" [class.active]="currentStep() === s.key" [class.done]="isStepDone(s.key)">
+        <div class="checkout__step-circle">
+          @if (isStepDone(s.key)) {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          } @else {
+            <span>{{ i + 1 }}</span>
+          }
         </div>
-        @if (i < steps.length - 1) {
-          <div class="step-line" [class.done]="isStepDone(s.key)"></div>
-        }
+        <span class="checkout__step-label">{{ s.label }}</span>
+      </div>
+      @if (i < steps.length - 1) {
+        <div class="checkout__step-line" [class.done]="isStepDone(s.key)"></div>
       }
-    </div>
+    }
   </div>
 
-  <div class="checkout-layout">
+  <div class="checkout__layout">
     <!-- Main Panel -->
-    <div class="main-panel">
+    <div class="checkout__main">
 
-      <!-- ── STEP 1: CART REVIEW ───────────────────────────────────── -->
+      <!-- STEP 1: CART -->
       @if (currentStep() === 'cart') {
-        <div class="panel-card">
-          <h2 class="panel-title">Review Your Cart</h2>
+        <div class="checkout__panel">
+          <h2 class="checkout__panel-title">Review Your Cart</h2>
 
           @if (cart.cartItems().length === 0) {
-            <div class="empty-cart">
+            <div class="checkout__empty">
               <p>Your cart is empty.</p>
-              <a routerLink="/" class="btn-link">Browse products →</a>
+              <a routerLink="/" class="checkout__link">Browse products</a>
             </div>
           } @else {
-            <div class="cart-items">
+            <div class="checkout__cart-items">
               @for (item of cart.cartItems(); track item.productId) {
-                <div class="line-item">
-                  <div class="line-image">
+                <div class="checkout__line-item">
+                  <div class="checkout__line-image">
                     @if (item.image) {
                       <img [src]="item.image" [alt]="item.name" />
                     } @else {
-                      <div class="img-ph">
+                      <div class="checkout__img-ph">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                           <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
                         </svg>
                       </div>
                     }
                   </div>
-                  <div class="line-info">
-                    <p class="line-name">{{ item.name }}</p>
-                    <p class="line-price">₹{{ item.basePrice | number:'1.0-0' }} each</p>
+                  <div class="checkout__line-info">
+                    <p class="checkout__line-name">{{ item.name }}</p>
+                    <p class="checkout__line-unit">₹{{ item.basePrice | number:'1.0-0' }} each</p>
                   </div>
-                  <div class="line-qty">
-                    <button class="qty-btn" (click)="cart.updateQty(item.productId, item.qty - 1)">−</button>
+                  <div class="checkout__line-qty">
+                    <button class="checkout__qty-btn" (click)="cart.updateQty(item.productId, item.qty - 1)">−</button>
                     <span>{{ item.qty }}</span>
-                    <button class="qty-btn" (click)="cart.updateQty(item.productId, item.qty + 1)" [disabled]="item.qty >= 10">+</button>
+                    <button class="checkout__qty-btn" (click)="cart.updateQty(item.productId, item.qty + 1)" [disabled]="item.qty >= 10">+</button>
                   </div>
-                  <p class="line-total">₹{{ item.lineTotal | number:'1.0-0' }}</p>
-                  <button class="remove-btn" (click)="cart.removeItem(item.productId)">
+                  <p class="checkout__line-total">₹{{ item.lineTotal | number:'1.0-0' }}</p>
+                  <button class="checkout__remove-btn" (click)="cart.removeItem(item.productId)">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                       <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
@@ -70,8 +68,8 @@
               }
             </div>
 
-            <div class="panel-footer">
-              <button class="btn-next" (click)="goTo('address')" [disabled]="cart.cartItems().length === 0">
+            <div class="checkout__panel-footer">
+              <button class="checkout__btn-next" (click)="goTo('address')" [disabled]="cart.cartItems().length === 0">
                 Continue to Address
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -82,46 +80,46 @@
         </div>
       }
 
-      <!-- ── STEP 2: ADDRESS ──────────────────────────────────────── -->
+      <!-- STEP 2: ADDRESS -->
       @if (currentStep() === 'address') {
-        <div class="panel-card">
-          <h2 class="panel-title">Delivery Address</h2>
-          <form class="address-form" (ngSubmit)="onAddressSubmit()">
-            <div class="form-row two-col">
-              <div class="form-group">
+        <div class="checkout__panel">
+          <h2 class="checkout__panel-title">Delivery Address</h2>
+          <form class="checkout__form" (ngSubmit)="onAddressSubmit()">
+            <div class="checkout__form-row checkout__form-row--two">
+              <div class="checkout__field">
                 <label>Full Name *</label>
                 <input [(ngModel)]="address.name" name="name" placeholder="Ramesh Kumar" required />
               </div>
-              <div class="form-group">
+              <div class="checkout__field">
                 <label>Phone *</label>
                 <input [(ngModel)]="address.phone" name="phone" placeholder="9876543210" required maxlength="10" />
               </div>
             </div>
-            <div class="form-row two-col">
-              <div class="form-group">
+            <div class="checkout__form-row checkout__form-row--two">
+              <div class="checkout__field">
                 <label>Pincode *</label>
                 <input [(ngModel)]="address.pincode" name="pincode" placeholder="400001" required maxlength="6" />
               </div>
-              <div class="form-group">
+              <div class="checkout__field">
                 <label>City *</label>
                 <input [(ngModel)]="address.city" name="city" placeholder="Mumbai" required />
               </div>
             </div>
-            <div class="form-row">
-              <div class="form-group">
+            <div class="checkout__form-row">
+              <div class="checkout__field">
                 <label>Street Address *</label>
                 <input [(ngModel)]="address.street" name="street" placeholder="Flat 4B, Shanti Nagar, MG Road" required />
               </div>
             </div>
-            <div class="form-row">
-              <div class="form-group">
+            <div class="checkout__form-row">
+              <div class="checkout__field">
                 <label>State *</label>
                 <input [(ngModel)]="address.state" name="state" placeholder="Maharashtra" required />
               </div>
             </div>
-            <div class="panel-footer">
-              <button type="button" class="btn-back" (click)="goTo('cart')">← Back</button>
-              <button type="submit" class="btn-next" [disabled]="!isAddressValid()">
+            <div class="checkout__panel-footer">
+              <button type="button" class="checkout__btn-back" (click)="goTo('cart')">Back</button>
+              <button type="submit" class="checkout__btn-next" [disabled]="!isAddressValid()">
                 Review Order
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -132,79 +130,79 @@
         </div>
       }
 
-      <!-- ── STEP 3: SUMMARY ─────────────────────────────────────── -->
+      <!-- STEP 3: SUMMARY -->
       @if (currentStep() === 'summary') {
-        <div class="panel-card">
-          <h2 class="panel-title">Order Summary</h2>
+        <div class="checkout__panel">
+          <h2 class="checkout__panel-title">Order Summary</h2>
 
           @if (summaryLoading()) {
-            <div class="loading"><div class="spinner"></div></div>
+            <div class="checkout__loading"><div class="checkout__spinner"></div></div>
           } @else if (summary()) {
             <!-- Items -->
-            <div class="summary-items">
+            <div class="checkout__summary-items">
               @for (item of summary()!.items; track item.productId) {
-                <div class="summary-line">
-                  <div class="sl-image">
+                <div class="checkout__summary-line">
+                  <div class="checkout__sl-image">
                     @if (item.image) {
                       <img [src]="item.image" [alt]="item.name" />
                     } @else {
-                      <div class="img-ph"></div>
+                      <div class="checkout__img-ph"></div>
                     }
                   </div>
-                  <div class="sl-info">
-                    <p class="sl-name">{{ item.name }}</p>
-                    <p class="sl-meta">Qty: {{ item.qty }}
+                  <div class="checkout__sl-info">
+                    <p class="checkout__sl-name">{{ item.name }}</p>
+                    <p class="checkout__sl-meta">Qty: {{ item.qty }}
                       @if (item.pricing.isOnSale) {
-                        <span class="discount-badge">−{{ item.pricing.discountPercent }}%</span>
+                        <span class="checkout__discount-badge">−{{ item.pricing.discountPercent }}%</span>
                       }
                     </p>
                   </div>
-                  <div class="sl-pricing">
+                  <div class="checkout__sl-pricing">
                     @if (item.pricing.isOnSale) {
-                      <p class="sl-original">₹{{ item.pricing.basePrice * item.qty | number:'1.0-0' }}</p>
+                      <p class="checkout__sl-original">₹{{ item.pricing.basePrice * item.qty | number:'1.0-0' }}</p>
                     }
-                    <p class="sl-total">₹{{ item.pricing.totalPrice | number:'1.2-2' }}</p>
+                    <p class="checkout__sl-total">₹{{ item.pricing.totalPrice | number:'1.2-2' }}</p>
                   </div>
                 </div>
               }
             </div>
 
-            <!-- Delivery Address confirmation -->
-            <div class="address-card">
-              <div class="address-card-header">
+            <!-- Delivery Address -->
+            <div class="checkout__address-confirm">
+              <div class="checkout__address-header">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2"/>
                   <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
                 </svg>
                 Delivery to
               </div>
-              <p class="address-text">
+              <p class="checkout__address-text">
                 <strong>{{ address.name }}</strong> · {{ address.phone }}<br/>
                 {{ address.street }}, {{ address.city }} {{ address.pincode }}, {{ address.state }}
               </p>
             </div>
           }
 
-          <!-- Wallet Payment Option -->
+          <!-- Wallet Option -->
           @if (auth.isLoggedIn()) {
-            <div class="wallet-option">
-              <div class="wallet-toggle-row">
-                <label class="wallet-toggle">
+            <div class="checkout__wallet-option">
+              <div class="checkout__wallet-row">
+                <label class="checkout__wallet-toggle">
                   <input type="checkbox" [(ngModel)]="useWallet" />
-                  <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                  <span class="toggle-label">Use Wallet Balance</span>
+                  <span class="checkout__toggle-track"><span class="checkout__toggle-thumb"></span></span>
+                  <span class="checkout__toggle-label">Use Wallet Balance</span>
                 </label>
-                <span class="wallet-balance">₹{{ walletBalance() | number:'1.2-2' }} available</span>
+                <span class="checkout__wallet-avail">₹{{ walletBalance() | number:'1.2-2' }} available</span>
               </div>
               @if (useWallet && walletBalance() > 0 && summary()) {
-                <div class="wallet-deduction">
+                <div class="checkout__wallet-deduction">
                   <span>Wallet deduction</span>
-                  <span class="wallet-deduct-amount">−₹{{ walletDeduction() | number:'1.2-2' }}</span>
+                  <span class="checkout__wallet-deduct-val">−₹{{ walletDeduction() | number:'1.2-2' }}</span>
                 </div>
                 @if (remainingAmount() > 0) {
-                  <p class="wallet-note">Remaining ₹{{ remainingAmount() | number:'1.2-2' }} will be charged via Razorpay</p>
+                  <p class="checkout__wallet-note">Remaining ₹{{ remainingAmount() | number:'1.2-2' }} will be charged via Razorpay</p>
                 } @else {
-                  <p class="wallet-note wallet-full">Full amount covered by wallet — no card/UPI needed!</p>
+                  <p class="checkout__wallet-note checkout__wallet-note--full">Full amount covered by wallet — no card/UPI needed!</p>
                 }
               }
             </div>
@@ -212,42 +210,42 @@
 
           <!-- Payment error -->
           @if (payment.paymentError() && payment.paymentError() !== 'Payment cancelled') {
-            <div class="stock-alert">
+            <div class="checkout__alert">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
               </svg>
               <div>
-                <p class="alert-title">{{ payment.paymentError() }}</p>
+                <p class="checkout__alert-title">{{ payment.paymentError() }}</p>
               </div>
             </div>
           }
 
           <!-- Stock issues -->
           @if (stockIssues().length > 0) {
-            <div class="stock-alert">
+            <div class="checkout__alert">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                 <line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                 <line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               </svg>
               <div>
-                <p class="alert-title">Stock unavailable for some items:</p>
+                <p class="checkout__alert-title">Stock unavailable for some items:</p>
                 @for (issue of stockIssues(); track issue.productId) {
-                  <p class="alert-item">{{ issue.name }} — only {{ issue.available }} available (you have {{ issue.requested }})</p>
+                  <p class="checkout__alert-item">{{ issue.name }} — only {{ issue.available }} available (you have {{ issue.requested }})</p>
                 }
               </div>
             </div>
           }
 
-          <div class="panel-footer">
-            <button type="button" class="btn-back" (click)="goTo('address')">← Back</button>
+          <div class="checkout__panel-footer">
+            <button type="button" class="checkout__btn-back" (click)="goTo('address')">Back</button>
             <button
-              class="btn-place-order"
+              class="checkout__btn-place"
               (click)="placeOrder()"
               [disabled]="orderPlaced() || stockIssues().length > 0"
             >
               @if (orderPlacing()) {
-                <div class="btn-spinner"></div> Reserving…
+                <div class="checkout__btn-spinner"></div> Reserving...
               } @else if (orderPlaced()) {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
@@ -267,60 +265,60 @@
 
     <!-- Price Panel -->
     @if (currentStep() !== 'cart' || cart.cartItems().length > 0) {
-      <aside class="price-panel">
-        <div class="price-card">
-          <h3 class="price-title">Price Details</h3>
-          <div class="price-rows">
+      <aside class="checkout__aside">
+        <div class="checkout__price-card">
+          <h3 class="checkout__price-heading">Price Details</h3>
+          <div class="checkout__price-body">
             @if (summary() && currentStep() === 'summary') {
-              <div class="price-row">
+              <div class="checkout__price-row">
                 <span>Subtotal ({{ summary()!.itemCount }} items)</span>
                 <span>₹{{ summary()!.subtotal | number:'1.0-0' }}</span>
               </div>
               @if (summary()!.totalDiscount > 0) {
-                <div class="price-row discount">
+                <div class="checkout__price-row checkout__price-row--discount">
                   <span>Discount</span>
                   <span>−₹{{ summary()!.totalDiscount | number:'1.0-0' }}</span>
                 </div>
               }
               @if (summary()!.totalTax > 0) {
-                <div class="price-row">
+                <div class="checkout__price-row">
                   <span>Taxes (GST)</span>
                   <span>₹{{ summary()!.totalTax | number:'1.0-0' }}</span>
                 </div>
               }
-              <div class="price-row shipping">
+              <div class="checkout__price-row checkout__price-row--shipping">
                 <span>Delivery</span>
-                <span class="free-tag">FREE</span>
+                <span class="checkout__free">FREE</span>
               </div>
-              <div class="price-divider"></div>
-              <div class="price-row total">
+              <div class="checkout__divider"></div>
+              <div class="checkout__price-row checkout__price-row--total">
                 <span>Total</span>
                 <span>₹{{ summary()!.total | number:'1.2-2' }}</span>
               </div>
               @if (summary()!.totalDiscount > 0) {
-                <p class="savings-note">
-                  You save ₹{{ summary()!.totalDiscount | number:'1.0-0' }} on this order 🎉
+                <p class="checkout__savings">
+                  You save ₹{{ summary()!.totalDiscount | number:'1.0-0' }} on this order
                 </p>
               }
             } @else {
-              <div class="price-row">
+              <div class="checkout__price-row">
                 <span>Subtotal ({{ cart.cartCount() }} items)</span>
                 <span>₹{{ cart.cartSubtotal() | number:'1.0-0' }}</span>
               </div>
-              <div class="price-row shipping">
+              <div class="checkout__price-row checkout__price-row--shipping">
                 <span>Delivery</span>
-                <span class="free-tag">FREE</span>
+                <span class="checkout__free">FREE</span>
               </div>
-              <div class="price-divider"></div>
-              <div class="price-row total">
+              <div class="checkout__divider"></div>
+              <div class="checkout__price-row checkout__price-row--total">
                 <span>Total (approx.)</span>
                 <span>₹{{ cart.cartSubtotal() | number:'1.0-0' }}</span>
               </div>
-              <p class="tax-note">Final price with discounts & taxes shown in Step 3</p>
+              <p class="checkout__tax-note">Final price with discounts &amp; taxes shown in Step 3</p>
             }
           </div>
         </div>
       </aside>
     }
   </div>
-</div>
+</section>

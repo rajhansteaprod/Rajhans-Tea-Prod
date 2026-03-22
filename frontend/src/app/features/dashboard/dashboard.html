@@ -1,52 +1,50 @@
-<div class="dashboard">
-  <!-- Welcome Section -->
-  <div class="welcome-section animate-in">
-    <div class="welcome-text">
-      <div class="greeting-badge">
-        <span class="wave">{{ getGreetingEmoji() }}</span>
-        {{ getGreeting() }}
-      </div>
-      <h1 class="welcome-title">
-        Welcome back{{ userName() ? ', ' + userName() : '' }}
+<section class="dashboard">
+  <!-- Welcome -->
+  <div class="dashboard__welcome">
+    <div class="dashboard__welcome-left">
+      <span class="dashboard__eyebrow">{{ getGreeting() }}</span>
+      <h1 class="dashboard__title">
+        Welcome back<br/>
+        <span class="dashboard__name">{{ userName() || 'there' }}</span>
       </h1>
-      <p class="welcome-subtitle">
+      <p class="dashboard__subtitle">
         Here's what's happening with your {{ isAdmin() ? 'store' : 'account' }} today.
       </p>
     </div>
-    <div class="welcome-avatar">
-      <div class="avatar" [class.admin]="isAdmin()">
+    <div class="dashboard__avatar-wrap">
+      <div class="dashboard__avatar" [class.admin]="isAdmin()">
         {{ getInitials() }}
       </div>
       @if (isAdmin()) {
-        <span class="role-badge">Admin</span>
+        <span class="dashboard__role">Admin</span>
       }
     </div>
   </div>
 
-  <!-- Stats Grid -->
-  <div class="stats-grid">
+  <!-- Stats -->
+  <div class="dashboard__stats">
     @for (stat of stats(); track stat.label) {
-      <div class="stat-card animate-in" [style.--delay]="$index * 0.1 + 's'">
-        <div class="stat-icon" [style.background]="stat.color + '12'" [style.color]="stat.color">
+      <div class="dashboard__stat">
+        <div class="dashboard__stat-icon" [style.background]="stat.color + '12'" [style.color]="stat.color">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" [innerHTML]="stat.icon"></svg>
         </div>
-        <div class="stat-info">
-          <span class="stat-value">{{ stat.value }}</span>
-          <span class="stat-label">{{ stat.label }}</span>
+        <div class="dashboard__stat-body">
+          <span class="dashboard__stat-value">{{ stat.value }}</span>
+          <span class="dashboard__stat-label">{{ stat.label }}</span>
         </div>
       </div>
     }
   </div>
 
   <!-- Quick Actions -->
-  <div class="section animate-in" style="--delay: 0.4s">
-    <h2 class="section-title">Quick Actions</h2>
-    <div class="actions-grid">
+  <div class="dashboard__section">
+    <h2 class="dashboard__section-heading">Quick Actions</h2>
+    <div class="dashboard__actions">
       @for (action of actions(); track action.label) {
-        <button class="action-card" (click)="onAction(action.route)">
-          <div class="action-icon">{{ action.emoji }}</div>
-          <span class="action-label">{{ action.label }}</span>
-          <svg class="action-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <button class="dashboard__action" (click)="onAction(action.route)">
+          <span class="dashboard__action-emoji">{{ action.emoji }}</span>
+          <span class="dashboard__action-label">{{ action.label }}</span>
+          <svg class="dashboard__action-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
@@ -54,22 +52,22 @@
     </div>
   </div>
 
-  <!-- Recent Activity -->
-  <div class="section animate-in" style="--delay: 0.5s">
-    <h2 class="section-title">Account Info</h2>
-    <div class="info-card">
-      <div class="info-row">
-        <span class="info-label">Phone</span>
-        <span class="info-value">+91 {{ authService.user()?.phone }}</span>
+  <!-- Account Info -->
+  <div class="dashboard__section">
+    <h2 class="dashboard__section-heading">Account Info</h2>
+    <div class="dashboard__info">
+      <div class="dashboard__info-row">
+        <span class="dashboard__info-label">Phone</span>
+        <span class="dashboard__info-value">+91 {{ authService.user()?.phone }}</span>
       </div>
-      <div class="info-row">
-        <span class="info-label">Role</span>
-        <span class="info-value capitalize">{{ authService.user()?.role }}</span>
+      <div class="dashboard__info-row">
+        <span class="dashboard__info-label">Role</span>
+        <span class="dashboard__info-value dashboard__info-value--cap">{{ authService.user()?.role }}</span>
       </div>
-      <div class="info-row">
-        <span class="info-label">Account ID</span>
-        <span class="info-value mono">{{ authService.user()?._id?.slice(0, 12) }}...</span>
+      <div class="dashboard__info-row">
+        <span class="dashboard__info-label">Account ID</span>
+        <span class="dashboard__info-value dashboard__info-value--mono">{{ authService.user()?._id?.slice(0, 12) }}...</span>
       </div>
     </div>
   </div>
-</div>
+</section>

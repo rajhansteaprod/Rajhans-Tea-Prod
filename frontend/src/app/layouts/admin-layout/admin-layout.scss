@@ -65,7 +65,7 @@
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: $color-overlay;
   z-index: #{$z-fixed - 1};
 
   @include respond-to(md) {
@@ -75,9 +75,7 @@
 
 .sidebar-header {
   padding: $space-lg $space-lg $space-md;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  @include flex-between;
 }
 
 .sidebar-logo {
@@ -93,9 +91,7 @@
   background: $color-primary;
   color: $color-text-inverse;
   border-radius: $radius-md;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include flex-center;
   font-size: $font-size-sm;
   font-weight: $font-weight-bold;
 }
@@ -130,9 +126,7 @@
 }
 
 .nav-group-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  @include flex-between;
   width: 100%;
   padding: $space-xs $space-md;
   border: none;
@@ -204,9 +198,7 @@
 .nav-icon {
   width: 20px;
   height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include flex-center;
   flex-shrink: 0;
 
   ::ng-deep svg {
@@ -261,17 +253,14 @@
   border-radius: $radius-md;
   background: rgba(204, 88, 3, 0.2);
   color: $color-primary;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include flex-center;
   font-size: $font-size-xs;
   font-weight: $font-weight-bold;
   flex-shrink: 0;
 }
 
 .user-details {
-  display: flex;
-  flex-direction: column;
+  @include flex-column;
   min-width: 0;
 }
 
@@ -304,7 +293,7 @@
 .admin-content {
   flex: 1;
   margin-left: 260px;
-  padding: $space-xl $space-xl;
+  padding: $space-xl;
   min-height: 100vh;
 
   @include respond-to(md) {

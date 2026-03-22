@@ -46,17 +46,9 @@ export class ExploreCtaComponent implements OnInit, AfterViewInit, OnDestroy {
         onEnter: () => {
           const tl = gsap.timeline();
 
-          tl.from(root.querySelector('.explore__eyebrow')!, {
-            opacity: 0, y: 10, duration: 0.5, ease: 'expo.out',
-          });
-
           tl.from(root.querySelectorAll('.explore__h-line'), {
             opacity: 0, y: 30, duration: 0.7, ease: 'expo.out', stagger: 0.12,
-          }, '-=0.3');
-
-          tl.from(root.querySelector('.explore__sub')!, {
-            opacity: 0, y: 15, duration: 0.5, ease: 'expo.out',
-          }, '-=0.3');
+          });
 
           // CTA: only animate y + scale, NOT opacity — CTA must always be visible
           tl.from(root.querySelector('.explore__cta')!, {

@@ -1,70 +1,50 @@
 @use '../../../../core/design-tokens/tokens' as *;
 @use '../../../../core/design-tokens/mixins' as *;
 
-.featured {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: $space-xxxl clamp($space-lg, 5vw, $space-xxxl);
+:host {
+  display: block;
+}
 
-  @include respond-to(md) {
-    padding-top: $space-xxl;
-    padding-bottom: $space-xxl;
-  }
+.featured {
+  @include section-padding;
+  @include content-container($max-width-wide);
 }
 
 // --- Header ---
 .featured__header {
-  @include flex-between;
-  margin-bottom: $space-xxl;
-
-  @include respond-to(sm) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: $space-md;
-  }
-}
-
-.featured__title-group {
-  @include flex-column;
-  gap: $space-xs;
+  text-align: center;
+  margin-bottom: $space-xxxl;
 }
 
 .featured__eyebrow {
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
-  color: $color-secondary;
+  @include eyebrow-text;
+  display: block;
+  margin-bottom: $space-sm;
 }
 
 .featured__title {
   font-family: $font-family-display;
-  font-size: clamp($font-size-xxl, 3vw, $font-size-xxxl);
+  font-size: clamp($font-size-xxxl, 4vw, $font-size-display);
   font-weight: $font-weight-regular;
   letter-spacing: $letter-spacing-display;
   color: $color-text-primary;
-  margin: 0;
+  margin: 0 0 $space-lg;
 }
 
-.featured__view-all {
+.featured__link {
   display: inline-flex;
   align-items: center;
-  gap: $space-xs;
   font-family: $font-family;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
-  color: $color-text-secondary;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
+  color: $color-text-tertiary;
   text-decoration: none;
   transition: color $transition-fast;
 
-  svg {
-    transition: transform $transition-fast;
-  }
-
   &:hover {
     color: $color-primary;
-    svg { transform: translateX($space-xxs); }
   }
 }
 
@@ -72,7 +52,7 @@
 .featured__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: $space-lg;
+  gap: $space-xl;
 
   @include respond-to(lg) {
     grid-template-columns: repeat(2, 1fr);
@@ -80,148 +60,15 @@
 
   @include respond-to(sm) {
     grid-template-columns: 1fr;
-    gap: $space-md;
-  }
-}
-
-// --- Product Card ---
-.card {
-  background: $color-bg-tertiary;
-  border-radius: $radius-lg;
-  border: 1px solid $color-border-light;
-  overflow: hidden;
-  transition: transform $transition-normal, box-shadow $transition-normal;
-
-  &:hover {
-    transform: translateY(-$space-xxs);
-    box-shadow: $shadow-lg;
-
-    .card__img {
-      transform: scale(1.04);
-    }
-  }
-}
-
-// --- Image ---
-.card__img-wrap {
-  display: block;
-  position: relative;
-  aspect-ratio: 1 / 1;
-  overflow: hidden;
-  background: $color-bg-secondary;
-}
-
-.card__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.6s $ease-expo-out;
-}
-
-.card__img-placeholder {
-  @include flex-center;
-  width: 100%;
-  height: 100%;
-  color: $color-text-disabled;
-}
-
-.card__badge {
-  position: absolute;
-  top: $space-sm;
-  left: $space-sm;
-  padding: $space-xxs $space-sm;
-  border-radius: $radius-sm;
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
-
-  &--oos {
-    background: $color-bg-dark;
-    color: $color-text-inverse;
-  }
-}
-
-// --- Body ---
-.card__body {
-  padding: $space-md $space-lg $space-lg;
-  @include flex-column;
-  gap: $space-xxs;
-}
-
-.card__category {
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-medium;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
-  color: $color-secondary;
-}
-
-.card__name {
-  font-family: $font-family-display;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-medium;
-  color: $color-text-primary;
-  text-decoration: none;
-  letter-spacing: $letter-spacing-tight;
-  transition: color $transition-fast;
-  @include truncate(1);
-
-  &:hover {
-    color: $color-primary;
-  }
-}
-
-.card__footer {
-  @include flex-between;
-  margin-top: $space-sm;
-}
-
-.card__price {
-  font-family: $font-family-display;
-  font-size: $font-size-xl;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  letter-spacing: $letter-spacing-tight;
-}
-
-.card__cta {
-  display: inline-flex;
-  align-items: center;
-  padding: $space-xs $space-lg;
-  background: $color-primary;
-  color: $color-text-inverse;
-  border: none;
-  border-radius: $radius-full;
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all $transition-fast;
-
-  &:hover:not(:disabled) {
-    background: $color-primary-hover;
-    transform: translateY(-1px);
-    box-shadow: $shadow-md;
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.97);
-  }
-
-  &:disabled {
-    background: $color-text-disabled;
-    cursor: not-allowed;
+    gap: $space-lg;
   }
 }
 
 // --- Skeleton loading ---
-.card--skeleton {
-  pointer-events: none;
+.featured__skeleton {
+  border-radius: $radius-lg;
+  overflow: hidden;
+  background: $color-bg-secondary;
 }
 
 .skeleton-box {
@@ -233,6 +80,12 @@
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+.skeleton-lines {
+  padding: $space-lg;
+  @include flex-column;
+  gap: $space-sm;
 }
 
 .skeleton-line {
@@ -247,8 +100,7 @@
   animation: shimmer 1.5s infinite;
 
   &--sm { width: 40%; height: $space-sm; }
-  &--lg { width: 80%; }
-  &--md { width: 50%; margin-top: $space-xs; }
+  &--lg { width: 70%; }
 }
 
 @keyframes shimmer {

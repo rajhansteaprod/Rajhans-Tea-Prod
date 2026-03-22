@@ -1,0 +1,50 @@
+@use '../../../core/design-tokens/tokens' as *;
+@use '../../../core/design-tokens/mixins' as *;
+
+.sh {
+  margin-bottom: $space-xxxl;
+
+  &--center { text-align: center; }
+  &--right { text-align: right; }
+}
+
+.sh__eyebrow {
+  @include eyebrow-text;
+  display: block;
+  margin-bottom: $space-md;
+}
+
+.sh__headline {
+  @include mega-headline(clamp($font-size-xxxl, 5vw, $font-size-section));
+  margin: 0 0 $space-lg;
+}
+
+.sh__subtitle {
+  font-family: $font-family;
+  font-size: $font-size-lg;
+  color: $color-text-tertiary;
+  line-height: $line-height-relaxed;
+  margin: 0 0 $space-lg;
+  max-width: 500px;
+
+  .sh--center & { margin-left: auto; margin-right: auto; }
+}
+
+.sh__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  text-decoration: none;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
+  transition: gap $transition-normal;
+
+  &:hover {
+    gap: $space-sm;
+    color: $color-primary-hover;
+  }
+}

@@ -1,18 +1,135 @@
 @use '../../../core/design-tokens/tokens' as *;
-.page { max-width:1100px; margin:0 auto; padding: $space-xxl $space-lg; }
-.page-title { font-size: $font-size-xxl; font-weight: $font-weight-bold; color: $color-text-primary; margin:0 0 $space-xxs; text-align:center; }
-.page-sub { font-size: $font-size-sm; color: $color-text-tertiary; text-align:center; margin:0 0 $space-xxl; }
-.collections-grid { display:grid; grid-template-columns: repeat(3,1fr); gap: $space-lg; }
-@media(max-width:768px) { .collections-grid { grid-template-columns: repeat(2,1fr); } }
-.collection-card { background: $color-bg-tertiary; border:1px solid $color-border-light; border-radius: $radius-xxl; overflow:hidden; text-decoration:none; transition: all $transition-normal;
-  &:hover { border-color: $color-border; box-shadow: $shadow-lg; transform:translateY(-3px); }
+@use '../../../core/design-tokens/mixins' as *;
+
+.collections {
+  min-height: 60vh;
 }
-.card-image { aspect-ratio:16/9; background: $color-bg-secondary; overflow:hidden;
-  img { width:100%; height:100%; object-fit:cover; }
+
+// ═══ Hero ═══
+.collections__hero {
+  @include section-padding;
+  text-align: center;
+  background: $color-bg-warm;
+  border-bottom: 1px solid $color-border-light;
 }
-.img-ph { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, $color-primary-light, $color-bg-secondary);
-  span { font-size: $font-size-xxxl; font-weight: $font-weight-bold; color: $color-primary; }
+
+.collections__hero-inner {
+  @include content-container($max-width-narrow);
 }
-.card-body { padding: $space-lg; }
-.card-name { font-size: $font-size-lg; font-weight: $font-weight-bold; color: $color-text-primary; margin:0 0 $space-xxs; }
-.card-desc { font-size: $font-size-sm; color: $color-text-tertiary; margin:0; }
+
+.collections__eyebrow {
+  @include eyebrow-text;
+  display: block;
+  margin-bottom: $space-md;
+  color: $color-primary;
+}
+
+.collections__title {
+  font-family: $font-family-display;
+  font-size: clamp($font-size-xxxl, 5vw, $font-size-section);
+  font-weight: $font-weight-regular;
+  line-height: $line-height-tight;
+  letter-spacing: $letter-spacing-display;
+  color: $color-text-primary;
+  margin: 0 0 $space-md;
+}
+
+.collections__sub {
+  font-family: $font-family;
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  margin: 0;
+}
+
+// ═══ Grid ═══
+.collections__grid-wrap {
+  @include content-container;
+  padding-top: $space-xxl;
+  padding-bottom: $space-section;
+}
+
+.collections__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $space-lg;
+
+  @include respond-to(md) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ═══ Card ═══
+.collection-card {
+  display: block;
+  text-decoration: none;
+  overflow: hidden;
+  @include hover-lift(-6px);
+}
+
+.collection-card__image {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: $color-bg-dark;
+
+  img {
+    @include image-cover;
+    transition: transform 0.8s $ease-expo-out;
+    opacity: 0.85;
+  }
+
+  &:hover img {
+    transform: scale(1.05);
+    opacity: 0.7;
+  }
+}
+
+.collection-card__placeholder {
+  width: 100%;
+  height: 100%;
+  @include flex-center;
+  background: $color-bg-dark;
+
+  span {
+    font-family: $font-family-display;
+    font-size: $font-size-display;
+    font-weight: $font-weight-regular;
+    color: rgba($color-text-inverse, 0.15);
+    letter-spacing: $letter-spacing-display;
+  }
+}
+
+.collection-card__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: $space-xxl;
+  background: linear-gradient(0deg, rgba($color-bg-dark, 0.8) 0%, transparent 60%);
+}
+
+.collection-card__name {
+  font-family: $font-family-display;
+  font-size: clamp($font-size-xl, 2.5vw, $font-size-xxl);
+  font-weight: $font-weight-regular;
+  color: $color-text-inverse;
+  margin: 0 0 $space-xs;
+  letter-spacing: $letter-spacing-display;
+}
+
+.collection-card__desc {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  color: rgba($color-text-inverse, 0.7);
+  margin: 0 0 $space-md;
+  max-width: 400px;
+  line-height: $line-height-relaxed;
+}
+
+.collection-card__cta {
+  @include eyebrow-text;
+  font-size: 10px;
+  color: $color-primary;
+  letter-spacing: $letter-spacing-wide;
+}

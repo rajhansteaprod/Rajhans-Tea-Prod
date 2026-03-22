@@ -82,30 +82,32 @@
       <div class="reviews__loading"><div class="reviews__spinner"></div></div>
     } @else if (reviews().length === 0) {
       <div class="reviews__empty">
-        <p>No reviews yet. Be the first to share your experience!</p>
+        <p>No reviews yet. Be the first to share your experience.</p>
       </div>
     } @else {
       <div class="reviews__list">
         @for (r of reviews(); track r._id) {
-          <div class="reviews__item">
-            <div class="reviews__item-header">
-              <div class="reviews__item-stars">
+          <article class="reviews__card">
+            <div class="reviews__card-header">
+              <div class="reviews__card-stars">
                 @for (s of [1,2,3,4,5]; track s) {
                   <svg class="reviews__star-sm" [class.filled]="s <= r.rating" width="14" height="14" viewBox="0 0 24 24">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
                   </svg>
                 }
               </div>
-              @if (r.isVerifiedPurchase) {
-                <span class="reviews__verified">Verified Purchase</span>
-              }
-              <span class="reviews__date">{{ r.createdAt | date:'mediumDate' }}</span>
+              <div class="reviews__card-meta">
+                @if (r.isVerifiedPurchase) {
+                  <span class="reviews__verified">Verified Purchase</span>
+                }
+                <span class="reviews__date">{{ r.createdAt | date:'mediumDate' }}</span>
+              </div>
             </div>
             @if (r.title) {
-              <h4 class="reviews__item-title">{{ r.title }}</h4>
+              <h4 class="reviews__card-title">{{ r.title }}</h4>
             }
-            <p class="reviews__item-body">{{ r.body }}</p>
-            <div class="reviews__item-footer">
+            <p class="reviews__card-body">{{ r.body }}</p>
+            <div class="reviews__card-footer">
               <button class="reviews__helpful-btn" (click)="voteHelpful(r._id)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 Helpful ({{ r.helpfulVotes }})
@@ -118,7 +120,7 @@
                 <p class="reviews__reply-body">{{ r.adminReply.body }}</p>
               </div>
             }
-          </div>
+          </article>
         }
       </div>
     }

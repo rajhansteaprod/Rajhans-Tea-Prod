@@ -1,167 +1,65 @@
 @use '../../../../core/design-tokens/tokens' as *;
 @use '../../../../core/design-tokens/mixins' as *;
 
+:host {
+  display: block;
+}
+
 .explore {
-  position: relative;
-  overflow: hidden;
-  padding: $space-xxxl * 2 0;
-  min-height: 480px;
+  background: $color-primary;
+  @include section-padding;
   @include flex-center;
-  flex-direction: column;
+  min-height: 400px;
 
   @include respond-to(md) {
-    padding: $space-xxxl $space-lg;
-    min-height: 400px;
+    min-height: 320px;
   }
 }
 
-// ── Scrolling product preview strip (behind content) ──
-.explore__preview {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  display: flex;
-  gap: $space-lg;
-  animation: previewScroll 30s linear infinite;
-  will-change: transform;
-}
-
-.explore__thumb {
-  flex-shrink: 0;
-  width: 140px;
-  height: 140px;
-  border-radius: $radius-xl;
-  overflow: hidden;
-  opacity: 0.12;
-  filter: blur(1px);
-  transition: opacity $transition-slow;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  @include respond-to(md) {
-    width: 100px;
-    height: 100px;
-  }
-}
-
-@keyframes previewScroll {
-  0% { transform: translateY(-50%) translateX(0); }
-  100% { transform: translateY(-50%) translateX(-50%); }
-}
-
-// ── Overlay to fade the strip edges ──
-.explore__overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg, $color-bg-primary 0%, transparent 20%, transparent 80%, $color-bg-primary 100%),
-    linear-gradient(180deg, $color-bg-primary 0%, transparent 30%, transparent 70%, $color-bg-primary 100%);
-  pointer-events: none;
-  z-index: 1;
-}
-
-// ── Content ──
 .explore__content {
-  position: relative;
-  z-index: 2;
   text-align: center;
-  max-width: 560px;
+  max-width: 640px;
   padding: 0 $space-lg;
-}
-
-.explore__eyebrow {
-  display: inline-block;
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
-  color: $color-secondary;
-  margin-bottom: $space-lg;
 }
 
 .explore__headline {
   font-family: $font-family-display;
-  font-size: clamp($font-size-xxxl, 4.5vw, $font-size-display);
-  font-weight: $font-weight-regular;
+  font-size: clamp($font-size-display, 6vw, $font-size-hero);
+  font-weight: $font-weight-medium;
   line-height: $line-height-tight;
   letter-spacing: $letter-spacing-display;
-  color: $color-text-primary;
-  margin: 0 0 $space-lg;
+  color: $color-text-inverse;
+  margin: 0 0 $space-xxl;
+
+  @include respond-to(md) {
+    font-size: clamp($font-size-xxxl, 8vw, $font-size-display);
+  }
 }
 
 .explore__h-line {
   display: block;
 }
 
-.explore__h-line--accent {
-  color: $color-primary;
-  font-style: italic;
-}
-
-.explore__sub {
-  font-family: $font-family;
-  font-size: $font-size-lg;
-  color: $color-text-tertiary;
-  line-height: $line-height-relaxed;
-  margin: 0 0 $space-xxl;
-
-  @include respond-to(md) {
-    font-size: $font-size-md;
-  }
-}
-
-// ── CTA — the star of the section ──
-// Ensure CTA is always visible (GSAP animates from opacity:0 — this is the safety net)
 .explore__cta {
   display: inline-flex;
   align-items: center;
   gap: $space-sm;
   padding: $space-md * 1.25 $space-xxl * 1.2;
-  background: $color-primary;
-  color: $color-text-inverse;
+  background: $color-text-inverse;
+  color: $color-primary;
   border-radius: $radius-full;
   font-family: $font-family;
   font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
   text-decoration: none;
   transition: all 0.4s $ease-expo-out;
-  box-shadow: 0 4px 20px rgba($color-primary, 0.25);
-  position: relative;
-  overflow: hidden;
-
-  // Shine sweep on hover
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba($color-text-inverse, 0.15) 50%,
-      transparent 100%
-    );
-    transition: left 0.6s $ease-expo-out;
-  }
 
   &:hover {
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 10px 40px rgba($color-primary, 0.35);
-    color: $color-text-inverse;
-
-    &::before {
-      left: 100%;
-    }
+    box-shadow: 0 10px 40px rgba($color-bg-dark, 0.25);
+    color: $color-primary;
 
     .explore__cta-arrow {
       transform: translateX($space-xxs);
@@ -173,21 +71,11 @@
   }
 
   &:focus-visible {
-    outline: 2px solid $color-primary;
+    outline: 2px solid $color-text-inverse;
     outline-offset: 4px;
   }
 }
 
 .explore__cta-arrow {
   transition: transform $transition-normal;
-}
-
-// CSS fallback — ensure content is visible even if GSAP fails
-.explore__content {
-  animation: exploreFadeIn 0.8s ease-out 0.3s both;
-}
-
-@keyframes exploreFadeIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
 }

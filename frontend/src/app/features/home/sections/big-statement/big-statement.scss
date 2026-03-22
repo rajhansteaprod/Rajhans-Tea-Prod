@@ -1,0 +1,37 @@
+@use '../../../../core/design-tokens/tokens' as *;
+@use '../../../../core/design-tokens/mixins' as *;
+
+:host {
+  display: block;
+}
+
+.statement {
+  background: $color-bg-dark;
+  @include section-padding;
+  @include flex-center;
+  min-height: 50vh;
+
+  @include respond-to(md) {
+    min-height: 40vh;
+  }
+}
+
+.statement__inner {
+  @include content-container($max-width-wide);
+  text-align: center;
+}
+
+.statement__text {
+  @include mega-headline($font-size-mega);
+  color: $color-text-inverse;
+  margin: 0;
+  font-size: clamp($font-size-display, 10vw, $font-size-mega);
+
+  @include respond-to(md) {
+    font-size: clamp($font-size-xxxl, 12vw, $font-size-hero);
+  }
+}
+
+.statement__line {
+  display: block;
+}

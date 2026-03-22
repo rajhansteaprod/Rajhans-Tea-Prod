@@ -1,186 +1,149 @@
-<div class="login-scene">
-  <!-- Animated background shapes -->
-  <div class="bg-shapes">
-    <div class="shape shape-1"></div>
-    <div class="shape shape-2"></div>
-    <div class="shape shape-3"></div>
-    <div class="shape shape-4"></div>
-    <div class="shape shape-5"></div>
-  </div>
-
-  <!-- Floating particles -->
-  <div class="particles">
-    @for (i of particles; track i) {
-      <div class="particle" [style.--delay]="i * 0.4 + 's'" [style.--x]="particleX(i)" [style.--size]="particleSize(i)"></div>
-    }
-  </div>
-
-  <div class="login-container" [class.entered]="entered()">
-    <!-- Left panel — brand showcase -->
-    <div class="brand-panel">
-      <div class="brand-content">
-        <div class="brand-badge">
-          <span class="badge-dot"></span>
-          Premium Shopping
-        </div>
-        <h1 class="brand-title">
-          <span class="title-line">Discover</span>
-          <span class="title-line accent">Rajhans Tea</span>
-          <span class="title-line">Collection</span>
-        </h1>
-        <p class="brand-desc">
-          Curated luxury meets modern convenience. Experience shopping reimagined for the discerning buyer.
-        </p>
-        <div class="brand-stats">
-          <div class="stat">
-            <span class="stat-value">10K+</span>
-            <span class="stat-label">Products</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat">
-            <span class="stat-value">50K+</span>
-            <span class="stat-label">Happy Customers</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat">
-            <span class="stat-value">4.9</span>
-            <span class="stat-label">Rating</span>
-          </div>
-        </div>
-      </div>
-      <div class="brand-pattern"></div>
+<div class="login">
+  <!-- Left: Brand Panel -->
+  <div class="login__brand">
+    <div class="login__brand-content">
+      <span class="login__brand-eyebrow">Welcome to</span>
+      <h1 class="login__brand-title">
+        <span class="login__brand-line">Rajhans</span>
+        <span class="login__brand-line login__brand-line--accent">Tea</span>
+      </h1>
+      <p class="login__brand-desc">
+        Curated premium teas, delivered to your door. Experience the finest blends from India's heritage gardens.
+      </p>
+      <div class="login__brand-divider"></div>
+      <p class="login__brand-tagline">Est. Since Generations</p>
     </div>
+  </div>
 
-    <!-- Right panel — auth form -->
-    <div class="auth-panel">
-      <div class="auth-inner">
-        <!-- Step indicator -->
-        <div class="step-indicator">
-          <div class="step-dot" [class.active]="true" [class.done]="step() === 'otp'"></div>
-          <div class="step-line" [class.active]="step() === 'otp'"></div>
-          <div class="step-dot" [class.active]="step() === 'otp'"></div>
-        </div>
+  <!-- Right: Auth Form -->
+  <div class="login__form-panel">
+    <div class="login__form-inner" [class.entered]="entered()">
+      <!-- Step dots -->
+      <div class="login__steps">
+        <div class="login__step-dot" [class.active]="true" [class.done]="step() === 'otp'"></div>
+        <div class="login__step-line" [class.active]="step() === 'otp'"></div>
+        <div class="login__step-dot" [class.active]="step() === 'otp'"></div>
+      </div>
 
-        <div class="auth-header" [class.slide-up]="step() === 'otp'">
-          <h2 class="auth-title">
-            {{ step() === 'phone' ? 'Welcome' : 'Verify OTP' }}
-          </h2>
-          <p class="auth-subtitle">
-            {{ step() === 'phone'
-              ? 'Sign in with your mobile number to continue'
-              : 'Enter the 6-digit code sent to' }}
-          </p>
-          @if (step() === 'otp') {
-            <p class="auth-phone-display">+91 {{ phone() }}</p>
-          }
-        </div>
-
-        @if (error()) {
-          <div class="error-toast" (click)="error.set(null)">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="8" fill="#C0392B"/>
-              <path d="M5 5L11 11M11 5L5 11" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <span>{{ error() }}</span>
-          </div>
+      <div class="login__header">
+        <h2 class="login__title">
+          {{ step() === 'phone' ? 'Sign In' : 'Verify OTP' }}
+        </h2>
+        <p class="login__subtitle">
+          {{ step() === 'phone'
+            ? 'Enter your mobile number to continue'
+            : 'Enter the 6-digit code sent to' }}
+        </p>
+        @if (step() === 'otp') {
+          <p class="login__phone-display">+91 {{ phone() }}</p>
         }
+      </div>
 
-        <!-- Phone Step -->
-        @if (step() === 'phone') {
-          <div class="form-section animate-in">
-            <label class="input-label">Mobile Number</label>
-            <div class="phone-input-group">
-              <div class="country-code">
-                <span class="flag">&#127470;&#127475;</span>
-                <span>+91</span>
-              </div>
-              <input
-                #phoneInput
-                type="tel"
-                class="phone-input"
-                placeholder="Enter 10-digit number"
-                [value]="phone()"
-                (input)="onPhoneInput($event)"
-                maxlength="10"
-                (keyup.enter)="onSendOtp()"
-                autocomplete="tel"
-              />
+      @if (error()) {
+        <div class="login__error" (click)="error.set(null)">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="8" fill="#C0392B"/>
+            <path d="M5 5L11 11M11 5L5 11" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span>{{ error() }}</span>
+        </div>
+      }
+
+      <!-- Phone Step -->
+      @if (step() === 'phone') {
+        <div class="login__section">
+          <label class="login__label">Mobile Number</label>
+          <div class="login__phone-group">
+            <div class="login__country">
+              <span class="login__flag">&#127470;&#127475;</span>
+              <span>+91</span>
             </div>
+            <input
+              #phoneInput
+              type="tel"
+              class="login__phone-input"
+              placeholder="Enter 10-digit number"
+              [value]="phone()"
+              (input)="onPhoneInput($event)"
+              maxlength="10"
+              (keyup.enter)="onSendOtp()"
+              autocomplete="tel"
+            />
+          </div>
+          <button
+            class="login__btn-submit"
+            [class.loading]="loading()"
+            [disabled]="phone().length !== 10 || loading()"
+            (click)="onSendOtp()"
+          >
+            @if (loading()) {
+              <div class="login__spinner"></div>
+              <span>Sending...</span>
+            } @else {
+              <span>Continue</span>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            }
+          </button>
+        </div>
+      }
+
+      <!-- OTP Step -->
+      @if (step() === 'otp') {
+        <div class="login__section">
+          <label class="login__label">Verification Code</label>
+          <div class="login__otp-inputs">
+            @for (i of otpSlots; track i) {
+              <input
+                #otpInput
+                type="text"
+                inputmode="numeric"
+                class="otp-box"
+                maxlength="1"
+                [value]="otpDigits()[i]"
+                (input)="onOtpDigitInput($event, i)"
+                (keydown)="onOtpKeydown($event, i)"
+                (paste)="onOtpPaste($event)"
+                [class.filled]="otpDigits()[i]"
+              />
+            }
+          </div>
+
+          <button
+            class="login__btn-submit"
+            [class.loading]="loading()"
+            [disabled]="otp().length !== 6 || loading()"
+            (click)="onVerifyOtp()"
+          >
+            @if (loading()) {
+              <div class="login__spinner"></div>
+              <span>Verifying...</span>
+            } @else {
+              <span>Verify &amp; Sign In</span>
+            }
+          </button>
+
+          <div class="login__otp-actions">
             <button
-              class="btn-primary"
-              [class.loading]="loading()"
-              [disabled]="phone().length !== 10 || loading()"
+              class="login__link"
+              [disabled]="resendCooldown() > 0"
               (click)="onSendOtp()"
             >
-              @if (loading()) {
-                <div class="spinner"></div>
-                <span>Sending...</span>
-              } @else {
-                <span>Continue</span>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              }
+              {{ resendCooldown() > 0 ? 'Resend in ' + resendCooldown() + 's' : 'Resend Code' }}
+            </button>
+            <button class="login__link" (click)="changePhone()">
+              Change Number
             </button>
           </div>
-        }
+        </div>
+      }
 
-        <!-- OTP Step -->
-        @if (step() === 'otp') {
-          <div class="form-section animate-in">
-            <label class="input-label">Verification Code</label>
-            <div class="otp-inputs">
-              @for (i of otpSlots; track i) {
-                <input
-                  #otpInput
-                  type="text"
-                  inputmode="numeric"
-                  class="otp-box"
-                  maxlength="1"
-                  [value]="otpDigits()[i]"
-                  (input)="onOtpDigitInput($event, i)"
-                  (keydown)="onOtpKeydown($event, i)"
-                  (paste)="onOtpPaste($event)"
-                  [class.filled]="otpDigits()[i]"
-                />
-              }
-            </div>
-
-            <button
-              class="btn-primary"
-              [class.loading]="loading()"
-              [disabled]="otp().length !== 6 || loading()"
-              (click)="onVerifyOtp()"
-            >
-              @if (loading()) {
-                <div class="spinner"></div>
-                <span>Verifying...</span>
-              } @else {
-                <span>Verify & Sign In</span>
-              }
-            </button>
-
-            <div class="otp-actions">
-              <button
-                class="btn-link"
-                [disabled]="resendCooldown() > 0"
-                (click)="onSendOtp()"
-              >
-                {{ resendCooldown() > 0 ? 'Resend in ' + resendCooldown() + 's' : 'Resend Code' }}
-              </button>
-              <button class="btn-link" (click)="changePhone()">
-                Change Number
-              </button>
-            </div>
-          </div>
-        }
-
-        <p class="terms">
-          By continuing, you agree to our
-          <a href="#">Terms of Service</a> &
-          <a href="#">Privacy Policy</a>
-        </p>
-      </div>
+      <p class="login__terms">
+        By continuing, you agree to our
+        <a href="#">Terms of Service</a> &amp;
+        <a href="#">Privacy Policy</a>
+      </p>
     </div>
   </div>
 

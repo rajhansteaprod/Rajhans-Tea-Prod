@@ -1,5 +1,7 @@
 @use '../../core/design-tokens/tokens' as *;
+@use '../../core/design-tokens/mixins' as *;
 
+// ═══ LAYOUT SHELL ═══
 .layout {
   min-height: 100vh;
   display: flex;
@@ -9,52 +11,130 @@
 
 .content {
   flex: 1;
-  padding: 72px $space-xxl $space-lg;
 }
 
-.content-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  min-height: 280px;
-}
-
+// ═══ FOOTER ═══
 .footer {
   background: $color-bg-dark;
   color: rgba(252, 255, 247, 0.7);
-  padding: $space-xxl $space-xxl $space-lg;
+  padding: $space-section clamp($space-lg, 5vw, $space-xxxl) $space-xxl;
+
+  @include respond-to(md) {
+    padding-top: $space-section-sm;
+  }
 }
 
-.footer-inner { max-width: 1200px; margin: 0 auto; }
+.footer-inner {
+  max-width: $max-width-wide;
+  margin: 0 auto;
+}
 
+// Brand block
+.footer-brand {
+  margin-bottom: $space-xxxl;
+  padding-bottom: $space-xxl;
+  border-bottom: 1px solid rgba(252, 255, 247, 0.08);
+}
+
+.footer-brand-name {
+  font-family: $font-family-display;
+  font-size: clamp($font-size-display, 8vw, $font-size-mega);
+  font-weight: $font-weight-bold;
+  color: rgba(252, 255, 247, 0.9);
+  letter-spacing: $letter-spacing-display;
+  line-height: 0.95;
+  margin: 0 0 $space-md;
+}
+
+.footer-brand-tagline {
+  font-family: $font-family;
+  font-size: $font-size-md;
+  color: rgba(252, 255, 247, 0.4);
+  margin: 0;
+  letter-spacing: $letter-spacing-wide;
+}
+
+// Link grid — 3 columns
 .footer-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: $space-xxl;
-  margin-bottom: $space-xxl;
-}
+  margin-bottom: $space-xxxl;
 
-@media (max-width: 768px) {
-  .footer-grid { grid-template-columns: repeat(2, 1fr); gap: $space-lg; }
+  @include respond-to(md) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-xl;
+  }
+
+  @include respond-to(xs) {
+    grid-template-columns: 1fr;
+    gap: $space-lg;
+  }
 }
 
 .footer-col {
-  display: flex; flex-direction: column; gap: $space-xs;
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+
   h4 {
-    font-size: $font-size-sm; font-weight: $font-weight-bold;
-    color: rgba(252, 255, 247, 0.9); text-transform: uppercase;
-    letter-spacing: 0.06em; margin: 0 0 $space-sm;
+    @include eyebrow-text;
+    color: rgba(252, 255, 247, 0.5);
+    margin: 0 0 $space-sm;
+    font-size: 11px;
+    letter-spacing: 0.14em;
   }
+
   a {
-    font-size: $font-size-sm; color: rgba(252, 255, 247, 0.6);
-    text-decoration: none; transition: color $transition-fast;
-    &:hover { color: $color-primary; }
+    font-size: $font-size-sm;
+    color: rgba(252, 255, 247, 0.6);
+    text-decoration: none;
+    transition: color $transition-fast;
+    line-height: $line-height-relaxed;
+
+    &:hover {
+      color: $color-bg-primary;
+    }
   }
 }
 
-.footer-text { font-size: $font-size-sm; margin: 0; color: rgba(252, 255, 247, 0.5); }
+// Newsletter mention
+.footer-newsletter {
+  padding-bottom: $space-xxl;
+  margin-bottom: $space-lg;
+  border-bottom: 1px solid rgba(252, 255, 247, 0.08);
+}
 
+.footer-newsletter-text {
+  font-size: $font-size-sm;
+  color: rgba(252, 255, 247, 0.35);
+  margin: 0;
+}
+
+// Bottom bar
 .footer-bottom {
-  border-top: 1px solid rgba(252, 255, 247, 0.1);
-  padding-top: $space-lg; text-align: center;
-  font-size: $font-size-xs; color: rgba(252, 255, 247, 0.4);
+  @include flex-between;
+  font-size: $font-size-xs;
+  color: rgba(252, 255, 247, 0.3);
+
+  @include respond-to(md) {
+    flex-direction: column;
+    gap: $space-sm;
+    text-align: center;
+  }
+}
+
+.footer-bottom-links {
+  display: flex;
+  gap: $space-lg;
+
+  a {
+    color: rgba(252, 255, 247, 0.3);
+    text-decoration: none;
+    transition: color $transition-fast;
+
+    &:hover {
+      color: rgba(252, 255, 247, 0.6);
+    }
+  }
 }

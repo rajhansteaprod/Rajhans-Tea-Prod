@@ -1,166 +1,28 @@
 @use '../../../core/design-tokens/tokens' as *;
 @use '../../../core/design-tokens/mixins' as *;
 
-// === Scene ===
-.login-scene {
+// ═══════════════════════════════════════════
+// LOGIN — Split layout, brand left, OTP right
+// ═══════════════════════════════════════════
+
+.login {
   min-height: 100vh;
   min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: $color-bg-primary;
-  position: relative;
-  overflow: hidden;
-  padding: $space-lg;
-
-  @include respond-to(xs) {
-    padding: 0;
-    align-items: stretch;
-  }
-}
-
-// === Background Shapes ===
-.bg-shapes {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.shape {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.4;
-  animation: float 20s ease-in-out infinite;
-}
-
-.shape-1 {
-  width: 500px;
-  height: 500px;
-  background: rgba(204, 88, 3, 0.08);
-  top: -10%;
-  right: -5%;
-  animation-delay: 0s;
-}
-
-.shape-2 {
-  width: 400px;
-  height: 400px;
-  background: rgba(87, 136, 108, 0.06);
-  bottom: -10%;
-  left: -5%;
-  animation-delay: -5s;
-}
-
-.shape-3 {
-  width: 300px;
-  height: 300px;
-  background: rgba(162, 126, 142, 0.06);
-  top: 50%;
-  left: 30%;
-  animation-delay: -10s;
-}
-
-.shape-4 {
-  width: 200px;
-  height: 200px;
-  background: rgba(204, 88, 3, 0.05);
-  bottom: 20%;
-  right: 20%;
-  animation-delay: -15s;
-}
-
-.shape-5 {
-  width: 250px;
-  height: 250px;
-  background: rgba(87, 136, 108, 0.05);
-  top: 20%;
-  left: 10%;
-  animation-delay: -8s;
-}
-
-@keyframes float {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(30px, -30px) scale(1.05); }
-  50% { transform: translate(-20px, 20px) scale(0.95); }
-  75% { transform: translate(15px, 15px) scale(1.02); }
-}
-
-// === Particles ===
-.particles {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.particle {
-  position: absolute;
-  width: var(--size);
-  height: var(--size);
-  background: $color-primary;
-  border-radius: 50%;
-  opacity: 0;
-  left: var(--x);
-  bottom: -10px;
-  animation: rise 12s ease-in-out infinite;
-  animation-delay: var(--delay);
-}
-
-@keyframes rise {
-  0% { opacity: 0; transform: translateY(0) scale(0); }
-  10% { opacity: 0.3; }
-  50% { opacity: 0.15; }
-  100% { opacity: 0; transform: translateY(-100vh) scale(1); }
-}
-
-// === Container ===
-.login-container {
-  position: relative;
-  z-index: 1;
   display: grid;
   grid-template-columns: 1.1fr 1fr;
-  max-width: 1000px;
-  width: 100%;
-  min-height: 600px;
-  border-radius: $radius-xxl;
-  overflow: hidden;
-  box-shadow: $shadow-xl, 0 0 0 1px rgba(58, 45, 50, 0.04);
-  opacity: 0;
-  transform: translateY(30px) scale(0.98);
-  animation: containerEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
 
   @include respond-to(md) {
     grid-template-columns: 1fr;
-    max-width: 460px;
-    min-height: auto;
-  }
-
-  @include respond-to(xs) {
-    max-width: 100%;
-    width: 100%;
-    border-radius: 0;
-    box-shadow: none;
-    min-height: 100vh;
-    min-height: 100dvh;
   }
 }
 
-@keyframes containerEnter {
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-// === Brand Panel ===
-.brand-panel {
-  background: $color-bg-dark;
-  padding: $space-xxl;
+// ═══ Brand Panel (Left) ═══
+.login__brand {
+  background: $color-primary;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  padding: $space-xxxl;
   position: relative;
   overflow: hidden;
 
@@ -169,164 +31,119 @@
   }
 }
 
-.brand-pattern {
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle at 20% 80%, rgba(204, 88, 3, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(87, 136, 108, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(162, 126, 142, 0.06) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.brand-content {
+.login__brand-content {
   position: relative;
   z-index: 1;
+  max-width: 400px;
 }
 
-.brand-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: $space-xs;
-  background: rgba(204, 88, 3, 0.12);
-  color: $color-primary;
-  padding: $space-xs $space-md;
-  border-radius: $radius-full;
+.login__brand-eyebrow {
+  display: block;
+  font-family: $font-family;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
+  letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
-  margin-bottom: $space-xl;
-  opacity: 0;
-  animation: slideIn 0.6s ease 0.5s forwards;
-}
-
-.badge-dot {
-  width: 6px;
-  height: 6px;
-  background: $color-primary;
-  border-radius: 50%;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.3); }
-}
-
-.brand-title {
+  color: rgba($color-text-inverse, 0.6);
   margin-bottom: $space-lg;
 }
 
-.title-line {
+.login__brand-title {
+  margin: 0 0 $space-xl;
+}
+
+.login__brand-line {
   display: block;
   font-family: $font-family-display;
-  font-size: $font-size-display;
+  font-size: $font-size-mega;
   font-weight: $font-weight-bold;
-  line-height: $line-height-tight;
-  letter-spacing: $letter-spacing-tight;
+  line-height: 0.9;
+  letter-spacing: $letter-spacing-mega;
   color: $color-text-inverse;
-  opacity: 0;
-  transform: translateY(20px);
+  text-transform: uppercase;
 
-  &:nth-child(1) { animation: slideIn 0.6s ease 0.6s forwards; }
-  &:nth-child(2) { animation: slideIn 0.6s ease 0.75s forwards; }
-  &:nth-child(3) { animation: slideIn 0.6s ease 0.9s forwards; }
-
-  &.accent {
-    color: $color-primary;
-    background: linear-gradient(135deg, $color-primary, #E8752B);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  &--accent {
+    color: rgba($color-text-inverse, 0.3);
   }
 
   @include respond-to(lg) {
-    font-size: $font-size-xxxl;
+    font-size: $font-size-hero;
   }
 }
 
-.brand-desc {
-  color: rgba(252, 255, 247, 0.55);
+.login__brand-desc {
   font-size: $font-size-md;
+  color: rgba($color-text-inverse, 0.65);
   line-height: $line-height-relaxed;
+  margin: 0 0 $space-xl;
   max-width: 340px;
-  margin-bottom: $space-xl;
-  opacity: 0;
-  animation: slideIn 0.6s ease 1s forwards;
 }
 
-.brand-stats {
+.login__brand-divider {
+  width: 48px;
+  height: 2px;
+  background: rgba($color-text-inverse, 0.2);
+  margin-bottom: $space-lg;
+}
+
+.login__brand-tagline {
+  font-family: $font-family-display;
+  font-size: $font-size-md;
+  font-style: italic;
+  color: rgba($color-text-inverse, 0.4);
+  margin: 0;
+}
+
+// ═══ Form Panel (Right) ═══
+.login__form-panel {
+  background: $color-bg-primary;
   display: flex;
   align-items: center;
-  gap: $space-lg;
+  justify-content: center;
+  padding: $space-xxl;
+
+  @include respond-to(md) {
+    padding: $space-xl $space-lg;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  @include respond-to(xs) {
+    padding: $space-section-sm $space-md $space-xl;
+    align-items: flex-start;
+  }
+}
+
+.login__form-inner {
+  width: 100%;
+  max-width: 380px;
   opacity: 0;
-  animation: slideIn 0.6s ease 1.1s forwards;
+  transform: translateY(20px);
+  animation: loginFadeIn 0.6s ease 0.2s forwards;
+
+  &.entered {
+    animation-delay: 0s;
+  }
 }
 
-.stat-value {
-  display: block;
-  font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
-  color: $color-text-inverse;
-  letter-spacing: $letter-spacing-tight;
-}
-
-.stat-label {
-  font-size: $font-size-xs;
-  color: rgba(252, 255, 247, 0.4);
-  text-transform: uppercase;
-  letter-spacing: $letter-spacing-wide;
-}
-
-.stat-divider {
-  width: 1px;
-  height: 32px;
-  background: rgba(252, 255, 247, 0.1);
-}
-
-@keyframes slideIn {
+@keyframes loginFadeIn {
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-// === Auth Panel ===
-.auth-panel {
-  background: $color-bg-tertiary;
-  padding: $space-xxl;
+// ═══ Step Indicator ═══
+.login__steps {
   display: flex;
   align-items: center;
-  justify-content: center;
-
-  @include respond-to(md) {
-    padding: $space-xl $space-lg;
-  }
-
-  @include respond-to(xs) {
-    padding: 72px $space-md $space-xl;
-    justify-content: flex-start;
-  }
+  margin-bottom: $space-xxl;
 }
 
-.auth-inner {
-  width: 100%;
-  max-width: 360px;
-}
-
-// === Step Indicator ===
-.step-indicator {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  margin-bottom: $space-xl;
-}
-
-.step-dot {
+.login__step-dot {
   width: 10px;
   height: 10px;
-  border-radius: 50%;
+  border-radius: $radius-full;
   background: $color-border;
   transition: all $transition-normal;
   flex-shrink: 0;
@@ -338,11 +155,11 @@
 
   &.done {
     background: $color-success;
-    box-shadow: 0 0 0 4px rgba(87, 136, 108, 0.12);
+    box-shadow: 0 0 0 4px rgba($color-success, 0.12);
   }
 }
 
-.step-line {
+.login__step-line {
   height: 2px;
   flex: 1;
   background: $color-border;
@@ -353,50 +170,51 @@
   }
 }
 
-// === Auth Header ===
-.auth-header {
+// ═══ Header ═══
+.login__header {
   margin-bottom: $space-xl;
 }
 
-.auth-title {
+.login__title {
   font-family: $font-family-display;
-  font-size: $font-size-xxl;
+  font-size: $font-size-xxxl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
-  letter-spacing: $letter-spacing-tight;
-  margin-bottom: $space-xs;
+  letter-spacing: $letter-spacing-display;
+  margin: 0 0 $space-xs;
 }
 
-.auth-subtitle {
+.login__subtitle {
   font-size: $font-size-sm;
   color: $color-text-tertiary;
   line-height: $line-height-relaxed;
+  margin: 0;
 }
 
-.auth-phone-display {
+.login__phone-display {
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
   color: $color-primary;
-  margin-top: $space-xxs;
+  margin: $space-xxs 0 0;
 }
 
-// === Error ===
-.error-toast {
+// ═══ Error ═══
+.login__error {
   display: flex;
   align-items: center;
   gap: $space-sm;
-  background: rgba(192, 57, 43, 0.06);
-  border: 1px solid rgba(192, 57, 43, 0.15);
+  background: rgba($color-error, 0.05);
+  border: 1px solid rgba($color-error, 0.15);
   border-radius: $radius-lg;
   padding: $space-sm $space-md;
   margin-bottom: $space-lg;
   font-size: $font-size-sm;
   color: $color-error;
   cursor: pointer;
-  animation: shakeIn 0.5s ease;
+  animation: loginShake 0.5s ease;
 }
 
-@keyframes shakeIn {
+@keyframes loginShake {
   0% { transform: translateX(-10px); opacity: 0; }
   25% { transform: translateX(5px); }
   50% { transform: translateX(-3px); }
@@ -404,34 +222,26 @@
   100% { transform: translateX(0); opacity: 1; }
 }
 
-// === Form ===
-.form-section {
-  display: flex;
-  flex-direction: column;
+// ═══ Form Section ═══
+.login__section {
+  @include flex-column;
   gap: $space-lg;
+  animation: loginSlideIn 0.4s $ease-expo-out;
 }
 
-.animate-in {
-  animation: fadeSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes fadeSlideIn {
+@keyframes loginSlideIn {
   from {
     opacity: 0;
     transform: translateX(20px);
   }
 }
 
-.input-label {
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  color: $color-text-secondary;
-  text-transform: uppercase;
-  letter-spacing: $letter-spacing-wide;
+.login__label {
+  @include eyebrow-text;
 }
 
-// === Phone Input ===
-.phone-input-group {
+// ═══ Phone Input ═══
+.login__phone-group {
   display: flex;
   border: 1.5px solid $color-border;
   border-radius: $radius-lg;
@@ -445,7 +255,7 @@
   }
 }
 
-.country-code {
+.login__country {
   display: flex;
   align-items: center;
   gap: $space-xs;
@@ -459,16 +269,16 @@
   flex-shrink: 0;
 }
 
-.flag {
+.login__flag {
   font-size: 18px;
   line-height: 1;
 }
 
-.phone-input {
+.login__phone-input {
   flex: 1;
   border: none;
   outline: none;
-  padding: $space-md $space-md;
+  padding: $space-md;
   font-size: $font-size-md;
   font-family: $font-family;
   color: $color-text-primary;
@@ -481,8 +291,8 @@
   }
 }
 
-// === OTP Inputs ===
-.otp-inputs {
+// ═══ OTP Inputs ═══
+.login__otp-inputs {
   display: flex;
   gap: $space-sm;
 }
@@ -511,12 +321,12 @@
 
   &.filled {
     border-color: $color-success;
-    background: rgba(87, 136, 108, 0.04);
+    background: rgba($color-success, 0.04);
   }
 }
 
-// === Button ===
-.btn-primary {
+// ═══ Submit Button ═══
+.login__btn-submit {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -532,26 +342,11 @@
   font-family: $font-family;
   cursor: pointer;
   transition: all $transition-normal;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
-    transform: translateX(-100%);
-    transition: transform 0.6s ease;
-  }
 
   &:hover:not(:disabled) {
     background: $color-primary-hover;
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(204, 88, 3, 0.3);
-
-    &::before {
-      transform: translateX(100%);
-    }
+    box-shadow: 0 4px 16px rgba($color-primary, 0.3);
   }
 
   &:active:not(:disabled) {
@@ -568,26 +363,25 @@
   }
 }
 
-.spinner {
+.login__spinner {
   width: 18px;
   height: 18px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+  border-radius: $radius-full;
+  animation: loginSpin 0.6s linear infinite;
 }
 
-@keyframes spin {
+@keyframes loginSpin {
   to { transform: rotate(360deg); }
 }
 
-// === OTP Actions ===
-.otp-actions {
-  display: flex;
-  justify-content: space-between;
+// ═══ OTP Actions ═══
+.login__otp-actions {
+  @include flex-between;
 }
 
-.btn-link {
+.login__link {
   background: none;
   border: none;
   color: $color-primary;
@@ -608,9 +402,9 @@
   }
 }
 
-// === Terms ===
-.terms {
-  margin-top: $space-xl;
+// ═══ Terms ═══
+.login__terms {
+  margin-top: $space-xxl;
   font-size: $font-size-xs;
   color: $color-text-tertiary;
   text-align: center;

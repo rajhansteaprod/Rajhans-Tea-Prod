@@ -10,9 +10,9 @@ import {
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CatalogService, Product } from '../../core/services/catalog.service';
-import { StorytellingComponent } from './sections/storytelling/storytelling';
 import { FeaturedProductsComponent } from './sections/featured-products/featured-products';
-import { FarmToCupComponent } from './sections/farm-to-cup/farm-to-cup';
+import { BigStatementComponent } from './sections/big-statement/big-statement';
+import { SplitVisualComponent } from './sections/split-visual/split-visual';
 import { ExploreCtaComponent } from './sections/explore-cta/explore-cta';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -22,7 +22,7 @@ gsap.registerPlugin(ScrollTrigger);
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, StorytellingComponent, FeaturedProductsComponent, FarmToCupComponent, ExploreCtaComponent],
+  imports: [CommonModule, RouterLink, FeaturedProductsComponent, BigStatementComponent, SplitVisualComponent, ExploreCtaComponent],
   templateUrl: './home.html',
   styleUrls: ['./home.scss'],
 })

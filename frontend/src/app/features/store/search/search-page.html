@@ -1,19 +1,21 @@
-<div class="search-page">
+<section class="search">
   <!-- Header -->
-  <div class="search-header">
-    <div class="search-info">
+  <div class="search__header">
+    <div class="search__header-left">
       @if (store.query()) {
-        <h1 class="search-title">Results for "{{ store.query() }}"</h1>
+        <span class="search__eyebrow">Search Results</span>
+        <h1 class="search__title">{{ store.query() }}</h1>
       } @else {
-        <h1 class="search-title">Browse Products</h1>
+        <span class="search__eyebrow">Explore</span>
+        <h1 class="search__title">Browse Products</h1>
       }
-      <span class="result-count">{{ store.resultCount() }} products found</span>
+      <span class="search__count">{{ store.resultCount() }} products found</span>
     </div>
-    <div class="sort-bar">
-      <select class="sort-select" [ngModel]="store.sort()" (ngModelChange)="store.setSort($event)">
+    <div class="search__sort">
+      <select class="search__sort-select" [ngModel]="store.sort()" (ngModelChange)="store.setSort($event)">
         <option value="relevance">Relevance</option>
-        <option value="price_asc">Price: Low → High</option>
-        <option value="price_desc">Price: High → Low</option>
+        <option value="price_asc">Price: Low to High</option>
+        <option value="price_desc">Price: High to Low</option>
         <option value="newest">Newest</option>
         <option value="name_asc">Name A-Z</option>
         <option value="featured">Featured</option>
@@ -21,54 +23,54 @@
     </div>
   </div>
 
-  <div class="search-layout">
+  <div class="search__layout">
     <!-- Filter Sidebar -->
-    <aside class="filter-sidebar">
+    <aside class="search__filters">
       @if (store.isFiltered()) {
-        <button class="btn-clear-filters" (click)="store.clearAllFilters()">Clear all filters</button>
+        <button class="search__clear-all" (click)="store.clearAllFilters()">Clear all filters</button>
       }
 
-      <!-- Category Filter -->
+      <!-- Category -->
       @if (store.facets()?.categories?.length) {
-        <div class="filter-group">
-          <h3 class="filter-title">Category</h3>
+        <div class="search__filter-group">
+          <h3 class="search__filter-title">Category</h3>
           @for (cat of store.facets()!.categories; track cat._id) {
-            <label class="filter-option">
+            <label class="search__filter-option">
               <input type="radio" name="category" [value]="cat._id"
                 [checked]="store.filters().categoryId === cat._id"
                 (change)="store.applyFilter('categoryId', cat._id)" />
-              <span class="filter-label">{{ cat.name }}</span>
-              <span class="filter-count">{{ cat.count }}</span>
+              <span class="search__filter-label">{{ cat.name }}</span>
+              <span class="search__filter-count">{{ cat.count }}</span>
             </label>
           }
           @if (store.filters().categoryId) {
-            <button class="btn-clear-filter" (click)="store.removeFilter('categoryId')">Clear</button>
+            <button class="search__clear-filter" (click)="store.removeFilter('categoryId')">Clear</button>
           }
         </div>
       }
 
       <!-- Price Range -->
       @if (store.facets()?.priceRange) {
-        <div class="filter-group">
-          <h3 class="filter-title">Price Range</h3>
-          <div class="price-inputs">
+        <div class="search__filter-group">
+          <h3 class="search__filter-title">Price Range</h3>
+          <div class="search__price-inputs">
             <input type="number" placeholder="Min" [(ngModel)]="priceMin" min="0" />
-            <span>—</span>
+            <span class="search__price-dash">—</span>
             <input type="number" placeholder="Max" [(ngModel)]="priceMax" min="0" />
-            <button class="btn-apply-price" (click)="applyPriceFilter()">Go</button>
+            <button class="search__price-go" (click)="applyPriceFilter()">Go</button>
           </div>
-          <p class="price-range-hint">₹{{ store.facets()!.priceRange.min | number:'1.0-0' }} — ₹{{ store.facets()!.priceRange.max | number:'1.0-0' }}</p>
+          <p class="search__price-hint">₹{{ store.facets()!.priceRange.min | number:'1.0-0' }} — ₹{{ store.facets()!.priceRange.max | number:'1.0-0' }}</p>
         </div>
       }
 
       <!-- Tags -->
       @if (store.facets()?.tags?.length) {
-        <div class="filter-group">
-          <h3 class="filter-title">Tags</h3>
-          <div class="tag-list">
+        <div class="search__filter-group">
+          <h3 class="search__filter-title">Tags</h3>
+          <div class="search__tags">
             @for (tag of store.facets()!.tags.slice(0, 15); track tag.tag) {
-              <button class="tag-pill" [class.active]="isTagActive(tag.tag)" (click)="toggleTag(tag.tag)">
-                {{ tag.tag }} <span class="tag-count">{{ tag.count }}</span>
+              <button class="search__tag" [class.active]="isTagActive(tag.tag)" (click)="toggleTag(tag.tag)">
+                {{ tag.tag }} <span class="search__tag-count">{{ tag.count }}</span>
               </button>
             }
           </div>
@@ -76,59 +78,59 @@
       }
 
       <!-- In Stock -->
-      <div class="filter-group">
-        <label class="filter-option toggle">
+      <div class="search__filter-group search__filter-group--last">
+        <label class="search__filter-option search__filter-option--toggle">
           <input type="checkbox" [checked]="store.filters().inStock"
             (change)="store.filters().inStock ? store.removeFilter('inStock') : store.applyFilter('inStock', true)" />
-          <span class="filter-label">In Stock Only</span>
+          <span class="search__filter-label">In Stock Only</span>
         </label>
       </div>
     </aside>
 
-    <!-- Results Grid -->
-    <main class="results-area">
+    <!-- Results -->
+    <main class="search__results">
       @if (store.loading()) {
-        <div class="loading"><div class="spinner"></div></div>
+        <div class="search__loading"><div class="search__spinner"></div></div>
       } @else if (!store.hasResults()) {
-        <div class="no-results">
-          <div class="no-results-icon">
+        <div class="search__empty">
+          <div class="search__empty-icon">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
               <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/>
               <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
           </div>
-          <h2>No products found</h2>
-          <p>Try different keywords or remove some filters</p>
+          <h2 class="search__empty-title">No products found</h2>
+          <p class="search__empty-desc">Try different keywords or remove some filters</p>
           @if (store.isFiltered()) {
-            <button class="btn-clear" (click)="store.clearAllFilters()">Clear all filters</button>
+            <button class="search__empty-clear" (click)="store.clearAllFilters()">Clear all filters</button>
           }
         </div>
       } @else {
-        <div class="product-grid">
+        <div class="search__grid">
           @for (product of store.results(); track product._id) {
-            <div class="product-card">
+            <div class="search__card">
               @if (product.isFeatured) {
-                <span class="featured-badge">Featured</span>
+                <span class="search__featured">Featured</span>
               }
-              <div class="card-image">
+              <a class="search__card-image" [routerLink]="['/products', product._id]">
                 @if (product.images[0]) {
                   <img [src]="product.images[0]" [alt]="product.name" loading="lazy" />
                 } @else {
-                  <div class="img-placeholder">
+                  <div class="search__img-ph">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
                       <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
                     </svg>
                   </div>
                 }
+              </a>
+              <div class="search__card-body">
+                <p class="search__card-category">{{ product.category?.name || '' }}</p>
+                <p class="search__card-name">{{ product.name }}</p>
+                <p class="search__card-price">₹{{ product.basePrice | number:'1.0-0' }}</p>
               </div>
-              <div class="card-body">
-                <p class="card-category">{{ product.category?.name || '' }}</p>
-                <p class="card-name">{{ product.name }}</p>
-                <p class="card-price">₹{{ product.basePrice | number:'1.0-0' }}</p>
-              </div>
-              <div class="card-actions">
-                <button class="btn-add-cart" (click)="addToCart(product._id)">Add to Cart</button>
-                <button class="btn-wishlist" (click)="toggleWishlist(product._id)" [class.active]="cartStore.isWishlisted(product._id)()">
+              <div class="search__card-actions">
+                <button class="search__btn-cart" (click)="addToCart(product._id)">Add to Cart</button>
+                <button class="search__btn-wish" (click)="toggleWishlist(product._id)" [class.active]="cartStore.isWishlisted(product._id)()">
                   <svg width="16" height="16" viewBox="0 0 24 24" [attr.fill]="cartStore.isWishlisted(product._id)() ? 'currentColor' : 'none'">
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                   </svg>
@@ -140,13 +142,17 @@
 
         <!-- Pagination -->
         @if (store.meta() && store.meta()!.totalPages > 1) {
-          <div class="pagination">
-            <button [disabled]="store.meta()!.page <= 1" (click)="store.goToPage(store.meta()!.page - 1)">← Prev</button>
-            <span>Page {{ store.meta()!.page }} of {{ store.meta()!.totalPages }}</span>
-            <button [disabled]="store.meta()!.page >= store.meta()!.totalPages" (click)="store.goToPage(store.meta()!.page + 1)">Next →</button>
+          <div class="search__pagination">
+            <button class="search__page-btn" [disabled]="store.meta()!.page <= 1" (click)="store.goToPage(store.meta()!.page - 1)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <span class="search__page-info">Page {{ store.meta()!.page }} of {{ store.meta()!.totalPages }}</span>
+            <button class="search__page-btn" [disabled]="store.meta()!.page >= store.meta()!.totalPages" (click)="store.goToPage(store.meta()!.page + 1)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
           </div>
         }
       }
     </main>
   </div>
-</div>
+</section>

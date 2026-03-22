@@ -1,12 +1,17 @@
 <div class="layout">
   <app-header />
   <main class="content">
-    <div class="content-inner">
-      <router-outlet />
-    </div>
+    <router-outlet />
   </main>
   <footer class="footer">
     <div class="footer-inner">
+      <!-- Brand -->
+      <div class="footer-brand">
+        <h2 class="footer-brand-name">Rajhans Tea</h2>
+        <p class="footer-brand-tagline">Crafted with intention. Steeped in tradition.</p>
+      </div>
+
+      <!-- Link Grid -->
       <div class="footer-grid">
         <div class="footer-col">
           <h4>Shop</h4>
@@ -15,24 +20,29 @@
         </div>
         <div class="footer-col">
           <h4>Company</h4>
-          <a routerLink="/page/about-us">About Us</a>
-          <a routerLink="/page/contact-us">Contact Us</a>
+          <a routerLink="/page/about-us">Our Story</a>
+          <a routerLink="/page/contact-us">Contact</a>
         </div>
         <div class="footer-col">
-          <h4>Support</h4>
+          <h4>Help</h4>
           <a routerLink="/page/terms-and-conditions">Terms & Conditions</a>
           <a routerLink="/page/privacy-policy">Privacy Policy</a>
-          <a routerLink="/page/shipping-policy">Shipping Policy</a>
-        </div>
-        <div class="footer-col">
-          <h4>Connect</h4>
-          <p class="footer-text">Rajhans Tea</p>
-          <p class="footer-text">Bhopal, Madhya Pradesh</p>
-          <p class="footer-text">support&#64;rajhanstea.com</p>
+          <a routerLink="/page/shipping-policy">Shipping & Returns</a>
         </div>
       </div>
+
+      <!-- Newsletter mention -->
+      <div class="footer-newsletter">
+        <p class="footer-newsletter-text">Sign up for our newsletter for exclusive offers and tea stories.</p>
+      </div>
+
+      <!-- Bottom bar -->
       <div class="footer-bottom">
         <span>&copy; 2026 Rajhans Tea. All rights reserved.</span>
+        <div class="footer-bottom-links">
+          <a routerLink="/page/privacy-policy">Privacy</a>
+          <a routerLink="/page/terms-and-conditions">Terms</a>
+        </div>
       </div>
     </div>
   </footer>

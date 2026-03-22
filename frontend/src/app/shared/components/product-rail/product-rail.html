@@ -1,28 +1,17 @@
 @if (products.length > 0) {
-  <div class="rail-section">
+  <section class="rail-section">
     <div class="rail-header">
       <h2 class="rail-title">{{ title }}</h2>
       @if (viewAllLink) {
-        <a [routerLink]="viewAllLink" class="view-all">View All →</a>
+        <a [routerLink]="viewAllLink" class="view-all">View All</a>
       }
     </div>
     <div class="rail-scroll" #scrollContainer>
       @for (p of products; track p._id) {
-        <div class="rail-card">
-          <div class="card-img">
-            @if (p.images?.[0]) {
-              <img [src]="p.images[0]" [alt]="p.name" loading="lazy" />
-            } @else {
-              <div class="img-ph"></div>
-            }
-          </div>
-          <div class="card-body">
-            <p class="card-cat">{{ p.category?.name || '' }}</p>
-            <p class="card-name">{{ p.name }}</p>
-            <p class="card-price">₹{{ p.basePrice }}</p>
-          </div>
+        <div class="rail-item">
+          <app-product-card [product]="p" />
         </div>
       }
     </div>
-  </div>
+  </section>
 }

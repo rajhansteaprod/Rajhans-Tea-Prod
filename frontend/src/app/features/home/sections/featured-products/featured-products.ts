@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CatalogService, Product } from '../../../../core/services/catalog.service';
 import { CartStore } from '../../../../core/services/cart.store';
+import { ProductCardComponent } from '../../../../shared/components/product-card/product-card';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -19,7 +20,7 @@ gsap.registerPlugin(ScrollTrigger);
 @Component({
   selector: 'app-featured-products',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ProductCardComponent],
   templateUrl: './featured-products.html',
   styleUrls: ['./featured-products.scss'],
 })

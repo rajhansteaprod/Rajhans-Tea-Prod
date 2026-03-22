@@ -1,11 +1,13 @@
 @use '../../../core/design-tokens/tokens' as *;
 @use '../../../core/design-tokens/mixins' as *;
 
-.page { padding: $space-xl 0; }
+.page {
+  max-width: 1200px;
+}
 
+// === Page Header ===
 .page-header {
-  display: flex;
-  justify-content: space-between;
+  @include flex-between;
   align-items: flex-start;
   margin-bottom: $space-xl;
   gap: $space-md;
@@ -13,11 +15,12 @@
 }
 
 .page-title {
+  font-family: $font-family-display;
   font-size: $font-size-xxl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
   letter-spacing: $letter-spacing-tight;
-  margin: 0 0 4px;
+  margin: 0 0 $space-xxs;
 }
 
 .page-subtitle {
@@ -38,15 +41,17 @@
   gap: $space-xs;
   background: transparent;
   color: $color-error;
-  border: 1px solid rgba(176,0,32,0.3);
+  border: 1px solid rgba(192, 57, 43, 0.3);
   padding: $space-sm $space-md;
-  border-radius: $radius-md;
+  border-radius: $radius-lg;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
+  font-family: $font-family;
   cursor: pointer;
   transition: all $transition-fast;
   white-space: nowrap;
-  &:hover { background: rgba(176,0,32,0.06); border-color: $color-error; }
+
+  &:hover { background: rgba(192, 57, 43, 0.06); border-color: $color-error; }
   &:disabled { opacity: 0.5; cursor: default; }
 }
 
@@ -55,28 +60,32 @@
   align-items: center;
   gap: $space-xs;
   background: $color-primary;
-  color: white;
+  color: $color-text-inverse;
   border: none;
   padding: $space-sm $space-md;
-  border-radius: $radius-md;
+  border-radius: $radius-lg;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
+  font-family: $font-family;
   cursor: pointer;
   transition: background $transition-fast;
   white-space: nowrap;
+
   &:hover { background: $color-primary-hover; }
 }
 
+// === Table ===
 .table-card {
   background: $color-bg-tertiary;
   border-radius: $radius-xl;
   border: 1px solid $color-border-light;
   overflow: hidden;
+  box-shadow: $shadow-sm;
 }
 
-.loading-state, .empty-state {
-  display: flex;
-  flex-direction: column;
+.loading-state,
+.empty-state {
+  @include flex-column;
   align-items: center;
   justify-content: center;
   gap: $space-md;
@@ -86,12 +95,14 @@
 }
 
 .spinner {
-  width: 24px; height: 24px;
-  border: 2px solid $color-border;
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid $color-border;
   border-top-color: $color-primary;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
+
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .data-table {
@@ -103,13 +114,14 @@
 th {
   text-align: left;
   padding: $space-sm $space-md;
-  font-size: 11px;
+  font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
   color: $color-text-tertiary;
   border-bottom: 1px solid $color-border-light;
   background: $color-bg-secondary;
+  white-space: nowrap;
 }
 
 td {
@@ -130,7 +142,7 @@ tr.editing td { background: rgba(204, 88, 3, 0.03); }
 
 .slug-badge {
   font-size: 11px;
-  font-family: monospace;
+  font-family: 'SF Mono', 'Fira Code', monospace;
   background: $color-bg-secondary;
   padding: 2px 6px;
   border-radius: $radius-sm;
@@ -140,24 +152,24 @@ tr.editing td { background: rgba(204, 88, 3, 0.03); }
 .status-toggle {
   font-size: 11px;
   font-weight: $font-weight-semibold;
-  padding: 2px 8px;
+  padding: 2px $space-xs;
   border-radius: $radius-full;
   border: none;
   cursor: pointer;
   transition: all $transition-fast;
-  &.active   { background: rgba(87,136,108,0.12); color: $color-secondary; &:hover { background: rgba(87,136,108,0.22); } }
-  &.inactive { background: rgba(176,0,32,0.08);   color: $color-error;     &:hover { background: rgba(176,0,32,0.16); } }
+
+  &.active   { background: rgba(87, 136, 108, 0.12); color: $color-secondary; &:hover { background: rgba(87, 136, 108, 0.22); } }
+  &.inactive { background: rgba(192, 57, 43, 0.08);  color: $color-error;     &:hover { background: rgba(192, 57, 43, 0.16); } }
   &:disabled { opacity: 0.5; cursor: default; }
 }
 
-.action-btns {
-  display: flex;
-  gap: $space-xs;
-}
+// === Action Buttons ===
+.action-btns { display: flex; gap: $space-xs; }
 
 .icon-btn {
-  width: 30px; height: 30px;
-  display: flex; align-items: center; justify-content: center;
+  width: 30px;
+  height: 30px;
+  @include flex-center;
   border: 1px solid $color-border-light;
   border-radius: $radius-md;
   background: transparent;
@@ -166,9 +178,10 @@ tr.editing td { background: rgba(204, 88, 3, 0.03); }
   color: $color-text-tertiary;
 
   &.edit:hover  { border-color: $color-primary; color: $color-primary; background: $color-primary-light; }
-  &.delete:hover { border-color: $color-error;  color: $color-error;   background: rgba(192,57,43,0.06); }
+  &.delete:hover { border-color: $color-error;  color: $color-error;   background: rgba(192, 57, 43, 0.06); }
 }
 
+// === Edit Panel ===
 .edit-row td { padding: 0; background: rgba(204, 88, 3, 0.02); }
 
 .edit-panel {
@@ -191,7 +204,7 @@ tr.editing td { background: rgba(204, 88, 3, 0.03); }
 
 .full-width { grid-column: 1 / -1; }
 
-.form-field { display: flex; flex-direction: column; gap: 4px; }
+.form-field { @include flex-column; gap: $space-xxs; }
 
 .form-label {
   font-size: $font-size-xs;
@@ -212,143 +225,175 @@ tr.editing td { background: rgba(204, 88, 3, 0.03); }
   font-weight: $font-weight-semibold;
 }
 
-.form-input, .form-select {
+.form-input,
+.form-select {
   padding: $space-sm $space-md;
-  border: 1px solid $color-border;
+  border: 1.5px solid $color-border;
   border-radius: $radius-md;
   font-size: $font-size-sm;
+  font-family: $font-family;
   color: $color-text-primary;
   background: $color-bg-tertiary;
-  transition: border-color $transition-fast;
+  transition: all $transition-fast;
   outline: none;
   width: 100%;
   box-sizing: border-box;
-  &:focus { border-color: $color-border-focus; box-shadow: $shadow-glow; }
+
+  &:focus { border-color: $color-primary; box-shadow: $shadow-glow; }
 }
 
 textarea.form-input { resize: vertical; font-family: inherit; }
 
+// === Image upload ===
 .image-upload-area { display: flex; }
 
 .image-preview-wrap {
   position: relative;
-  width: 80px; height: 80px;
+  width: 80px;
+  height: 80px;
   border-radius: $radius-md;
   overflow: hidden;
   border: 1px solid $color-border-light;
 }
 
 .image-preview {
-  width: 100%; height: 100%;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
 .remove-image {
-  position: absolute; top: 4px; right: 4px;
-  width: 20px; height: 20px;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: rgba(58,45,50,0.7);
+  background: rgba(58, 45, 50, 0.7);
   color: white;
   border: none;
-  display: flex; align-items: center; justify-content: center;
+  @include flex-center;
   cursor: pointer;
   transition: background $transition-fast;
+
   &:hover { background: $color-error; }
 }
 
 .upload-btn {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
+  @include flex-column;
+  align-items: center;
+  justify-content: center;
   gap: 6px;
-  width: 100%; padding: $space-md;
+  width: 100%;
+  padding: $space-md;
   border: 2px dashed $color-border;
-  border-radius: $radius-md;
+  border-radius: $radius-lg;
   color: $color-text-tertiary;
   font-size: $font-size-xs;
   font-weight: $font-weight-medium;
   cursor: pointer;
+  background: transparent;
   transition: all $transition-fast;
+
   &:hover { border-color: $color-primary; color: $color-primary; background: $color-primary-light; }
 }
 
 .btn-cancel {
   padding: $space-sm $space-md;
   border: 1px solid $color-border;
-  border-radius: $radius-md;
+  border-radius: $radius-lg;
   background: transparent;
   font-size: $font-size-sm;
+  font-family: $font-family;
   color: $color-text-secondary;
   cursor: pointer;
   transition: all $transition-fast;
+
   &:hover { background: $color-bg-secondary; }
 }
 
 .btn-save {
   padding: $space-sm $space-lg;
   background: $color-primary;
-  color: white;
+  color: $color-text-inverse;
   border: none;
-  border-radius: $radius-md;
+  border-radius: $radius-lg;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
+  font-family: $font-family;
   cursor: pointer;
   transition: background $transition-fast;
+
   &:hover:not(:disabled) { background: $color-primary-hover; }
   &:disabled { opacity: 0.5; cursor: default; }
 }
 
-.form-error, .modal-error {
+.form-error,
+.modal-error {
   margin: $space-sm 0;
   padding: $space-xs $space-sm;
-  background: rgba(239,68,68,0.08);
-  border: 1px solid rgba(239,68,68,0.3);
-  border-radius: 6px;
-  color: #ef4444;
-  font-size: 13px;
+  background: rgba(192, 57, 43, 0.08);
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  border-radius: $radius-md;
+  color: $color-error;
+  font-size: $font-size-sm;
 }
 
 .modal-error { margin: 0 $space-lg $space-sm; }
 
-// Modal
+// === Modal ===
 .modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(58,45,50,0.5);
+  position: fixed;
+  inset: 0;
+  background: $color-overlay;
   backdrop-filter: blur(4px);
   z-index: $z-modal-backdrop;
-  display: flex; align-items: center; justify-content: center;
+  @include flex-center;
   padding: $space-lg;
 }
+
 .modal-box {
   background: $color-bg-tertiary;
   border-radius: $radius-xl;
-  width: 100%; max-width: 560px;
+  border: 1px solid $color-border-light;
+  width: 100%;
+  max-width: 560px;
   box-shadow: $shadow-xl;
   overflow: hidden;
 }
+
 .modal-header {
-  display: flex; align-items: center; justify-content: space-between;
+  @include flex-between;
   padding: $space-lg;
   border-bottom: 1px solid $color-border-light;
 }
+
 .modal-title {
   font-size: $font-size-lg;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
   margin: 0;
 }
+
 .modal-close {
-  width: 32px; height: 32px;
-  border: none; background: transparent;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
   border-radius: $radius-md;
   cursor: pointer;
   color: $color-text-tertiary;
-  display: flex; align-items: center; justify-content: center;
+  @include flex-center;
   transition: all $transition-fast;
+
   &:hover { background: $color-bg-secondary; color: $color-text-primary; }
 }
+
 .modal-body { padding: $space-lg; }
+
 .modal-footer {
-  display: flex; justify-content: flex-end;
+  display: flex;
+  justify-content: flex-end;
   gap: $space-sm;
   padding: $space-md $space-lg;
   border-top: 1px solid $color-border-light;

@@ -1,11 +1,16 @@
 <div class="products">
-  <!-- Page Header -->
-  <header class="products__header">
-    <div class="products__header-left">
-      <h1 class="products__title">All Products</h1>
-      <span class="products__count">{{ totalProducts() }} products</span>
+  <!-- Page Hero -->
+  <header class="products__hero">
+    <div class="products__hero-inner">
+      <span class="products__eyebrow">Browse</span>
+      <h1 class="products__title">Our Teas</h1>
+      <p class="products__count">{{ totalProducts() }} products</p>
     </div>
-    <div class="products__header-right">
+  </header>
+
+  <!-- Toolbar -->
+  <div class="products__toolbar">
+    <div class="products__toolbar-inner">
       <!-- Mobile filter toggle -->
       <button class="products__filter-btn" (click)="filterOpen.set(!filterOpen())">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -19,11 +24,11 @@
           <option value="createdAt:desc">Newest</option>
           <option value="basePrice:asc">Price: Low to High</option>
           <option value="basePrice:desc">Price: High to Low</option>
-          <option value="name:asc">Name A–Z</option>
+          <option value="name:asc">Name A-Z</option>
         </select>
       </div>
     </div>
-  </header>
+  </div>
 
   <div class="products__layout">
     <!-- Filter Sidebar (Desktop) / Drawer (Mobile) -->
@@ -56,7 +61,7 @@
         <h4 class="filter-group__title">Price Range</h4>
         <div class="filter-price">
           <input type="number" class="filter-price__input" placeholder="Min" [(ngModel)]="priceMin" min="0" />
-          <span class="filter-price__sep">—</span>
+          <span class="filter-price__sep">&mdash;</span>
           <input type="number" class="filter-price__input" placeholder="Max" [(ngModel)]="priceMax" min="0" />
           <button class="filter-price__apply" (click)="applyPriceFilter()">Go</button>
         </div>

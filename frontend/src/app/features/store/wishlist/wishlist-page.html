@@ -1,12 +1,13 @@
-<div class="page">
-  <div class="page-header">
+<section class="wishlist">
+  <div class="wishlist__header">
     <div>
-      <h1 class="page-title">Wishlist</h1>
-      <p class="page-subtitle">
+      <span class="wishlist__eyebrow">Your Collection</span>
+      <h1 class="wishlist__title">Wishlist</h1>
+      <p class="wishlist__count">
         {{ cart.wishlistItems().length }} saved item{{ cart.wishlistItems().length !== 1 ? 's' : '' }}
       </p>
     </div>
-    <a routerLink="/" class="btn-back">
+    <a routerLink="/" class="wishlist__back">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
         <path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -15,27 +16,27 @@
   </div>
 
   @if (cart.wishlistLoading()) {
-    <div class="loading">
-      <div class="spinner"></div>
+    <div class="wishlist__loading">
+      <div class="wishlist__spinner"></div>
     </div>
   } @else if (cart.wishlistItems().length === 0) {
-    <div class="empty-state">
-      <div class="empty-icon">
+    <div class="wishlist__empty">
+      <div class="wishlist__empty-icon">
         <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
         </svg>
       </div>
-      <h2 class="empty-title">Nothing saved yet</h2>
-      <p class="empty-sub">Tap the heart on any product to save it here.</p>
-      <a class="btn-primary" routerLink="/">Start exploring</a>
+      <h2 class="wishlist__empty-title">Nothing saved yet</h2>
+      <p class="wishlist__empty-desc">Tap the heart on any product to save it here.</p>
+      <a class="wishlist__btn-primary" routerLink="/">Start Exploring</a>
     </div>
   } @else {
-    <div class="product-grid">
+    <div class="wishlist__grid">
       @for (item of cart.wishlistItems(); track item.productId) {
-        <div class="product-card">
-          <!-- Wishlist remove -->
+        <div class="wishlist__card">
+          <!-- Heart remove button -->
           <button
-            class="heart-btn active"
+            class="wishlist__heart active"
             (click)="cart.toggleWishlist(item.productId)"
             title="Remove from wishlist"
           >
@@ -45,11 +46,11 @@
           </button>
 
           <!-- Image -->
-          <div class="card-image">
+          <a class="wishlist__card-image" [routerLink]="['/products', item.productId]">
             @if (item.image) {
               <img [src]="item.image" [alt]="item.name" loading="lazy" />
             } @else {
-              <div class="img-placeholder">
+              <div class="wishlist__img-placeholder">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
                   <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
                   <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.5"/>
@@ -57,22 +58,21 @@
                 </svg>
               </div>
             }
-            <!-- Archived badge -->
             @if (item.status === 'archived') {
-              <span class="status-badge archived">Unavailable</span>
+              <span class="wishlist__badge-archived">Unavailable</span>
             }
-          </div>
+          </a>
 
           <!-- Info -->
-          <div class="card-info">
-            <p class="product-name">{{ item.name }}</p>
-            <p class="product-price">₹{{ item.basePrice | number:'1.0-0' }}</p>
+          <div class="wishlist__card-body">
+            <p class="wishlist__product-name">{{ item.name }}</p>
+            <p class="wishlist__product-price">₹{{ item.basePrice | number:'1.0-0' }}</p>
           </div>
 
-          <!-- Actions -->
-          <div class="card-actions">
+          <!-- Add to cart -->
+          <div class="wishlist__card-footer">
             <button
-              class="btn-add-cart"
+              class="wishlist__btn-cart"
               [disabled]="item.status !== 'active'"
               (click)="addToCart(item.productId)"
             >
@@ -88,4 +88,4 @@
       }
     </div>
   }
-</div>
+</section>

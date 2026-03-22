@@ -1,34 +1,9 @@
 <section class="explore" #exploreSection>
-  <!-- Blurred product preview strip (curiosity trigger) -->
-  <div class="explore__preview" #previewStrip>
-    @for (p of products(); track p._id; let i = $index) {
-      <div class="explore__thumb" [style.--i]="i">
-        @if (p.images?.[0]) {
-          <img [src]="p.images[0]" [alt]="p.name" loading="lazy" />
-        }
-      </div>
-    }
-    <!-- Duplicate for seamless scroll illusion -->
-    @for (p of products(); track p._id + '-dup'; let i = $index) {
-      <div class="explore__thumb" [style.--i]="i + products().length">
-        @if (p.images?.[0]) {
-          <img [src]="p.images[0]" [alt]="p.name" loading="lazy" />
-        }
-      </div>
-    }
-  </div>
-
-  <!-- Fade overlay -->
-  <div class="explore__overlay"></div>
-
-  <!-- Content -->
   <div class="explore__content" #exploreContent>
-    <span class="explore__eyebrow">Discover More</span>
     <h2 class="explore__headline">
-      <span class="explore__h-line" #hLine1>Find Your</span>
-      <span class="explore__h-line explore__h-line--accent" #hLine2>Perfect Brew.</span>
+      <span class="explore__h-line">Explore Our</span>
+      <span class="explore__h-line">Collection</span>
     </h2>
-    <p class="explore__sub">Carefully crafted blends for every taste, every mood, every moment.</p>
     <a routerLink="/products" class="explore__cta" #exploreCta>
       <span>View All Products</span>
       <svg class="explore__cta-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none">

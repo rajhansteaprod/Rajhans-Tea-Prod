@@ -1,49 +1,71 @@
 @use '../../../core/design-tokens/tokens' as *;
 @use '../../../core/design-tokens/mixins' as *;
 
+// ═══════════════════════════════════════════
+// WALLET — Balance card + transaction list
+// ═══════════════════════════════════════════
+
 .wallet {
-  max-width: 700px;
-  margin: 0 auto;
+  @include content-container(700px);
+  padding-top: $space-section-sm;
+  padding-bottom: $space-section-sm;
+
+  @include respond-to(md) {
+    padding-top: $space-xxl;
+    padding-bottom: $space-xxl;
+  }
+}
+
+.wallet__eyebrow {
+  @include eyebrow-text;
+  display: block;
+  margin-bottom: $space-xs;
+  color: $color-primary;
 }
 
 .wallet__title {
   font-family: $font-family-display;
-  font-size: $font-size-xxl;
-  font-weight: $font-weight-medium;
+  font-size: $font-size-display;
+  font-weight: $font-weight-bold;
   color: $color-text-primary;
   letter-spacing: $letter-spacing-display;
-  margin: 0 0 $space-xl;
+  margin: 0 0 $space-xxl;
+  line-height: 1;
+
+  @include respond-to(md) {
+    font-size: $font-size-xxxl;
+  }
 }
 
 // ═══ Balance Card ═══
-.wallet__card {
+.wallet__balance {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: $space-xxl;
-  background: $color-primary;
+  padding: $space-xxl $space-xxxl;
+  background: $color-bg-dark;
   border-radius: $radius-xl;
   margin-bottom: $space-xxl;
+
+  @include respond-to(sm) {
+    padding: $space-xl;
+  }
 }
 
-.wallet__card-inner {
+.wallet__balance-inner {
   @include flex-column;
-  gap: $space-xs;
+  gap: $space-sm;
 }
 
-.wallet__card-label {
-  font-family: $font-family;
-  font-size: $font-size-sm;
-  color: rgba($color-text-inverse, 0.6);
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
-  font-weight: $font-weight-medium;
+.wallet__balance-label {
+  @include eyebrow-text;
+  color: rgba($color-text-inverse, 0.5);
 }
 
-.wallet__card-amount {
+.wallet__balance-amount {
   font-family: $font-family-display;
   font-size: $font-size-display;
-  font-weight: $font-weight-medium;
+  font-weight: $font-weight-bold;
   color: $color-text-inverse;
   line-height: 1;
   letter-spacing: $letter-spacing-display;
@@ -53,21 +75,20 @@
   }
 }
 
-.wallet__card-icon {
-  color: rgba($color-text-inverse, 0.2);
+.wallet__balance-icon {
+  color: rgba($color-text-inverse, 0.15);
 }
 
 // ═══ Section ═══
 .wallet__section-header {
   @include flex-between;
   margin-bottom: $space-lg;
+  padding-bottom: $space-sm;
+  border-bottom: 1px solid $color-border-light;
 }
 
 .wallet__section-title {
-  font-family: $font-family;
-  font-size: $font-size-md;
-  font-weight: $font-weight-bold;
-  color: $color-text-primary;
+  @include eyebrow-text;
   margin: 0;
 }
 
@@ -89,17 +110,21 @@
   display: flex;
   align-items: center;
   gap: $space-md;
-  padding: $space-md $space-lg;
+  padding: $space-md $space-xl;
   border-bottom: 1px solid $color-border-light;
   transition: background $transition-fast;
 
   &:last-child { border-bottom: none; }
-  &:hover { background: $color-bg-secondary; }
+  &:hover { background: $color-bg-warm; }
+
+  @include respond-to(sm) {
+    padding: $space-md $space-lg;
+  }
 }
 
-.wallet__txn-icon {
-  width: 36px;
-  height: 36px;
+.wallet__txn-indicator {
+  width: 40px;
+  height: 40px;
   @include flex-center;
   border-radius: $radius-full;
   flex-shrink: 0;
@@ -108,6 +133,7 @@
     background: rgba($color-secondary, 0.1);
     color: $color-secondary;
   }
+
   &.debit {
     background: rgba($color-error, 0.08);
     color: $color-error;
@@ -122,7 +148,6 @@
 }
 
 .wallet__txn-desc {
-  font-family: $font-family;
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
   color: $color-text-primary;
@@ -142,8 +167,8 @@
 }
 
 .wallet__txn-amount {
-  font-family: $font-family;
-  font-size: $font-size-md;
+  font-family: $font-family-display;
+  font-size: $font-size-lg;
   font-weight: $font-weight-bold;
   white-space: nowrap;
 
@@ -156,24 +181,24 @@
   @include flex-column;
   align-items: center;
   text-align: center;
-  padding: $space-xxxl;
+  padding: $space-section-sm 0;
   gap: $space-sm;
 }
 
 .wallet__empty-icon {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   @include flex-center;
-  border-radius: $radius-xxl;
-  background: $color-bg-secondary;
+  border-radius: $radius-full;
+  background: $color-bg-warm;
   color: $color-text-disabled;
   margin-bottom: $space-sm;
 }
 
 .wallet__empty-text {
-  font-family: $font-family;
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
+  font-family: $font-family-display;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
   color: $color-text-primary;
   margin: 0;
 }
@@ -187,7 +212,7 @@
 // ═══ Loading ═══
 .wallet__loading {
   @include flex-center;
-  padding: $space-xxxl;
+  padding: $space-section-sm 0;
 }
 
 .wallet__spinner {
@@ -204,16 +229,16 @@
 // ═══ Pagination ═══
 .wallet__pagination {
   @include flex-center;
-  gap: $space-md;
-  margin-top: $space-xl;
+  gap: $space-lg;
+  margin-top: $space-xxl;
 }
 
 .wallet__page-btn {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   @include flex-center;
   border: 1px solid $color-border-light;
-  border-radius: $radius-md;
+  border-radius: $radius-full;
   background: transparent;
   color: $color-text-secondary;
   cursor: pointer;

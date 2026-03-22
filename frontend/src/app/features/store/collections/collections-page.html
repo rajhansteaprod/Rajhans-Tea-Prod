@@ -1,19 +1,36 @@
-<div class="page">
-  <h1 class="page-title">Collections</h1>
-  <p class="page-sub">Explore our curated collections</p>
+<div class="collections">
+  <!-- Hero -->
+  <header class="collections__hero">
+    <div class="collections__hero-inner">
+      <span class="collections__eyebrow">Explore</span>
+      <h1 class="collections__title">Collections</h1>
+      <p class="collections__sub">Curated selections for every palate</p>
+    </div>
+  </header>
 
-  <div class="collections-grid">
-    @for (c of collections(); track c._id) {
-      <a [routerLink]="'/collections/' + c.slug" class="collection-card">
-        <div class="card-image">
-          @if (c.image) { <img [src]="c.image" [alt]="c.name" loading="lazy" /> }
-          @else { <div class="img-ph"><span>{{ c.name[0] }}</span></div> }
-        </div>
-        <div class="card-body">
-          <h3 class="card-name">{{ c.name }}</h3>
-          @if (c.description) { <p class="card-desc">{{ c.description }}</p> }
-        </div>
-      </a>
-    }
+  <!-- Grid -->
+  <div class="collections__grid-wrap">
+    <div class="collections__grid">
+      @for (c of collections(); track c._id) {
+        <a [routerLink]="'/collections/' + c.slug" class="collection-card">
+          <div class="collection-card__image">
+            @if (c.image) {
+              <img [src]="c.image" [alt]="c.name" loading="lazy" />
+            } @else {
+              <div class="collection-card__placeholder">
+                <span>{{ c.name[0] }}</span>
+              </div>
+            }
+            <div class="collection-card__overlay">
+              <h3 class="collection-card__name">{{ c.name }}</h3>
+              @if (c.description) {
+                <p class="collection-card__desc">{{ c.description }}</p>
+              }
+              <span class="collection-card__cta">Explore Collection</span>
+            </div>
+          </div>
+        </a>
+      }
+    </div>
   </div>
 </div>

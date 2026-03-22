@@ -1,22 +1,174 @@
 @use '../../../core/design-tokens/tokens' as *;
-.catalog-page { max-width:1100px; margin:0 auto; padding: $space-lg; }
-.breadcrumbs { font-size: $font-size-xs; color: $color-text-tertiary; margin-bottom: $space-md; a { color: $color-text-tertiary; text-decoration:none; &:hover { color: $color-primary; } } }
-.page-title { font-size: $font-size-xxl; font-weight: $font-weight-bold; color: $color-text-primary; margin:0 0 $space-xxs; }
-.result-count { font-size: $font-size-sm; color: $color-text-tertiary; margin:0 0 $space-xl; }
-.loading { display:flex; justify-content:center; padding: $space-xxxl; }
-.spinner { width:32px; height:32px; border:2px solid $color-border; border-top-color: $color-primary; border-radius:50%; animation: spin .7s linear infinite; }
-@keyframes spin { to { transform:rotate(360deg); } }
-.empty { text-align:center; color: $color-text-tertiary; padding: $space-xxxl; }
-.product-grid { display:grid; grid-template-columns: repeat(3,1fr); gap: $space-lg; }
-@media(max-width:768px) { .product-grid { grid-template-columns: repeat(2,1fr); } }
-.product-card { background: $color-bg-tertiary; border:1px solid $color-border-light; border-radius: $radius-xl; overflow:hidden; text-decoration:none; transition: all $transition-normal;
-  &:hover { border-color: $color-border; box-shadow: $shadow-lg; transform:translateY(-2px); }
+@use '../../../core/design-tokens/mixins' as *;
+
+.catalog {
+  min-height: 60vh;
 }
-.card-image { aspect-ratio:1; background: $color-bg-secondary; overflow:hidden;
-  img { width:100%; height:100%; object-fit:cover; transition: transform $transition-slow; }
-  &:hover img { transform:scale(1.04); }
+
+// ═══ Hero ═══
+.catalog__hero {
+  @include section-padding;
+  text-align: center;
+  background: $color-bg-dark;
 }
-.img-ph { width:100%; height:100%; background: $color-bg-secondary; }
-.card-body { padding: $space-md; }
-.card-name { font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-text-primary; margin:0 0 $space-xxs; }
-.card-price { font-size: $font-size-md; font-weight: $font-weight-bold; color: $color-primary; margin:0; }
+
+.catalog__hero-inner {
+  @include content-container($max-width-narrow);
+}
+
+.catalog__breadcrumbs {
+  @include eyebrow-text;
+  font-size: 10px;
+  color: rgba($color-text-inverse, 0.4);
+  margin-bottom: $space-lg;
+
+  a {
+    color: rgba($color-text-inverse, 0.4);
+    text-decoration: none;
+    transition: color $transition-fast;
+
+    &:hover {
+      color: $color-primary;
+    }
+  }
+}
+
+.catalog__breadcrumbs-sep {
+  margin: 0 $space-xs;
+}
+
+.catalog__title {
+  font-family: $font-family-display;
+  font-size: clamp($font-size-xxxl, 5vw, $font-size-section);
+  font-weight: $font-weight-regular;
+  line-height: $line-height-tight;
+  letter-spacing: $letter-spacing-display;
+  color: $color-text-inverse;
+  margin: 0 0 $space-md;
+}
+
+.catalog__count {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  color: rgba($color-text-inverse, 0.5);
+  margin: 0;
+  letter-spacing: $letter-spacing-wide;
+}
+
+// ═══ Content ═══
+.catalog__content {
+  @include content-container;
+  padding-top: $space-xxl;
+  padding-bottom: $space-section;
+}
+
+// ═══ Loading ═══
+.catalog__loading {
+  @include flex-center;
+  padding: $space-section;
+}
+
+.catalog__spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid $color-border-light;
+  border-top-color: $color-primary;
+  border-radius: 50%;
+  animation: catalogSpin 0.7s linear infinite;
+}
+
+@keyframes catalogSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ═══ Empty ═══
+.catalog__empty {
+  text-align: center;
+  padding: $space-section 0;
+  color: $color-text-tertiary;
+  font-size: $font-size-md;
+}
+
+.catalog__back-link {
+  display: inline-block;
+  margin-top: $space-lg;
+  @include eyebrow-text;
+  font-size: $font-size-xs;
+  color: $color-primary;
+  text-decoration: none;
+  border-bottom: 1px solid $color-primary;
+  padding-bottom: 2px;
+
+  &:hover {
+    color: $color-primary-hover;
+  }
+}
+
+// ═══ Product Grid ═══
+.catalog__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-xl;
+
+  @include respond-to(md) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-lg;
+  }
+
+  @include respond-to(xs) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ═══ Card ═══
+.catalog-card {
+  display: block;
+  text-decoration: none;
+  @include hover-lift(-6px);
+}
+
+.catalog-card__image {
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: $color-bg-warm;
+  margin-bottom: $space-md;
+
+  img {
+    @include image-cover;
+    transition: transform 0.8s $ease-expo-out;
+  }
+
+  &:hover img {
+    transform: scale(1.05);
+  }
+}
+
+.catalog-card__placeholder {
+  width: 100%;
+  height: 100%;
+  background: $color-bg-warm;
+}
+
+.catalog-card__body {
+  padding: 0 $space-xxs;
+}
+
+.catalog-card__name {
+  font-family: $font-family-display;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-regular;
+  color: $color-text-primary;
+  margin: 0 0 $space-xxs;
+  letter-spacing: $letter-spacing-tight;
+  line-height: $line-height-tight;
+}
+
+.catalog-card__price {
+  font-family: $font-family;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin: 0;
+}

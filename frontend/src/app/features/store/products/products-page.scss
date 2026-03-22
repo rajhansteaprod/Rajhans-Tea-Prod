@@ -5,41 +5,52 @@
   min-height: 60vh;
 }
 
-// ═══ Header ═══
-.products__header {
-  @include flex-between;
-  flex-wrap: wrap;
-  gap: $space-md;
-  margin-bottom: $space-xl;
-  padding-bottom: $space-lg;
+// ═══ Hero ═══
+.products__hero {
+  @include section-padding;
+  text-align: center;
+  background: $color-bg-warm;
   border-bottom: 1px solid $color-border-light;
 }
 
-.products__header-left {
-  display: flex;
-  align-items: baseline;
-  gap: $space-md;
+.products__hero-inner {
+  @include content-container($max-width-narrow);
+}
+
+.products__eyebrow {
+  @include eyebrow-text;
+  display: block;
+  margin-bottom: $space-md;
+  color: $color-primary;
 }
 
 .products__title {
+  @include mega-headline($font-size-section);
+  text-transform: none;
   font-family: $font-family-display;
-  font-size: $font-size-xxl;
-  font-weight: $font-weight-medium;
-  color: $color-text-primary;
+  font-weight: $font-weight-regular;
+  font-size: clamp($font-size-xxxl, 5vw, $font-size-section);
+  line-height: $line-height-tight;
   letter-spacing: $letter-spacing-display;
-  margin: 0;
+  margin: 0 0 $space-md;
 }
 
 .products__count {
   font-family: $font-family;
   font-size: $font-size-sm;
   color: $color-text-tertiary;
+  letter-spacing: $letter-spacing-wide;
 }
 
-.products__header-right {
-  display: flex;
-  align-items: center;
-  gap: $space-md;
+// ═══ Toolbar ═══
+.products__toolbar {
+  border-bottom: 1px solid $color-border-light;
+  padding: $space-md 0;
+}
+
+.products__toolbar-inner {
+  @include content-container;
+  @include flex-between;
 }
 
 .products__filter-btn {
@@ -48,18 +59,26 @@
   gap: $space-xs;
   padding: $space-xs $space-md;
   border: 1px solid $color-border;
-  border-radius: $radius-md;
+  border-radius: 0;
   background: transparent;
   font-family: $font-family;
-  font-size: $font-size-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
   color: $color-text-primary;
   cursor: pointer;
   transition: all $transition-fast;
   position: relative;
 
-  &:hover { border-color: $color-primary; color: $color-primary; }
+  &:hover {
+    border-color: $color-primary;
+    color: $color-primary;
+  }
 
-  @include respond-to(lg) { display: flex; }
+  @include respond-to(lg) {
+    display: flex;
+  }
 }
 
 .products__filter-badge {
@@ -79,36 +98,47 @@
 .products__sort {
   display: flex;
   align-items: center;
-  gap: $space-xs;
+  gap: $space-sm;
+  margin-left: auto;
 }
 
 .products__sort-label {
-  font-size: $font-size-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
   color: $color-text-tertiary;
   white-space: nowrap;
 
-  @include respond-to(sm) { display: none; }
+  @include respond-to(sm) {
+    display: none;
+  }
 }
 
 .products__sort-select {
   padding: $space-xs $space-md;
   border: 1px solid $color-border;
-  border-radius: $radius-md;
-  background: $color-bg-tertiary;
+  border-radius: 0;
+  background: $color-bg-primary;
   font-family: $font-family;
   font-size: $font-size-sm;
   color: $color-text-primary;
   outline: none;
   cursor: pointer;
 
-  &:focus { border-color: $color-primary; }
+  &:focus {
+    border-color: $color-primary;
+  }
 }
 
 // ═══ Layout ═══
 .products__layout {
+  @include content-container;
   display: grid;
   grid-template-columns: 240px 1fr;
-  gap: $space-xxl;
+  gap: $space-xxxl;
+  padding-top: $space-xxl;
+  padding-bottom: $space-section;
 
   @include respond-to(lg) {
     grid-template-columns: 1fr;
@@ -118,9 +148,9 @@
 // ═══ Sidebar ═══
 .products__sidebar {
   position: sticky;
-  top: 88px;
+  top: 100px;
   align-self: start;
-  max-height: calc(100vh - 100px);
+  max-height: calc(100vh - 120px);
   overflow-y: auto;
 
   @include respond-to(lg) {
@@ -128,31 +158,30 @@
     top: 0;
     left: 0;
     bottom: 0;
-    width: 300px;
+    width: 320px;
     max-height: none;
     background: $color-bg-primary;
     z-index: $z-modal;
-    padding: $space-lg;
+    padding: $space-xl;
     transform: translateX(-100%);
     transition: transform $transition-normal;
     box-shadow: $shadow-xl;
 
-    &.open { transform: translateX(0); }
+    &.open {
+      transform: translateX(0);
+    }
   }
 }
 
 .products__sidebar-head {
   @include flex-between;
-  margin-bottom: $space-lg;
+  margin-bottom: $space-xl;
+  padding-bottom: $space-md;
+  border-bottom: 1px solid $color-border-light;
 }
 
 .products__sidebar-title {
-  font-family: $font-family;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
-  text-transform: uppercase;
-  letter-spacing: $letter-spacing-wide;
-  color: $color-text-primary;
+  @include eyebrow-text;
   margin: 0;
 }
 
@@ -161,9 +190,14 @@
   background: none;
   color: $color-primary;
   font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
   cursor: pointer;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
 
-  &:hover { text-decoration: underline; }
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .products__sidebar-close {
@@ -173,7 +207,9 @@
   color: $color-text-tertiary;
   cursor: pointer;
 
-  @include respond-to(lg) { display: block; }
+  @include respond-to(lg) {
+    display: block;
+  }
 }
 
 .products__backdrop {
@@ -183,7 +219,7 @@
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba($color-bg-dark, 0.4);
+    background: rgba($color-bg-dark, 0.5);
     z-index: $z-modal-backdrop;
   }
 }
@@ -193,16 +229,16 @@
   padding-bottom: $space-lg;
   margin-bottom: $space-lg;
   border-bottom: 1px solid $color-border-light;
+
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
 .filter-group__title {
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  text-transform: uppercase;
-  letter-spacing: $letter-spacing-wide;
-  color: $color-text-tertiary;
-  margin: 0 0 $space-sm;
+  @include eyebrow-text;
+  font-size: 10px;
+  margin: 0 0 $space-md;
 }
 
 .filter-option {
@@ -212,19 +248,24 @@
   padding: $space-xs $space-sm;
   border: none;
   background: transparent;
-  border-radius: $radius-sm;
+  border-radius: 0;
   font-family: $font-family;
   font-size: $font-size-sm;
   color: $color-text-secondary;
   cursor: pointer;
   transition: all $transition-fast;
   text-align: left;
+  border-left: 2px solid transparent;
 
-  &:hover { background: $color-bg-secondary; color: $color-text-primary; }
+  &:hover {
+    color: $color-text-primary;
+    border-left-color: $color-border;
+  }
+
   &.active {
-    background: $color-primary-light;
     color: $color-primary;
     font-weight: $font-weight-medium;
+    border-left-color: $color-primary;
   }
 }
 
@@ -235,48 +276,67 @@
 }
 
 .filter-price__input {
-  width: 70px;
-  padding: $space-xs;
+  width: 72px;
+  padding: $space-xs $space-sm;
   border: 1px solid $color-border;
-  border-radius: $radius-sm;
+  border-radius: 0;
+  font-family: $font-family;
   font-size: $font-size-xs;
   text-align: center;
   outline: none;
 
-  &:focus { border-color: $color-primary; }
+  &:focus {
+    border-color: $color-primary;
+  }
 }
 
-.filter-price__sep { color: $color-text-disabled; }
+.filter-price__sep {
+  color: $color-text-disabled;
+  font-size: $font-size-xs;
+}
 
 .filter-price__apply {
-  padding: $space-xs $space-sm;
-  background: $color-primary;
+  padding: $space-xs $space-md;
+  background: $color-bg-dark;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-sm;
+  border-radius: 0;
+  font-family: $font-family;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
   cursor: pointer;
+  transition: background $transition-fast;
+
+  &:hover {
+    background: $color-primary;
+  }
 }
 
 .filter-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: $space-xxs;
+  gap: $space-xs;
 }
 
 .filter-tag {
-  padding: $space-xxs $space-sm;
+  padding: $space-xxs $space-md;
   border: 1px solid $color-border;
-  border-radius: $radius-full;
+  border-radius: 0;
   background: transparent;
   font-family: $font-family;
   font-size: $font-size-xs;
   color: $color-text-secondary;
   cursor: pointer;
   transition: all $transition-fast;
+  letter-spacing: $letter-spacing-wide;
 
-  &:hover { border-color: $color-primary; }
+  &:hover {
+    border-color: $color-primary;
+    color: $color-primary;
+  }
+
   &.active {
     background: $color-primary;
     color: $color-text-inverse;
@@ -288,44 +348,51 @@
 .products__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: $space-lg;
+  gap: $space-xl;
 
-  @include respond-to(lg) { grid-template-columns: repeat(3, 1fr); }
-  @include respond-to(md) { grid-template-columns: repeat(2, 1fr); }
-  @include respond-to(xs) { grid-template-columns: 1fr; }
+  @include respond-to(lg) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @include respond-to(md) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-lg;
+  }
+
+  @include respond-to(xs) {
+    grid-template-columns: 1fr;
+  }
 }
 
 // ═══ Product Card ═══
 .card {
-  background: $color-bg-tertiary;
-  border: 1px solid $color-border-light;
-  border-radius: $radius-lg;
+  background: $color-bg-primary;
   overflow: hidden;
-  transition: all $transition-normal;
+  @include hover-lift(-6px);
 
   &:hover {
-    border-color: $color-border;
-    box-shadow: $shadow-md;
-    transform: translateY(-3px);
+    .card__img {
+      transform: scale(1.05);
+    }
 
-    .card__img { transform: scale(1.06); }
-    .card__actions { opacity: 1; transform: translateY(0); }
+    .card__actions {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
 .card__img-wrap {
   position: relative;
   display: block;
-  aspect-ratio: 1;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
-  background: $color-bg-secondary;
+  background: $color-bg-warm;
 }
 
 .card__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.6s $ease-expo-out;
+  @include image-cover;
+  transition: transform 0.8s $ease-expo-out;
 }
 
 .card__img-placeholder {
@@ -337,72 +404,78 @@
 
 .card__actions {
   position: absolute;
-  bottom: $space-sm;
-  right: $space-sm;
+  bottom: $space-md;
+  right: $space-md;
   display: flex;
   gap: $space-xxs;
   opacity: 0;
-  transform: translateY($space-xs);
+  transform: translateY($space-sm);
   transition: all $transition-normal;
 }
 
 .card__action {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   @include flex-center;
   border-radius: $radius-full;
   border: none;
-  background: $color-bg-tertiary;
+  background: $color-bg-primary;
   color: $color-text-primary;
   cursor: pointer;
   box-shadow: $shadow-md;
   transition: all $transition-fast;
 
-  &:hover { background: $color-primary; color: $color-text-inverse; }
-  &--active { color: $color-primary; }
+  &:hover {
+    background: $color-primary;
+    color: $color-text-inverse;
+  }
+
+  &--active {
+    color: $color-primary;
+  }
 }
 
 .card__badge {
   position: absolute;
-  top: $space-sm;
-  left: $space-sm;
+  top: $space-md;
+  left: $space-md;
   padding: $space-xxs $space-sm;
-  background: $color-primary;
+  background: $color-bg-dark;
   color: $color-text-inverse;
   font-family: $font-family;
   font-size: 10px;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
-  border-radius: $radius-sm;
 }
 
 .card__body {
-  padding: $space-md;
+  padding: $space-lg $space-xs $space-md;
   display: flex;
   flex-direction: column;
   gap: $space-xxs;
 }
 
 .card__category {
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
-  color: $color-secondary;
+  @include eyebrow-text;
+  font-size: 10px;
+  color: $color-text-tertiary;
 }
 
 .card__name {
   font-family: $font-family-display;
   font-size: $font-size-lg;
-  font-weight: $font-weight-medium;
+  font-weight: $font-weight-regular;
   color: $color-text-primary;
   text-decoration: none;
+  letter-spacing: $letter-spacing-tight;
+  line-height: $line-height-tight;
   @include truncate(1);
   transition: color $transition-fast;
 
-  &:hover { color: $color-primary; }
+  &:hover {
+    color: $color-primary;
+  }
 }
 
 .card__bottom {
@@ -412,19 +485,21 @@
 
 .card__price {
   font-family: $font-family;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
-  color: $color-primary;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
 }
 
 .card__cta {
-  padding: $space-xxs $space-md;
-  border: 1px solid $color-border;
-  border-radius: $radius-full;
+  padding: $space-xxs $space-lg;
+  border: 1px solid $color-text-primary;
+  border-radius: 0;
   background: transparent;
   font-family: $font-family;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
   color: $color-text-primary;
   text-decoration: none;
   transition: all $transition-fast;
@@ -439,26 +514,30 @@
 // ═══ Loading ═══
 .products__loading {
   @include flex-center;
-  padding: $space-xxxl;
+  padding: $space-section;
 }
 
 .products__spinner {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border: 2px solid $color-border-light;
   border-top-color: $color-primary;
   border-radius: $radius-full;
   animation: spin 0.7s linear infinite;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 // ═══ Empty ═══
 .products__empty {
   @include flex-column;
   align-items: center;
   text-align: center;
-  padding: $space-xxxl * 2 0;
+  padding: $space-section 0;
   gap: $space-md;
 }
 
@@ -466,14 +545,14 @@
   width: 80px;
   height: 80px;
   @include flex-center;
-  border-radius: $radius-xxl;
-  background: $color-bg-secondary;
+  border: 1px solid $color-border-light;
   color: $color-text-disabled;
 }
 
 .products__empty-title {
   font-family: $font-family-display;
-  font-size: $font-size-xl;
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-regular;
   color: $color-text-primary;
   margin: 0;
 }
@@ -486,15 +565,22 @@
 
 .products__empty-btn {
   padding: $space-sm $space-xl;
-  border: 1px solid $color-border;
-  border-radius: $radius-md;
+  border: 1px solid $color-text-primary;
+  border-radius: 0;
   background: transparent;
   font-family: $font-family;
-  font-size: $font-size-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all $transition-fast;
 
-  &:hover { border-color: $color-primary; color: $color-primary; }
+  &:hover {
+    border-color: $color-primary;
+    background: $color-primary;
+    color: $color-text-inverse;
+  }
 }
 
 // ═══ Pagination ═══
@@ -502,16 +588,16 @@
   @include flex-center;
   gap: $space-xs;
   margin-top: $space-xxl;
-  padding-top: $space-xl;
+  padding-top: $space-xxl;
   border-top: 1px solid $color-border-light;
 }
 
 .page-btn {
-  min-width: 36px;
-  height: 36px;
+  min-width: 40px;
+  height: 40px;
   @include flex-center;
   border: 1px solid $color-border-light;
-  border-radius: $radius-md;
+  border-radius: 0;
   background: transparent;
   font-family: $font-family;
   font-size: $font-size-sm;
@@ -525,9 +611,9 @@
   }
 
   &.active {
-    background: $color-primary;
+    background: $color-bg-dark;
     color: $color-text-inverse;
-    border-color: $color-primary;
+    border-color: $color-bg-dark;
   }
 
   &:disabled {

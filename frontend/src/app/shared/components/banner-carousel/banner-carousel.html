@@ -1,7 +1,7 @@
 @if (banners.length > 0) {
-  <div class="carousel">
+  <div class="carousel" role="region" aria-label="Banner carousel">
     @for (banner of banners; track banner._id; let i = $index) {
-      <div class="slide" [class.active]="currentIndex() === i">
+      <div class="slide" [class.active]="currentIndex() === i" [attr.aria-hidden]="currentIndex() !== i">
         <a [href]="banner.link || '#'" class="slide-link">
           <img [src]="banner.image" [alt]="banner.title" />
           <div class="slide-overlay">
@@ -14,9 +14,16 @@
       </div>
     }
     @if (banners.length > 1) {
-      <div class="dots">
+      <div class="dots" role="tablist" aria-label="Slide navigation">
         @for (banner of banners; track banner._id; let i = $index) {
-          <button class="dot" [class.active]="currentIndex() === i" (click)="goTo(i)"></button>
+          <button
+            class="dot"
+            [class.active]="currentIndex() === i"
+            (click)="goTo(i)"
+            [attr.aria-label]="'Go to slide ' + (i + 1)"
+            [attr.aria-selected]="currentIndex() === i"
+            role="tab"
+          ></button>
         }
       </div>
     }

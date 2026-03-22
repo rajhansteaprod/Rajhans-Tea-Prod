@@ -1,13 +1,14 @@
 @use '../../../../core/design-tokens/tokens' as *;
 @use '../../../../core/design-tokens/mixins' as *;
 
-.page { max-width: 1200px; }
+.page {
+  max-width: 1200px;
+}
 
 // === Page Header ===
 .page-header {
-  display: flex;
+  @include flex-between;
   align-items: flex-start;
-  justify-content: space-between;
   gap: $space-md;
   margin-bottom: $space-lg;
 }
@@ -34,7 +35,7 @@
   background: $color-primary;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-md;
+  border-radius: $radius-lg;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
   font-family: $font-family;
@@ -119,14 +120,20 @@
 }
 
 // === Table ===
-.table-card { @include card; overflow: hidden; }
+.table-card {
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-xl;
+  overflow: hidden;
+  box-shadow: $shadow-sm;
+}
 
-.table-loading, .table-empty {
+.table-loading,
+.table-empty {
   padding: $space-xxxl;
   text-align: center;
   color: $color-text-tertiary;
-  display: flex;
-  flex-direction: column;
+  @include flex-column;
   align-items: center;
   gap: $space-sm;
 }
@@ -139,6 +146,7 @@
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
+
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .table-wrapper { overflow-x: auto; }
@@ -197,13 +205,11 @@
   flex-wrap: nowrap;
 }
 
-// === Sessions toggle button (icon-only) ===
+// === Sessions toggle button ===
 .sessions-btn {
   width: 30px;
   height: 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  @include flex-center;
   border: 1px solid $color-border-light;
   border-radius: $radius-md;
   background: $color-bg-tertiary;
@@ -215,12 +221,7 @@
   transition: all $transition-fast;
   flex-shrink: 0;
 
-  &:hover {
-    border-color: $color-primary;
-    color: $color-primary;
-    background: $color-primary-light;
-  }
-
+  &:hover,
   &.active {
     border-color: $color-primary;
     color: $color-primary;
@@ -231,9 +232,7 @@
 .btn-icon {
   width: 30px;
   height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include flex-center;
   border: 1px solid transparent;
   border-radius: $radius-sm;
   background: none;
@@ -281,7 +280,7 @@
   }
 }
 
-// === Banned badge in status column ===
+// === Banned badge ===
 .banned-badge {
   display: inline-flex;
   align-items: center;
@@ -303,9 +302,7 @@
   border-radius: $radius-md;
   background: $color-bg-secondary;
   color: $color-text-secondary;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include flex-center;
   font-size: $font-size-xs;
   font-weight: $font-weight-bold;
   flex-shrink: 0;
@@ -318,7 +315,7 @@
   }
 }
 
-.user-info { display: flex; flex-direction: column; min-width: 0; }
+.user-info { @include flex-column; min-width: 0; }
 
 .user-name { font-weight: $font-weight-medium; color: $color-text-primary; }
 
@@ -373,9 +370,7 @@
 
 // === Pagination ===
 .pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  @include flex-between;
   padding: $space-sm $space-md;
   border-top: 1px solid $color-border-light;
 
@@ -389,9 +384,7 @@
 .page-btn {
   min-width: 32px;
   height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include flex-center;
   border: 1px solid $color-border-light;
   border-radius: $radius-md;
   background: $color-bg-tertiary;
@@ -416,10 +409,10 @@
   border: 1px solid $color-border;
   border-radius: $radius-xl;
   padding: $space-lg;
-  animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes slideDown {
+@keyframes slideIn {
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
@@ -442,8 +435,7 @@
 }
 
 .form-field {
-  display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-xxs;
 }
 
@@ -455,8 +447,9 @@
   letter-spacing: $letter-spacing-wide;
 }
 
-.form-input, .form-select {
-  padding: $space-sm $space-sm;
+.form-input,
+.form-select {
+  padding: $space-sm;
   border: 1.5px solid $color-border;
   border-radius: $radius-md;
   font-size: $font-size-sm;
@@ -532,7 +525,7 @@
   background: $color-primary;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-md;
+  border-radius: $radius-lg;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
   font-family: $font-family;
@@ -548,7 +541,7 @@
   background: none;
   color: $color-text-secondary;
   border: 1px solid $color-border;
-  border-radius: $radius-md;
+  border-radius: $radius-lg;
   font-size: $font-size-sm;
   font-family: $font-family;
   cursor: pointer;
@@ -561,12 +554,10 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: $color-overlay;
   backdrop-filter: blur(4px);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  z-index: $z-modal-backdrop;
+  @include flex-center;
   padding: $space-md;
   animation: fadeIn 0.15s ease;
 }
@@ -579,7 +570,7 @@
 .modal-box {
   background: $color-bg-primary;
   border-radius: $radius-xl;
-  border: 1px solid $color-border;
+  border: 1px solid $color-border-light;
   box-shadow: $shadow-xl;
   width: 100%;
   max-width: 540px;
@@ -592,9 +583,7 @@
 }
 
 .modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  @include flex-between;
   padding: $space-lg;
   border-bottom: 1px solid $color-border-light;
 }
@@ -608,9 +597,7 @@
 .modal-close {
   width: 28px;
   height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include flex-center;
   border: none;
   background: none;
   color: $color-text-tertiary;
@@ -622,8 +609,7 @@
 
 .modal-body {
   padding: $space-lg;
-  display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-md;
 }
 
@@ -638,11 +624,11 @@
 .modal-error {
   margin: 0 $space-lg $space-sm;
   padding: $space-xs $space-sm;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 6px;
-  color: #ef4444;
-  font-size: 13px;
+  background: rgba(192, 57, 43, 0.08);
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  border-radius: $radius-md;
+  color: $color-error;
+  font-size: $font-size-sm;
 }
 
 .modal-footer {

@@ -1,0 +1,28 @@
+<a [routerLink]="'/product/' + product.slug" class="card" [class.horizontal]="layout === 'horizontal'">
+  <div class="card__img-wrap">
+    @if (product.images?.[0]) {
+      <img [src]="product.images[0]" [alt]="product.name" loading="lazy" class="card__img" />
+    } @else {
+      <div class="card__img-placeholder">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="1.5"/></svg>
+      </div>
+    }
+    <!-- Quick actions -->
+    <div class="card__overlay">
+      <button class="card__action" (click)="onAddToCart($event)" aria-label="Add to cart">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="1.5"/><path d="M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="1.5"/></svg>
+      </button>
+      <button class="card__action" [class.active]="wishlisted" (click)="onToggleWishlist($event)" aria-label="Wishlist">
+        <svg width="18" height="18" viewBox="0 0 24 24" [attr.fill]="wishlisted ? 'currentColor' : 'none'"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    @if (product.isFeatured) {
+      <span class="card__badge">Featured</span>
+    }
+  </div>
+  <div class="card__body">
+    <span class="card__category">{{ product.category?.name || 'Tea' }}</span>
+    <h3 class="card__name">{{ product.name }}</h3>
+    <span class="card__price">&#8377;{{ product.basePrice }}</span>
+  </div>
+</a>

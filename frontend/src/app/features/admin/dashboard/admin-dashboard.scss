@@ -1,7 +1,9 @@
 @use '../../../core/design-tokens/tokens' as *;
 @use '../../../core/design-tokens/mixins' as *;
 
-.dash { max-width: 1100px; }
+.dash {
+  max-width: 1100px;
+}
 
 // === Stagger Animation ===
 .animate-in {
@@ -10,14 +12,14 @@
   animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   animation-delay: calc(var(--i, 0) * 0.07s);
 }
+
 @keyframes fadeUp {
   to { opacity: 1; transform: translateY(0); }
 }
 
 // === Header ===
 .dash-header {
-  display: flex;
-  justify-content: space-between;
+  @include flex-between;
   align-items: flex-end;
   margin-bottom: $space-xl;
   gap: $space-md;
@@ -106,11 +108,11 @@
   border: 1px solid $color-border-light;
   border-radius: $radius-xl;
   padding: $space-lg;
-
-  @include respond-to(xs) { padding: $space-md; }
   transition: all $transition-normal;
   position: relative;
   overflow: hidden;
+
+  @include respond-to(xs) { padding: $space-md; }
 
   &::before {
     content: '';
@@ -138,8 +140,7 @@
 }
 
 .kpi-top {
-  display: flex;
-  justify-content: space-between;
+  @include flex-between;
   align-items: flex-start;
   margin-bottom: $space-md;
 }
@@ -156,9 +157,7 @@
   width: 36px;
   height: 36px;
   border-radius: $radius-md;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include flex-center;
 
   &.users { background: $color-primary-light; color: $color-primary; }
   &.active { background: rgba(87, 136, 108, 0.1); color: $color-success; }
@@ -239,9 +238,7 @@
 }
 
 .panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  @include flex-between;
   padding: $space-lg $space-lg $space-sm;
 }
 
@@ -267,10 +264,8 @@
 }
 
 .user-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: $space-sm $space-sm;
+  @include flex-between;
+  padding: $space-sm;
   border-radius: $radius-md;
   transition: background $transition-fast;
 
@@ -290,9 +285,7 @@
   border-radius: $radius-md;
   background: $color-bg-secondary;
   color: $color-text-tertiary;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include flex-center;
   font-size: 11px;
   font-weight: $font-weight-bold;
   flex-shrink: 0;
@@ -304,8 +297,7 @@
 }
 
 .user-meta {
-  display: flex;
-  flex-direction: column;
+  @include flex-column;
   min-width: 0;
 }
 
@@ -375,9 +367,7 @@
   width: 36px;
   height: 36px;
   border-radius: $radius-md;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include flex-center;
   flex-shrink: 0;
 
   &.users-icon { background: $color-primary-light; color: $color-primary; }

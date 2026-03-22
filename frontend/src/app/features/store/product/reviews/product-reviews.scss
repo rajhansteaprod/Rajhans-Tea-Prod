@@ -2,9 +2,9 @@
 @use '../../../../core/design-tokens/mixins' as *;
 
 .reviews {
-  margin-top: $space-xxl;
+  margin-top: $space-section;
+  padding-top: $space-xxl;
   border-top: 1px solid $color-border-light;
-  padding-top: $space-xl;
 }
 
 // ═══ Tabs ═══
@@ -12,26 +12,30 @@
   display: flex;
   gap: 0;
   border-bottom: 1px solid $color-border-light;
-  margin-bottom: $space-xl;
+  margin-bottom: $space-xxl;
 }
 
 .reviews__tab {
-  padding: $space-sm $space-xl;
+  padding: $space-md $space-xl;
   border: none;
   background: none;
   font-family: $font-family;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
   color: $color-text-tertiary;
   cursor: pointer;
   border-bottom: 2px solid transparent;
   transition: all $transition-fast;
 
-  &:hover { color: $color-text-primary; }
+  &:hover {
+    color: $color-text-primary;
+  }
+
   &.active {
     color: $color-primary;
     border-bottom-color: $color-primary;
-    font-weight: $font-weight-semibold;
   }
 }
 
@@ -39,11 +43,10 @@
 .reviews__summary {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: $space-xxl;
-  margin-bottom: $space-xl;
-  padding: $space-xl;
-  background: $color-bg-secondary;
-  border-radius: $radius-lg;
+  gap: $space-xxxl;
+  margin-bottom: $space-xxl;
+  padding: $space-xxl;
+  background: $color-bg-warm;
 
   @include respond-to(sm) {
     grid-template-columns: 1fr;
@@ -61,9 +64,10 @@
 .reviews__avg-num {
   font-family: $font-family-display;
   font-size: $font-size-display;
-  font-weight: $font-weight-medium;
+  font-weight: $font-weight-regular;
   color: $color-text-primary;
   line-height: 1;
+  letter-spacing: $letter-spacing-tight;
 }
 
 .reviews__avg-stars {
@@ -71,15 +75,22 @@
   gap: 2px;
 }
 
-.reviews__star, .reviews__star-sm {
+.reviews__star,
+.reviews__star-sm {
   fill: none;
   color: $color-border;
-  &.filled { fill: $color-primary; color: $color-primary; }
+
+  &.filled {
+    fill: $color-primary;
+    color: $color-primary;
+  }
 }
 
 .reviews__avg-count {
   font-size: $font-size-xs;
   color: $color-text-tertiary;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
 }
 
 .reviews__bars {
@@ -104,16 +115,14 @@
 
 .reviews__bar {
   flex: 1;
-  height: 8px;
+  height: 6px;
   background: $color-border-light;
-  border-radius: $radius-full;
   overflow: hidden;
 }
 
 .reviews__bar-fill {
   height: 100%;
   background: $color-primary;
-  border-radius: $radius-full;
   transition: width $transition-normal;
 }
 
@@ -127,31 +136,33 @@
 .reviews__write-btn {
   display: inline-flex;
   align-items: center;
-  padding: $space-sm $space-xl;
-  border: 1px solid $color-primary;
-  border-radius: $radius-md;
+  padding: $space-sm $space-xxl;
+  border: 1px solid $color-text-primary;
+  border-radius: 0;
   background: transparent;
-  color: $color-primary;
+  color: $color-text-primary;
   font-family: $font-family;
-  font-size: $font-size-sm;
+  font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
   cursor: pointer;
   text-decoration: none;
   transition: all $transition-fast;
-  margin-bottom: $space-xl;
+  margin-bottom: $space-xxl;
 
   &:hover {
     background: $color-primary;
     color: $color-text-inverse;
+    border-color: $color-primary;
   }
 }
 
 // ═══ Review Form ═══
 .reviews__form {
-  padding: $space-xl;
-  background: $color-bg-secondary;
-  border-radius: $radius-lg;
-  margin-bottom: $space-xl;
+  padding: $space-xxl;
+  background: $color-bg-warm;
+  margin-bottom: $space-xxl;
   @include flex-column;
   gap: $space-lg;
 }
@@ -162,9 +173,8 @@
 }
 
 .reviews__form-label {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
+  @include eyebrow-text;
+  font-size: 10px;
 }
 
 .reviews__form-stars {
@@ -180,33 +190,47 @@
   padding: 0;
   transition: color $transition-fast;
 
-  &.filled { fill: $color-primary; color: $color-primary; }
-  &:hover { color: $color-primary; }
+  &.filled {
+    fill: $color-primary;
+    color: $color-primary;
+  }
 
-  svg { fill: currentColor; }
+  &:hover {
+    color: $color-primary;
+  }
+
+  svg {
+    fill: currentColor;
+  }
 }
 
 .reviews__form-input {
   padding: $space-sm $space-md;
   border: 1px solid $color-border;
-  border-radius: $radius-md;
+  border-radius: 0;
   font-family: $font-family;
   font-size: $font-size-sm;
   outline: none;
+  background: $color-bg-primary;
 
-  &:focus { border-color: $color-primary; box-shadow: $shadow-glow; }
+  &:focus {
+    border-color: $color-primary;
+  }
 }
 
 .reviews__form-textarea {
   padding: $space-sm $space-md;
   border: 1px solid $color-border;
-  border-radius: $radius-md;
+  border-radius: 0;
   font-family: $font-family;
   font-size: $font-size-sm;
   resize: vertical;
   outline: none;
+  background: $color-bg-primary;
 
-  &:focus { border-color: $color-primary; box-shadow: $shadow-glow; }
+  &:focus {
+    border-color: $color-primary;
+  }
 }
 
 .reviews__submit-btn {
@@ -215,15 +239,23 @@
   background: $color-primary;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-md;
+  border-radius: 0;
   font-family: $font-family;
-  font-size: $font-size-sm;
+  font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all $transition-fast;
 
-  &:hover { background: $color-primary-hover; }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:hover {
+    background: $color-primary-hover;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 // ═══ Review List ═══
@@ -232,55 +264,66 @@
   gap: 0;
 }
 
-.reviews__item {
-  padding: $space-lg 0;
+.reviews__card {
+  padding: $space-xl 0;
   border-bottom: 1px solid $color-border-light;
 
-  &:last-child { border-bottom: none; }
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
-.reviews__item-header {
+.reviews__card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $space-sm;
+  flex-wrap: wrap;
+  gap: $space-sm;
+}
+
+.reviews__card-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.reviews__card-meta {
   display: flex;
   align-items: center;
   gap: $space-sm;
-  margin-bottom: $space-xs;
-  flex-wrap: wrap;
 }
 
-.reviews__item-stars { display: flex; gap: 1px; }
-
 .reviews__verified {
-  font-size: 10px;
-  font-weight: $font-weight-semibold;
+  @include eyebrow-text;
+  font-size: 9px;
   color: $color-secondary;
   background: rgba($color-secondary, 0.08);
-  padding: 1px $space-xs;
-  border-radius: $radius-sm;
+  padding: 2px $space-xs;
 }
 
 .reviews__date {
   font-size: $font-size-xs;
   color: $color-text-disabled;
-  margin-left: auto;
 }
 
-.reviews__item-title {
-  font-family: $font-family;
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
+.reviews__card-title {
+  font-family: $font-family-display;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-regular;
   color: $color-text-primary;
-  margin: 0 0 $space-xxs;
+  margin: 0 0 $space-xs;
+  letter-spacing: $letter-spacing-tight;
 }
 
-.reviews__item-body {
+.reviews__card-body {
   font-size: $font-size-sm;
   color: $color-text-secondary;
   line-height: $line-height-relaxed;
   margin: 0;
 }
 
-.reviews__item-footer {
-  margin-top: $space-sm;
+.reviews__card-footer {
+  margin-top: $space-md;
 }
 
 .reviews__helpful-btn {
@@ -293,21 +336,23 @@
   color: $color-text-tertiary;
   cursor: pointer;
   transition: color $transition-fast;
+  letter-spacing: $letter-spacing-wide;
 
-  &:hover { color: $color-primary; }
+  &:hover {
+    color: $color-primary;
+  }
 }
 
 .reviews__reply {
-  margin-top: $space-sm;
-  padding: $space-sm $space-md;
+  margin-top: $space-md;
+  padding: $space-md $space-lg;
   background: $color-bg-warm;
-  border-radius: $radius-md;
   border-left: 3px solid $color-primary;
 }
 
 .reviews__reply-label {
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
+  @include eyebrow-text;
+  font-size: 10px;
   color: $color-primary;
   display: block;
   margin-bottom: $space-xxs;
@@ -316,6 +361,7 @@
 .reviews__reply-body {
   font-size: $font-size-sm;
   color: $color-text-secondary;
+  line-height: $line-height-relaxed;
   margin: 0;
 }
 
@@ -334,7 +380,11 @@
   animation: reviewSpin 0.7s linear infinite;
 }
 
-@keyframes reviewSpin { to { transform: rotate(360deg); } }
+@keyframes reviewSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .reviews__empty {
   text-align: center;
@@ -347,34 +397,44 @@
 .qa__ask {
   display: flex;
   gap: $space-sm;
-  margin-bottom: $space-xl;
+  margin-bottom: $space-xxl;
 }
 
 .qa__ask-input {
   flex: 1;
   padding: $space-sm $space-md;
   border: 1px solid $color-border;
-  border-radius: $radius-md;
+  border-radius: 0;
   font-family: $font-family;
   font-size: $font-size-sm;
   outline: none;
 
-  &:focus { border-color: $color-primary; }
+  &:focus {
+    border-color: $color-primary;
+  }
 }
 
 .qa__ask-btn {
   padding: $space-sm $space-xl;
-  background: $color-primary;
+  background: $color-bg-dark;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-md;
+  border-radius: 0;
   font-family: $font-family;
-  font-size: $font-size-sm;
+  font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
   cursor: pointer;
 
-  &:hover { background: $color-primary-hover; }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:hover {
+    background: $color-primary;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 .qa__list {
@@ -383,49 +443,53 @@
 }
 
 .qa__item {
-  padding: $space-lg 0;
+  padding: $space-xl 0;
   border-bottom: 1px solid $color-border-light;
 
-  &:last-child { border-bottom: none; }
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
-.qa__question, .qa__answer {
+.qa__question,
+.qa__answer {
   display: flex;
   gap: $space-md;
 }
 
 .qa__answer {
   margin-top: $space-md;
-  padding-left: $space-xl;
+  padding-left: $space-xxl;
 }
 
-.qa__q-badge, .qa__a-badge {
+.qa__q-badge,
+.qa__a-badge {
   width: 28px;
   height: 28px;
   @include flex-center;
   flex-shrink: 0;
-  border-radius: $radius-full;
   font-family: $font-family;
   font-size: $font-size-xs;
   font-weight: $font-weight-bold;
 }
 
 .qa__q-badge {
-  background: $color-primary-light;
-  color: $color-primary;
+  background: $color-primary;
+  color: $color-text-inverse;
 }
 
 .qa__a-badge {
-  background: $color-bg-secondary;
+  background: $color-bg-warm;
   color: $color-text-tertiary;
 
   &.admin {
-    background: $color-secondary;
+    background: $color-bg-dark;
     color: $color-text-inverse;
   }
 }
 
-.qa__q-text, .qa__a-text {
+.qa__q-text,
+.qa__a-text {
   font-size: $font-size-sm;
   color: $color-text-primary;
   line-height: $line-height-relaxed;
@@ -438,26 +502,30 @@
 }
 
 .qa__a-admin {
-  font-size: 10px;
-  font-weight: $font-weight-semibold;
+  @include eyebrow-text;
+  font-size: 9px;
   color: $color-secondary;
 }
 
 .qa__reply-btn {
   margin-top: $space-sm;
-  margin-left: $space-xl + 28px;
+  margin-left: calc($space-xxl + 28px);
   border: none;
   background: none;
   font-size: $font-size-xs;
   color: $color-primary;
   cursor: pointer;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
 
-  &:hover { text-decoration: underline; }
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .qa__answer-form {
   margin-top: $space-sm;
-  padding-left: $space-xl + 28px;
+  padding-left: calc($space-xxl + 28px);
   @include flex-column;
   gap: $space-sm;
 }
@@ -465,12 +533,14 @@
 .qa__answer-input {
   padding: $space-sm $space-md;
   border: 1px solid $color-border;
-  border-radius: $radius-md;
+  border-radius: 0;
   font-family: $font-family;
   font-size: $font-size-sm;
   outline: none;
 
-  &:focus { border-color: $color-primary; }
+  &:focus {
+    border-color: $color-primary;
+  }
 }
 
 .qa__answer-actions {
@@ -483,18 +553,22 @@
   background: $color-primary;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-sm;
+  border-radius: 0;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
   cursor: pointer;
 
-  &:disabled { opacity: 0.5; }
+  &:disabled {
+    opacity: 0.5;
+  }
 }
 
 .qa__answer-cancel {
   padding: $space-xs $space-lg;
   border: 1px solid $color-border;
-  border-radius: $radius-sm;
+  border-radius: 0;
   background: transparent;
   font-size: $font-size-xs;
   color: $color-text-secondary;

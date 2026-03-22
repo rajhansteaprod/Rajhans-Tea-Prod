@@ -82,3 +82,61 @@
   width: 100vw;
   margin-left: calc(-50vw + 50%);
 }
+
+// --- Section Padding (barcoopbevy-style generous spacing) ---
+@mixin section-padding {
+  padding: $space-section clamp($space-lg, 5vw, $space-xxxl);
+  @include respond-to(md) { padding-top: $space-section-sm; padding-bottom: $space-section-sm; }
+}
+
+// --- Eyebrow Text (small uppercase label) ---
+@mixin eyebrow-text {
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
+  color: $color-text-tertiary;
+}
+
+// --- Mega Headline (barcoopbevy-style bold serif) ---
+@mixin mega-headline($size: $font-size-hero) {
+  font-family: $font-family-display;
+  font-size: $size;
+  font-weight: $font-weight-bold;
+  line-height: 0.95;
+  letter-spacing: $letter-spacing-mega;
+  text-transform: uppercase;
+  color: $color-text-primary;
+}
+
+// --- Content Container ---
+@mixin content-container($max: $max-width-content) {
+  max-width: $max;
+  margin: 0 auto;
+  padding-left: clamp($space-lg, 5vw, $space-xxxl);
+  padding-right: clamp($space-lg, 5vw, $space-xxxl);
+}
+
+// --- Editorial Grid (asymmetric 2-col) ---
+@mixin editorial-grid($left: 1fr, $right: 1fr) {
+  display: grid;
+  grid-template-columns: $left $right;
+  gap: $space-xxxl;
+  align-items: center;
+  @include respond-to(md) { grid-template-columns: 1fr; gap: $space-xl; }
+}
+
+// --- Hover Lift ---
+@mixin hover-lift($y: -4px, $shadow: $shadow-lg) {
+  transition: transform 0.4s $ease-expo-out, box-shadow 0.4s $ease-expo-out;
+  &:hover { transform: translateY($y); box-shadow: $shadow; }
+}
+
+// --- Image Cover ---
+@mixin image-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}

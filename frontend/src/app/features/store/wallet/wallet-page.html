@@ -1,14 +1,15 @@
-<div class="wallet">
-  <h1 class="wallet__title">My Wallet</h1>
+<section class="wallet">
+  <span class="wallet__eyebrow">Your Balance</span>
+  <h1 class="wallet__title">Wallet</h1>
 
   <!-- Balance Card -->
-  <div class="wallet__card">
-    <div class="wallet__card-inner">
-      <span class="wallet__card-label">Available Balance</span>
-      <span class="wallet__card-amount">&#8377;{{ balance() | number:'1.2-2' }}</span>
+  <div class="wallet__balance">
+    <div class="wallet__balance-inner">
+      <span class="wallet__balance-label">Available Balance</span>
+      <span class="wallet__balance-amount">&#8377;{{ balance() | number:'1.2-2' }}</span>
     </div>
-    <div class="wallet__card-icon">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+    <div class="wallet__balance-icon">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
         <rect x="1" y="4" width="22" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/>
         <line x1="1" y1="10" x2="23" y2="10" stroke="currentColor" stroke-width="1.5"/>
         <circle cx="18" cy="15" r="1" fill="currentColor"/>
@@ -42,7 +43,7 @@
       <div class="wallet__list">
         @for (txn of transactions(); track txn._id) {
           <div class="wallet__txn">
-            <div class="wallet__txn-icon" [class.credit]="txn.type === 'credit'" [class.debit]="txn.type === 'debit'">
+            <div class="wallet__txn-indicator" [class.credit]="txn.type === 'credit'" [class.debit]="txn.type === 'debit'">
               @if (txn.type === 'credit') {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               } @else {
@@ -77,4 +78,4 @@
       }
     }
   </div>
-</div>
+</section>

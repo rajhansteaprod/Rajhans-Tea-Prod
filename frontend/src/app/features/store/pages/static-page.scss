@@ -1,12 +1,177 @@
 @use '../../../core/design-tokens/tokens' as *;
-.static-page { max-width:800px; margin:0 auto; padding: $space-xxl $space-lg; }
-.page-title { font-size: $font-size-xxl; font-weight: $font-weight-bold; color: $color-text-primary; margin:0 0 $space-xl; text-align:center; }
-.page-content { font-size: $font-size-md; color: $color-text-primary; line-height: $line-height-relaxed; }
-.not-found { text-align:center; padding: $space-xxxl;
-  h2 { font-size: $font-size-xxl; color: $color-text-primary; margin:0 0 $space-sm; }
-  p { color: $color-text-tertiary; margin:0 0 $space-lg; }
+@use '../../../core/design-tokens/mixins' as *;
+
+// ═══ Static Page ═══
+.static-page {
+  min-height: 60vh;
 }
-.back-link { color: $color-primary; text-decoration:none; font-weight: $font-weight-semibold; }
-.loading { display:flex; justify-content:center; padding: $space-xxxl; }
-.spinner { width:32px; height:32px; border:2px solid $color-border; border-top-color: $color-primary; border-radius:50%; animation: spin .7s linear infinite; }
-@keyframes spin { to { transform:rotate(360deg); } }
+
+.static-page__hero {
+  @include section-padding;
+  text-align: center;
+  background: $color-bg-warm;
+  border-bottom: 1px solid $color-border-light;
+}
+
+.static-page__title {
+  font-family: $font-family-display;
+  font-size: clamp($font-size-xxl, 4vw, $font-size-section);
+  font-weight: $font-weight-regular;
+  line-height: $line-height-tight;
+  letter-spacing: $letter-spacing-display;
+  color: $color-text-primary;
+  margin: 0;
+  max-width: $max-width-narrow;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.static-page__content {
+  @include content-container($max-width-narrow);
+  padding-top: $space-xxl;
+  padding-bottom: $space-section;
+  font-family: $font-family;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: $line-height-relaxed;
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: $font-family-display;
+    font-weight: $font-weight-regular;
+    letter-spacing: $letter-spacing-display;
+    line-height: $line-height-tight;
+    color: $color-text-primary;
+    margin-top: $space-xxl;
+    margin-bottom: $space-md;
+  }
+
+  h2 {
+    font-size: $font-size-xxl;
+  }
+
+  h3 {
+    font-size: $font-size-xl;
+  }
+
+  p {
+    margin: 0 0 $space-lg;
+    color: $color-text-secondary;
+  }
+
+  a {
+    color: $color-primary;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color $transition-fast;
+
+    &:hover {
+      border-bottom-color: $color-primary;
+    }
+  }
+
+  ul,
+  ol {
+    padding-left: $space-xl;
+    margin: 0 0 $space-lg;
+    color: $color-text-secondary;
+
+    li {
+      margin-bottom: $space-sm;
+    }
+  }
+
+  blockquote {
+    margin: $space-xl 0;
+    padding: $space-lg $space-xl;
+    border-left: 3px solid $color-primary;
+    background: $color-bg-warm;
+    font-style: italic;
+    color: $color-text-secondary;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    margin: $space-xl 0;
+  }
+
+  hr {
+    border: none;
+    height: 1px;
+    background: $color-border-light;
+    margin: $space-xxl 0;
+  }
+}
+
+// ═══ Not Found ═══
+.not-found {
+  text-align: center;
+  @include section-padding;
+  padding-top: $space-section * 1.5;
+}
+
+.not-found__eyebrow {
+  @include eyebrow-text;
+  display: block;
+  color: $color-primary;
+  margin-bottom: $space-md;
+  font-size: $font-size-sm;
+}
+
+.not-found__title {
+  font-family: $font-family-display;
+  font-size: $font-size-xxxl;
+  font-weight: $font-weight-regular;
+  color: $color-text-primary;
+  margin: 0 0 $space-sm;
+  letter-spacing: $letter-spacing-display;
+}
+
+.not-found__sub {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  margin: 0 0 $space-xxl;
+}
+
+.not-found__link {
+  display: inline-block;
+  padding: $space-sm $space-xxl;
+  background: $color-primary;
+  color: $color-text-inverse;
+  text-decoration: none;
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
+  transition: all $transition-fast;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba($color-primary, 0.3);
+  }
+}
+
+// ═══ Loading ═══
+.loading {
+  @include flex-center;
+  padding: $space-section;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid $color-border-light;
+  border-top-color: $color-primary;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

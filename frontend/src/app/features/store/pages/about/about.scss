@@ -9,13 +9,14 @@
 // HERO
 // ═══════════════════════════════════════
 .about-hero {
-  padding: $space-xxxl * 2 clamp($space-lg, 5vw, $space-xxxl) $space-xxxl;
+  @include section-padding;
+  padding-top: $space-section * 1.5;
   text-align: center;
-  max-width: 800px;
+  max-width: $max-width-narrow;
   margin: 0 auto;
 
   @include respond-to(md) {
-    padding-top: $space-xxxl;
+    padding-top: $space-section;
   }
 }
 
@@ -26,12 +27,8 @@
 }
 
 .about-hero__eyebrow {
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
-  color: $color-secondary;
+  @include eyebrow-text;
+  color: $color-primary;
   margin-bottom: $space-lg;
 }
 
@@ -72,28 +69,19 @@
   width: 40px;
   height: 1px;
   background: $color-border;
-  margin: $space-xxxl auto 0;
+  margin: $space-section auto 0;
 }
 
 // ═══════════════════════════════════════
 // ORIGIN STORY
 // ═══════════════════════════════════════
 .origin {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: $space-xxxl clamp($space-lg, 5vw, $space-xxxl);
+  @include content-container(1000px);
+  @include section-padding;
 }
 
 .origin__grid {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: $space-xxxl;
-  align-items: start;
-
-  @include respond-to(md) {
-    grid-template-columns: 1fr;
-    gap: $space-xl;
-  }
+  @include editorial-grid(280px, 1fr);
 }
 
 .origin__visual {
@@ -110,7 +98,6 @@
   width: 200px;
   height: 240px;
   border: 1px solid $color-border-light;
-  border-radius: $radius-lg;
   @include flex-center;
 
   @include respond-to(md) {
@@ -127,7 +114,6 @@
   width: 80px;
   height: 80px;
   background: $color-primary;
-  border-radius: $radius-md;
   opacity: 0.15;
 
   @include respond-to(md) {
@@ -154,11 +140,7 @@
 }
 
 .origin__label {
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
+  @include eyebrow-text;
   color: $color-primary;
 }
 
@@ -192,7 +174,9 @@
 // MISSION QUOTE
 // ═══════════════════════════════════════
 .mission {
-  padding: $space-xxxl * 2 clamp($space-lg, 5vw, $space-xxxl);
+  @include section-padding;
+  padding-top: $space-section * 1.5;
+  padding-bottom: $space-section * 1.5;
   background: $color-bg-warm;
 }
 
@@ -224,11 +208,7 @@
 }
 
 .mission__attr {
-  font-family: $font-family;
-  font-size: $font-size-sm;
-  color: $color-text-tertiary;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
+  @include eyebrow-text;
   margin: 0;
 }
 
@@ -236,29 +216,26 @@
 // VALUES
 // ═══════════════════════════════════════
 .values {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: $space-xxxl * 2 clamp($space-lg, 5vw, $space-xxxl);
+  @include content-container(1000px);
+  @include section-padding;
+  padding-top: $space-section * 1.5;
+  padding-bottom: $space-section * 1.5;
 
   @include respond-to(md) {
-    padding-top: $space-xxxl;
-    padding-bottom: $space-xxxl;
+    padding-top: $space-section;
+    padding-bottom: $space-section;
   }
 }
 
 .values__header {
   text-align: center;
-  margin-bottom: $space-xxxl;
+  margin-bottom: $space-section;
 }
 
 .values__eyebrow {
+  @include eyebrow-text;
   display: inline-block;
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
-  color: $color-secondary;
+  color: $color-primary;
   margin-bottom: $space-lg;
 }
 
@@ -293,15 +270,14 @@
 }
 
 .values__card {
-  padding: $space-xl;
+  padding: $space-xxl;
   border: 1px solid $color-border-light;
-  border-radius: $radius-lg;
   transition: all $transition-normal;
 
   &:hover {
     border-color: $color-border;
-    box-shadow: $shadow-md;
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    box-shadow: $shadow-lg;
   }
 }
 
@@ -309,10 +285,9 @@
   width: 44px;
   height: 44px;
   @include flex-center;
-  background: $color-primary-light;
-  border-radius: $radius-md;
+  background: $color-bg-warm;
   color: $color-primary;
-  margin-bottom: $space-md;
+  margin-bottom: $space-lg;
   flex-shrink: 0;
   overflow: hidden;
 }
@@ -320,9 +295,10 @@
 .values__title {
   font-family: $font-family-display;
   font-size: $font-size-lg;
-  font-weight: $font-weight-medium;
+  font-weight: $font-weight-regular;
   color: $color-text-primary;
   margin: 0 0 $space-xs;
+  letter-spacing: $letter-spacing-tight;
 }
 
 .values__desc {
@@ -337,20 +313,19 @@
 // PROOF / CREDIBILITY
 // ═══════════════════════════════════════
 .proof {
-  padding: $space-xxxl clamp($space-lg, 5vw, $space-xxxl);
+  @include section-padding;
   background: $color-bg-dark;
 }
 
 .proof__grid {
-  max-width: 1000px;
-  margin: 0 auto;
+  @include content-container(1000px);
   display: flex;
   align-items: center;
   justify-content: space-between;
 
   @include respond-to(md) {
     flex-direction: column;
-    gap: $space-xl;
+    gap: $space-xxl;
   }
 }
 
@@ -373,12 +348,8 @@
 }
 
 .proof__label {
-  font-family: $font-family;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
+  @include eyebrow-text;
   color: $color-primary;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
 }
 
 .proof__detail {
@@ -403,13 +374,14 @@
 // FOUNDER NOTE
 // ═══════════════════════════════════════
 .founder {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: $space-xxxl * 2 clamp($space-lg, 5vw, $space-xxxl);
+  @include content-container(700px);
+  @include section-padding;
+  padding-top: $space-section * 1.5;
+  padding-bottom: $space-section * 1.5;
 
   @include respond-to(md) {
-    padding-top: $space-xxxl;
-    padding-bottom: $space-xxxl;
+    padding-top: $space-section;
+    padding-bottom: $space-section;
   }
 }
 
@@ -424,11 +396,7 @@
 }
 
 .founder__label {
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
+  @include eyebrow-text;
   color: $color-primary;
 }
 
@@ -453,11 +421,14 @@
 // ═══════════════════════════════════════
 .about-cta {
   text-align: center;
-  padding: $space-xxxl * 2 $space-lg;
+  @include section-padding;
+  padding-top: $space-section * 1.5;
+  padding-bottom: $space-section * 1.5;
   background: $color-bg-warm;
 
   @include respond-to(md) {
-    padding: $space-xxxl $space-lg;
+    padding-top: $space-section;
+    padding-bottom: $space-section;
   }
 }
 
@@ -487,9 +458,8 @@
   padding: $space-md $space-xxl;
   background: $color-primary;
   color: $color-text-inverse;
-  border-radius: $radius-full;
   font-family: $font-family;
-  font-size: $font-size-md;
+  font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
