@@ -32,15 +32,11 @@ on:
   # Run on every push to these branches
   push:
     branches:
-      - main   # production branch
-      - v1     # current development branch
+      - master
 
-  # Run on every Pull Request targeting these branches
-  # This means: before merging INTO main or v1, all checks must pass
   pull_request:
     branches:
-      - main
-      - v1
+      - master
 
 # -----------------------------------------------------------------------------
 # CONCURRENCY — Prevent duplicate runs
