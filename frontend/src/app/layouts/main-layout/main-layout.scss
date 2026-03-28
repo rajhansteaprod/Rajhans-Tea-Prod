@@ -13,10 +13,65 @@
   flex: 1;
 }
 
-// ═══ FOOTER ═══
+// ═══════════════════════════════════════
+// TRUST BAR — Kusmi Tea style (above footer)
+// ═══════════════════════════════════════
+.trust-bar {
+  background: $color-bg-secondary;
+  border-top: 1px solid $color-border-light;
+  border-bottom: 1px solid $color-border-light;
+  padding: $space-xxl clamp($space-lg, 5vw, $space-xxxl);
+}
+
+.trust-bar-inner {
+  max-width: $max-width-wide;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: $space-xl;
+
+  @include respond-to(md) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-lg;
+  }
+
+  @include respond-to(sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.trust-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-sm;
+  text-align: center;
+
+  svg {
+    color: $color-text-secondary;
+  }
+}
+
+.trust-label {
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+  letter-spacing: 0.02em;
+}
+
+// ═══════════════════════════════════════
+// FOOTER — Mariage Frères style
+// ═══════════════════════════════════════
 .footer {
   background: $color-bg-dark;
-  color: rgba(252, 255, 247, 0.7);
+  color: $color-text-inverse;
+}
+
+// ── Newsletter Row — centered, Mariage Frères style ──
+.footer-newsletter {
   padding: $space-section clamp($space-lg, 5vw, $space-xxxl) $space-xxl;
 
   @include respond-to(md) {
@@ -24,117 +79,211 @@
   }
 }
 
-.footer-inner {
-  max-width: $max-width-wide;
+.footer-newsletter-inner {
+  max-width: 600px;
   margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-lg;
 }
 
-// Brand block
+.footer-newsletter-heading {
+  font-family: $font-family-display;
+  font-size: clamp($font-size-xl, 3vw, $font-size-xxl);
+  font-weight: $font-weight-medium;
+  color: $color-text-inverse;
+  letter-spacing: $letter-spacing-section;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.footer-newsletter-sub {
+  font-family: $font-family-display;
+  font-size: $font-size-md;
+  font-style: italic;
+  color: rgba(252, 255, 247, 0.5);
+  margin: 0;
+}
+
+// Underline-only email input — Mariage Frères style
+.footer-newsletter-form {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  max-width: 440px;
+  border-bottom: 1px solid rgba(252, 255, 247, 0.3);
+}
+
+.footer-email-input {
+  flex: 1;
+  padding: $space-md 0;
+  border: none;
+  background: transparent;
+  color: $color-text-inverse;
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  outline: none;
+
+  &::placeholder {
+    color: rgba(252, 255, 247, 0.35);
+  }
+}
+
+.footer-signup-btn {
+  padding: $space-md $space-sm;
+  background: none;
+  color: rgba(252, 255, 247, 0.7);
+  border: none;
+  font-family: $font-family-display;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s;
+
+  &:hover {
+    color: $color-text-inverse;
+  }
+}
+
+// Social icons — borderless, no circles (Mariage Frères style)
+.footer-social {
+  display: flex;
+  align-items: center;
+  gap: $space-xl;
+  margin-top: $space-sm;
+}
+
+.footer-social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(252, 255, 247, 0.45);
+  text-decoration: none;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: $color-text-inverse;
+  }
+}
+
+// ── Ornamental Divider ──
+.footer-ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-lg 0;
+
+  span {
+    display: block;
+    width: 50px;
+    height: 1px;
+    background: $color-gold;
+    position: relative;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      top: -3px;
+      width: 7px;
+      height: 7px;
+      border: 1px solid $color-gold;
+      border-radius: 50%;
+      background: $color-bg-dark;
+    }
+
+    &::before {
+      left: -14px;
+    }
+
+    &::after {
+      right: -14px;
+    }
+  }
+}
+
+// ── Massive Brand Name ──
 .footer-brand {
-  margin-bottom: $space-xxxl;
-  padding-bottom: $space-xxl;
-  border-bottom: 1px solid rgba(252, 255, 247, 0.08);
+  padding: $space-xl clamp($space-lg, 5vw, $space-xxxl);
+  overflow: hidden;
 }
 
 .footer-brand-name {
   font-family: $font-family-display;
-  font-size: clamp($font-size-display, 8vw, $font-size-mega);
-  font-weight: $font-weight-bold;
+  font-size: clamp(80px, 14vw, 200px);
+  font-weight: $font-weight-regular;
   color: rgba(252, 255, 247, 0.9);
-  letter-spacing: $letter-spacing-display;
-  line-height: 0.95;
-  margin: 0 0 $space-md;
-}
-
-.footer-brand-tagline {
-  font-family: $font-family;
-  font-size: $font-size-md;
-  color: rgba(252, 255, 247, 0.4);
+  letter-spacing: 0.08em;
+  line-height: 0.85;
   margin: 0;
-  letter-spacing: $letter-spacing-wide;
-}
-
-// Link grid — 3 columns
-.footer-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: $space-xxl;
-  margin-bottom: $space-xxxl;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 100%;
 
   @include respond-to(md) {
-    grid-template-columns: repeat(2, 1fr);
-    gap: $space-xl;
-  }
-
-  @include respond-to(xs) {
-    grid-template-columns: 1fr;
-    gap: $space-lg;
-  }
-}
-
-.footer-col {
-  display: flex;
-  flex-direction: column;
-  gap: $space-sm;
-
-  h4 {
-    @include eyebrow-text;
-    color: rgba(252, 255, 247, 0.5);
-    margin: 0 0 $space-sm;
-    font-size: 11px;
-    letter-spacing: 0.14em;
-  }
-
-  a {
-    font-size: $font-size-sm;
-    color: rgba(252, 255, 247, 0.6);
-    text-decoration: none;
-    transition: color $transition-fast;
-    line-height: $line-height-relaxed;
-
-    &:hover {
-      color: $color-bg-primary;
-    }
-  }
-}
-
-// Newsletter mention
-.footer-newsletter {
-  padding-bottom: $space-xxl;
-  margin-bottom: $space-lg;
-  border-bottom: 1px solid rgba(252, 255, 247, 0.08);
-}
-
-.footer-newsletter-text {
-  font-size: $font-size-sm;
-  color: rgba(252, 255, 247, 0.35);
-  margin: 0;
-}
-
-// Bottom bar
-.footer-bottom {
-  @include flex-between;
-  font-size: $font-size-xs;
-  color: rgba(252, 255, 247, 0.3);
-
-  @include respond-to(md) {
-    flex-direction: column;
-    gap: $space-sm;
+    font-size: clamp(48px, 12vw, 120px);
+    white-space: normal;
     text-align: center;
   }
 }
 
-.footer-bottom-links {
+// ── Nav Links Row ──
+.footer-nav {
   display: flex;
-  gap: $space-lg;
+  align-items: center;
+  justify-content: center;
+  gap: $space-xxl;
+  padding: $space-lg clamp($space-lg, 5vw, $space-xxxl);
+  max-width: $max-width-wide;
+  margin: 0 auto;
+  width: 100%;
+  border-top: 1px solid rgba(252, 255, 247, 0.08);
+
+  @include respond-to(md) {
+    flex-direction: column;
+    gap: $space-md;
+    text-align: center;
+  }
+}
+
+.footer-nav-left,
+.footer-nav-right {
+  display: flex;
+  align-items: center;
+  gap: $space-xl;
+
+  @include respond-to(md) {
+    gap: $space-lg;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 
   a {
-    color: rgba(252, 255, 247, 0.3);
+    font-family: $font-family-nav;
+    font-size: 12px;
+    font-weight: $font-weight-medium;
+    color: rgba(252, 255, 247, 0.45);
     text-decoration: none;
-    transition: color $transition-fast;
+    letter-spacing: $letter-spacing-luxury;
+    transition: color 0.3s ease;
 
     &:hover {
-      color: rgba(252, 255, 247, 0.6);
+      color: $color-text-inverse;
     }
   }
+}
+
+// ── Copyright ──
+.footer-copyright {
+  text-align: center;
+  padding: $space-md clamp($space-lg, 5vw, $space-xxxl) $space-xxl;
+  font-size: $font-size-xs;
+  color: rgba(252, 255, 247, 0.2);
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
 }

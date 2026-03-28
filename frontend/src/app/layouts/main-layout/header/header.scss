@@ -2,7 +2,7 @@
 @use '../../../core/design-tokens/mixins' as *;
 
 // ═══════════════════════════════════════
-// HEADER — Slim 64px, barcoopbevy-inspired
+// HEADER — Solid maroon, barcoopbevy style
 // ═══════════════════════════════════════
 
 .nav {
@@ -11,62 +11,23 @@
   left: 0;
   right: 0;
   z-index: $z-sticky;
-  height: 64px;
+  height: 90px;
   display: flex;
   align-items: center;
   padding: 0 clamp($space-lg, 5vw, $space-xxxl);
-  background: rgba(252, 255, 247, 0.97);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  transition: all 0.5s $ease-expo-out;
-  animation: navReveal 0.6s $ease-expo-out both;
+  background: $color-bg-dark;
+  transition: all 0.4s $ease-expo-out;
+  animation: navReveal 0.5s $ease-expo-out both;
 
-  // Transparent on hero
+  // Always dark — transparent/scrolled states stay the same
   &.transparent {
-    background: transparent;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-
-    .logo-name {
-      color: rgba(255, 255, 255, 0.95);
-    }
-
-    .nav-link {
-      color: rgba(255, 255, 255, 0.7);
-
-      &:hover,
-      &.active {
-        color: white;
-      }
-
-      &::after {
-        background: white;
-      }
-    }
-
-    .action-icon {
-      color: rgba(255, 255, 255, 0.8);
-
-      &:hover {
-        color: white;
-        background: rgba(255, 255, 255, 0.1);
-      }
-    }
-
-    .badge {
-      border: 2px solid rgba(0, 0, 0, 0.2);
-    }
-
-    .burger span {
-      background: white;
-    }
+    background: none;
   }
 
-  // Scrolled state
   &.scrolled {
-    height: 60px;
-    background: rgba(255, 255, 255, 0.98);
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+    height: 76px;
+    background: $color-bg-dark;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
   }
 
   &.hidden {
@@ -74,11 +35,11 @@
   }
 
   &.mega-active {
-    background: rgba(255, 255, 255, 1);
+    background: $color-bg-dark;
   }
 
   @include respond-to(md) {
-    height: 56px;
+    height: 68px;
   }
 }
 
@@ -114,21 +75,24 @@
 
 .logo-name {
   font-family: $font-family-display;
-  font-size: 22px;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  letter-spacing: -0.01em;
-  transition: color 0.4s $ease-expo-out;
+  font-size: 24px;
+  font-weight: $font-weight-regular;
+  color: $color-text-inverse;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: opacity 0.3s $ease-expo-out;
+  line-height: 1;
+
+  &:hover {
+    opacity: 0.85;
+  }
 }
 
-// ═══ CENTER NAV LINKS ═══
+// ═══ RIGHT NAV LINKS ═══
 .nav-links {
   display: flex;
   align-items: center;
   gap: 0;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
 
   @include respond-to(md) {
     position: fixed;
@@ -137,14 +101,14 @@
     bottom: 0;
     left: auto;
     width: 300px;
-    background: $color-bg-tertiary;
+    background: $color-bg-dark;
     flex-direction: column;
     align-items: stretch;
     padding: 80px $space-lg $space-lg;
     transform: translateX(100%);
     transition: transform 0.5s $ease-expo-out;
     z-index: $z-fixed;
-    box-shadow: -12px 0 40px rgba(0, 0, 0, 0.08);
+    box-shadow: -12px 0 40px rgba(0, 0, 0, 0.2);
     overflow-y: auto;
 
     &.open {
@@ -157,59 +121,63 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 8px 18px;
-  font-size: 13px;
-  font-weight: $font-weight-medium;
-  color: $color-text-secondary;
+  padding: 8px 20px;
+  font-family: $font-family;
+  font-size: $font-size-nav;
+  font-weight: $font-weight-semibold;
+  color: $color-text-inverse;
   background: none;
   border: none;
   cursor: pointer;
   text-decoration: none;
-  transition: color 0.25s $ease-expo-out;
+  transition: color 0.3s ease;
   position: relative;
   white-space: nowrap;
-  font-family: $font-family;
-  letter-spacing: 0.01em;
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 4px;
-    left: 18px;
-    right: 18px;
-    height: 1px;
-    background: $color-text-primary;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.35s $ease-expo-out;
-  }
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
 
   &:hover,
   &.active {
-    color: $color-text-primary;
-
-    &::after {
-      transform: scaleX(1);
-    }
+    color: $color-text-inverse;
   }
 
   @include respond-to(md) {
     padding: 14px 0;
     font-size: 16px;
-    border-bottom: 1px solid $color-border-light;
-
-    &::after {
-      display: none;
-    }
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    font-family: $font-family-display;
   }
 }
 
+.nav-link--cart {
+  position: relative;
+}
+
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: $color-gold;
+  color: $color-bg-maroon;
+  border-radius: $radius-full;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  font-family: $font-family;
+  line-height: 1;
+  margin-left: 4px;
+  animation: pop 0.3s $ease-expo-out;
+}
+
 .nav-link--danger {
-  color: $color-error;
+  color: rgba(255, 120, 120, 0.9);
 }
 
 .nav-chevron {
   transition: transform 0.35s $ease-expo-out;
+  color: rgba(252, 255, 247, 0.6);
 
   &.flip {
     transform: rotate(180deg);
@@ -224,7 +192,7 @@
     flex-direction: column;
     margin-top: $space-md;
     padding-top: $space-md;
-    border-top: 1px solid $color-border;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
   }
 }
 
@@ -244,14 +212,14 @@
   border-radius: $radius-full;
   border: none;
   background: transparent;
-  color: $color-text-secondary;
+  color: rgba(252, 255, 247, 0.7);
   cursor: pointer;
   text-decoration: none;
   transition: all 0.25s $ease-expo-out;
 
   &:hover {
-    color: $color-text-primary;
-    background: rgba(58, 45, 50, 0.04);
+    color: $color-text-inverse;
+    background: rgba(255, 255, 255, 0.1);
   }
 
   &:active {
@@ -272,8 +240,8 @@
   min-width: 15px;
   height: 15px;
   padding: 0 3px;
-  background: $color-primary;
-  color: white;
+  background: $color-gold;
+  color: $color-bg-maroon;
   border-radius: $radius-full;
   font-size: 9px;
   font-weight: 700;
@@ -305,7 +273,7 @@
   transition: background 0.2s;
 
   &:hover {
-    background: rgba(58, 45, 50, 0.04);
+    background: rgba(255, 255, 255, 0.1);
   }
 
   @include respond-to(md) {
@@ -316,7 +284,7 @@
     display: block;
     width: 16px;
     height: 1.5px;
-    background: $color-text-primary;
+    background: $color-text-inverse;
     border-radius: 2px;
     transition: all 0.35s $ease-expo-out;
     transform-origin: center;
@@ -333,7 +301,7 @@
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(3px);
   z-index: #{$z-fixed - 1};
   animation: fadeIn 0.3s ease;
@@ -350,7 +318,7 @@
   position: fixed;
   inset: 0;
   z-index: #{$z-sticky - 1};
-  background: rgba(58, 45, 50, 0.08);
+  background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(2px);
   animation: fadeIn 0.2s ease;
 }
@@ -360,8 +328,8 @@
   left: 0;
   right: 0;
   background: $color-bg-tertiary;
-  border-top: 1px solid $color-border-light;
-  box-shadow: 0 32px 80px rgba(58, 45, 50, 0.12);
+  border-top: 1px solid $color-gold;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.15);
   overflow-y: auto;
   animation: megaSlide 0.35s $ease-expo-out both;
 }
@@ -385,11 +353,14 @@
 
 .mega-heading {
   @include eyebrow-text;
-  font-size: 11px;
+  font-family: $font-family-nav;
+  font-size: 12px;
+  font-weight: $font-weight-bold;
   letter-spacing: 0.14em;
   margin: 0 0 $space-md;
   padding-bottom: $space-sm;
   border-bottom: 1px solid $color-border-light;
+  color: $color-bg-maroon;
 }
 
 // ── Sidebar ──
@@ -434,18 +405,18 @@
 
   &:hover,
   &.mega-cat--active {
-    background: rgba(204, 88, 3, 0.05);
-    color: $color-primary;
+    background: rgba($color-primary, 0.06);
+    color: $color-bg-maroon;
     padding-left: 14px;
 
     .mega-cat-arrow {
       opacity: 1;
       transform: translateX(0);
-      color: $color-primary;
+      color: $color-bg-maroon;
     }
 
     .mega-cat-icon {
-      background: rgba(204, 88, 3, 0.12);
+      background: rgba($color-primary, 0.12);
     }
   }
 
@@ -471,8 +442,8 @@
   width: 32px;
   height: 32px;
   border-radius: $radius-md;
-  background: rgba(204, 88, 3, 0.06);
-  color: $color-primary;
+  background: rgba($color-primary, 0.06);
+  color: $color-bg-maroon;
   @include flex-center;
   flex-shrink: 0;
 }
@@ -485,7 +456,7 @@
 }
 
 .mega-cat--browse {
-  color: $color-primary;
+  color: $color-bg-maroon;
   font-weight: $font-weight-semibold;
 
   .mega-cat-arrow {
@@ -526,7 +497,7 @@
 .mega-card {
   display: flex;
   flex-direction: column;
-  border-radius: $radius-lg;
+  border-radius: 0;
   overflow: hidden;
   border: 1px solid $color-border-light;
   background: $color-bg-primary;
@@ -535,8 +506,8 @@
   animation-delay: calc(var(--i) * 0.06s + 0.1s);
 
   &:hover {
-    border-color: rgba(204, 88, 3, 0.15);
-    box-shadow: 0 12px 40px rgba(58, 45, 50, 0.08);
+    border-color: rgba($color-primary, 0.2);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
     transform: translateY(-3px);
 
     .mega-card-image img {
@@ -569,14 +540,14 @@
   top: $space-sm;
   left: $space-sm;
   padding: 4px 10px;
-  border-radius: $radius-full;
   font-size: 10px;
   font-weight: 700;
+  font-family: $font-family-nav;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 
   &--oos {
-    background: $color-text-primary;
+    background: $color-bg-maroon;
     color: white;
   }
 }
@@ -592,7 +563,9 @@
 .mega-card-cat {
   @include eyebrow-text;
   font-size: 10px;
-  color: $color-secondary;
+  color: $color-bg-teal;
+  font-family: $font-family-nav;
+  letter-spacing: 0.1em;
 }
 
 .mega-card-name {
@@ -601,11 +574,11 @@
   font-weight: $font-weight-medium;
   color: $color-text-primary;
   text-decoration: none;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.02em;
   transition: color 0.2s;
 
   &:hover {
-    color: $color-primary;
+    color: $color-bg-maroon;
   }
 }
 
@@ -618,10 +591,10 @@
 }
 
 .mega-card-price {
-  font-family: $font-family-display;
-  font-size: 22px;
-  font-weight: $font-weight-semibold;
-  color: $color-primary;
+  font-family: $font-family-nav;
+  font-size: 18px;
+  font-weight: $font-weight-bold;
+  color: $color-bg-maroon;
   margin-top: auto;
   padding-top: $space-xs;
 }
@@ -637,19 +610,21 @@
   align-items: center;
   gap: 6px;
   padding: 9px 16px;
-  border: 1.5px solid $color-border;
-  border-radius: $radius-full;
+  border: 2px solid $color-bg-maroon;
+  border-radius: 0;
   background: transparent;
-  font-size: 13px;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
+  font-size: 12px;
+  font-weight: $font-weight-bold;
+  font-family: $font-family-nav;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $color-bg-maroon;
   cursor: pointer;
-  font-family: $font-family;
   transition: all 0.25s $ease-expo-out;
 
   &:hover {
-    border-color: $color-primary;
-    color: $color-primary;
+    background: $color-bg-maroon;
+    color: $color-text-inverse;
     transform: translateY(-1px);
   }
 
@@ -663,8 +638,8 @@
 
     &:hover {
       transform: none;
-      border-color: $color-border;
-      color: $color-text-primary;
+      background: transparent;
+      color: $color-bg-maroon;
     }
   }
 }
@@ -675,21 +650,23 @@
   gap: 6px;
   padding: 9px 20px;
   border: none;
-  border-radius: $radius-full;
-  background: $color-primary;
+  border-radius: 0;
+  background: $color-bg-maroon;
   color: white;
-  font-size: 13px;
-  font-weight: $font-weight-semibold;
+  font-size: 12px;
+  font-weight: $font-weight-bold;
+  font-family: $font-family-nav;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   cursor: pointer;
   text-decoration: none;
-  font-family: $font-family;
   transition: all 0.25s $ease-expo-out;
 
   &:hover {
     background: $color-primary-hover;
     color: white;
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(204, 88, 3, 0.25);
+    box-shadow: 0 4px 16px rgba($color-primary, 0.3);
   }
 
   &:active {
@@ -704,7 +681,7 @@
   position: fixed;
   inset: 0;
   z-index: $z-modal;
-  background: rgba(58, 45, 50, 0.4);
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(16px);
   display: flex;
   align-items: flex-start;
@@ -724,8 +701,8 @@
   max-width: 100%;
   max-height: 75vh;
   background: $color-bg-tertiary;
-  border-radius: $radius-xl;
-  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  border-radius: 0;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
   animation: searchDrop 0.35s $ease-expo-out;
@@ -747,7 +724,7 @@
 }
 
 .search-header-icon {
-  color: $color-text-tertiary;
+  color: $color-bg-maroon;
   flex-shrink: 0;
 }
 
@@ -827,12 +804,17 @@
   align-items: center;
   gap: 6px;
   @include eyebrow-text;
+  font-family: $font-family-nav;
   font-size: 11px;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.1em;
   padding: $space-xs $space-sm;
   margin-bottom: $space-xxs;
+  color: $color-bg-maroon;
 
   svg {
-    color: $color-text-disabled;
+    color: $color-bg-maroon;
+    opacity: 0.5;
   }
 }
 
@@ -850,19 +832,21 @@
   gap: 6px;
   padding: 8px 14px;
   border: 1px solid $color-border-light;
-  border-radius: $radius-full;
+  border-radius: 0;
   background: $color-bg-primary;
-  font-size: 13px;
-  font-weight: $font-weight-medium;
+  font-size: 12px;
+  font-weight: $font-weight-bold;
+  font-family: $font-family-nav;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: $color-text-secondary;
   cursor: pointer;
-  font-family: $font-family;
   transition: all 0.25s $ease-expo-out;
 
   &:hover {
-    border-color: $color-primary;
-    color: $color-primary;
-    background: rgba(204, 88, 3, 0.04);
+    border-color: $color-bg-maroon;
+    color: $color-bg-maroon;
+    background: rgba($color-primary, 0.04);
     transform: translateY(-1px);
   }
 
@@ -875,7 +859,7 @@
   }
 
   &:hover svg {
-    color: $color-primary;
+    color: $color-bg-maroon;
   }
 }
 
@@ -888,7 +872,7 @@
   padding: $space-sm;
   border: none;
   background: none;
-  border-radius: $radius-lg;
+  border-radius: $radius-md;
   cursor: pointer;
   text-align: left;
   font-family: $font-family;
@@ -935,7 +919,7 @@
 .search-product-price {
   font-size: 13px;
   font-weight: $font-weight-semibold;
-  color: $color-primary;
+  color: $color-bg-maroon;
 }
 
 .search-product-meta {
@@ -960,7 +944,7 @@
   padding: $space-sm;
   border: none;
   background: none;
-  border-radius: $radius-lg;
+  border-radius: $radius-md;
   cursor: pointer;
   text-align: left;
   font-family: $font-family;
@@ -980,8 +964,8 @@
   width: 36px;
   height: 36px;
   border-radius: $radius-md;
-  background: rgba(87, 136, 108, 0.08);
-  color: $color-secondary;
+  background: rgba($color-primary, 0.06);
+  color: $color-bg-maroon;
   @include flex-center;
   flex-shrink: 0;
 }
@@ -1014,7 +998,7 @@
   width: 20px;
   height: 20px;
   border: 2px solid $color-border-light;
-  border-top-color: $color-primary;
+  border-top-color: $color-bg-maroon;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
@@ -1085,7 +1069,7 @@
   width: 28px;
   height: 28px;
   border: 2px solid $color-border-light;
-  border-top-color: $color-primary;
+  border-top-color: $color-bg-maroon;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }

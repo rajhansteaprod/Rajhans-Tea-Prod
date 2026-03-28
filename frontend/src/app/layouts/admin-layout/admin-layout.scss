@@ -36,8 +36,11 @@
 }
 
 .mobile-title {
-  font-weight: $font-weight-semibold;
+  font-family: $font-family-nav;
+  font-weight: $font-weight-bold;
   font-size: $font-size-md;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 // === Sidebar ===
@@ -88,30 +91,33 @@
 .logo-mark {
   width: 32px;
   height: 32px;
-  background: $color-primary;
+  background: $color-bg-maroon;
   color: $color-text-inverse;
-  border-radius: $radius-md;
+  border-radius: 0;
   @include flex-center;
+  font-family: $font-family-heading;
   font-size: $font-size-sm;
   font-weight: $font-weight-bold;
 }
 
 .logo-text {
+  font-family: $font-family-heading;
   font-size: $font-size-lg;
   font-weight: $font-weight-bold;
   color: $color-text-inverse;
-  letter-spacing: $letter-spacing-tight;
+  letter-spacing: 0.08em;
 }
 
 .env-badge {
+  font-family: $font-family-nav;
   font-size: 10px;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
-  color: $color-primary;
-  background: rgba(204, 88, 3, 0.15);
+  color: $color-gold;
+  background: rgba(232, 168, 56, 0.15);
   padding: 2px $space-xs;
-  border-radius: $radius-sm;
+  border-radius: 0;
 }
 
 // === Navigation ===
@@ -136,6 +142,7 @@
 }
 
 .nav-group-label {
+  font-family: $font-family-nav;
   font-size: 10px;
   font-weight: $font-weight-bold;
   text-transform: uppercase;
@@ -166,11 +173,14 @@
   align-items: center;
   gap: $space-sm;
   padding: $space-sm $space-md;
-  border-radius: $radius-md;
+  border-radius: 0;
   color: rgba(252, 255, 247, 0.6);
   text-decoration: none;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-luxury;
   transition: all $transition-fast;
   cursor: pointer;
   margin-bottom: 2px;
@@ -181,11 +191,11 @@
   }
 
   &.active {
-    background: rgba(204, 88, 3, 0.15);
-    color: $color-primary;
+    background: rgba($color-bg-maroon, 0.3);
+    color: $color-text-inverse;
 
     .nav-icon {
-      color: $color-primary;
+      color: $color-text-inverse;
     }
   }
 
@@ -224,14 +234,15 @@
 }
 
 .coming-soon {
+  font-family: $font-family-nav;
   font-size: 9px;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
   color: rgba(252, 255, 247, 0.25);
   background: rgba(252, 255, 247, 0.06);
   padding: 1px 6px;
-  border-radius: $radius-sm;
+  border-radius: 0;
 }
 
 // === Footer ===
@@ -250,10 +261,11 @@
 .user-avatar {
   width: 32px;
   height: 32px;
-  border-radius: $radius-md;
-  background: rgba(204, 88, 3, 0.2);
-  color: $color-primary;
+  border-radius: 0;
+  background: rgba($color-bg-maroon, 0.4);
+  color: $color-text-inverse;
   @include flex-center;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
   font-weight: $font-weight-bold;
   flex-shrink: 0;
@@ -265,9 +277,11 @@
 }
 
 .user-name {
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
   color: $color-text-inverse;
-  font-weight: $font-weight-medium;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
 }
 
 .user-role {
@@ -279,7 +293,10 @@
   display: flex;
   align-items: center;
   gap: $space-xs;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
   color: rgba(252, 255, 247, 0.4);
   text-decoration: none;
   transition: color $transition-fast;

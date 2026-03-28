@@ -2,7 +2,7 @@
 @use '../../../core/design-tokens/mixins' as *;
 
 // ═══════════════════════════════════════════
-// WISHLIST — Product grid with clean cards
+// WISHLIST — Barcoopbevy bold condensed style
 // ═══════════════════════════════════════════
 
 .wishlist {
@@ -29,17 +29,21 @@
 }
 
 .wishlist__eyebrow {
-  @include eyebrow-text;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
   display: block;
   margin-bottom: $space-xs;
-  color: $color-primary;
+  color: $color-bg-maroon;
 }
 
 .wishlist__title {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-display;
   font-weight: $font-weight-bold;
-  letter-spacing: $letter-spacing-display;
+  letter-spacing: $letter-spacing-heading;
   color: $color-text-primary;
   margin: 0;
   line-height: 1;
@@ -50,6 +54,7 @@
 }
 
 .wishlist__count {
+  font-family: $font-family-display;
   font-size: $font-size-sm;
   color: $color-text-tertiary;
   margin: $space-xs 0 0;
@@ -59,20 +64,23 @@
   display: inline-flex;
   align-items: center;
   gap: $space-xs;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
+  font-weight: $font-weight-bold;
   color: $color-text-secondary;
   text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   padding: $space-sm $space-lg;
-  border: 1px solid $color-border-light;
-  border-radius: $radius-full;
+  border: 2px solid $color-border-light;
+  border-radius: 0;
   transition: all $transition-fast;
   white-space: nowrap;
   flex-shrink: 0;
 
   &:hover {
-    color: $color-primary;
-    border-color: $color-primary;
+    color: $color-bg-maroon;
+    border-color: $color-bg-maroon;
   }
 }
 
@@ -86,7 +94,7 @@
   width: 32px;
   height: 32px;
   border: 2px solid $color-border-light;
-  border-top-color: $color-primary;
+  border-top-color: $color-bg-maroon;
   border-radius: $radius-full;
   animation: wishSpin 0.7s linear infinite;
 }
@@ -106,14 +114,14 @@
   width: 100px;
   height: 100px;
   @include flex-center;
-  border-radius: $radius-full;
+  border-radius: 0;
   background: $color-bg-warm;
   color: $color-text-disabled;
   margin-bottom: $space-sm;
 }
 
 .wishlist__empty-title {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-xxl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
@@ -121,6 +129,7 @@
 }
 
 .wishlist__empty-desc {
+  font-family: $font-family-display;
   font-size: $font-size-md;
   color: $color-text-tertiary;
   margin: 0;
@@ -129,13 +138,14 @@
 .wishlist__btn-primary {
   display: inline-flex;
   padding: $space-sm $space-xxl;
-  background: $color-primary;
+  background: $color-bg-maroon;
   color: $color-text-inverse;
-  border-radius: $radius-full;
+  border-radius: 0;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   text-decoration: none;
-  letter-spacing: $letter-spacing-wide;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   transition: all $transition-fast;
   margin-top: $space-sm;
@@ -158,9 +168,15 @@
   position: relative;
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
-  border-radius: $radius-xl;
+  border-radius: 0;
   overflow: hidden;
-  @include hover-lift(-3px, $shadow-lg);
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-border;
+    box-shadow: $shadow-lg;
+    transform: translateY(-3px);
+  }
 }
 
 .wishlist__heart {
@@ -170,7 +186,7 @@
   z-index: 2;
   width: 36px;
   height: 36px;
-  border-radius: $radius-full;
+  border-radius: 0;
   border: none;
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(8px);
@@ -219,12 +235,14 @@
   bottom: $space-sm;
   left: $space-sm;
   padding: $space-xxs $space-sm;
-  border-radius: $radius-full;
+  border-radius: 0;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   background: rgba($color-bg-dark, 0.85);
   color: $color-text-inverse;
   letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
 }
 
 .wishlist__card-body {
@@ -240,10 +258,10 @@
 }
 
 .wishlist__product-price {
-  font-family: $font-family-display;
+  font-family: $font-family-nav;
   font-size: $font-size-lg;
   font-weight: $font-weight-bold;
-  color: $color-primary;
+  color: $color-bg-maroon;
   margin: 0;
 }
 
@@ -261,13 +279,13 @@
   background: $color-bg-dark;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-md;
+  border-radius: 0;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  font-family: $font-family;
-  cursor: pointer;
-  letter-spacing: $letter-spacing-wide;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+  cursor: pointer;
   transition: all $transition-fast;
 
   &:disabled {
@@ -279,7 +297,7 @@
   }
 
   &:not(:disabled):hover {
-    background: $color-primary;
+    background: $color-bg-maroon;
     transform: translateY(-1px);
   }
 }

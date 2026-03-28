@@ -13,11 +13,11 @@
 }
 
 .page-title {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-xxl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
-  letter-spacing: $letter-spacing-tight;
+  letter-spacing: 0.02em;
   margin: 0 0 $space-xxs;
 }
 
@@ -32,7 +32,7 @@
   background: $color-primary;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-lg;
+  border-radius: 0;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
   font-family: $font-family;
@@ -49,7 +49,7 @@
   padding: $space-xxl;
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
-  border-radius: $radius-xl;
+  border-radius: 0;
   font-size: $font-size-sm;
 }
 
@@ -65,7 +65,7 @@
   padding: $space-xl;
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
-  border-radius: $radius-xl;
+  border-radius: 0;
   box-shadow: $shadow-sm;
   transition: all $transition-fast;
 
@@ -80,7 +80,7 @@
   padding: 2px $space-sm;
   background: $color-primary;
   color: $color-text-inverse;
-  border-radius: $radius-full;
+  border-radius: 0;
   font-size: 10px;
   font-weight: $font-weight-bold;
   text-transform: uppercase;
@@ -112,7 +112,7 @@
 .btn-sm {
   padding: $space-xs $space-md;
   border: 1px solid $color-border;
-  border-radius: $radius-md;
+  border-radius: 0;
   background: transparent;
   font-size: $font-size-xs;
   font-family: $font-family;
@@ -140,7 +140,7 @@
   width: 480px;
   max-width: 90vw;
   background: $color-bg-tertiary;
-  border-radius: $radius-xl;
+  border-radius: 0;
   border: 1px solid $color-border-light;
   box-shadow: $shadow-xl;
   z-index: $z-modal;
@@ -160,7 +160,7 @@
   button {
     width: 32px;
     height: 32px;
-    border-radius: $radius-md;
+    border-radius: 0;
     border: 1px solid $color-border-light;
     background: transparent;
     cursor: pointer;
@@ -192,7 +192,7 @@
     width: 100%;
     padding: $space-sm $space-md;
     border: 1.5px solid $color-border;
-    border-radius: $radius-md;
+    border-radius: 0;
     font-size: $font-size-sm;
     font-family: $font-family;
     background: $color-bg-tertiary;
@@ -231,7 +231,7 @@
   button {
     padding: $space-sm $space-lg;
     border: 1px solid $color-border;
-    border-radius: $radius-lg;
+    border-radius: 0;
     background: transparent;
     font-size: $font-size-sm;
     font-family: $font-family;

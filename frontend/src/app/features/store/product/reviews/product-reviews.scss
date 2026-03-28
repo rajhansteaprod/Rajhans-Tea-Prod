@@ -2,16 +2,17 @@
 @use '../../../../core/design-tokens/mixins' as *;
 
 .reviews {
-  margin-top: $space-section;
-  padding-top: $space-xxl;
-  border-top: 1px solid $color-border-light;
+  @include content-container;
+  padding-top: $space-section;
+  padding-bottom: $space-section;
+  border-top: 2px solid $color-text-primary;
 }
 
 // ═══ Tabs ═══
 .reviews__tabs {
   display: flex;
   gap: 0;
-  border-bottom: 1px solid $color-border-light;
+  border-bottom: 2px solid $color-border-light;
   margin-bottom: $space-xxl;
 }
 
@@ -19,14 +20,14 @@
   padding: $space-md $space-xl;
   border: none;
   background: none;
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   color: $color-text-tertiary;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
+  border-bottom: 3px solid transparent;
   transition: all $transition-fast;
 
   &:hover {
@@ -47,6 +48,7 @@
   margin-bottom: $space-xxl;
   padding: $space-xxl;
   background: $color-bg-warm;
+  border-radius: 0;
 
   @include respond-to(sm) {
     grid-template-columns: 1fr;
@@ -62,9 +64,9 @@
 }
 
 .reviews__avg-num {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-display;
-  font-weight: $font-weight-regular;
+  font-weight: $font-weight-bold;
   color: $color-text-primary;
   line-height: 1;
   letter-spacing: $letter-spacing-tight;
@@ -87,9 +89,11 @@
 }
 
 .reviews__avg-count {
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
   color: $color-text-tertiary;
-  letter-spacing: $letter-spacing-wide;
+  letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
 }
 
@@ -106,8 +110,9 @@
 }
 
 .reviews__bar-label {
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   color: $color-text-secondary;
   width: 14px;
   text-align: right;
@@ -115,9 +120,10 @@
 
 .reviews__bar {
   flex: 1;
-  height: 6px;
+  height: 8px;
   background: $color-border-light;
   overflow: hidden;
+  border-radius: 0;
 }
 
 .reviews__bar-fill {
@@ -127,7 +133,9 @@
 }
 
 .reviews__bar-count {
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
   color: $color-text-tertiary;
   width: 24px;
 }
@@ -137,14 +145,14 @@
   display: inline-flex;
   align-items: center;
   padding: $space-sm $space-xxl;
-  border: 1px solid $color-text-primary;
+  border: 2px solid $color-text-primary;
   border-radius: 0;
   background: transparent;
   color: $color-text-primary;
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   cursor: pointer;
   text-decoration: none;
@@ -152,9 +160,8 @@
   margin-bottom: $space-xxl;
 
   &:hover {
-    background: $color-primary;
+    background: $color-text-primary;
     color: $color-text-inverse;
-    border-color: $color-primary;
   }
 }
 
@@ -165,6 +172,7 @@
   margin-bottom: $space-xxl;
   @include flex-column;
   gap: $space-lg;
+  border-radius: 0;
 }
 
 .reviews__form-group {
@@ -173,8 +181,12 @@
 }
 
 .reviews__form-label {
-  @include eyebrow-text;
-  font-size: 10px;
+  font-family: $font-family-nav;
+  font-size: 11px;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
+  color: $color-text-primary;
 }
 
 .reviews__form-stars {
@@ -206,50 +218,50 @@
 
 .reviews__form-input {
   padding: $space-sm $space-md;
-  border: 1px solid $color-border;
+  border: 2px solid $color-border;
   border-radius: 0;
-  font-family: $font-family;
+  font-family: $font-family-display;
   font-size: $font-size-sm;
   outline: none;
   background: $color-bg-primary;
 
   &:focus {
-    border-color: $color-primary;
+    border-color: $color-text-primary;
   }
 }
 
 .reviews__form-textarea {
   padding: $space-sm $space-md;
-  border: 1px solid $color-border;
+  border: 2px solid $color-border;
   border-radius: 0;
-  font-family: $font-family;
+  font-family: $font-family-display;
   font-size: $font-size-sm;
   resize: vertical;
   outline: none;
   background: $color-bg-primary;
 
   &:focus {
-    border-color: $color-primary;
+    border-color: $color-text-primary;
   }
 }
 
 .reviews__submit-btn {
   align-self: flex-start;
   padding: $space-sm $space-xxl;
-  background: $color-primary;
+  background: $color-bg-dark;
   color: $color-text-inverse;
   border: none;
   border-radius: 0;
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   cursor: pointer;
   transition: all $transition-fast;
 
   &:hover {
-    background: $color-primary-hover;
+    background: $color-primary;
   }
 
   &:disabled {
@@ -294,29 +306,38 @@
 }
 
 .reviews__verified {
-  @include eyebrow-text;
-  font-size: 9px;
+  font-family: $font-family-nav;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
   color: $color-secondary;
   background: rgba($color-secondary, 0.08);
   padding: 2px $space-xs;
 }
 
 .reviews__date {
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
   color: $color-text-disabled;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
 }
 
 .reviews__card-title {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-lg;
-  font-weight: $font-weight-regular;
+  font-weight: $font-weight-bold;
   color: $color-text-primary;
   margin: 0 0 $space-xs;
-  letter-spacing: $letter-spacing-tight;
+  letter-spacing: $letter-spacing-normal;
 }
 
 .reviews__card-body {
-  font-size: $font-size-sm;
+  font-family: $font-family-display;
+  font-size: $font-size-md;
+  font-style: italic;
   color: $color-text-secondary;
   line-height: $line-height-relaxed;
   margin: 0;
@@ -332,11 +353,14 @@
   gap: $space-xxs;
   border: none;
   background: none;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
   color: $color-text-tertiary;
   cursor: pointer;
   transition: color $transition-fast;
   letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
 
   &:hover {
     color: $color-primary;
@@ -348,18 +372,24 @@
   padding: $space-md $space-lg;
   background: $color-bg-warm;
   border-left: 3px solid $color-primary;
+  border-radius: 0;
 }
 
 .reviews__reply-label {
-  @include eyebrow-text;
-  font-size: 10px;
+  font-family: $font-family-nav;
+  font-size: 11px;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
   color: $color-primary;
   display: block;
   margin-bottom: $space-xxs;
 }
 
 .reviews__reply-body {
+  font-family: $font-family-display;
   font-size: $font-size-sm;
+  font-style: italic;
   color: $color-text-secondary;
   line-height: $line-height-relaxed;
   margin: 0;
@@ -374,9 +404,9 @@
 .reviews__spinner {
   width: 28px;
   height: 28px;
-  border: 2px solid $color-border-light;
+  border: 3px solid $color-border-light;
   border-top-color: $color-primary;
-  border-radius: $radius-full;
+  border-radius: 0;
   animation: reviewSpin 0.7s linear infinite;
 }
 
@@ -390,7 +420,9 @@
   text-align: center;
   padding: $space-xxl;
   color: $color-text-tertiary;
-  font-size: $font-size-sm;
+  font-family: $font-family-display;
+  font-size: $font-size-md;
+  font-style: italic;
 }
 
 // ═══ Q&A ═══
@@ -403,14 +435,14 @@
 .qa__ask-input {
   flex: 1;
   padding: $space-sm $space-md;
-  border: 1px solid $color-border;
+  border: 2px solid $color-border;
   border-radius: 0;
-  font-family: $font-family;
+  font-family: $font-family-display;
   font-size: $font-size-sm;
   outline: none;
 
   &:focus {
-    border-color: $color-primary;
+    border-color: $color-text-primary;
   }
 }
 
@@ -420,12 +452,13 @@
   color: $color-text-inverse;
   border: none;
   border-radius: 0;
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   cursor: pointer;
+  transition: background $transition-fast;
 
   &:hover {
     background: $color-primary;
@@ -468,13 +501,14 @@
   height: 28px;
   @include flex-center;
   flex-shrink: 0;
-  font-family: $font-family;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
   font-weight: $font-weight-bold;
+  border-radius: 0;
 }
 
 .qa__q-badge {
-  background: $color-primary;
+  background: $color-text-primary;
   color: $color-text-inverse;
 }
 
@@ -483,28 +517,36 @@
   color: $color-text-tertiary;
 
   &.admin {
-    background: $color-bg-dark;
+    background: $color-primary;
     color: $color-text-inverse;
   }
 }
 
 .qa__q-text,
 .qa__a-text {
-  font-size: $font-size-sm;
+  font-family: $font-family-display;
+  font-size: $font-size-md;
   color: $color-text-primary;
   line-height: $line-height-relaxed;
   margin: 0;
 }
 
 .qa__q-date {
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
   color: $color-text-disabled;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
 }
 
 .qa__a-admin {
-  @include eyebrow-text;
-  font-size: 9px;
-  color: $color-secondary;
+  font-family: $font-family-nav;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
+  color: $color-primary;
 }
 
 .qa__reply-btn {
@@ -512,7 +554,9 @@
   margin-left: calc($space-xxl + 28px);
   border: none;
   background: none;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
   color: $color-primary;
   cursor: pointer;
   letter-spacing: $letter-spacing-wide;
@@ -532,14 +576,14 @@
 
 .qa__answer-input {
   padding: $space-sm $space-md;
-  border: 1px solid $color-border;
+  border: 2px solid $color-border;
   border-radius: 0;
-  font-family: $font-family;
+  font-family: $font-family-display;
   font-size: $font-size-sm;
   outline: none;
 
   &:focus {
-    border-color: $color-primary;
+    border-color: $color-text-primary;
   }
 }
 
@@ -550,15 +594,20 @@
 
 .qa__answer-submit {
   padding: $space-xs $space-lg;
-  background: $color-primary;
+  background: $color-bg-dark;
   color: $color-text-inverse;
   border: none;
   border-radius: 0;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   cursor: pointer;
+
+  &:hover {
+    background: $color-primary;
+  }
 
   &:disabled {
     opacity: 0.5;
@@ -567,10 +616,19 @@
 
 .qa__answer-cancel {
   padding: $space-xs $space-lg;
-  border: 1px solid $color-border;
+  border: 2px solid $color-border;
   border-radius: 0;
   background: transparent;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
   color: $color-text-secondary;
   cursor: pointer;
+
+  &:hover {
+    border-color: $color-text-primary;
+    color: $color-text-primary;
+  }
 }

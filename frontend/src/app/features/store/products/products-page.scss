@@ -5,46 +5,43 @@
   min-height: 60vh;
 }
 
-// ═══ Hero ═══
+// ═══ Hero — Solid color, mega bold condensed title ═══
 .products__hero {
-  @include section-padding;
-  text-align: center;
   background: $color-bg-warm;
-  border-bottom: 1px solid $color-border-light;
+  padding: $space-section 0 $space-xxl;
+
+  @include respond-to(md) {
+    padding: $space-xxxl 0 $space-xl;
+  }
 }
 
 .products__hero-inner {
-  @include content-container($max-width-narrow);
-}
-
-.products__eyebrow {
-  @include eyebrow-text;
-  display: block;
-  margin-bottom: $space-md;
-  color: $color-primary;
+  @include content-container;
+  text-align: left;
 }
 
 .products__title {
-  @include mega-headline($font-size-section);
-  text-transform: none;
-  font-family: $font-family-display;
-  font-weight: $font-weight-regular;
-  font-size: clamp($font-size-xxxl, 5vw, $font-size-section);
-  line-height: $line-height-tight;
-  letter-spacing: $letter-spacing-display;
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  font-size: clamp(80px, 12vw, 150px);
+  line-height: 0.9;
+  letter-spacing: $letter-spacing-heading;
+  color: $color-text-primary;
   margin: 0 0 $space-md;
 }
 
 .products__count {
-  font-family: $font-family;
-  font-size: $font-size-sm;
+  font-family: $font-family-nav;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
   color: $color-text-tertiary;
   letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
 }
 
 // ═══ Toolbar ═══
 .products__toolbar {
-  border-bottom: 1px solid $color-border-light;
+  border-bottom: 2px solid $color-text-primary;
   padding: $space-md 0;
 }
 
@@ -58,12 +55,12 @@
   align-items: center;
   gap: $space-xs;
   padding: $space-xs $space-md;
-  border: 1px solid $color-border;
+  border: 2px solid $color-text-primary;
   border-radius: 0;
   background: transparent;
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
   color: $color-text-primary;
@@ -72,8 +69,8 @@
   position: relative;
 
   &:hover {
-    border-color: $color-primary;
-    color: $color-primary;
+    background: $color-text-primary;
+    color: $color-text-inverse;
   }
 
   @include respond-to(lg) {
@@ -85,14 +82,14 @@
   position: absolute;
   top: -$space-xs;
   right: -$space-xs;
-  min-width: 18px;
-  height: 18px;
+  min-width: 20px;
+  height: 20px;
   @include flex-center;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: $font-weight-bold;
   background: $color-primary;
   color: $color-text-inverse;
-  border-radius: $radius-full;
+  border-radius: 0;
 }
 
 .products__sort {
@@ -103,8 +100,9 @@
 }
 
 .products__sort-label {
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
   color: $color-text-tertiary;
@@ -117,17 +115,19 @@
 
 .products__sort-select {
   padding: $space-xs $space-md;
-  border: 1px solid $color-border;
+  border: 2px solid $color-border;
   border-radius: 0;
   background: $color-bg-primary;
-  font-family: $font-family;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
   color: $color-text-primary;
   outline: none;
   cursor: pointer;
+  text-transform: uppercase;
 
   &:focus {
-    border-color: $color-primary;
+    border-color: $color-text-primary;
   }
 }
 
@@ -135,7 +135,7 @@
 .products__layout {
   @include content-container;
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 220px 1fr;
   gap: $space-xxxl;
   padding-top: $space-xxl;
   padding-bottom: $space-section;
@@ -145,7 +145,7 @@
   }
 }
 
-// ═══ Sidebar ═══
+// ═══ Sidebar — minimal, clean ═══
 .products__sidebar {
   position: sticky;
   top: 100px;
@@ -177,20 +177,26 @@
   @include flex-between;
   margin-bottom: $space-xl;
   padding-bottom: $space-md;
-  border-bottom: 1px solid $color-border-light;
+  border-bottom: 2px solid $color-text-primary;
 }
 
 .products__sidebar-title {
-  @include eyebrow-text;
+  font-family: $font-family-nav;
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
   margin: 0;
+  color: $color-text-primary;
 }
 
 .products__clear-all {
   border: none;
   background: none;
   color: $color-primary;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   cursor: pointer;
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
@@ -236,9 +242,13 @@
 }
 
 .filter-group__title {
-  @include eyebrow-text;
-  font-size: 10px;
+  font-family: $font-family-nav;
+  font-size: 12px;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
   margin: 0 0 $space-md;
+  color: $color-text-primary;
 }
 
 .filter-option {
@@ -249,13 +259,16 @@
   border: none;
   background: transparent;
   border-radius: 0;
-  font-family: $font-family;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
   color: $color-text-secondary;
   cursor: pointer;
   transition: all $transition-fast;
   text-align: left;
-  border-left: 2px solid transparent;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+  border-left: 3px solid transparent;
 
   &:hover {
     color: $color-text-primary;
@@ -264,7 +277,7 @@
 
   &.active {
     color: $color-primary;
-    font-weight: $font-weight-medium;
+    font-weight: $font-weight-bold;
     border-left-color: $color-primary;
   }
 }
@@ -278,15 +291,15 @@
 .filter-price__input {
   width: 72px;
   padding: $space-xs $space-sm;
-  border: 1px solid $color-border;
+  border: 2px solid $color-border;
   border-radius: 0;
-  font-family: $font-family;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
   text-align: center;
   outline: none;
 
   &:focus {
-    border-color: $color-primary;
+    border-color: $color-text-primary;
   }
 }
 
@@ -301,9 +314,9 @@
   color: $color-text-inverse;
   border: none;
   border-radius: 0;
-  font-family: $font-family;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
   cursor: pointer;
@@ -322,33 +335,35 @@
 
 .filter-tag {
   padding: $space-xxs $space-md;
-  border: 1px solid $color-border;
+  border: 2px solid $color-border;
   border-radius: 0;
   background: transparent;
-  font-family: $font-family;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
   color: $color-text-secondary;
   cursor: pointer;
   transition: all $transition-fast;
   letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
 
   &:hover {
-    border-color: $color-primary;
-    color: $color-primary;
+    border-color: $color-text-primary;
+    color: $color-text-primary;
   }
 
   &.active {
-    background: $color-primary;
+    background: $color-text-primary;
     color: $color-text-inverse;
-    border-color: $color-primary;
+    border-color: $color-text-primary;
   }
 }
 
-// ═══ Product Grid ═══
+// ═══ Product Grid — 3 columns, no card borders ═══
 .products__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: $space-xl;
+  gap: $space-xxl $space-xl;
 
   @include respond-to(lg) {
     grid-template-columns: repeat(3, 1fr);
@@ -356,7 +371,7 @@
 
   @include respond-to(md) {
     grid-template-columns: repeat(2, 1fr);
-    gap: $space-lg;
+    gap: $space-xl $space-lg;
   }
 
   @include respond-to(xs) {
@@ -364,13 +379,15 @@
   }
 }
 
-// ═══ Product Card ═══
+// ═══ Product Card (inline on products page) ═══
 .card {
-  background: $color-bg-primary;
+  background: transparent;
   overflow: hidden;
-  @include hover-lift(-6px);
+  transition: transform $transition-fast;
 
   &:hover {
+    transform: translateY(-2px);
+
     .card__img {
       transform: scale(1.05);
     }
@@ -378,6 +395,10 @@
     .card__actions {
       opacity: 1;
       transform: translateY(0);
+    }
+
+    .card__cta {
+      letter-spacing: 0.08em;
     }
   }
 }
@@ -388,6 +409,7 @@
   aspect-ratio: 3 / 4;
   overflow: hidden;
   background: $color-bg-warm;
+  border-radius: 0;
 }
 
 .card__img {
@@ -417,7 +439,7 @@
   width: 40px;
   height: 40px;
   @include flex-center;
-  border-radius: $radius-full;
+  border-radius: 0;
   border: none;
   background: $color-bg-primary;
   color: $color-text-primary;
@@ -442,33 +464,37 @@
   padding: $space-xxs $space-sm;
   background: $color-bg-dark;
   color: $color-text-inverse;
-  font-family: $font-family;
-  font-size: 10px;
+  font-family: $font-family-nav;
+  font-size: 11px;
   font-weight: $font-weight-bold;
-  letter-spacing: $letter-spacing-wide;
+  letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
+  border-radius: 0;
 }
 
 .card__body {
-  padding: $space-lg $space-xs $space-md;
+  padding: $space-lg 0 $space-md;
   display: flex;
   flex-direction: column;
   gap: $space-xxs;
 }
 
 .card__category {
-  @include eyebrow-text;
-  font-size: 10px;
+  font-family: $font-family-nav;
+  font-size: 11px;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-luxury;
+  text-transform: uppercase;
   color: $color-text-tertiary;
 }
 
 .card__name {
-  font-family: $font-family-display;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-regular;
+  font-family: $font-family-heading;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
   color: $color-text-primary;
   text-decoration: none;
-  letter-spacing: $letter-spacing-tight;
+  letter-spacing: $letter-spacing-normal;
   line-height: $line-height-tight;
   @include truncate(1);
   transition: color $transition-fast;
@@ -479,36 +505,27 @@
 }
 
 .card__bottom {
-  @include flex-between;
-  margin-top: $space-xs;
+  margin-top: $space-xxs;
 }
 
 .card__price {
-  font-family: $font-family;
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
+  font-family: $font-family-nav;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
   color: $color-text-primary;
 }
 
 .card__cta {
-  padding: $space-xxs $space-lg;
-  border: 1px solid $color-text-primary;
-  border-radius: 0;
-  background: transparent;
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
-  color: $color-text-primary;
+  color: $color-primary;
   text-decoration: none;
-  transition: all $transition-fast;
-
-  &:hover {
-    border-color: $color-primary;
-    background: $color-primary;
-    color: $color-text-inverse;
-  }
+  display: inline-block;
+  margin-top: $space-xs;
+  transition: letter-spacing $transition-fast;
 }
 
 // ═══ Loading ═══
@@ -520,9 +537,9 @@
 .products__spinner {
   width: 32px;
   height: 32px;
-  border: 2px solid $color-border-light;
+  border: 3px solid $color-border-light;
   border-top-color: $color-primary;
-  border-radius: $radius-full;
+  border-radius: 0;
   animation: spin 0.7s linear infinite;
 }
 
@@ -545,40 +562,41 @@
   width: 80px;
   height: 80px;
   @include flex-center;
-  border: 1px solid $color-border-light;
+  border: 2px solid $color-border-light;
   color: $color-text-disabled;
 }
 
 .products__empty-title {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-xxl;
-  font-weight: $font-weight-regular;
+  font-weight: $font-weight-bold;
   color: $color-text-primary;
   margin: 0;
 }
 
 .products__empty-sub {
-  font-size: $font-size-sm;
+  font-family: $font-family-display;
+  font-size: $font-size-md;
+  font-style: italic;
   color: $color-text-tertiary;
   margin: 0;
 }
 
 .products__empty-btn {
   padding: $space-sm $space-xl;
-  border: 1px solid $color-text-primary;
+  border: 2px solid $color-text-primary;
   border-radius: 0;
   background: transparent;
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
   cursor: pointer;
   transition: all $transition-fast;
 
   &:hover {
-    border-color: $color-primary;
-    background: $color-primary;
+    background: $color-text-primary;
     color: $color-text-inverse;
   }
 }
@@ -589,31 +607,32 @@
   gap: $space-xs;
   margin-top: $space-xxl;
   padding-top: $space-xxl;
-  border-top: 1px solid $color-border-light;
+  border-top: 2px solid $color-text-primary;
 }
 
 .page-btn {
-  min-width: 40px;
-  height: 40px;
+  min-width: 44px;
+  height: 44px;
   @include flex-center;
-  border: 1px solid $color-border-light;
+  border: 2px solid $color-border-light;
   border-radius: 0;
   background: transparent;
-  font-family: $font-family;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
   color: $color-text-secondary;
   cursor: pointer;
   transition: all $transition-fast;
 
   &:hover:not(:disabled) {
-    border-color: $color-primary;
-    color: $color-primary;
+    border-color: $color-text-primary;
+    color: $color-text-primary;
   }
 
   &.active {
-    background: $color-bg-dark;
+    background: $color-text-primary;
     color: $color-text-inverse;
-    border-color: $color-bg-dark;
+    border-color: $color-text-primary;
   }
 
   &:disabled {

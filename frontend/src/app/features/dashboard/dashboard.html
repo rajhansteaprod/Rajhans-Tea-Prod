@@ -4,8 +4,8 @@
     <div class="dashboard__welcome-left">
       <span class="dashboard__eyebrow">{{ getGreeting() }}</span>
       <h1 class="dashboard__title">
-        Welcome back<br/>
-        <span class="dashboard__name">{{ userName() || 'there' }}</span>
+        WELCOME BACK<br/>
+        <span class="dashboard__name">{{ userName() || 'THERE' }}</span>
       </h1>
       <p class="dashboard__subtitle">
         Here's what's happening with your {{ isAdmin() ? 'store' : 'account' }} today.
@@ -16,7 +16,7 @@
         {{ getInitials() }}
       </div>
       @if (isAdmin()) {
-        <span class="dashboard__role">Admin</span>
+        <span class="dashboard__role">ADMIN</span>
       }
     </div>
   </div>
@@ -38,7 +38,7 @@
 
   <!-- Quick Actions -->
   <div class="dashboard__section">
-    <h2 class="dashboard__section-heading">Quick Actions</h2>
+    <h2 class="dashboard__section-heading">QUICK ACTIONS</h2>
     <div class="dashboard__actions">
       @for (action of actions(); track action.label) {
         <button class="dashboard__action" (click)="onAction(action.route)">
@@ -54,7 +54,7 @@
 
   <!-- Account Info -->
   <div class="dashboard__section">
-    <h2 class="dashboard__section-heading">Account Info</h2>
+    <h2 class="dashboard__section-heading">ACCOUNT INFO</h2>
     <div class="dashboard__info">
       <div class="dashboard__info-row">
         <span class="dashboard__info-label">Phone</span>

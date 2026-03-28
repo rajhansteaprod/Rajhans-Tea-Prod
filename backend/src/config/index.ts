@@ -25,7 +25,7 @@ export const config = {
     authMaxRequests: parseInt(process.env.AUTH_RATE_LIMIT_MAX_REQUESTS || '10', 10),
   },
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:4200',
+    origin: (process.env.CORS_ORIGIN || 'http://localhost:4200').split(',').map(s => s.trim()),
   },
   firebase: {
     serviceAccountPath: process.env.FIREBASE_SERVICE_ACCOUNT_PATH || '',

@@ -1,0 +1,322 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Hero Slides</h1>
+      <p class="page-subtitle">Manage homepage hero banner slides</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-primary-create" (click)="openCreate()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Add Slide
+      </button>
+    </div>
+  </div>
+
+  <!-- Slides Grid -->
+  <div class="slides-container">
+    @if (loading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <span>Loading slides…</span>
+      </div>
+    } @else if (slides().length === 0) {
+      <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <p>No hero slides yet. Add your first one.</p>
+      </div>
+    } @else {
+      <div class="slides-list">
+        @for (slide of slides(); track slide._id; let i = $index) {
+          <div class="slide-card"
+            [class.editing]="editingId() === slide._id"
+            [class.inactive]="!slide.isActive"
+            draggable="true"
+            (dragstart)="onDragStart(i)"
+            (dragover)="onDragOver($event)"
+            (drop)="onDrop(i)">
+
+            <div class="slide-drag-handle">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M8 6h.01M8 12h.01M8 18h.01M16 6h.01M16 12h.01M16 18h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              </svg>
+            </div>
+
+            <div class="slide-previews">
+              <div class="preview-thumb desktop">
+                <span class="preview-label">Desktop</span>
+                <img [src]="slide.desktopImage" [alt]="slide.title" />
+              </div>
+              <div class="preview-thumb mobile">
+                <span class="preview-label">Mobile</span>
+                <img [src]="slide.mobileImage" [alt]="slide.title" />
+              </div>
+            </div>
+
+            <div class="slide-info">
+              <div class="slide-title">{{ slide.title }}</div>
+              <div class="slide-subtitle">{{ slide.subtitle || '—' }}</div>
+              <div class="slide-cta-info">{{ slide.ctaText }} → {{ slide.ctaLink }}</div>
+            </div>
+
+            <div class="slide-actions">
+              <button class="status-toggle" [class.active]="slide.isActive" [class.inactive]="!slide.isActive"
+                (click)="toggleActive(slide)" [disabled]="saving()">
+                {{ slide.isActive ? 'Active' : 'Inactive' }}
+              </button>
+              <button class="icon-btn edit" (click)="openEdit(slide)" title="Edit">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+              <button class="icon-btn delete" (click)="deleteSlide(slide._id)" title="Delete">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Inline edit panel -->
+          @if (editingId() === slide._id) {
+            <div class="edit-panel">
+              <div class="form-grid">
+                <div class="form-field">
+                  <label class="form-label">Title *</label>
+                  <input class="form-input" type="text" [ngModel]="editForm().title"
+                    (ngModelChange)="updateForm('title', $event)" placeholder="e.g. Premium CTC Tea" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Subtitle</label>
+                  <input class="form-input" type="text" [ngModel]="editForm().subtitle"
+                    (ngModelChange)="updateForm('subtitle', $event)" placeholder="e.g. Crafted for bold chai" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label">CTA Text</label>
+                  <input class="form-input" type="text" [ngModel]="editForm().ctaText"
+                    (ngModelChange)="updateForm('ctaText', $event)" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label">CTA Link</label>
+                  <input class="form-input" type="text" [ngModel]="editForm().ctaLink"
+                    (ngModelChange)="updateForm('ctaLink', $event)" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Text Alignment</label>
+                  <div class="align-picker">
+                    <button class="align-btn" [class.active]="editForm().textAlign === 'left'" (click)="updateForm('textAlign', 'left')" title="Left">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 10h12M3 14h18M3 18h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </button>
+                    <button class="align-btn" [class.active]="editForm().textAlign === 'center'" (click)="updateForm('textAlign', 'center')" title="Center">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M6 10h12M3 14h18M6 18h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </button>
+                    <button class="align-btn" [class.active]="editForm().textAlign === 'right'" (click)="updateForm('textAlign', 'right')" title="Right">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M9 10h12M3 14h18M9 18h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Desktop Image</label>
+                  <div class="image-upload-area">
+                    @if (editDesktopPreview() || editDesktopUrl()) {
+                      <div class="image-preview-wrap landscape">
+                        <img [src]="editDesktopPreview() || editDesktopUrl()" />
+                        <label class="change-image-btn">
+                          <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                            (change)="onEditFileSelect($event, 'desktop')" />
+                          Change
+                        </label>
+                      </div>
+                    } @else {
+                      <label class="upload-btn">
+                        <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                          (change)="onEditFileSelect($event, 'desktop')" />
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                          <polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                          <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        Upload Desktop (16:9)
+                      </label>
+                    }
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Mobile Image</label>
+                  <div class="image-upload-area">
+                    @if (editMobilePreview() || editMobileUrl()) {
+                      <div class="image-preview-wrap portrait">
+                        <img [src]="editMobilePreview() || editMobileUrl()" />
+                        <label class="change-image-btn">
+                          <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                            (change)="onEditFileSelect($event, 'mobile')" />
+                          Change
+                        </label>
+                      </div>
+                    } @else {
+                      <label class="upload-btn">
+                        <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                          (change)="onEditFileSelect($event, 'mobile')" />
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                          <polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                          <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        Upload Mobile (9:16)
+                      </label>
+                    }
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label class="form-label toggle-label">
+                    <input type="checkbox" [ngModel]="editForm().isActive"
+                      (ngModelChange)="updateForm('isActive', $event)" />
+                    Active
+                  </label>
+                </div>
+              </div>
+              @if (formError()) {
+                <div class="form-error">{{ formError() }}</div>
+              }
+              <div class="edit-actions">
+                <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+                <button class="btn-save" (click)="saveEdit()" [disabled]="saving()">
+                  {{ saving() ? 'Saving…' : 'Save Changes' }}
+                </button>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Create modal -->
+@if (showCreate()) {
+  <div class="modal-overlay" (click)="showCreate.set(false)">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Add Hero Slide</h2>
+        <button class="modal-close" (click)="showCreate.set(false)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-field full-width">
+            <label class="form-label">Title *</label>
+            <input class="form-input" type="text" [ngModel]="createForm().title"
+              (ngModelChange)="updateForm('title', $event)" placeholder="e.g. Premium CTC Tea" />
+          </div>
+          <div class="form-field full-width">
+            <label class="form-label">Subtitle</label>
+            <input class="form-input" type="text" [ngModel]="createForm().subtitle"
+              (ngModelChange)="updateForm('subtitle', $event)" placeholder="e.g. Crafted for bold, authentic chai" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">CTA Text</label>
+            <input class="form-input" type="text" [ngModel]="createForm().ctaText"
+              (ngModelChange)="updateForm('ctaText', $event)" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">CTA Link</label>
+            <input class="form-input" type="text" [ngModel]="createForm().ctaLink"
+              (ngModelChange)="updateForm('ctaLink', $event)" />
+          </div>
+          <div class="form-field full-width">
+            <label class="form-label">Text Alignment</label>
+            <div class="align-picker">
+              <button class="align-btn" type="button" [class.active]="createForm().textAlign === 'left'" (click)="updateForm('textAlign', 'left')" title="Left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 10h12M3 14h18M3 18h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+              <button class="align-btn" type="button" [class.active]="createForm().textAlign === 'center'" (click)="updateForm('textAlign', 'center')" title="Center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M6 10h12M3 14h18M6 18h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+              <button class="align-btn" type="button" [class.active]="createForm().textAlign === 'right'" (click)="updateForm('textAlign', 'right')" title="Right">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M9 10h12M3 14h18M9 18h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Desktop Image * <span class="hint">16:9 ratio</span></label>
+            <div class="image-upload-area">
+              @if (createDesktopPreview()) {
+                <div class="image-preview-wrap landscape">
+                  <img [src]="createDesktopPreview()" />
+                  <label class="change-image-btn">
+                    <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                      (change)="onCreateFileSelect($event, 'desktop')" />
+                    Change
+                  </label>
+                </div>
+              } @else {
+                <label class="upload-btn">
+                  <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                    (change)="onCreateFileSelect($event, 'desktop')" />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                  Upload Desktop Image
+                </label>
+              }
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Mobile Image * <span class="hint">9:16 ratio</span></label>
+            <div class="image-upload-area">
+              @if (createMobilePreview()) {
+                <div class="image-preview-wrap portrait">
+                  <img [src]="createMobilePreview()" />
+                  <label class="change-image-btn">
+                    <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                      (change)="onCreateFileSelect($event, 'mobile')" />
+                    Change
+                  </label>
+                </div>
+              } @else {
+                <label class="upload-btn">
+                  <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                    (change)="onCreateFileSelect($event, 'mobile')" />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                  Upload Mobile Image
+                </label>
+              }
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="form-label toggle-label">
+              <input type="checkbox" [ngModel]="createForm().isActive"
+                (ngModelChange)="updateForm('isActive', $event)" />
+              Active
+            </label>
+          </div>
+        </div>
+      </div>
+      @if (formError()) {
+        <div class="modal-error">{{ formError() }}</div>
+      }
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
+        <button class="btn-save" (click)="saveCreate()" [disabled]="saving() || !createForm().title">
+          {{ saving() ? 'Creating…' : 'Create Slide' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

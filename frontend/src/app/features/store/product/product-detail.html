@@ -4,21 +4,24 @@
     <nav class="breadcrumbs">
       <a routerLink="/">Home</a>
       <span class="breadcrumbs__sep">/</span>
+      <a routerLink="/products">Shop</a>
+      <span class="breadcrumbs__sep">/</span>
       <a [routerLink]="'/catalog/' + product().category?.slug">{{ product().category?.name }}</a>
       <span class="breadcrumbs__sep">/</span>
       <span class="breadcrumbs__current">{{ product().name }}</span>
     </nav>
 
-    <div class="product-layout">
-      <!-- Gallery — 60% -->
-      <div class="gallery">
-        <div class="gallery__main">
-          <img [src]="selectedImage() || product().images[0] || ''" [alt]="product().name" />
+    <!-- 50/50 Split Layout -->
+    <div class="product-split">
+      <!-- LEFT — Solid color bg with product image -->
+      <div class="product-split__left">
+        <div class="product-split__gallery">
+          <img [src]="selectedImage() || product().images[0] || ''" [alt]="product().name" class="product-split__main-img" />
         </div>
         @if (product().images.length > 1) {
-          <div class="gallery__thumbs">
+          <div class="product-split__thumbs">
             @for (img of product().images; track img) {
-              <button class="gallery__thumb" [class.active]="selectedImage() === img" (click)="selectedImage.set(img)">
+              <button class="product-split__thumb" [class.active]="selectedImage() === img" (click)="selectedImage.set(img)">
                 <img [src]="img" [alt]="product().name" />
               </button>
             }
@@ -26,95 +29,104 @@
         }
       </div>
 
-      <!-- Info — 40% -->
-      <div class="product-info">
-        <span class="product-info__category">{{ product().category?.name }}</span>
-        <h1 class="product-info__name">{{ product().name }}</h1>
+      <!-- RIGHT — White/cream bg with product info -->
+      <div class="product-split__right">
+        <div class="product-info">
+          <!-- Category eyebrow -->
+          <span class="product-info__category">{{ product().category?.name }}</span>
 
-        @if (ratingSummary()) {
-          <div class="product-info__rating">
-            <div class="product-info__stars">
-              @for (s of [1,2,3,4,5]; track s) {
-                <svg class="product-info__star" [class.filled]="s <= Math.round(ratingSummary()!.averageRating)" width="16" height="16" viewBox="0 0 24 24">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-                </svg>
+          <!-- Huge bold condensed name -->
+          <h1 class="product-info__name">{{ product().name }}</h1>
+
+          <!-- Short description as subtitle -->
+          @if (product().shortDescription) {
+            <p class="product-info__subtitle">{{ product().shortDescription }}</p>
+          }
+
+          <!-- Rating -->
+          @if (ratingSummary()) {
+            <div class="product-info__rating">
+              <div class="product-info__stars">
+                @for (s of [1,2,3,4,5]; track s) {
+                  <svg class="product-info__star" [class.filled]="s <= Math.round(ratingSummary()!.averageRating)" width="16" height="16" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                  </svg>
+                }
+              </div>
+              <span class="product-info__rating-text">{{ ratingSummary()!.averageRating }} ({{ ratingSummary()!.totalReviews }} reviews)</span>
+            </div>
+          }
+
+          <div class="product-info__divider"></div>
+
+          <!-- Description in italic serif -->
+          @if (product().description) {
+            <div class="product-info__description">
+              <div class="product-info__desc-body" [innerHTML]="product().description"></div>
+            </div>
+          }
+
+          <!-- Weight/Size info -->
+          @if (product().weight) {
+            <p class="product-info__weight">{{ product().weight }}</p>
+          }
+
+          <!-- Price — large, bold -->
+          <p class="product-info__price">&#8377;{{ product().basePrice | number:'1.0-0' }}</p>
+
+          <!-- Stock Status -->
+          @if (product().trackInventory) {
+            @if (product().stock > 0) {
+              <p class="product-info__stock product-info__stock--in">IN STOCK ({{ product().stock }} left)</p>
+            } @else {
+              <p class="product-info__stock product-info__stock--out">OUT OF STOCK</p>
+            }
+          }
+
+          <!-- Quantity + Add to Cart row -->
+          <div class="product-info__cart-row">
+            <div class="product-info__qty-picker">
+              <button class="product-info__qty-btn" (click)="decrementQty()" [disabled]="quantity() <= 1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+              </button>
+              <span class="product-info__qty-value">{{ quantity() }}</span>
+              <button class="product-info__qty-btn" (click)="incrementQty()" [disabled]="product().trackInventory && quantity() >= product().stock">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+            <button class="product-info__btn-cart" [disabled]="product().stock === 0 && product().trackInventory" (click)="addToCart()">
+              ADD TO CART
+            </button>
+          </div>
+
+          <!-- Buy Now -->
+          <button class="product-info__btn-buy" [disabled]="product().stock === 0 && product().trackInventory" (click)="buyNow()">
+            BUY NOW
+          </button>
+
+          <!-- Wishlist + Share row -->
+          <div class="product-info__meta-row">
+            <button class="product-info__btn-wish" [class.active]="cartStore.isWishlisted(product()._id)()" (click)="cartStore.toggleWishlist(product()._id)">
+              <svg width="18" height="18" viewBox="0 0 24 24" [attr.fill]="cartStore.isWishlisted(product()._id)() ? 'currentColor' : 'none'">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <span>WISHLIST</span>
+            </button>
+            <div class="product-info__share">
+              <button class="product-info__share-btn" (click)="shareWhatsApp()">WHATSAPP</button>
+              <button class="product-info__share-btn" (click)="copyLink()">{{ copied() ? 'COPIED!' : 'COPY LINK' }}</button>
+            </div>
+          </div>
+
+          <!-- Tags -->
+          @if (product().tags?.length > 0) {
+            <div class="product-info__tags">
+              @for (tag of product().tags; track tag) {
+                <a class="product-info__tag" [routerLink]="'/products'" [queryParams]="{tags: tag}">{{ tag }}</a>
               }
             </div>
-            <span class="product-info__rating-text">{{ ratingSummary()!.averageRating }} ({{ ratingSummary()!.totalReviews }} reviews)</span>
-          </div>
-        }
-
-        <div class="product-info__divider"></div>
-
-        <p class="product-info__price">&#8377;{{ product().basePrice | number:'1.0-0' }}</p>
-
-        @if (product().shortDescription) {
-          <p class="product-info__desc">{{ product().shortDescription }}</p>
-        }
-
-        <!-- Stock Status -->
-        @if (product().trackInventory) {
-          @if (product().stock > 0) {
-            <p class="product-info__stock product-info__stock--in">In Stock ({{ product().stock }} left)</p>
-          } @else {
-            <p class="product-info__stock product-info__stock--out">Out of Stock</p>
           }
-        }
-
-        <!-- Quantity Selector -->
-        <div class="product-info__qty-row">
-          <span class="product-info__qty-label">Quantity</span>
-          <div class="product-info__qty-picker">
-            <button class="product-info__qty-btn" (click)="decrementQty()" [disabled]="quantity() <= 1">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-            </button>
-            <span class="product-info__qty-value">{{ quantity() }}</span>
-            <button class="product-info__qty-btn" (click)="incrementQty()" [disabled]="product().trackInventory && quantity() >= product().stock">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-            </button>
-          </div>
         </div>
-
-        <!-- Actions -->
-        <div class="product-info__actions">
-          <button class="product-info__btn-cart" [disabled]="product().stock === 0 && product().trackInventory" (click)="addToCart()">
-            Add to Cart
-          </button>
-          <button class="product-info__btn-buy" [disabled]="product().stock === 0 && product().trackInventory" (click)="buyNow()">
-            Buy Now
-          </button>
-          <button class="product-info__btn-wish" [class.active]="cartStore.isWishlisted(product()._id)()" (click)="cartStore.toggleWishlist(product()._id)">
-            <svg width="20" height="20" viewBox="0 0 24 24" [attr.fill]="cartStore.isWishlisted(product()._id)() ? 'currentColor' : 'none'">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2"/>
-            </svg>
-          </button>
-        </div>
-
-        <!-- Share -->
-        <div class="product-info__share">
-          <span class="product-info__share-label">Share</span>
-          <button class="product-info__share-btn" (click)="shareWhatsApp()">WhatsApp</button>
-          <button class="product-info__share-btn" (click)="copyLink()">{{ copied() ? 'Copied!' : 'Copy Link' }}</button>
-        </div>
-
-        <div class="product-info__divider"></div>
-
-        <!-- Description -->
-        @if (product().description) {
-          <div class="product-info__description">
-            <h3 class="product-info__section-title">Description</h3>
-            <div class="product-info__section-body" [innerHTML]="product().description"></div>
-          </div>
-        }
-
-        <!-- Tags -->
-        @if (product().tags?.length > 0) {
-          <div class="product-info__tags">
-            @for (tag of product().tags; track tag) {
-              <a class="product-info__tag" [routerLink]="'/products'" [queryParams]="{tags: tag}">{{ tag }}</a>
-            }
-          </div>
-        }
       </div>
     </div>
 
@@ -131,6 +143,6 @@
 @if (product() && !(product().stock === 0 && product().trackInventory)) {
   <div class="sticky-bar">
     <span class="sticky-bar__price">&#8377;{{ product().basePrice | number:'1.0-0' }}</span>
-    <button class="sticky-bar__btn" (click)="addToCart()">Add to Cart</button>
+    <button class="sticky-bar__btn" (click)="addToCart()">ADD TO CART</button>
   </div>
 }

@@ -2,7 +2,7 @@
 @use '../../../core/design-tokens/mixins' as *;
 
 // ═══════════════════════════════════════════
-// ORDER HISTORY — Clean order cards with status
+// ORDER HISTORY — Barcoopbevy bold condensed
 // ═══════════════════════════════════════════
 
 .orders {
@@ -29,17 +29,21 @@
 }
 
 .orders__eyebrow {
-  @include eyebrow-text;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
   display: block;
   margin-bottom: $space-xs;
-  color: $color-primary;
+  color: $color-bg-maroon;
 }
 
 .orders__title {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-display;
   font-weight: $font-weight-bold;
-  letter-spacing: $letter-spacing-display;
+  letter-spacing: $letter-spacing-heading;
   color: $color-text-primary;
   margin: 0;
   line-height: 1;
@@ -53,20 +57,23 @@
   display: inline-flex;
   align-items: center;
   gap: $space-xs;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
+  font-weight: $font-weight-bold;
   color: $color-text-secondary;
   text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   padding: $space-sm $space-lg;
-  border: 1px solid $color-border-light;
-  border-radius: $radius-full;
+  border: 2px solid $color-border-light;
+  border-radius: 0;
   transition: all $transition-fast;
   white-space: nowrap;
   flex-shrink: 0;
 
   &:hover {
-    color: $color-primary;
-    border-color: $color-primary;
+    color: $color-bg-maroon;
+    border-color: $color-bg-maroon;
   }
 }
 
@@ -80,7 +87,7 @@
   width: 32px;
   height: 32px;
   border: 2px solid $color-border-light;
-  border-top-color: $color-primary;
+  border-top-color: $color-bg-maroon;
   border-radius: $radius-full;
   animation: orderSpin 0.7s linear infinite;
 }
@@ -100,14 +107,14 @@
   width: 96px;
   height: 96px;
   @include flex-center;
-  border-radius: $radius-full;
+  border-radius: 0;
   background: $color-bg-warm;
   color: $color-text-disabled;
   margin-bottom: $space-sm;
 }
 
 .orders__empty-title {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-xxl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
@@ -115,6 +122,7 @@
 }
 
 .orders__empty-desc {
+  font-family: $font-family-display;
   font-size: $font-size-md;
   color: $color-text-tertiary;
   margin: 0;
@@ -124,13 +132,14 @@
 .orders__btn-primary {
   display: inline-flex;
   padding: $space-sm $space-xxl;
-  background: $color-primary;
+  background: $color-bg-maroon;
   color: $color-text-inverse;
-  border-radius: $radius-full;
+  border-radius: 0;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   text-decoration: none;
-  letter-spacing: $letter-spacing-wide;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   transition: all $transition-fast;
   margin-top: $space-sm;
@@ -151,7 +160,7 @@
 .orders__card {
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
-  border-radius: $radius-xl;
+  border-radius: 0;
   overflow: hidden;
   transition: border-color $transition-fast, box-shadow $transition-fast;
 
@@ -180,11 +189,11 @@
 }
 
 .orders__card-number {
-  font-family: $font-family-display;
+  font-family: $font-family-nav;
   font-size: $font-size-lg;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
-  letter-spacing: $letter-spacing-tight;
+  letter-spacing: 0.02em;
 }
 
 .orders__card-date {
@@ -194,7 +203,8 @@
 
 .orders__status {
   padding: $space-xxs $space-md;
-  border-radius: $radius-full;
+  border-radius: 0;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
   font-weight: $font-weight-bold;
   text-transform: uppercase;
@@ -205,7 +215,7 @@
   &[data-status="shipped"],
   &[data-status="in_transit"],
   &[data-status="out_for_delivery"] { background: rgba(70, 130, 180, 0.1); color: #4682B4; }
-  &[data-status="delivered"] { background: rgba($color-success, 0.12); color: $color-success; }
+  &[data-status="delivered"] { background: rgba($color-bg-teal, 0.12); color: $color-bg-teal; }
   &[data-status="cancelled"],
   &[data-status="returned"] { background: rgba($color-error, 0.1); color: $color-error; }
 }
@@ -237,8 +247,9 @@
 }
 
 .orders__line-price {
+  font-family: $font-family-nav;
   color: $color-text-primary;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
 }
 
 // ═══ Footer ═══
@@ -281,7 +292,7 @@
 }
 
 .orders__total {
-  font-family: $font-family-display;
+  font-family: $font-family-nav;
   font-size: $font-size-xl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
@@ -291,13 +302,16 @@
   display: inline-flex;
   align-items: center;
   gap: $space-xxs;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   color: #4682B4;
   text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   padding: $space-xxs $space-md;
-  border: 1px solid #4682B4;
-  border-radius: $radius-full;
+  border: 2px solid #4682B4;
+  border-radius: 0;
   transition: all $transition-fast;
 
   &:hover {
@@ -336,7 +350,7 @@
   top: 4px;
   width: 12px;
   height: 12px;
-  border-radius: $radius-full;
+  border-radius: 0;
   border: 2px solid $color-border;
   background: $color-bg-tertiary;
 
@@ -345,7 +359,7 @@
   &[data-status="shipped"],
   &[data-status="in_transit"],
   &[data-status="out_for_delivery"] { border-color: #4682B4; background: #4682B4; }
-  &[data-status="delivered"] { border-color: $color-success; background: $color-success; }
+  &[data-status="delivered"] { border-color: $color-bg-teal; background: $color-bg-teal; }
   &[data-status="cancelled"] { border-color: $color-error; background: $color-error; }
 }
 
@@ -355,9 +369,11 @@
 }
 
 .orders__timeline-status {
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   color: $color-text-primary;
+  text-transform: uppercase;
 }
 
 .orders__timeline-date {
@@ -366,6 +382,7 @@
 }
 
 .orders__timeline-note {
+  font-family: $font-family-display;
   font-size: $font-size-xs;
   color: $color-text-secondary;
   font-style: italic;
@@ -382,16 +399,16 @@
   width: 40px;
   height: 40px;
   @include flex-center;
-  border: 1px solid $color-border-light;
-  border-radius: $radius-full;
+  border: 2px solid $color-border-light;
+  border-radius: 0;
   background: transparent;
   color: $color-text-secondary;
   cursor: pointer;
   transition: all $transition-fast;
 
   &:hover:not(:disabled) {
-    border-color: $color-primary;
-    color: $color-primary;
+    border-color: $color-bg-maroon;
+    color: $color-bg-maroon;
   }
 
   &:disabled {
@@ -401,6 +418,8 @@
 }
 
 .orders__page-info {
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
   color: $color-text-tertiary;
+  text-transform: uppercase;
 }

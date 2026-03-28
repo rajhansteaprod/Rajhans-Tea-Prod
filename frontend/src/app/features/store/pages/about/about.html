@@ -4,8 +4,8 @@
     <div class="about-hero__inner">
       <span class="about-hero__eyebrow">Our Story</span>
       <h1 class="about-hero__headline">
-        <span class="about-hero__line">Not just a brand.</span>
-        <span class="about-hero__line about-hero__line--accent">A promise in every cup.</span>
+        <span class="about-hero__line">ALL NATURAL</span>
+        <span class="about-hero__line">PREMIUM TEA</span>
       </h1>
       <p class="about-hero__sub">
         Rajhans Tea was born from a simple belief — that your daily chai
@@ -15,7 +15,7 @@
     <div class="about-hero__divider"></div>
   </section>
 
-  <!-- ═══ ORIGIN STORY ═══ -->
+  <!-- ═══ ORIGIN STORY — Split Section 1 ═══ -->
   <section class="origin" #originSection>
     <div class="origin__grid">
       <div class="origin__visual">
@@ -25,8 +25,7 @@
         </div>
       </div>
       <div class="origin__content">
-        <span class="origin__label">The Beginning</span>
-        <h2 class="origin__headline">It started with a question</h2>
+        <h2 class="origin__headline">MADE WITH REAL INGREDIENTS</h2>
         <p class="origin__text">
           Why does the chai at home never taste as good as it should?
           The leaves are stale, the blends inconsistent, the freshness gone
@@ -45,15 +44,22 @@
     </div>
   </section>
 
-  <!-- ═══ MISSION ═══ -->
+  <!-- ═══ MISSION — Split Section 2 (reversed) ═══ -->
   <section class="mission" #missionSection>
-    <div class="mission__inner">
-      <div class="mission__quote-mark">&ldquo;</div>
-      <blockquote class="mission__quote">
-        We believe great chai shouldn't be a luxury. It should be
-        a daily standard — accessible, authentic, and uncompromising.
-      </blockquote>
-      <p class="mission__attr">— The Rajhans Promise</p>
+    <div class="mission__grid">
+      <div class="mission__content">
+        <h2 class="mission__headline">FROM GARDEN TO YOUR CUP</h2>
+        <blockquote class="mission__quote">
+          We believe great chai shouldn't be a luxury. It should be
+          a daily standard — accessible, authentic, and uncompromising.
+        </blockquote>
+        <p class="mission__attr">— The Rajhans Promise</p>
+      </div>
+      <div class="mission__visual">
+        <div class="mission__frame">
+          <div class="mission__quote-mark">&ldquo;</div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -61,7 +67,7 @@
   <section class="values" #valuesSection>
     <div class="values__header">
       <span class="values__eyebrow">What We Stand For</span>
-      <h2 class="values__headline">Built on principles,<br /><em>not shortcuts.</em></h2>
+      <h2 class="values__headline">BUILT ON PRINCIPLES,<br /><em>NOT SHORTCUTS.</em></h2>
     </div>
     <div class="values__grid">
       @for (v of values; track v.title; let i = $index) {
@@ -103,6 +109,60 @@
     </div>
   </section>
 
+  <!-- ═══ FAQ SECTION ═══ -->
+  <section class="faq">
+    <div class="faq__inner">
+      <h2 class="faq__headline">FREQUENTLY ASKED QUESTIONS</h2>
+      <div class="faq__list">
+        <details class="faq__item">
+          <summary class="faq__question">
+            <span>What makes Rajhans Tea different from other brands?</span>
+            <span class="faq__icon">+</span>
+          </summary>
+          <div class="faq__answer">
+            <p>We source directly from Assam's finest CTC gardens, pack within hours of processing, and use zero artificial additives. Every packet delivers the same bold, fresh taste — no compromises.</p>
+          </div>
+        </details>
+        <details class="faq__item">
+          <summary class="faq__question">
+            <span>Is Rajhans Tea 100% natural?</span>
+            <span class="faq__icon">+</span>
+          </summary>
+          <div class="faq__answer">
+            <p>Yes. We use absolutely no artificial flavours, chemicals, or colouring agents. Just pure, single-origin Assam CTC tea — the way nature intended.</p>
+          </div>
+        </details>
+        <details class="faq__item">
+          <summary class="faq__question">
+            <span>How do you ensure freshness?</span>
+            <span class="faq__icon">+</span>
+          </summary>
+          <div class="faq__answer">
+            <p>Our tea is sealed within 24 hours of processing. We use airtight packaging to lock in the aroma, colour, and flavour so every cup tastes as fresh as the garden.</p>
+          </div>
+        </details>
+        <details class="faq__item">
+          <summary class="faq__question">
+            <span>Do you ship across India?</span>
+            <span class="faq__icon">+</span>
+          </summary>
+          <div class="faq__answer">
+            <p>Yes, we deliver Pan India with tracked, insured, and reliable shipping. Your chai reaches you safe, fresh, and on time.</p>
+          </div>
+        </details>
+        <details class="faq__item">
+          <summary class="faq__question">
+            <span>What is your return policy?</span>
+            <span class="faq__icon">+</span>
+          </summary>
+          <div class="faq__answer">
+            <p>If you're not satisfied with your purchase, reach out to us within 7 days and we'll make it right. Your satisfaction is our promise.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
   <!-- ═══ FOUNDER NOTE ═══ -->
   <section class="founder" #founderSection>
     <div class="founder__inner">
@@ -126,8 +186,8 @@
   <!-- ═══ SOFT CTA ═══ -->
   <section class="about-cta" #ctaSection>
     <h2 class="about-cta__headline">
-      <span>Ready to taste</span>
-      <span class="about-cta__headline--accent">the difference?</span>
+      <span>READY TO TASTE</span>
+      <span class="about-cta__headline--accent">THE DIFFERENCE?</span>
     </h2>
     <a routerLink="/products" class="about-cta__btn">
       <span>Explore Our Collection</span>

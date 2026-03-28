@@ -3,47 +3,81 @@
   <main class="content">
     <router-outlet />
   </main>
+
+  <!-- Trust bar — Kusmi Tea style -->
+  <div class="trust-bar">
+    <div class="trust-bar-inner">
+      <div class="trust-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M16 16l3 3M4 4l3 3M21 12h-3M6 12H3M17.66 6.34l-2.12 2.12M8.46 15.54l-2.12 2.12M12 3v3M12 18v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span class="trust-label">Pan-India Delivery</span>
+      </div>
+      <div class="trust-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="trust-label">Secure Payment</span>
+      </div>
+      <div class="trust-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="trust-label">100% Natural</span>
+      </div>
+      <div class="trust-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="trust-label">Premium Quality</span>
+      </div>
+    </div>
+  </div>
+
   <footer class="footer">
-    <div class="footer-inner">
-      <!-- Brand -->
-      <div class="footer-brand">
-        <h2 class="footer-brand-name">Rajhans Tea</h2>
-        <p class="footer-brand-tagline">Crafted with intention. Steeped in tradition.</p>
+    <!-- Newsletter row — Mariage Frères style -->
+    <div class="footer-newsletter">
+      <div class="footer-newsletter-inner">
+        <h3 class="footer-newsletter-heading">Continue the Experience</h3>
+        <p class="footer-newsletter-sub">Receive our newsletter and benefit from exclusive advantages</p>
+        <div class="footer-newsletter-form">
+          <input type="email" class="footer-email-input" placeholder="Enter your email address" />
+          <button class="footer-signup-btn">Subscribe</button>
+        </div>
+        <div class="footer-social">
+          <a href="#" class="footer-social-link" aria-label="Instagram">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor"/></svg>
+          </a>
+          <a href="#" class="footer-social-link" aria-label="Facebook">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a href="#" class="footer-social-link" aria-label="Twitter">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
       </div>
+    </div>
 
-      <!-- Link Grid -->
-      <div class="footer-grid">
-        <div class="footer-col">
-          <h4>Shop</h4>
-          <a routerLink="/products">All Products</a>
-          <a routerLink="/collections">Collections</a>
-        </div>
-        <div class="footer-col">
-          <h4>Company</h4>
-          <a routerLink="/page/about-us">Our Story</a>
-          <a routerLink="/page/contact-us">Contact</a>
-        </div>
-        <div class="footer-col">
-          <h4>Help</h4>
-          <a routerLink="/page/terms-and-conditions">Terms & Conditions</a>
-          <a routerLink="/page/privacy-policy">Privacy Policy</a>
-          <a routerLink="/page/shipping-policy">Shipping & Returns</a>
-        </div>
-      </div>
+    <!-- Ornamental Divider -->
+    <div class="footer-ornament">
+      <span></span>
+    </div>
 
-      <!-- Newsletter mention -->
-      <div class="footer-newsletter">
-        <p class="footer-newsletter-text">Sign up for our newsletter for exclusive offers and tea stories.</p>
-      </div>
+    <!-- Massive brand name -->
+    <div class="footer-brand">
+      <h2 class="footer-brand-name">RAJHANS TEA</h2>
+    </div>
 
-      <!-- Bottom bar -->
-      <div class="footer-bottom">
-        <span>&copy; 2026 Rajhans Tea. All rights reserved.</span>
-        <div class="footer-bottom-links">
-          <a routerLink="/page/privacy-policy">Privacy</a>
-          <a routerLink="/page/terms-and-conditions">Terms</a>
-        </div>
+    <!-- Nav links row -->
+    <div class="footer-nav">
+      <div class="footer-nav-left">
+        <a routerLink="/products">SHOP</a>
+        <a routerLink="/page/about-us">OUR STORY</a>
+        <a routerLink="/page/blog">ABOUT</a>
+        <a routerLink="/page/contact-us">CONTACT</a>
       </div>
+      <div class="footer-nav-right">
+        <a routerLink="/page/terms-and-conditions">TERMS</a>
+        <a routerLink="/page/privacy-policy">PRIVACY</a>
+        <a routerLink="/page/shipping-policy">FAQ</a>
+      </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="footer-copyright">
+      <span>&copy; 2026 RAJHANS TEA. All rights reserved.</span>
     </div>
   </footer>
 </div>

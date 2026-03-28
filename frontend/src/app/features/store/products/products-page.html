@@ -2,8 +2,7 @@
   <!-- Page Hero -->
   <header class="products__hero">
     <div class="products__hero-inner">
-      <span class="products__eyebrow">Browse</span>
-      <h1 class="products__title">Our Teas</h1>
+      <h1 class="products__title">SHOP</h1>
       <p class="products__count">{{ totalProducts() }} products</p>
     </div>
   </header>
@@ -34,7 +33,7 @@
     <!-- Filter Sidebar (Desktop) / Drawer (Mobile) -->
     <aside class="products__sidebar" [class.open]="filterOpen()">
       <div class="products__sidebar-head">
-        <h3 class="products__sidebar-title">Filters</h3>
+        <h3 class="products__sidebar-title">FILTERS</h3>
         @if (isFiltered()) {
           <button class="products__clear-all" (click)="clearFilters()">Clear all</button>
         }
@@ -45,7 +44,7 @@
 
       <!-- Category filter -->
       <div class="filter-group">
-        <h4 class="filter-group__title">Category</h4>
+        <h4 class="filter-group__title">CATEGORY</h4>
         <button class="filter-option" [class.active]="!selectedCategory()" (click)="selectCategory(null)">
           <span>All Categories</span>
         </button>
@@ -58,19 +57,19 @@
 
       <!-- Price filter -->
       <div class="filter-group">
-        <h4 class="filter-group__title">Price Range</h4>
+        <h4 class="filter-group__title">PRICE RANGE</h4>
         <div class="filter-price">
           <input type="number" class="filter-price__input" placeholder="Min" [(ngModel)]="priceMin" min="0" />
           <span class="filter-price__sep">&mdash;</span>
           <input type="number" class="filter-price__input" placeholder="Max" [(ngModel)]="priceMax" min="0" />
-          <button class="filter-price__apply" (click)="applyPriceFilter()">Go</button>
+          <button class="filter-price__apply" (click)="applyPriceFilter()">GO</button>
         </div>
       </div>
 
       <!-- Tags filter -->
       @if (allTags().length > 0) {
         <div class="filter-group">
-          <h4 class="filter-group__title">Tags</h4>
+          <h4 class="filter-group__title">TAGS</h4>
           <div class="filter-tags">
             @for (tag of allTags(); track tag) {
               <button class="filter-tag" [class.active]="selectedTags().includes(tag)" (click)="toggleTag(tag)">{{ tag }}</button>
@@ -96,10 +95,10 @@
           <div class="products__empty-icon">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           </div>
-          <h2 class="products__empty-title">No products found</h2>
+          <h2 class="products__empty-title">NO PRODUCTS FOUND</h2>
           <p class="products__empty-sub">Try adjusting your filters or browse all products.</p>
           @if (isFiltered()) {
-            <button class="products__empty-btn" (click)="clearFilters()">Clear Filters</button>
+            <button class="products__empty-btn" (click)="clearFilters()">CLEAR FILTERS</button>
           }
         </div>
       } @else {
@@ -125,7 +124,7 @@
                   </button>
                 </div>
                 @if (p.isFeatured) {
-                  <span class="card__badge">Featured</span>
+                  <span class="card__badge">FEATURED</span>
                 }
               </a>
 
@@ -135,8 +134,8 @@
                 <a [routerLink]="'/product/' + p.slug" class="card__name">{{ p.name }}</a>
                 <div class="card__bottom">
                   <span class="card__price">&#8377;{{ p.basePrice }}</span>
-                  <a [routerLink]="'/product/' + p.slug" class="card__cta">View</a>
                 </div>
+                <a [routerLink]="'/product/' + p.slug" class="card__cta">SHOP NOW &rarr;</a>
               </div>
             </div>
           }

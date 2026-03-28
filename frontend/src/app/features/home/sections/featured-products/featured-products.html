@@ -1,14 +1,14 @@
 <section class="featured" #section>
   <div class="featured__header">
-    <span class="featured__eyebrow">Our Teas</span>
-    <h2 class="featured__title">Crafted for Your Cup</h2>
-    <a routerLink="/products" class="featured__link">View All</a>
+    <span class="featured__eyebrow">Our Selection</span>
+    <h2 class="featured__title">Meet Our Teas</h2>
+    <a routerLink="/products" class="featured__view-all">View All</a>
   </div>
 
   @if (loading()) {
     <div class="featured__grid">
       @for (i of [1,2,3]; track i) {
-        <div class="featured__skeleton">
+        <div class="featured__card featured__card--skeleton">
           <div class="skeleton-box"></div>
           <div class="skeleton-lines">
             <div class="skeleton-line skeleton-line--sm"></div>
@@ -19,11 +19,20 @@
     </div>
   } @else {
     <div class="featured__grid">
-      @for (product of products(); track product._id) {
-        <app-product-card
-          [product]="product"
-          (addToCart)="addToCart($event)"
-        />
+      @for (product of products(); track product._id; let i = $index) {
+        <a class="featured__card" [routerLink]="'/product/' + product.slug">
+          <div class="featured__card-image">
+            @if (product.images?.[0]) {
+              <img [src]="product.images[0]" [alt]="product.name" loading="lazy" />
+            }
+          </div>
+          <div class="featured__card-info">
+            <span class="featured__card-category">{{ product.category?.name || 'Tea' }}</span>
+            <h3 class="featured__card-name">{{ product.name }}</h3>
+            <p class="featured__card-attr">CTC Tea &middot; Premium &middot; Assam</p>
+            <span class="featured__card-price">&#8377;{{ product.basePrice }}</span>
+          </div>
+        </a>
       }
     </div>
   }

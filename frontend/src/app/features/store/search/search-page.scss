@@ -2,7 +2,7 @@
 @use '../../../core/design-tokens/mixins' as *;
 
 // ═══════════════════════════════════════════
-// SEARCH — Product grid with filter sidebar
+// SEARCH — Barcoopbevy bold condensed style
 // ═══════════════════════════════════════════
 
 .search {
@@ -32,17 +32,21 @@
 }
 
 .search__eyebrow {
-  @include eyebrow-text;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
   display: block;
   margin-bottom: $space-xs;
-  color: $color-primary;
+  color: $color-bg-maroon;
 }
 
 .search__title {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-display;
   font-weight: $font-weight-bold;
-  letter-spacing: $letter-spacing-display;
+  letter-spacing: $letter-spacing-heading;
   color: $color-text-primary;
   margin: 0 0 $space-xxs;
   line-height: 1;
@@ -53,24 +57,27 @@
 }
 
 .search__count {
+  font-family: $font-family-display;
   font-size: $font-size-sm;
   color: $color-text-tertiary;
 }
 
 .search__sort-select {
   padding: $space-sm $space-lg $space-sm $space-md;
-  border: 1px solid $color-border;
-  border-radius: $radius-full;
+  border: 2px solid $color-border;
+  border-radius: 0;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
   background: $color-bg-tertiary;
-  font-family: $font-family;
   color: $color-text-primary;
   cursor: pointer;
   outline: none;
+  text-transform: uppercase;
   transition: border-color $transition-fast;
 
   &:focus {
-    border-color: $color-primary;
+    border-color: $color-bg-maroon;
   }
 }
 
@@ -105,8 +112,12 @@
 }
 
 .search__filter-title {
-  @include eyebrow-text;
+  font-family: $font-family-nav;
   font-size: 11px;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
+  color: $color-text-secondary;
   margin: 0 0 $space-sm;
 }
 
@@ -119,7 +130,7 @@
   color: $color-text-primary;
   cursor: pointer;
 
-  input { cursor: pointer; accent-color: $color-primary; }
+  input { cursor: pointer; accent-color: $color-bg-maroon; }
 
   &--toggle {
     gap: $space-sm;
@@ -131,19 +142,22 @@
 }
 
 .search__filter-count {
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
   color: $color-text-tertiary;
   background: $color-bg-secondary;
   padding: 1px 6px;
-  border-radius: $radius-full;
+  border-radius: 0;
 }
 
 .search__clear-filter {
   border: none;
   background: none;
-  color: $color-primary;
+  color: $color-bg-maroon;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-family: $font-family;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
   cursor: pointer;
   padding: $space-xxs 0;
 
@@ -153,12 +167,15 @@
 .search__clear-all {
   width: 100%;
   padding: $space-xs $space-sm;
-  border: 1px solid $color-error;
-  border-radius: $radius-full;
+  border: 2px solid $color-error;
+  border-radius: 0;
   background: transparent;
   color: $color-error;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-family: $font-family;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   cursor: pointer;
   transition: all $transition-fast;
 
@@ -173,14 +190,14 @@
   input {
     width: 70px;
     padding: $space-xs;
-    border: 1px solid $color-border;
-    border-radius: $radius-md;
+    border: 2px solid $color-border;
+    border-radius: 0;
     font-size: $font-size-xs;
     font-family: $font-family;
     text-align: center;
     outline: none;
 
-    &:focus { border-color: $color-primary; }
+    &:focus { border-color: $color-bg-maroon; }
   }
 }
 
@@ -193,13 +210,15 @@
   background: $color-bg-dark;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-md;
+  border-radius: 0;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-family: $font-family;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
   cursor: pointer;
   transition: background $transition-fast;
 
-  &:hover { background: $color-primary; }
+  &:hover { background: $color-bg-maroon; }
 }
 
 .search__price-hint {
@@ -216,11 +235,13 @@
 
 .search__tag {
   padding: $space-xxs $space-sm;
-  border: 1px solid $color-border;
-  border-radius: $radius-full;
+  border: 2px solid $color-border;
+  border-radius: 0;
   background: transparent;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-family: $font-family;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all $transition-fast;
   display: flex;
@@ -228,7 +249,7 @@
   gap: 4px;
   color: $color-text-primary;
 
-  &:hover { border-color: $color-primary; }
+  &:hover { border-color: $color-bg-maroon; }
 
   &.active {
     background: $color-bg-dark;
@@ -252,7 +273,7 @@
   width: 32px;
   height: 32px;
   border: 2px solid $color-border-light;
-  border-top-color: $color-primary;
+  border-top-color: $color-bg-maroon;
   border-radius: $radius-full;
   animation: searchSpin 0.7s linear infinite;
 }
@@ -271,13 +292,13 @@
   width: 88px;
   height: 88px;
   @include flex-center;
-  border-radius: $radius-full;
+  border-radius: 0;
   background: $color-bg-warm;
   color: $color-text-disabled;
 }
 
 .search__empty-title {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-xxl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
@@ -285,6 +306,7 @@
 }
 
 .search__empty-desc {
+  font-family: $font-family-display;
   font-size: $font-size-sm;
   color: $color-text-tertiary;
   margin: 0;
@@ -292,15 +314,17 @@
 
 .search__empty-clear {
   padding: $space-sm $space-xl;
-  border: 1px solid $color-border;
-  border-radius: $radius-full;
+  border: 2px solid $color-border;
+  border-radius: 0;
   background: transparent;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-family: $font-family;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all $transition-fast;
 
-  &:hover { border-color: $color-primary; color: $color-primary; }
+  &:hover { border-color: $color-bg-maroon; color: $color-bg-maroon; }
 }
 
 // ═══ Product Grid ═══
@@ -322,9 +346,15 @@
   position: relative;
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
-  border-radius: $radius-xl;
+  border-radius: 0;
   overflow: hidden;
-  @include hover-lift(-3px, $shadow-lg);
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-border;
+    box-shadow: $shadow-lg;
+    transform: translateY(-3px);
+  }
 }
 
 .search__featured {
@@ -332,9 +362,10 @@
   top: $space-sm;
   left: $space-sm;
   padding: $space-xxs $space-sm;
-  background: $color-bg-dark;
+  background: $color-bg-maroon;
   color: $color-text-inverse;
-  border-radius: $radius-full;
+  border-radius: 0;
+  font-family: $font-family-nav;
   font-size: 10px;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-wide;
@@ -368,8 +399,12 @@
 }
 
 .search__card-category {
-  @include eyebrow-text;
+  font-family: $font-family-nav;
   font-size: 10px;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
+  color: $color-text-tertiary;
   margin: 0 0 $space-xxs;
 }
 
@@ -382,10 +417,10 @@
 }
 
 .search__card-price {
-  font-family: $font-family-display;
+  font-family: $font-family-nav;
   font-size: $font-size-lg;
   font-weight: $font-weight-bold;
-  color: $color-primary;
+  color: $color-bg-maroon;
   margin: 0;
 }
 
@@ -401,24 +436,24 @@
   background: $color-bg-dark;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-md;
+  border-radius: 0;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  font-family: $font-family;
-  cursor: pointer;
-  letter-spacing: $letter-spacing-wide;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+  cursor: pointer;
   transition: all $transition-fast;
 
-  &:hover { background: $color-primary; }
+  &:hover { background: $color-bg-maroon; }
 }
 
 .search__btn-wish {
   width: 40px;
   height: 40px;
   @include flex-center;
-  border: 1px solid $color-border;
-  border-radius: $radius-md;
+  border: 2px solid $color-border;
+  border-radius: 0;
   background: transparent;
   cursor: pointer;
   color: $color-text-tertiary;
@@ -439,18 +474,20 @@
   width: 40px;
   height: 40px;
   @include flex-center;
-  border: 1px solid $color-border-light;
-  border-radius: $radius-full;
+  border: 2px solid $color-border-light;
+  border-radius: 0;
   background: transparent;
   color: $color-text-secondary;
   cursor: pointer;
   transition: all $transition-fast;
 
-  &:hover:not(:disabled) { border-color: $color-primary; color: $color-primary; }
+  &:hover:not(:disabled) { border-color: $color-bg-maroon; color: $color-bg-maroon; }
   &:disabled { opacity: 0.3; cursor: not-allowed; }
 }
 
 .search__page-info {
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
   color: $color-text-tertiary;
+  text-transform: uppercase;
 }

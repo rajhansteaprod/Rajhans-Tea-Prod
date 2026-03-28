@@ -2,50 +2,50 @@
       <div class="nav-inner">
         <!-- Logo left -->
         <a routerLink="/" class="logo" (click)="closeMega()">
-          <span class="logo-name">Rajhans Tea</span>
+          <span class="logo-name">RAJHANS TEA</span>
         </a>
 
-        <!-- Center nav -->
+        <!-- Right nav links (desktop) -->
         <nav class="nav-links" [class.open]="mobileOpen()">
           <button class="nav-link" [class.active]="megaOpen()" (click)="navigateTo('/products')" (mouseenter)="onNavHover()">
-            All Products
+            SHOP
             <svg class="nav-chevron" [class.flip]="megaOpen()" width="10" height="10" viewBox="0 0 24 24" fill="none">
               <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
-          <a routerLink="/page/about-us" class="nav-link" (click)="closeAll()">Our Story</a>
-          <a routerLink="/page/blog" class="nav-link" (click)="closeAll()">Journal</a>
+          <a routerLink="/page/about-us" class="nav-link" (click)="closeAll()">OUR STORY</a>
+          <a routerLink="/page/blog" class="nav-link" (click)="closeAll()">ABOUT</a>
+          <button class="nav-link nav-link--cart" (click)="cart.toggleSidebar()">
+            BASKET
+            @if (cart.cartCount() > 0) { <span class="nav-badge">{{ cart.cartCount() }}</span> }
+          </button>
 
           <!-- Mobile-only links -->
           <div class="mobile-links">
-            <a routerLink="/products" class="nav-link" (click)="closeAll()">Products</a>
-            <a routerLink="/wishlist" class="nav-link" (click)="closeAll()">Wishlist</a>
+            <a routerLink="/products" class="nav-link" (click)="closeAll()">PRODUCTS</a>
+            <a routerLink="/wishlist" class="nav-link" (click)="closeAll()">WISHLIST</a>
             @if (auth.isLoggedIn()) {
-              <a routerLink="/dashboard" class="nav-link" (click)="closeAll()">Account</a>
-              <a routerLink="/orders" class="nav-link" (click)="closeAll()">Orders</a>
+              <a routerLink="/dashboard" class="nav-link" (click)="closeAll()">ACCOUNT</a>
+              <a routerLink="/orders" class="nav-link" (click)="closeAll()">ORDERS</a>
               @if (auth.isAdmin()) {
-                <a routerLink="/admin" class="nav-link" (click)="closeAll()">Admin</a>
+                <a routerLink="/admin" class="nav-link" (click)="closeAll()">ADMIN</a>
               }
-              <button class="nav-link nav-link--danger" (click)="auth.logout(); closeAll()">Sign Out</button>
+              <button class="nav-link nav-link--danger" (click)="auth.logout(); closeAll()">SIGN OUT</button>
             } @else {
-              <a routerLink="/auth/login" class="nav-link" (click)="closeAll()">Sign In</a>
+              <a routerLink="/auth/login" class="nav-link" (click)="closeAll()">SIGN IN</a>
             }
           </div>
         </nav>
 
-        <!-- Right icons -->
+        <!-- Right icons (mobile: search + burger only) -->
         <div class="nav-actions">
           <button class="action-icon" (click)="toggleSearch()" aria-label="Search">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.6"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           </button>
-          <a routerLink="/wishlist" class="action-icon" aria-label="Wishlist">
+          <a routerLink="/wishlist" class="action-icon hide-mobile" aria-label="Wishlist">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
             @if (cart.wishlistIds().size > 0) { <span class="badge">{{ cart.wishlistIds().size }}</span> }
           </a>
-          <button class="action-icon" (click)="cart.toggleSidebar()" aria-label="Cart">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="1.6"/><path d="M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="1.6"/></svg>
-            @if (cart.cartCount() > 0) { <span class="badge">{{ cart.cartCount() }}</span> }
-          </button>
           @if (auth.isLoggedIn()) {
             <a routerLink="/dashboard" class="action-icon hide-mobile" aria-label="Account">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.6"/></svg>
@@ -65,11 +65,11 @@
     <!-- ══════ MEGA MENU ══════ -->
     @if (megaOpen()) {
       <div class="mega" (click)="closeMega()">
-        <div class="mega-content" [style.top.px]="scrolled() ? 60 : 64" (click)="$event.stopPropagation()" (mouseleave)="closeMega()">
+        <div class="mega-content" [style.top.px]="scrolled() ? 68 : 72" (click)="$event.stopPropagation()" (mouseleave)="closeMega()">
           <div class="mega-layout">
             <!-- LEFT: Categories -->
             <aside class="mega-sidebar">
-              <h3 class="mega-heading">Categories</h3>
+              <h3 class="mega-heading">CATEGORIES</h3>
               <button class="mega-cat" [class.mega-cat--active]="!activeCatId()" (mouseenter)="onCatHover(null)" (click)="navigateTo('/products')" [style.--i]="0">
                 <div class="mega-cat-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
@@ -102,7 +102,7 @@
 
             <!-- RIGHT: Products -->
             <section class="mega-main">
-              <h3 class="mega-heading">{{ activeCatId() ? 'Products' : 'All Products' }}</h3>
+              <h3 class="mega-heading">{{ activeCatId() ? 'PRODUCTS' : 'ALL PRODUCTS' }}</h3>
               @if (megaLoading()) {
                 <div class="mega-loading">
                   <div class="mega-spinner"></div>

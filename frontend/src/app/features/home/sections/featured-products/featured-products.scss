@@ -6,53 +6,62 @@
 }
 
 .featured {
+  background: $color-bg-primary;
   @include section-padding;
-  @include content-container($max-width-wide);
 }
 
-// --- Header ---
+// ── Header with eyebrow + title + view all ──
 .featured__header {
+  @include content-container($max-width-wide);
   text-align: center;
   margin-bottom: $space-xxxl;
+  position: relative;
 }
 
 .featured__eyebrow {
-  @include eyebrow-text;
+  font-family: $font-family-nav;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-luxury;
+  text-transform: uppercase;
+  color: $color-gold;
   display: block;
-  margin-bottom: $space-sm;
+  margin-bottom: $space-md;
 }
 
 .featured__title {
-  font-family: $font-family-display;
-  font-size: clamp($font-size-xxxl, 4vw, $font-size-display);
-  font-weight: $font-weight-regular;
-  letter-spacing: $letter-spacing-display;
-  color: $color-text-primary;
+  @include mega-headline;
+  font-size: clamp($font-size-xxxl, 5vw, $font-size-display);
   margin: 0 0 $space-lg;
+
+  @include respond-to(md) {
+    font-size: clamp($font-size-xxl, 8vw, $font-size-xxxl);
+  }
 }
 
-.featured__link {
-  display: inline-flex;
-  align-items: center;
-  font-family: $font-family;
+.featured__view-all {
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
+  letter-spacing: $letter-spacing-luxury;
   text-transform: uppercase;
   color: $color-text-tertiary;
   text-decoration: none;
-  transition: color $transition-fast;
+  transition: color 0.3s ease;
 
   &:hover {
     color: $color-primary;
   }
 }
 
-// --- Grid ---
+// ── Product grid — equal cards, Kusmi Tea style ──
 .featured__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: $space-xl;
+  max-width: $max-width-wide;
+  margin: 0 auto;
+  padding: 0 clamp($space-lg, 5vw, $space-xxxl);
 
   @include respond-to(lg) {
     grid-template-columns: repeat(2, 1fr);
@@ -60,47 +69,107 @@
 
   @include respond-to(sm) {
     grid-template-columns: 1fr;
-    gap: $space-lg;
+    max-width: 400px;
   }
 }
 
-// --- Skeleton loading ---
-.featured__skeleton {
-  border-radius: $radius-lg;
-  overflow: hidden;
-  background: $color-bg-secondary;
+// ── Individual card — borderless, clean (Kusmi style) ──
+.featured__card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: none;
 }
 
-.skeleton-box {
-  aspect-ratio: 1 / 1;
-  background: linear-gradient(90deg,
-    $color-bg-secondary 25%,
-    $color-border-light 50%,
-    $color-bg-secondary 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+.featured__card-image {
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: $color-bg-warm;
+  margin-bottom: $space-lg;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s $ease-expo-out;
+  }
+
+  .featured__card:hover & img {
+    transform: scale(1.04);
+  }
+}
+
+// ── Card info — all cards show details ──
+.featured__card-info {
+  text-align: left;
+}
+
+.featured__card-category {
+  font-family: $font-family-nav;
+  font-size: 11px;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-luxury;
+  text-transform: uppercase;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: $space-xxs;
+}
+
+.featured__card-name {
+  font-family: $font-family-display;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin: 0 0 $space-xxs;
+  letter-spacing: 0.02em;
+}
+
+.featured__card-attr {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin: 0 0 $space-sm;
+}
+
+.featured__card-price {
+  font-family: $font-family-nav;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+}
+
+// ── Skeleton loading ──
+.featured__card--skeleton {
+  .skeleton-box {
+    aspect-ratio: 3 / 4;
+    margin-bottom: $space-lg;
+    background: linear-gradient(90deg,
+      rgba($color-bg-dark, 0.06) 25%,
+      rgba($color-bg-dark, 0.02) 50%,
+      rgba($color-bg-dark, 0.06) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
 }
 
 .skeleton-lines {
-  padding: $space-lg;
   @include flex-column;
   gap: $space-sm;
 }
 
 .skeleton-line {
   height: $space-md;
-  border-radius: $radius-sm;
   background: linear-gradient(90deg,
-    $color-bg-secondary 25%,
-    $color-border-light 50%,
-    $color-bg-secondary 75%
+    rgba($color-bg-dark, 0.06) 25%,
+    rgba($color-bg-dark, 0.02) 50%,
+    rgba($color-bg-dark, 0.06) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 
-  &--sm { width: 40%; height: $space-sm; }
-  &--lg { width: 70%; }
+  &--sm { width: 80px; height: $space-sm; }
+  &--lg { width: 160px; }
 }
 
 @keyframes shimmer {

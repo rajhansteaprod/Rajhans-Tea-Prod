@@ -4,7 +4,7 @@
 .sessions-panel {
   background: $color-bg-secondary;
   border: 1px solid $color-border;
-  border-radius: $radius-xl;
+  border-radius: 0;
   overflow: hidden;
   animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -33,7 +33,7 @@
 .panel-icon {
   width: 36px;
   height: 36px;
-  border-radius: $radius-md;
+  border-radius: 0;
   background: $color-primary-light;
   color: $color-primary;
   display: flex;
@@ -66,7 +66,7 @@
   gap: $space-xs;
   padding: $space-xs $space-sm;
   border: 1px solid rgba(203, 65, 65, 0.3);
-  border-radius: $radius-md;
+  border-radius: 0;
   background: transparent;
   color: $color-error;
   font-size: $font-size-xs;
@@ -93,7 +93,7 @@
   background: none;
   color: $color-text-tertiary;
   cursor: pointer;
-  border-radius: $radius-sm;
+  border-radius: 0;
   transition: all $transition-fast;
 
   &:hover { background: $color-bg-tertiary; color: $color-text-primary; }
@@ -129,7 +129,7 @@
   height: 20px;
   border: 2px solid $color-border;
   border-top-color: $color-primary;
-  border-radius: 50%;
+  border-radius: 0;
   animation: spin 0.6s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -144,7 +144,7 @@
   align-items: flex-start;
   gap: $space-sm;
   padding: $space-sm $space-sm;
-  border-radius: $radius-md;
+  border-radius: 0;
   transition: background $transition-fast;
   position: relative;
 
@@ -153,7 +153,7 @@
   &.current {
     background: rgba(204, 88, 3, 0.04);
     border: 1px solid rgba(204, 88, 3, 0.12);
-    border-radius: $radius-md;
+    border-radius: 0;
   }
 }
 
@@ -161,7 +161,7 @@
 .device-icon {
   width: 34px;
   height: 34px;
-  border-radius: $radius-md;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -198,7 +198,7 @@
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
   padding: 1px $space-xs;
-  border-radius: $radius-sm;
+  border-radius: 0;
   background: $color-primary-light;
   color: $color-primary;
 }
@@ -235,7 +235,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid transparent;
-  border-radius: $radius-sm;
+  border-radius: 0;
   background: none;
   color: $color-text-disabled;
   cursor: pointer;

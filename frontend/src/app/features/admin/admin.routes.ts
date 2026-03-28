@@ -67,6 +67,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./cms/cms-management').then((m) => m.CmsManagementComponent),
       },
+      {
+        path: 'interface/hero-slides',
+        loadComponent: () =>
+          import('./interface/hero-slides/hero-slides').then((m) => m.HeroSlidesComponent),
+      },
     ],
   },
 ];

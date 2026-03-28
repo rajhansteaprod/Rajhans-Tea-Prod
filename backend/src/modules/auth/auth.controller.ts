@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { AuthService } from './services/auth.service';
 import { sendSuccess, sendCreated } from '../../utils/api-response';
 import { extractDeviceInfo } from '../../utils/device-parser';
+import { BadRequestError } from '../../utils/api-error';
 
 const authService = new AuthService();
 
@@ -22,11 +23,14 @@ export const verifyFirebaseToken = async (req: Request, res: Response) => {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 
-  sendCreated(res, result, result.isNewUser ? 'Account created successfully' : 'Login successful');
+  // Strip refreshToken from response body — it's already in the httpOnly cookie
+  const { refreshToken: _rt, ...safeTokens } = result.tokens;
+  sendCreated(res, { ...result, tokens: { accessToken: safeTokens.accessToken } }, result.isNewUser ? 'Account created successfully' : 'Login successful');
 };
 
 export const refreshToken = async (req: Request, res: Response) => {
-  const token = req.body.refreshToken || req.cookies?.refreshToken;
+  const token = req.cookies?.refreshToken || req.body.refreshToken;
+  if (!token) throw new BadRequestError('Refresh token is required');
 
   // Update device info on each refresh so sessions reflect the most recent browser/IP
   const deviceInfo = extractDeviceInfo(req);
@@ -40,7 +44,8 @@ export const refreshToken = async (req: Request, res: Response) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  sendSuccess(res, result, 'Token refreshed successfully');
+  // Strip refreshToken from response body — it's already in the httpOnly cookie
+  sendSuccess(res, { tokens: { accessToken: result.tokens.accessToken } }, 'Token refreshed successfully');
 };
 
 export const logout = async (req: Request, res: Response) => {

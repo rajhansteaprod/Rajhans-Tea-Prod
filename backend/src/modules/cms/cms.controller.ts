@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { CmsService } from './services/cms.service';
+import { HeroSlideService } from './services/hero-slide.service';
 import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../../utils/api-response';
 
 const cmsService = new CmsService();
+const heroSlideService = new HeroSlideService();
 
 // ─── Public ──────────────────────────────────────────────────────────────────
 
@@ -84,4 +86,58 @@ export const adminUpdateBlog = async (req: Request, res: Response) => {
 export const adminDeleteBlog = async (req: Request, res: Response) => {
   await cmsService.deleteBlog(req.params['id'] as string);
   sendNoContent(res);
+};
+
+// ─── Public: Hero Slides ────────────────────────────────────────────────────
+
+export const getActiveHeroSlides = async (_req: Request, res: Response) => {
+  const slides = await heroSlideService.getActiveSlides();
+  sendSuccess(res, slides, 'Hero slides');
+};
+
+// ─── Admin: Hero Slides ─────────────────────────────────────────────────────
+
+export const adminListHeroSlides = async (_req: Request, res: Response) => {
+  const slides = await heroSlideService.listAll();
+  sendSuccess(res, slides, 'Hero slides');
+};
+
+export const adminCreateHeroSlide = async (req: Request, res: Response) => {
+  const files = req.files as { [field: string]: Express.Multer.File[] } | undefined;
+  const body = { ...req.body };
+
+  if (files?.['desktopImage']?.[0]) {
+    body.desktopImage = `/uploads/${files['desktopImage'][0].filename}`;
+  }
+  if (files?.['mobileImage']?.[0]) {
+    body.mobileImage = `/uploads/${files['mobileImage'][0].filename}`;
+  }
+
+  const slide = await heroSlideService.create(body);
+  sendCreated(res, slide, 'Hero slide created');
+};
+
+export const adminUpdateHeroSlide = async (req: Request, res: Response) => {
+  const files = req.files as { [field: string]: Express.Multer.File[] } | undefined;
+  const body = { ...req.body };
+
+  if (files?.['desktopImage']?.[0]) {
+    body.desktopImage = `/uploads/${files['desktopImage'][0].filename}`;
+  }
+  if (files?.['mobileImage']?.[0]) {
+    body.mobileImage = `/uploads/${files['mobileImage'][0].filename}`;
+  }
+
+  const slide = await heroSlideService.update(req.params['id'] as string, body);
+  sendSuccess(res, slide, 'Hero slide updated');
+};
+
+export const adminDeleteHeroSlide = async (req: Request, res: Response) => {
+  await heroSlideService.delete(req.params['id'] as string);
+  sendNoContent(res);
+};
+
+export const adminReorderHeroSlides = async (req: Request, res: Response) => {
+  const slides = await heroSlideService.reorder(req.body.orderedIds);
+  sendSuccess(res, slides, 'Hero slides reordered');
 };

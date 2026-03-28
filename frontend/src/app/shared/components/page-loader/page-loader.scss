@@ -1,0 +1,62 @@
+@use '../../../core/design-tokens/tokens' as *;
+@use '../../../core/design-tokens/mixins' as *;
+
+.page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: $color-bg-dark;
+  @include flex-center;
+  animation: loader-in 0.3s ease both;
+
+  &.leaving {
+    animation: loader-out 0.5s ease both;
+  }
+}
+
+.page-loader__content {
+  @include flex-column;
+  align-items: center;
+  gap: $space-xl;
+}
+
+.page-loader__brand {
+  font-family: $font-family-display;
+  font-size: clamp(24px, 5vw, 36px);
+  font-weight: $font-weight-regular;
+  color: $color-text-inverse;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+// Three animated dots
+.page-loader__spinner {
+  display: flex;
+  gap: $space-sm;
+
+  span {
+    width: 6px;
+    height: 6px;
+    background: $color-text-inverse;
+    border-radius: 50%;
+    animation: dot-pulse 1.2s ease-in-out infinite;
+
+    &:nth-child(2) { animation-delay: 0.15s; }
+    &:nth-child(3) { animation-delay: 0.3s; }
+  }
+}
+
+@keyframes dot-pulse {
+  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes loader-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes loader-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}

@@ -1,14 +1,35 @@
-<section class="split">
-  <div class="split__image">
-    <img
-      src="assets/images/tea-pouring.jpg"
-      alt="Tea leaves being hand-picked"
-      loading="lazy"
-    />
+<section class="brews">
+  <div class="brews__header">
+    <span class="brews__eyebrow">How to Enjoy</span>
+    <h2 class="brews__title">Brew Your Way</h2>
   </div>
-  <div class="split__content">
-    <h2 class="split__headline">From Garden<br />to Your Cup</h2>
-    <p class="split__text">Sourced directly from India's finest tea estates, crafted with care.</p>
-    <a routerLink="/page/about-us" class="split__cta">Learn More</a>
+
+  <div class="brews__grid">
+    <!-- Masala Chai -->
+    <div class="brews__card brews__card--masala">
+      <div class="brews__card-overlay">
+        <h3 class="brews__card-name">Masala Chai</h3>
+        <p class="brews__card-tags">CTC Tea &middot; Cardamom &middot; Ginger &middot; Cloves</p>
+        <a routerLink="/products" class="brews__card-cta">Discover</a>
+      </div>
+    </div>
+
+    <!-- Elaichi Chai -->
+    <div class="brews__card brews__card--elaichi">
+      <div class="brews__card-overlay">
+        <h3 class="brews__card-name">Elaichi Chai</h3>
+        <p class="brews__card-tags">CTC Tea &middot; Cardamom &middot; Milk &middot; Sugar</p>
+        <a routerLink="/products" class="brews__card-cta">Discover</a>
+      </div>
+    </div>
+
+    <!-- Adrak Chai -->
+    <div class="brews__card brews__card--adrak">
+      <div class="brews__card-overlay">
+        <h3 class="brews__card-name">Adrak Chai</h3>
+        <p class="brews__card-tags">CTC Tea &middot; Fresh Ginger &middot; Jaggery</p>
+        <a routerLink="/products" class="brews__card-cta">Discover</a>
+      </div>
+    </div>
   </div>
 </section>

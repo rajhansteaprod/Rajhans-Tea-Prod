@@ -2,7 +2,7 @@
   <!-- Tabs -->
   <div class="reviews__tabs">
     <button class="reviews__tab" [class.active]="activeTab() === 'reviews'" (click)="activeTab.set('reviews')">
-      Reviews ({{ ratingSummary()?.totalReviews || 0 }})
+      REVIEWS ({{ ratingSummary()?.totalReviews || 0 }})
     </button>
     <button class="reviews__tab" [class.active]="activeTab() === 'qa'" (click)="switchToQA()">
       Q&A ({{ questions().length }})
@@ -23,7 +23,7 @@
               </svg>
             }
           </div>
-          <span class="reviews__avg-count">{{ ratingSummary()!.totalReviews }} reviews</span>
+          <span class="reviews__avg-count">{{ ratingSummary()!.totalReviews }} REVIEWS</span>
         </div>
         <div class="reviews__bars">
           @for (rating of [5,4,3,2,1]; track rating) {
@@ -42,17 +42,17 @@
     <!-- Write Review Button -->
     @if (auth.isLoggedIn()) {
       <button class="reviews__write-btn" (click)="showForm.set(!showForm())">
-        {{ showForm() ? 'Cancel' : 'Write a Review' }}
+        {{ showForm() ? 'CANCEL' : 'WRITE A REVIEW' }}
       </button>
     } @else {
-      <a routerLink="/auth/login" class="reviews__write-btn">Sign in to Review</a>
+      <a routerLink="/auth/login" class="reviews__write-btn">SIGN IN TO REVIEW</a>
     }
 
     <!-- Review Form -->
     @if (showForm()) {
       <form class="reviews__form" (ngSubmit)="submitReview()">
         <div class="reviews__form-group">
-          <label class="reviews__form-label">Rating</label>
+          <label class="reviews__form-label">RATING</label>
           <div class="reviews__form-stars">
             @for (s of [1,2,3,4,5]; track s) {
               <button type="button" class="reviews__form-star" [class.filled]="s <= formRating()" (click)="formRating.set(s)">
@@ -64,15 +64,15 @@
           </div>
         </div>
         <div class="reviews__form-group">
-          <label class="reviews__form-label">Title</label>
+          <label class="reviews__form-label">TITLE</label>
           <input class="reviews__form-input" [(ngModel)]="formTitle" name="title" placeholder="Summarize your experience" />
         </div>
         <div class="reviews__form-group">
-          <label class="reviews__form-label">Review</label>
+          <label class="reviews__form-label">REVIEW</label>
           <textarea class="reviews__form-textarea" [(ngModel)]="formBody" name="body" placeholder="Tell others what you think..." rows="4"></textarea>
         </div>
         <button type="submit" class="reviews__submit-btn" [disabled]="formRating() === 0 || submitting()">
-          {{ submitting() ? 'Submitting...' : 'Submit Review' }}
+          {{ submitting() ? 'SUBMITTING...' : 'SUBMIT REVIEW' }}
         </button>
       </form>
     }
@@ -98,7 +98,7 @@
               </div>
               <div class="reviews__card-meta">
                 @if (r.isVerifiedPurchase) {
-                  <span class="reviews__verified">Verified Purchase</span>
+                  <span class="reviews__verified">VERIFIED PURCHASE</span>
                 }
                 <span class="reviews__date">{{ r.createdAt | date:'mediumDate' }}</span>
               </div>
@@ -110,13 +110,13 @@
             <div class="reviews__card-footer">
               <button class="reviews__helpful-btn" (click)="voteHelpful(r._id)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Helpful ({{ r.helpfulVotes }})
+                HELPFUL ({{ r.helpfulVotes }})
               </button>
             </div>
             <!-- Admin Reply -->
             @if (r.adminReply) {
               <div class="reviews__reply">
-                <span class="reviews__reply-label">Rajhans Tea replied:</span>
+                <span class="reviews__reply-label">RAJHANS TEA REPLIED:</span>
                 <p class="reviews__reply-body">{{ r.adminReply.body }}</p>
               </div>
             }
@@ -132,10 +132,10 @@
     @if (auth.isLoggedIn()) {
       <div class="qa__ask">
         <input class="qa__ask-input" [(ngModel)]="questionText" placeholder="Ask a question about this product..." />
-        <button class="qa__ask-btn" [disabled]="!questionText.trim()" (click)="askQuestion()">Ask</button>
+        <button class="qa__ask-btn" [disabled]="!questionText.trim()" (click)="askQuestion()">ASK</button>
       </div>
     } @else {
-      <a routerLink="/auth/login" class="reviews__write-btn">Sign in to Ask</a>
+      <a routerLink="/auth/login" class="reviews__write-btn">SIGN IN TO ASK</a>
     }
 
     @if (qaLoading()) {
@@ -161,7 +161,7 @@
                 <div class="qa__a-content">
                   <p class="qa__a-text">{{ a.body }}</p>
                   @if (a.isAdminAnswer) {
-                    <span class="qa__a-admin">Official Answer</span>
+                    <span class="qa__a-admin">OFFICIAL ANSWER</span>
                   }
                 </div>
               </div>
@@ -172,12 +172,12 @@
                 <div class="qa__answer-form">
                   <input class="qa__answer-input" [(ngModel)]="answerText" placeholder="Write your answer..." />
                   <div class="qa__answer-actions">
-                    <button class="qa__answer-submit" [disabled]="!answerText.trim()" (click)="submitAnswer(q._id)">Submit</button>
-                    <button class="qa__answer-cancel" (click)="answeringId.set(null)">Cancel</button>
+                    <button class="qa__answer-submit" [disabled]="!answerText.trim()" (click)="submitAnswer(q._id)">SUBMIT</button>
+                    <button class="qa__answer-cancel" (click)="answeringId.set(null)">CANCEL</button>
                   </div>
                 </div>
               } @else {
-                <button class="qa__reply-btn" (click)="answeringId.set(q._id)">Answer this question</button>
+                <button class="qa__reply-btn" (click)="answeringId.set(q._id)">ANSWER THIS QUESTION</button>
               }
             }
           </div>

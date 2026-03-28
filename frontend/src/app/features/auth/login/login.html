@@ -4,12 +4,9 @@
     <div class="login__brand-content">
       <span class="login__brand-eyebrow">Welcome to</span>
       <h1 class="login__brand-title">
-        <span class="login__brand-line">Rajhans</span>
-        <span class="login__brand-line login__brand-line--accent">Tea</span>
+        <span class="login__brand-line">RAJHANS</span>
+        <span class="login__brand-line login__brand-line--accent">TEA</span>
       </h1>
-      <p class="login__brand-desc">
-        Curated premium teas, delivered to your door. Experience the finest blends from India's heritage gardens.
-      </p>
       <div class="login__brand-divider"></div>
       <p class="login__brand-tagline">Est. Since Generations</p>
     </div>
@@ -27,7 +24,7 @@
 
       <div class="login__header">
         <h2 class="login__title">
-          {{ step() === 'phone' ? 'Sign In' : 'Verify OTP' }}
+          {{ step() === 'phone' ? 'SIGN IN' : 'VERIFY OTP' }}
         </h2>
         <p class="login__subtitle">
           {{ step() === 'phone'
@@ -52,7 +49,7 @@
       <!-- Phone Step -->
       @if (step() === 'phone') {
         <div class="login__section">
-          <label class="login__label">Mobile Number</label>
+          <label class="login__label">MOBILE NUMBER</label>
           <div class="login__phone-group">
             <div class="login__country">
               <span class="login__flag">&#127470;&#127475;</span>
@@ -78,9 +75,9 @@
           >
             @if (loading()) {
               <div class="login__spinner"></div>
-              <span>Sending...</span>
+              <span>SENDING...</span>
             } @else {
-              <span>Continue</span>
+              <span>CONTINUE</span>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -92,7 +89,7 @@
       <!-- OTP Step -->
       @if (step() === 'otp') {
         <div class="login__section">
-          <label class="login__label">Verification Code</label>
+          <label class="login__label">VERIFICATION CODE</label>
           <div class="login__otp-inputs">
             @for (i of otpSlots; track i) {
               <input
@@ -118,9 +115,9 @@
           >
             @if (loading()) {
               <div class="login__spinner"></div>
-              <span>Verifying...</span>
+              <span>VERIFYING...</span>
             } @else {
-              <span>Verify &amp; Sign In</span>
+              <span>VERIFY &amp; SIGN IN</span>
             }
           </button>
 
@@ -130,10 +127,10 @@
               [disabled]="resendCooldown() > 0"
               (click)="onSendOtp()"
             >
-              {{ resendCooldown() > 0 ? 'Resend in ' + resendCooldown() + 's' : 'Resend Code' }}
+              {{ resendCooldown() > 0 ? 'Resend in ' + resendCooldown() + 's' : 'RESEND CODE' }}
             </button>
             <button class="login__link" (click)="changePhone()">
-              Change Number
+              CHANGE NUMBER
             </button>
           </div>
         </div>

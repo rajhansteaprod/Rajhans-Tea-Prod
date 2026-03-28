@@ -9,11 +9,11 @@
 .page-header { margin-bottom: $space-xl; }
 
 .page-title {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-xxl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
-  letter-spacing: $letter-spacing-tight;
+  letter-spacing: 0.02em;
   margin: 0 0 $space-xxs;
 }
 
@@ -41,7 +41,7 @@
   padding: $space-lg;
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
-  border-radius: $radius-xl;
+  border-radius: 0;
   box-shadow: $shadow-sm;
   transition: all $transition-fast;
 
@@ -51,7 +51,7 @@
 .stat-icon {
   width: 44px;
   height: 44px;
-  border-radius: $radius-lg;
+  border-radius: 0;
   @include flex-center;
 
   .revenue & { background: rgba(87, 136, 108, 0.1); color: $color-success; }
@@ -88,7 +88,7 @@
   min-width: 200px;
   padding: $space-sm $space-md;
   border: 1.5px solid $color-border;
-  border-radius: $radius-lg;
+  border-radius: 0;
   font-size: $font-size-sm;
   font-family: $font-family;
   background: $color-bg-tertiary;
@@ -103,7 +103,7 @@
 .status-filter {
   padding: $space-sm $space-xl $space-sm $space-md;
   border: 1.5px solid $color-border;
-  border-radius: $radius-lg;
+  border-radius: 0;
   font-size: $font-size-sm;
   font-family: $font-family;
   background: $color-bg-tertiary;
@@ -129,7 +129,7 @@
   height: 28px;
   border: 2.5px solid $color-border;
   border-top-color: $color-primary;
-  border-radius: 50%;
+  border-radius: 0;
   animation: spin 0.7s linear infinite;
 }
 
@@ -146,7 +146,7 @@
 .table-wrap {
   overflow-x: auto;
   border: 1px solid $color-border-light;
-  border-radius: $radius-xl;
+  border-radius: 0;
   box-shadow: $shadow-sm;
 }
 
@@ -204,7 +204,7 @@
 .status-badge {
   display: inline-block;
   padding: 2px $space-xs;
-  border-radius: $radius-full;
+  border-radius: 0;
   font-size: 10px;
   font-weight: $font-weight-bold;
   text-transform: uppercase;
@@ -224,7 +224,7 @@
   width: 30px;
   height: 30px;
   @include flex-center;
-  border-radius: $radius-md;
+  border-radius: 0;
   border: 1px solid $color-border-light;
   background: transparent;
   color: $color-text-tertiary;
@@ -248,7 +248,7 @@
 .page-btn {
   padding: $space-xs $space-md;
   border: 1px solid $color-border;
-  border-radius: $radius-md;
+  border-radius: 0;
   background: transparent;
   font-size: $font-size-sm;
   font-family: $font-family;
@@ -280,7 +280,7 @@
   max-height: 85vh;
   overflow-y: auto;
   background: $color-bg-tertiary;
-  border-radius: $radius-xl;
+  border-radius: 0;
   border: 1px solid $color-border-light;
   box-shadow: $shadow-xl;
   z-index: $z-modal;
@@ -301,7 +301,7 @@
 .close-btn {
   width: 32px;
   height: 32px;
-  border-radius: $radius-md;
+  border-radius: 0;
   border: 1px solid $color-border-light;
   background: transparent;
   cursor: pointer;
@@ -355,7 +355,7 @@
 
 .items-list {
   border: 1px solid $color-border-light;
-  border-radius: $radius-lg;
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -406,7 +406,7 @@
   input {
     padding: $space-sm $space-md;
     border: 1.5px solid $color-border;
-    border-radius: $radius-md;
+    border-radius: 0;
     font-size: $font-size-sm;
     font-family: $font-family;
     background: $color-bg-tertiary;
@@ -422,7 +422,7 @@
   background: rgba(192, 57, 43, 0.08);
   color: $color-error;
   border: 1px solid rgba(192, 57, 43, 0.2);
-  border-radius: $radius-md;
+  border-radius: 0;
   font-size: $font-size-sm;
   margin-bottom: $space-md;
 }
@@ -437,7 +437,7 @@
 .btn-cancel {
   padding: $space-sm $space-lg;
   border: 1px solid $color-border;
-  border-radius: $radius-lg;
+  border-radius: 0;
   background: transparent;
   font-size: $font-size-sm;
   font-family: $font-family;
@@ -452,7 +452,7 @@
   background: $color-error;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-lg;
+  border-radius: 0;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
   font-family: $font-family;

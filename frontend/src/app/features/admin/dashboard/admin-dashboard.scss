@@ -33,11 +33,11 @@
 }
 
 .dash-title {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-xxl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
-  letter-spacing: $letter-spacing-tight;
+  letter-spacing: 0.02em;
 
   @include respond-to(sm) {
     font-size: $font-size-xl;
@@ -56,14 +56,14 @@
   gap: 6px;
   padding: $space-xxs $space-sm;
   background: rgba(87, 136, 108, 0.08);
-  border-radius: $radius-full;
+  border-radius: 0;
 }
 
 .live-dot {
   width: 7px;
   height: 7px;
   background: $color-success;
-  border-radius: 50%;
+  border-radius: 0;
   animation: livePulse 2s ease-in-out infinite;
 }
 
@@ -106,7 +106,7 @@
 .kpi-card {
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
-  border-radius: $radius-xl;
+  border-radius: 0;
   padding: $space-lg;
   transition: all $transition-normal;
   position: relative;
@@ -156,7 +156,7 @@
 .kpi-icon {
   width: 36px;
   height: 36px;
-  border-radius: $radius-md;
+  border-radius: 0;
   @include flex-center;
 
   &.users { background: $color-primary-light; color: $color-primary; }
@@ -177,7 +177,7 @@
   font-size: 32px;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
-  letter-spacing: $letter-spacing-tight;
+  letter-spacing: 0.02em;
   line-height: 1;
 
   @include respond-to(xs) { font-size: 26px; }
@@ -187,7 +187,7 @@
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
   padding: 1px $space-xs;
-  border-radius: $radius-sm;
+  border-radius: 0;
 
   &.up {
     color: $color-success;
@@ -198,14 +198,14 @@
 .kpi-bar {
   height: 4px;
   background: $color-bg-secondary;
-  border-radius: $radius-full;
+  border-radius: 0;
   overflow: hidden;
   margin-bottom: $space-xs;
 }
 
 .kpi-bar-fill {
   height: 100%;
-  border-radius: $radius-full;
+  border-radius: 0;
   transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
 
   &.users { background: $color-primary; }
@@ -233,7 +233,7 @@
 .panel {
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
-  border-radius: $radius-xl;
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -243,9 +243,11 @@
 }
 
 .panel-title {
+  font-family: $font-family-heading;
   font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   color: $color-text-primary;
+  letter-spacing: 0.02em;
 }
 
 .panel-link {
@@ -266,7 +268,7 @@
 .user-row {
   @include flex-between;
   padding: $space-sm;
-  border-radius: $radius-md;
+  border-radius: 0;
   transition: background $transition-fast;
 
   &:hover { background: $color-bg-secondary; }
@@ -282,7 +284,7 @@
 .avatar {
   width: 34px;
   height: 34px;
-  border-radius: $radius-md;
+  border-radius: 0;
   background: $color-bg-secondary;
   color: $color-text-tertiary;
   @include flex-center;
@@ -319,7 +321,7 @@
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
   padding: 2px $space-xs;
-  border-radius: $radius-sm;
+  border-radius: 0;
   background: $color-bg-secondary;
   color: $color-text-tertiary;
   flex-shrink: 0;
@@ -347,7 +349,7 @@
   align-items: center;
   gap: $space-sm;
   padding: $space-sm;
-  border-radius: $radius-md;
+  border-radius: 0;
   text-decoration: none;
   transition: all $transition-fast;
   cursor: pointer;
@@ -366,7 +368,7 @@
 .action-icon {
   width: 36px;
   height: 36px;
-  border-radius: $radius-md;
+  border-radius: 0;
   @include flex-center;
   flex-shrink: 0;
 
@@ -407,6 +409,6 @@
   color: $color-text-disabled;
   background: $color-bg-secondary;
   padding: 2px 6px;
-  border-radius: $radius-sm;
+  border-radius: 0;
   flex-shrink: 0;
 }

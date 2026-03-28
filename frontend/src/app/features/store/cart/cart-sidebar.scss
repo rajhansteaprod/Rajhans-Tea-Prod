@@ -2,13 +2,13 @@
 @use '../../../core/design-tokens/mixins' as *;
 
 // ═══════════════════════════════════════
-// CART SIDEBAR — 420px wide, clean design
+// CART SIDEBAR — barcoopbevy style
 // ═══════════════════════════════════════
 
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(58, 45, 50, 0.35);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(6px);
   z-index: $z-modal-backdrop;
   animation: fadeIn $transition-fast forwards;
@@ -27,7 +27,7 @@
   width: 420px;
   max-width: 100vw;
   background: $color-bg-primary;
-  box-shadow: -20px 0 60px rgba(58, 45, 50, 0.12);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.15);
   z-index: $z-modal;
   display: flex;
   flex-direction: column;
@@ -57,17 +57,17 @@
   gap: $space-sm;
   font-family: $font-family-display;
   font-size: $font-size-xl;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   color: $color-text-primary;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.04em;
   margin: 0;
 }
 
 .count-badge {
-  background: $color-bg-dark;
+  background: $color-bg-maroon;
   color: $color-text-inverse;
-  border-radius: $radius-full;
-  font-family: $font-family;
+  border-radius: 0;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
   font-weight: $font-weight-bold;
   min-width: 22px;
@@ -80,7 +80,7 @@
   width: 36px;
   height: 36px;
   @include flex-center;
-  border-radius: $radius-full;
+  border-radius: 0;
   border: none;
   background: transparent;
   color: $color-text-tertiary;
@@ -109,7 +109,7 @@
   width: 24px;
   height: 24px;
   border: 2px solid $color-border-light;
-  border-top-color: $color-primary;
+  border-top-color: $color-bg-maroon;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -130,7 +130,7 @@
 .empty-icon {
   width: 72px;
   height: 72px;
-  border-radius: 50%;
+  border-radius: 0;
   background: $color-bg-secondary;
   @include flex-center;
   color: $color-text-disabled;
@@ -140,10 +140,10 @@
 .empty-title {
   font-family: $font-family-display;
   font-size: $font-size-xl;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   color: $color-text-primary;
   margin: 0;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.04em;
 }
 
 .empty-sub {
@@ -155,20 +155,21 @@
 .btn-shop {
   margin-top: $space-lg;
   padding: $space-md $space-xxl;
-  background: $color-bg-dark;
+  background: $color-bg-maroon;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-full;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  font-family: $font-family;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: $font-weight-bold;
+  font-family: $font-family-nav;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
   text-decoration: none;
   transition: all $transition-fast;
-  letter-spacing: 0.01em;
 
   &:hover {
-    background: $color-text-primary;
+    background: $color-primary-hover;
     transform: translateY(-1px);
   }
 }
@@ -200,7 +201,7 @@
 .item-image {
   width: 88px;
   height: 88px;
-  border-radius: $radius-md;
+  border-radius: 0;
   overflow: hidden;
   background: $color-bg-secondary;
   flex-shrink: 0;
@@ -234,10 +235,12 @@
 
 .item-name {
   font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
+  font-family: $font-family-display;
   color: $color-text-primary;
   margin: 0;
   line-height: $line-height-tight;
+  letter-spacing: 0.02em;
 }
 
 .item-price {
@@ -256,7 +259,7 @@
   align-items: center;
   gap: 0;
   border: 1px solid $color-border;
-  border-radius: $radius-full;
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -283,7 +286,8 @@
 
 .qty-value {
   font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
+  font-family: $font-family-nav;
   color: $color-text-primary;
   min-width: 24px;
   text-align: center;
@@ -292,6 +296,7 @@
 .item-line-total {
   font-size: $font-size-sm;
   font-weight: $font-weight-bold;
+  font-family: $font-family-nav;
   color: $color-text-primary;
 }
 
@@ -299,7 +304,7 @@
   width: 24px;
   height: 24px;
   @include flex-center;
-  border-radius: $radius-full;
+  border-radius: 0;
   border: none;
   background: transparent;
   color: $color-text-disabled;
@@ -326,14 +331,16 @@
 }
 
 .subtotal-label {
-  font-size: $font-size-sm;
+  font-size: 12px;
+  font-family: $font-family-nav;
+  font-weight: $font-weight-bold;
   color: $color-text-tertiary;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 
 .subtotal-value {
-  font-family: $font-family-display;
+  font-family: $font-family-nav;
   font-size: $font-size-xl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
@@ -351,22 +358,23 @@
   justify-content: center;
   width: 100%;
   padding: $space-md $space-lg;
-  background: $color-bg-dark;
+  background: $color-bg-maroon;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-full;
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
-  font-family: $font-family;
+  border-radius: 0;
+  font-size: 14px;
+  font-weight: $font-weight-bold;
+  font-family: $font-family-nav;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
   text-decoration: none;
   transition: all $transition-fast;
-  letter-spacing: 0.01em;
 
   &:hover {
-    background: $color-text-primary;
+    background: $color-primary-hover;
     transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(58, 45, 50, 0.2);
+    box-shadow: 0 8px 24px rgba($color-primary, 0.25);
   }
 }
 
@@ -377,18 +385,20 @@
   padding: $space-sm $space-lg;
   background: transparent;
   color: $color-text-secondary;
-  border: 1px solid $color-border;
-  border-radius: $radius-full;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  font-family: $font-family;
+  border: 2px solid $color-border;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: $font-weight-bold;
+  font-family: $font-family-nav;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   cursor: pointer;
   text-align: center;
   transition: all $transition-fast;
 
   &:hover {
-    border-color: $color-text-primary;
-    color: $color-text-primary;
+    border-color: $color-bg-maroon;
+    color: $color-bg-maroon;
   }
 }
 
@@ -401,7 +411,10 @@
   color: $color-text-disabled;
   border: none;
   font-size: $font-size-xs;
-  font-family: $font-family;
+  font-family: $font-family-nav;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
   text-align: center;
   transition: color $transition-fast;

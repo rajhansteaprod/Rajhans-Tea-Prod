@@ -31,7 +31,7 @@
 // --- Typography ---
 @mixin heading($size: $font-size-xl) {
   font-size: $size;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-medium;
   line-height: $line-height-tight;
   color: $color-text-primary;
 }
@@ -58,13 +58,13 @@
   border: 1px solid $color-border-light;
 }
 
-// --- Display Typography (Cormorant Garamond) ---
+// --- Display Typography (Playfair Display) ---
 @mixin display-text($size: $font-size-display) {
   font-family: $font-family-display;
   font-size: $size;
-  font-weight: 300;
+  font-weight: $font-weight-regular;
   line-height: $line-height-tight;
-  letter-spacing: $letter-spacing-display;
+  letter-spacing: $letter-spacing-heading;
   color: $color-text-primary;
 }
 
@@ -83,7 +83,7 @@
   margin-left: calc(-50vw + 50%);
 }
 
-// --- Section Padding (barcoopbevy-style generous spacing) ---
+// --- Section Padding (generous luxury spacing) ---
 @mixin section-padding {
   padding: $space-section clamp($space-lg, 5vw, $space-xxxl);
   @include respond-to(md) { padding-top: $space-section-sm; padding-bottom: $space-section-sm; }
@@ -91,23 +91,97 @@
 
 // --- Eyebrow Text (small uppercase label) ---
 @mixin eyebrow-text {
-  font-family: $font-family;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-eyebrow;
+  letter-spacing: $letter-spacing-luxury;
   text-transform: uppercase;
   color: $color-text-tertiary;
 }
 
-// --- Mega Headline (barcoopbevy-style bold serif) ---
+// --- Mega Headline (luxury serif, ALL CAPS — Mariage Frères style) ---
 @mixin mega-headline($size: $font-size-hero) {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $size;
   font-weight: $font-weight-bold;
-  line-height: 0.95;
-  letter-spacing: $letter-spacing-mega;
+  line-height: 1.0;
+  letter-spacing: $letter-spacing-section;
   text-transform: uppercase;
   color: $color-text-primary;
+}
+
+// --- Ghost Button (outlined, Mariage Frères style) ---
+@mixin ghost-button($border-color: $color-text-inverse, $text-color: $color-text-inverse) {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-md $space-xxl;
+  background: transparent;
+  color: $text-color;
+  border: 1px solid $border-color;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-luxury;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.4s $ease-expo-out;
+
+  // Compact on mobile
+  @include respond-to(md) {
+    padding: $space-sm $space-lg;
+    font-size: $font-size-xs;
+  }
+
+  &:hover {
+    background: $border-color;
+    color: $color-bg-dark;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $border-color;
+    outline-offset: 4px;
+  }
+}
+
+// --- Luxury Nav Link (Mariage Freres-style spaced uppercase) ---
+@mixin luxury-nav-link {
+  font-family: $font-family-nav;
+  font-size: 11px;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-luxury;
+  text-transform: uppercase;
+  color: inherit;
+  transition: color $transition-fast;
+}
+
+// --- Ornamental Divider (gold line with diamond) ---
+@mixin ornamental-divider($color: $color-gold, $width: 60px) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-sm;
+
+  &::before,
+  &::after {
+    content: '';
+    width: $width;
+    height: 1px;
+    background: $color;
+  }
+}
+
+// --- Gold Accent Underline ---
+@mixin gold-accent-underline($width: 40px) {
+  &::after {
+    content: '';
+    display: block;
+    width: $width;
+    height: 2px;
+    background: $color-gold;
+    margin-top: $space-md;
+  }
 }
 
 // --- Content Container ---
@@ -127,8 +201,8 @@
   @include respond-to(md) { grid-template-columns: 1fr; gap: $space-xl; }
 }
 
-// --- Hover Lift ---
-@mixin hover-lift($y: -4px, $shadow: $shadow-lg) {
+// --- Hover Lift (subtle for luxury) ---
+@mixin hover-lift($y: -2px, $shadow: $shadow-lg) {
   transition: transform 0.4s $ease-expo-out, box-shadow 0.4s $ease-expo-out;
   &:hover { transform: translateY($y); box-shadow: $shadow; }
 }

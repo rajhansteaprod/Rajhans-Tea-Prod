@@ -16,7 +16,7 @@ interface VerifyTokenResponse {
   success: boolean;
   data: {
     user: AuthUser;
-    tokens: { accessToken: string; refreshToken: string };
+    tokens: { accessToken: string };
     isNewUser: boolean;
   };
 }
@@ -24,7 +24,7 @@ interface VerifyTokenResponse {
 interface RefreshResponse {
   success: boolean;
   data: {
-    tokens: { accessToken: string; refreshToken: string };
+    tokens: { accessToken: string };
   };
 }
 
@@ -47,33 +47,32 @@ export class AuthService {
   /** Send Firebase ID token to backend, get our JWT tokens back */
   verifyFirebaseToken(idToken: string): Observable<VerifyTokenResponse> {
     return this.http
-      .post<VerifyTokenResponse>(`${this.apiUrl}/verify-token`, { idToken })
+      .post<VerifyTokenResponse>(`${this.apiUrl}/verify-token`, { idToken }, { withCredentials: true })
       .pipe(
         tap((res) => {
           this._user.set(res.data.user);
           this._accessToken.set(res.data.tokens.accessToken);
           localStorage.setItem('user', JSON.stringify(res.data.user));
           localStorage.setItem('accessToken', res.data.tokens.accessToken);
-          localStorage.setItem('refreshToken', res.data.tokens.refreshToken);
+          // refreshToken is now in httpOnly cookie — not stored in localStorage
         }),
       );
   }
 
   refreshToken(): Observable<RefreshResponse> {
-    const refreshToken = localStorage.getItem('refreshToken');
+    // refreshToken is sent automatically via httpOnly cookie (withCredentials: true)
     return this.http
-      .post<RefreshResponse>(`${this.apiUrl}/refresh-token`, { refreshToken })
+      .post<RefreshResponse>(`${this.apiUrl}/refresh-token`, {}, { withCredentials: true })
       .pipe(
         tap((res) => {
           this._accessToken.set(res.data.tokens.accessToken);
           localStorage.setItem('accessToken', res.data.tokens.accessToken);
-          localStorage.setItem('refreshToken', res.data.tokens.refreshToken);
         }),
       );
   }
 
   logout(): void {
-    this.http.post(`${this.apiUrl}/logout`, {}).subscribe();
+    this.http.post(`${this.apiUrl}/logout`, {}, { withCredentials: true }).subscribe();
     this.clearAuth();
     this.router.navigate(['/auth/login']);
   }
@@ -112,7 +111,6 @@ export class AuthService {
     this._accessToken.set(null);
     localStorage.removeItem('user');
     localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
   }
 
   private loadUserFromStorage(): AuthUser | null {

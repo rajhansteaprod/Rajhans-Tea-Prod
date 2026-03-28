@@ -9,23 +9,41 @@
   background: $color-bg-dark;
   @include section-padding;
   @include flex-center;
-  min-height: 50vh;
+  min-height: 60vh;
+  position: relative;
+  overflow: hidden;
 
   @include respond-to(md) {
-    min-height: 40vh;
+    min-height: 45vh;
   }
 }
 
 .statement__inner {
-  @include content-container($max-width-wide);
+  @include content-container($max-width-content);
   text-align: center;
+  position: relative;
 }
 
+// ── Eyebrow ──
+.statement__eyebrow {
+  font-family: $font-family-nav;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-luxury;
+  text-transform: uppercase;
+  color: rgba($color-gold, 0.5);
+  display: block;
+  margin-bottom: $space-xxl;
+}
+
+// ── Mega headline ──
 .statement__text {
-  @include mega-headline($font-size-mega);
+  @include mega-headline;
   color: $color-text-inverse;
-  margin: 0;
+  margin: 0 0 $space-xxl;
   font-size: clamp($font-size-display, 10vw, $font-size-mega);
+  position: relative;
+  z-index: 1;
 
   @include respond-to(md) {
     font-size: clamp($font-size-xxxl, 12vw, $font-size-hero);
@@ -34,4 +52,56 @@
 
 .statement__line {
   display: block;
+}
+
+// ── Ornamental divider (Mariage Frères flourish) ──
+.statement__divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 $space-xxl;
+
+  span {
+    display: block;
+    width: 50px;
+    height: 1px;
+    background: $color-gold;
+    position: relative;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      top: -3px;
+      width: 7px;
+      height: 7px;
+      border: 1px solid $color-gold;
+      border-radius: 50%;
+      background: $color-bg-dark;
+    }
+
+    &::before {
+      left: -14px;
+    }
+
+    &::after {
+      right: -14px;
+    }
+  }
+}
+
+.statement__sub {
+  font-family: $font-family-display;
+  font-size: $font-size-lg;
+  font-style: italic;
+  font-weight: $font-weight-regular;
+  color: rgba($color-text-inverse, 0.45);
+  margin: 0;
+  position: relative;
+  z-index: 1;
+  letter-spacing: 0.02em;
+
+  @include respond-to(md) {
+    font-size: $font-size-md;
+  }
 }

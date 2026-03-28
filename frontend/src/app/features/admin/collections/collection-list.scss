@@ -15,11 +15,11 @@
 }
 
 .page-title {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-xxl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
-  letter-spacing: $letter-spacing-tight;
+  letter-spacing: 0.02em;
   margin: 0 0 $space-xxs;
 }
 
@@ -37,7 +37,7 @@
   color: $color-text-inverse;
   border: none;
   padding: $space-sm $space-md;
-  border-radius: $radius-lg;
+  border-radius: 0;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
   font-family: $font-family;
@@ -65,7 +65,7 @@
   height: 24px;
   border: 2.5px solid $color-border;
   border-top-color: $color-primary;
-  border-radius: 50%;
+  border-radius: 0;
   animation: spin 0.7s linear infinite;
 }
 
@@ -80,7 +80,7 @@
 
 .collection-card {
   background: $color-bg-tertiary;
-  border-radius: $radius-xl;
+  border-radius: 0;
   border: 1px solid $color-border-light;
   overflow: hidden;
   box-shadow: $shadow-sm;
@@ -120,7 +120,7 @@
   font-size: 10px;
   font-weight: $font-weight-semibold;
   padding: 2px 6px;
-  border-radius: $radius-full;
+  border-radius: 0;
 
   &.featured { background: rgba(204, 88, 3, 0.9); color: white; }
   &.status.active   { background: rgba(87, 136, 108, 0.9);  color: white; }
@@ -148,7 +148,7 @@
   font-family: 'SF Mono', 'Fira Code', monospace;
   background: $color-bg-secondary;
   padding: 2px 6px;
-  border-radius: $radius-sm;
+  border-radius: 0;
   color: $color-text-tertiary;
 }
 
@@ -244,7 +244,7 @@
 .form-select {
   padding: $space-sm $space-md;
   border: 1.5px solid $color-border;
-  border-radius: $radius-md;
+  border-radius: 0;
   font-size: $font-size-sm;
   font-family: $font-family;
   color: $color-text-primary;
@@ -266,7 +266,7 @@ textarea.form-input { resize: vertical; font-family: inherit; }
   position: relative;
   width: 80px;
   height: 80px;
-  border-radius: $radius-md;
+  border-radius: 0;
   overflow: hidden;
   border: 1px solid $color-border-light;
 }
@@ -279,7 +279,7 @@ textarea.form-input { resize: vertical; font-family: inherit; }
   right: 4px;
   width: 20px;
   height: 20px;
-  border-radius: 50%;
+  border-radius: 0;
   background: rgba(58, 45, 50, 0.7);
   color: white;
   border: none;
@@ -298,7 +298,7 @@ textarea.form-input { resize: vertical; font-family: inherit; }
   width: 100%;
   padding: $space-md;
   border: 2px dashed $color-border;
-  border-radius: $radius-lg;
+  border-radius: 0;
   color: $color-text-tertiary;
   font-size: $font-size-xs;
   font-weight: $font-weight-medium;
@@ -312,7 +312,7 @@ textarea.form-input { resize: vertical; font-family: inherit; }
 .btn-cancel {
   padding: $space-sm $space-md;
   border: 1px solid $color-border;
-  border-radius: $radius-lg;
+  border-radius: 0;
   background: transparent;
   font-size: $font-size-sm;
   font-family: $font-family;
@@ -328,7 +328,7 @@ textarea.form-input { resize: vertical; font-family: inherit; }
   background: $color-primary;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-lg;
+  border-radius: 0;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
   font-family: $font-family;
@@ -344,7 +344,7 @@ textarea.form-input { resize: vertical; font-family: inherit; }
   padding: $space-xs $space-sm;
   background: rgba(192, 57, 43, 0.08);
   border: 1px solid rgba(192, 57, 43, 0.3);
-  border-radius: $radius-md;
+  border-radius: 0;
   color: $color-error;
   font-size: $font-size-sm;
 }
@@ -354,7 +354,7 @@ textarea.form-input { resize: vertical; font-family: inherit; }
   padding: $space-xs $space-sm;
   background: rgba(192, 57, 43, 0.08);
   border: 1px solid rgba(192, 57, 43, 0.3);
-  border-radius: $radius-md;
+  border-radius: 0;
   color: $color-error;
   font-size: $font-size-sm;
 }
@@ -372,7 +372,7 @@ textarea.form-input { resize: vertical; font-family: inherit; }
 
 .modal-box {
   background: $color-bg-tertiary;
-  border-radius: $radius-xl;
+  border-radius: 0;
   border: 1px solid $color-border-light;
   width: 100%;
   max-width: 560px;
@@ -398,7 +398,7 @@ textarea.form-input { resize: vertical; font-family: inherit; }
   height: 32px;
   border: none;
   background: transparent;
-  border-radius: $radius-md;
+  border-radius: 0;
   cursor: pointer;
   color: $color-text-tertiary;
   @include flex-center;

@@ -8,17 +8,27 @@
 // ═══ Hero ═══
 .catalog__hero {
   @include section-padding;
+  padding-top: $space-section * 1.5;
+  padding-bottom: $space-section * 1.5;
   text-align: center;
   background: $color-bg-dark;
+
+  @include respond-to(md) {
+    padding-top: $space-section;
+    padding-bottom: $space-section;
+  }
 }
 
 .catalog__hero-inner {
-  @include content-container($max-width-narrow);
+  @include content-container($max-width-content);
 }
 
 .catalog__breadcrumbs {
-  @include eyebrow-text;
-  font-size: 10px;
+  font-family: $font-family-nav;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
   color: rgba($color-text-inverse, 0.4);
   margin-bottom: $space-lg;
 
@@ -38,21 +48,17 @@
 }
 
 .catalog__title {
-  font-family: $font-family-display;
-  font-size: clamp($font-size-xxxl, 5vw, $font-size-section);
-  font-weight: $font-weight-regular;
-  line-height: $line-height-tight;
-  letter-spacing: $letter-spacing-display;
+  @include mega-headline(clamp($font-size-display, 8vw, $font-size-mega));
   color: $color-text-inverse;
   margin: 0 0 $space-md;
 }
 
 .catalog__count {
-  font-family: $font-family;
-  font-size: $font-size-sm;
+  font-family: $font-family-display;
+  font-size: $font-size-md;
   color: rgba($color-text-inverse, 0.5);
   margin: 0;
-  letter-spacing: $letter-spacing-wide;
+  font-style: italic;
 }
 
 // ═══ Content ═══
@@ -88,21 +94,26 @@
   text-align: center;
   padding: $space-section 0;
   color: $color-text-tertiary;
-  font-size: $font-size-md;
+  font-family: $font-family-display;
+  font-size: $font-size-lg;
 }
 
 .catalog__back-link {
   display: inline-block;
   margin-top: $space-lg;
-  @include eyebrow-text;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
   color: $color-primary;
   text-decoration: none;
-  border-bottom: 1px solid $color-primary;
+  border-bottom: 2px solid $color-primary;
   padding-bottom: 2px;
 
   &:hover {
     color: $color-primary-hover;
+    border-bottom-color: $color-primary-hover;
   }
 }
 
@@ -126,7 +137,16 @@
 .catalog-card {
   display: block;
   text-decoration: none;
-  @include hover-lift(-6px);
+  border-radius: 0;
+  transition: transform 0.4s $ease-expo-out;
+
+  &:hover {
+    transform: translateY(-6px);
+
+    .catalog-card__image img {
+      transform: scale(1.05);
+    }
+  }
 }
 
 .catalog-card__image {
@@ -134,14 +154,12 @@
   overflow: hidden;
   background: $color-bg-warm;
   margin-bottom: $space-md;
+  border-radius: 0;
 
   img {
     @include image-cover;
     transition: transform 0.8s $ease-expo-out;
-  }
-
-  &:hover img {
-    transform: scale(1.05);
+    border-radius: 0;
   }
 }
 
@@ -149,6 +167,7 @@
   width: 100%;
   height: 100%;
   background: $color-bg-warm;
+  border-radius: 0;
 }
 
 .catalog-card__body {
@@ -156,19 +175,19 @@
 }
 
 .catalog-card__name {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-lg;
-  font-weight: $font-weight-regular;
+  font-weight: $font-weight-bold;
   color: $color-text-primary;
   margin: 0 0 $space-xxs;
-  letter-spacing: $letter-spacing-tight;
+  letter-spacing: $letter-spacing-heading;
   line-height: $line-height-tight;
 }
 
 .catalog-card__price {
-  font-family: $font-family;
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
+  font-family: $font-family-display;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   margin: 0;
 }

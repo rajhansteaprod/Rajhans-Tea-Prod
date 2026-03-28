@@ -2,7 +2,7 @@
 @use '../../core/design-tokens/mixins' as *;
 
 // ═══════════════════════════════════════════
-// DASHBOARD — Clean, premium account overview
+// DASHBOARD — Barcoopbevy bold condensed style
 // ═══════════════════════════════════════════
 
 .dashboard {
@@ -34,18 +34,22 @@
 }
 
 .dashboard__eyebrow {
-  @include eyebrow-text;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
   display: block;
   margin-bottom: $space-sm;
-  color: $color-primary;
+  color: $color-bg-maroon;
 }
 
 .dashboard__title {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-display;
   font-weight: $font-weight-bold;
   line-height: $line-height-tight;
-  letter-spacing: $letter-spacing-display;
+  letter-spacing: $letter-spacing-heading;
   color: $color-text-primary;
   margin: 0 0 $space-sm;
 
@@ -59,11 +63,12 @@
 }
 
 .dashboard__name {
-  color: $color-primary;
+  color: $color-bg-maroon;
 }
 
 .dashboard__subtitle {
-  font-size: $font-size-md;
+  font-family: $font-family-display;
+  font-size: $font-size-lg;
   color: $color-text-tertiary;
   line-height: $line-height-relaxed;
   margin: 0;
@@ -79,29 +84,32 @@
 .dashboard__avatar {
   width: 72px;
   height: 72px;
-  border-radius: $radius-full;
+  border-radius: 0;
   background: $color-bg-warm;
   color: $color-text-secondary;
   @include flex-center;
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-xl;
   font-weight: $font-weight-bold;
   border: 2px solid $color-border-light;
 
   &.admin {
-    background: $color-primary-light;
-    color: $color-primary;
-    border-color: rgba($color-primary, 0.2);
+    background: $color-bg-maroon;
+    color: $color-text-inverse;
+    border-color: $color-bg-maroon;
   }
 }
 
 .dashboard__role {
-  @include eyebrow-text;
-  font-size: 10px;
-  color: $color-primary;
-  background: $color-primary-light;
+  font-family: $font-family-nav;
+  font-size: 11px;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
+  color: $color-text-inverse;
+  background: $color-bg-maroon;
   padding: 2px $space-sm;
-  border-radius: $radius-full;
+  border-radius: 0;
 }
 
 // ═══ Stats ═══
@@ -119,14 +127,25 @@
   padding: $space-lg $space-xl;
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
-  border-radius: $radius-lg;
-  @include hover-lift(-2px, $shadow-md);
+  border-radius: 0;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-border;
+    box-shadow: $shadow-md;
+    transform: translateY(-2px);
+  }
+
+  &:nth-child(1) { border-top: 3px solid $color-bg-teal; }
+  &:nth-child(2) { border-top: 3px solid $color-bg-amber; }
+  &:nth-child(3) { border-top: 3px solid $color-bg-maroon; }
+  &:nth-child(4) { border-top: 3px solid $color-text-primary; }
 }
 
 .dashboard__stat-icon {
   width: 48px;
   height: 48px;
-  border-radius: $radius-lg;
+  border-radius: 0;
   @include flex-center;
   flex-shrink: 0;
 
@@ -145,7 +164,7 @@
 }
 
 .dashboard__stat-value {
-  font-family: $font-family-display;
+  font-family: $font-family-nav;
   font-size: $font-size-xxl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
@@ -154,6 +173,7 @@
 }
 
 .dashboard__stat-label {
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
   color: $color-text-tertiary;
   letter-spacing: $letter-spacing-wide;
@@ -170,11 +190,15 @@
 }
 
 .dashboard__section-heading {
-  @include eyebrow-text;
-  font-size: $font-size-xs;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
+  color: $color-text-tertiary;
   margin: 0 0 $space-lg;
   padding-bottom: $space-sm;
-  border-bottom: 1px solid $color-border-light;
+  border-bottom: 2px solid $color-border-light;
 }
 
 // ═══ Actions ═══
@@ -191,7 +215,7 @@
   padding: $space-md $space-lg;
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
-  border-radius: $radius-lg;
+  border-radius: 0;
   cursor: pointer;
   font-family: $font-family;
   text-align: left;
@@ -199,12 +223,12 @@
   transition: all $transition-normal;
 
   &:hover {
-    border-color: $color-primary;
+    border-color: $color-bg-maroon;
     background: $color-bg-warm;
 
     .dashboard__action-arrow {
       transform: translateX(4px);
-      color: $color-primary;
+      color: $color-bg-maroon;
     }
   }
 }
@@ -216,9 +240,12 @@
 
 .dashboard__action-label {
   flex: 1;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
+  font-weight: $font-weight-semibold;
   color: $color-text-primary;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .dashboard__action-arrow {
@@ -231,7 +258,7 @@
 .dashboard__info {
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
-  border-radius: $radius-lg;
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -245,8 +272,11 @@
 }
 
 .dashboard__info-label {
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
   color: $color-text-tertiary;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .dashboard__info-value {
@@ -255,7 +285,10 @@
   color: $color-text-primary;
 
   &--cap {
-    text-transform: capitalize;
+    text-transform: uppercase;
+    font-family: $font-family-nav;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0.04em;
   }
 
   &--mono {

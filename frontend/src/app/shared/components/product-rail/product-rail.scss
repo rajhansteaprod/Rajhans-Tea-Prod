@@ -11,23 +11,27 @@
 }
 
 .rail-title {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-xl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
+  letter-spacing: $letter-spacing-section;
+  text-transform: uppercase;
   margin: 0;
 }
 
 .view-all {
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  color: $color-primary;
+  font-weight: $font-weight-semibold;
+  color: $color-text-tertiary;
   text-decoration: none;
-  font-weight: $font-weight-medium;
-  transition: color $transition-fast;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-luxury;
+  transition: color 0.3s ease;
 
   &:hover {
-    color: $color-primary-hover;
-    text-decoration: underline;
+    color: $color-primary;
   }
 }
 
@@ -41,7 +45,7 @@
 
   &::-webkit-scrollbar { height: 4px; }
   &::-webkit-scrollbar-track { background: transparent; }
-  &::-webkit-scrollbar-thumb { background: $color-border; border-radius: $radius-full; }
+  &::-webkit-scrollbar-thumb { background: $color-border; border-radius: 0; }
 }
 
 .rail-item {

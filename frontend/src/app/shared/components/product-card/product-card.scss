@@ -1,30 +1,35 @@
 @use '../../../core/design-tokens/tokens' as *;
 @use '../../../core/design-tokens/mixins' as *;
 
+// ═══════════════════════════════════════
+// PRODUCT CARD — Kusmi Tea style
+// Borderless, clean, image-dominant
+// ═══════════════════════════════════════
+
 .card {
   display: block;
   text-decoration: none;
   color: inherit;
-  @include hover-lift(-6px, $shadow-xl);
 
   &.horizontal {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: $space-lg;
 
-    @include respond-to(sm) { grid-template-columns: 1fr; }
+    @include respond-to(sm) {
+      grid-template-columns: 1fr;
+    }
   }
 }
 
 .card__img-wrap {
   position: relative;
-  aspect-ratio: 1;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
-  background: $color-bg-secondary;
-  border-radius: $radius-lg;
+  background: $color-bg-warm;
 
   .horizontal & {
-    aspect-ratio: 4/5;
+    aspect-ratio: 4 / 5;
   }
 }
 
@@ -32,7 +37,9 @@
   @include image-cover;
   transition: transform 0.6s $ease-expo-out;
 
-  .card:hover & { transform: scale(1.06); }
+  .card:hover & {
+    transform: scale(1.04);
+  }
 }
 
 .card__img-placeholder {
@@ -42,33 +49,33 @@
   color: $color-text-disabled;
 }
 
-.card__overlay {
+// Quick-add circle icon — Kusmi style (bottom-right of image)
+.card__quick-add {
   position: absolute;
   bottom: $space-md;
   right: $space-md;
-  display: flex;
-  gap: $space-xxs;
+  width: 38px;
+  height: 38px;
+  @include flex-center;
+  border-radius: $radius-full;
+  border: 1px solid $color-border;
+  background: $color-bg-tertiary;
+  color: $color-text-primary;
+  cursor: pointer;
   opacity: 0;
   transform: translateY($space-xs);
   transition: all 0.3s $ease-expo-out;
 
-  .card:hover & { opacity: 1; transform: translateY(0); }
-}
+  .card:hover & {
+    opacity: 1;
+    transform: translateY(0);
+  }
 
-.card__action {
-  width: 40px;
-  height: 40px;
-  @include flex-center;
-  border-radius: $radius-full;
-  border: none;
-  background: $color-bg-tertiary;
-  color: $color-text-primary;
-  cursor: pointer;
-  box-shadow: $shadow-md;
-  transition: all $transition-fast;
-
-  &:hover { background: $color-primary; color: $color-text-inverse; }
-  &.active { color: $color-primary; }
+  &:hover {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: $color-text-inverse;
+  }
 }
 
 .card__badge {
@@ -76,18 +83,17 @@
   top: $space-md;
   left: $space-md;
   padding: $space-xxs $space-sm;
-  background: $color-primary;
+  background: $color-bg-dark;
   color: $color-text-inverse;
-  font-family: $font-family;
+  font-family: $font-family-nav;
   font-size: 10px;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
-  border-radius: $radius-sm;
 }
 
 .card__body {
-  padding: $space-lg 0 0;
+  padding: $space-md 0 0;
 
   .horizontal & {
     padding: 0;
@@ -97,26 +103,30 @@
   }
 }
 
-.card__category {
-  @include eyebrow-text;
-  color: $color-secondary;
-  display: block;
-  margin-bottom: $space-xxs;
-}
-
 .card__name {
   font-family: $font-family-display;
-  font-size: $font-size-xl;
+  font-size: $font-size-lg;
   font-weight: $font-weight-medium;
   color: $color-text-primary;
-  margin: 0 0 $space-xs;
+  margin: 0 0 $space-xxs;
   line-height: $line-height-tight;
+  letter-spacing: 0.02em;
   @include truncate(2);
 }
 
-.card__price {
+// Dot-separated attributes — Kusmi style
+.card__attr {
   font-family: $font-family;
-  font-size: $font-size-lg;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: $space-xs;
+}
+
+.card__price {
+  font-family: $font-family-nav;
+  font-size: $font-size-md;
   font-weight: $font-weight-bold;
-  color: $color-primary;
+  color: $color-text-primary;
+  display: block;
 }

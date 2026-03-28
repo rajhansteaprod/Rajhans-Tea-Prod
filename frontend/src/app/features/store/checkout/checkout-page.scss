@@ -2,7 +2,7 @@
 @use '../../../core/design-tokens/mixins' as *;
 
 // ═══════════════════════════════════════════
-// CHECKOUT — Multi-step, clean and functional
+// CHECKOUT — Barcoopbevy bold condensed style
 // ═══════════════════════════════════════════
 
 .checkout {
@@ -33,38 +33,40 @@
 .checkout__step-circle {
   width: 40px;
   height: 40px;
-  border-radius: $radius-full;
+  border-radius: 0;
   border: 2px solid $color-border;
   background: $color-bg-tertiary;
   @include flex-center;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   color: $color-text-tertiary;
   transition: all $transition-normal;
 
   .checkout__step.active & {
-    border-color: $color-primary;
-    background: $color-primary;
+    border-color: $color-bg-maroon;
+    background: $color-bg-maroon;
     color: $color-text-inverse;
   }
 
   .checkout__step.done & {
-    border-color: $color-success;
-    background: $color-success;
+    border-color: $color-bg-teal;
+    background: $color-bg-teal;
     color: $color-text-inverse;
   }
 }
 
 .checkout__step-label {
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-medium;
+  font-weight: $font-weight-semibold;
   color: $color-text-tertiary;
   white-space: nowrap;
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
 
-  .checkout__step.active & { color: $color-primary; font-weight: $font-weight-semibold; }
-  .checkout__step.done & { color: $color-success; }
+  .checkout__step.active & { color: $color-bg-maroon; font-weight: $font-weight-bold; }
+  .checkout__step.done & { color: $color-bg-teal; }
 }
 
 .checkout__step-line {
@@ -76,7 +78,7 @@
   margin-bottom: 24px;
   transition: background $transition-normal;
 
-  &.done { background: $color-success; }
+  &.done { background: $color-bg-teal; }
 }
 
 // ═══ Layout ═══
@@ -95,19 +97,19 @@
 .checkout__panel {
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
-  border-radius: $radius-xl;
+  border-radius: 0;
   overflow: hidden;
 }
 
 .checkout__panel-title {
-  font-family: $font-family-display;
+  font-family: $font-family-heading;
   font-size: $font-size-xxl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
-  letter-spacing: $letter-spacing-tight;
+  letter-spacing: $letter-spacing-heading;
   margin: 0;
   padding: $space-xl $space-xl $space-lg;
-  border-bottom: 1px solid $color-border-light;
+  border-bottom: 2px solid $color-border-light;
 
   @include respond-to(sm) {
     font-size: $font-size-xl;
@@ -143,7 +145,7 @@
 .checkout__line-image {
   width: 64px;
   height: 64px;
-  border-radius: $radius-md;
+  border-radius: 0;
   overflow: hidden;
   background: $color-bg-secondary;
 
@@ -161,7 +163,7 @@
   @include flex-center;
   color: $color-text-disabled;
   background: $color-bg-secondary;
-  border-radius: $radius-md;
+  border-radius: 0;
 }
 
 .checkout__line-info { min-width: 0; }
@@ -186,10 +188,11 @@
   gap: $space-xs;
   background: $color-bg-secondary;
   border: 1px solid $color-border-light;
-  border-radius: $radius-md;
+  border-radius: 0;
   padding: 4px $space-xs;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   color: $color-text-primary;
 }
 
@@ -202,14 +205,15 @@
   font-size: $font-size-md;
   color: $color-text-secondary;
   cursor: pointer;
-  border-radius: $radius-sm;
+  border-radius: 0;
   line-height: 1;
 
-  &:hover { background: $color-primary-light; color: $color-primary; }
+  &:hover { background: rgba($color-bg-maroon, 0.08); color: $color-bg-maroon; }
   &:disabled { opacity: 0.3; cursor: not-allowed; }
 }
 
 .checkout__line-total {
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
@@ -225,7 +229,7 @@
   border: none;
   color: $color-text-disabled;
   cursor: pointer;
-  border-radius: $radius-sm;
+  border-radius: 0;
   transition: all $transition-fast;
 
   &:hover { background: rgba($color-error, 0.08); color: $color-error; }
@@ -260,14 +264,18 @@
   flex: 1;
 
   label {
-    @include eyebrow-text;
+    font-family: $font-family-nav;
     font-size: 11px;
+    font-weight: $font-weight-bold;
+    letter-spacing: $letter-spacing-eyebrow;
+    text-transform: uppercase;
+    color: $color-text-secondary;
   }
 
   input {
     padding: $space-sm $space-md;
-    border: 1px solid $color-border;
-    border-radius: $radius-md;
+    border: 2px solid $color-border;
+    border-radius: 0;
     font-size: $font-size-sm;
     color: $color-text-primary;
     background: $color-bg-primary;
@@ -276,8 +284,8 @@
     font-family: $font-family;
 
     &:focus {
-      border-color: $color-primary;
-      box-shadow: $shadow-glow;
+      border-color: $color-bg-maroon;
+      box-shadow: 0 0 0 3px rgba($color-bg-maroon, 0.1);
     }
 
     &::placeholder { color: $color-text-disabled; }
@@ -294,7 +302,7 @@
   width: 32px;
   height: 32px;
   border: 2px solid $color-border-light;
-  border-top-color: $color-primary;
+  border-top-color: $color-bg-maroon;
   border-radius: $radius-full;
   animation: checkoutSpin 0.7s linear infinite;
 }
@@ -319,7 +327,7 @@
 .checkout__sl-image {
   width: 56px;
   height: 56px;
-  border-radius: $radius-md;
+  border-radius: 0;
   overflow: hidden;
   background: $color-bg-secondary;
 
@@ -346,10 +354,11 @@
 }
 
 .checkout__discount-badge {
-  background: rgba($color-success, 0.12);
-  color: $color-success;
+  background: rgba($color-bg-teal, 0.12);
+  color: $color-bg-teal;
   padding: 1px 6px;
-  border-radius: $radius-full;
+  border-radius: 0;
+  font-family: $font-family-nav;
   font-size: 10px;
   font-weight: $font-weight-bold;
 }
@@ -364,9 +373,10 @@
 }
 
 .checkout__sl-total {
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
   font-weight: $font-weight-bold;
-  color: $color-primary;
+  color: $color-bg-maroon;
   margin: 0;
 }
 
@@ -376,19 +386,24 @@
   padding: $space-md $space-lg;
   background: $color-bg-warm;
   border: 1px solid $color-border-light;
-  border-radius: $radius-lg;
+  border-radius: 0;
 }
 
 .checkout__address-header {
   display: flex;
   align-items: center;
   gap: $space-xs;
-  @include eyebrow-text;
+  font-family: $font-family-nav;
   font-size: 11px;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
+  color: $color-text-secondary;
   margin-bottom: $space-xs;
 }
 
 .checkout__address-text {
+  font-family: $font-family-display;
   font-size: $font-size-sm;
   color: $color-text-primary;
   margin: 0;
@@ -401,7 +416,7 @@
   padding: $space-md $space-lg;
   background: $color-bg-secondary;
   border: 1px solid $color-border-light;
-  border-radius: $radius-lg;
+  border-radius: 0;
 }
 
 .checkout__wallet-row {
@@ -426,12 +441,12 @@
 .checkout__toggle-track {
   width: 40px;
   height: 22px;
-  border-radius: $radius-full;
+  border-radius: 0;
   background: $color-border;
   position: relative;
   transition: background $transition-fast;
 
-  input:checked + & { background: $color-success; }
+  input:checked + & { background: $color-bg-teal; }
 }
 
 .checkout__toggle-thumb {
@@ -440,7 +455,7 @@
   left: 2px;
   width: 18px;
   height: 18px;
-  border-radius: $radius-full;
+  border-radius: 0;
   background: white;
   box-shadow: $shadow-sm;
   transition: transform $transition-fast;
@@ -449,15 +464,19 @@
 }
 
 .checkout__toggle-label {
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
+  font-weight: $font-weight-semibold;
   color: $color-text-primary;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .checkout__wallet-avail {
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  color: $color-success;
+  font-weight: $font-weight-bold;
+  color: $color-bg-teal;
 }
 
 .checkout__wallet-deduction {
@@ -470,8 +489,9 @@
 }
 
 .checkout__wallet-deduct-val {
+  font-family: $font-family-nav;
   font-weight: $font-weight-bold;
-  color: $color-success;
+  color: $color-bg-teal;
 }
 
 .checkout__wallet-note {
@@ -480,7 +500,7 @@
   margin: $space-xs 0 0;
 
   &--full {
-    color: $color-success;
+    color: $color-bg-teal;
     font-weight: $font-weight-medium;
   }
 }
@@ -493,14 +513,16 @@
   padding: $space-md;
   background: rgba($color-error, 0.05);
   border: 1px solid rgba($color-error, 0.15);
-  border-radius: $radius-lg;
+  border-radius: 0;
   color: $color-error;
 }
 
 .checkout__alert-title {
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-bold;
   margin: 0 0 $space-xxs;
+  text-transform: uppercase;
 }
 
 .checkout__alert-item {
@@ -513,15 +535,19 @@
   padding: $space-xxl;
   text-align: center;
   color: $color-text-tertiary;
-  font-size: $font-size-sm;
+  font-family: $font-family-display;
+  font-size: $font-size-md;
 
   p { margin: 0 0 $space-sm; }
 }
 
 .checkout__link {
-  color: $color-primary;
-  font-weight: $font-weight-semibold;
+  color: $color-bg-maroon;
+  font-family: $font-family-nav;
+  font-weight: $font-weight-bold;
   text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 
   &:hover { text-decoration: underline; }
 }
@@ -544,11 +570,13 @@
   padding: $space-sm $space-xl;
   background: transparent;
   color: $color-text-secondary;
-  border: 1px solid $color-border;
-  border-radius: $radius-full;
+  border: 2px solid $color-border;
+  border-radius: 0;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  font-family: $font-family;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   cursor: pointer;
   transition: all $transition-fast;
 
@@ -560,21 +588,22 @@
   align-items: center;
   gap: $space-xs;
   padding: $space-sm $space-xl;
-  background: $color-primary;
+  background: $color-bg-maroon;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-full;
+  border-radius: 0;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  font-family: $font-family;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   cursor: pointer;
-  letter-spacing: $letter-spacing-wide;
   transition: all $transition-fast;
 
   &:hover:not(:disabled) {
     background: $color-primary-hover;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba($color-primary, 0.25);
+    box-shadow: 0 4px 12px rgba($color-bg-maroon, 0.25);
   }
 
   &:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -588,19 +617,19 @@
   background: $color-bg-dark;
   color: $color-text-inverse;
   border: none;
-  border-radius: $radius-full;
+  border-radius: 0;
+  font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  font-family: $font-family;
-  cursor: pointer;
-  letter-spacing: $letter-spacing-wide;
+  font-weight: $font-weight-bold;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
   transition: all $transition-fast;
 
   &:hover:not(:disabled) {
-    background: $color-primary;
+    background: $color-bg-maroon;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba($color-primary, 0.3);
+    box-shadow: 0 4px 12px rgba($color-bg-maroon, 0.3);
   }
 
   &:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -624,12 +653,17 @@
 .checkout__price-card {
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
-  border-radius: $radius-xl;
+  border-radius: 0;
   overflow: hidden;
 }
 
 .checkout__price-heading {
-  @include eyebrow-text;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-eyebrow;
+  text-transform: uppercase;
+  color: $color-text-secondary;
   margin: 0;
   padding: $space-md $space-lg;
   background: $color-bg-warm;
@@ -646,26 +680,31 @@
   font-size: $font-size-sm;
   color: $color-text-secondary;
 
-  &--discount { color: $color-success; }
+  &--discount { color: $color-bg-teal; }
 
   &--shipping span:last-child {
-    color: $color-success;
-    font-weight: $font-weight-semibold;
+    color: $color-bg-teal;
+    font-family: $font-family-nav;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
   }
 
   &--total {
+    font-family: $font-family-nav;
     font-size: $font-size-md;
     font-weight: $font-weight-bold;
     color: $color-text-primary;
+    text-transform: uppercase;
   }
 }
 
 .checkout__free {
-  font-weight: $font-weight-semibold;
+  font-family: $font-family-nav;
+  font-weight: $font-weight-bold;
 }
 
 .checkout__divider {
-  height: 1px;
+  height: 2px;
   background: $color-border-light;
   margin: $space-sm 0;
 }
@@ -673,12 +712,14 @@
 .checkout__savings {
   margin: $space-sm 0 0;
   padding: $space-xs $space-sm;
-  background: rgba($color-success, 0.08);
-  border-radius: $radius-md;
+  background: rgba($color-bg-teal, 0.08);
+  border-radius: 0;
+  font-family: $font-family-nav;
   font-size: $font-size-xs;
-  color: $color-success;
-  font-weight: $font-weight-medium;
+  color: $color-bg-teal;
+  font-weight: $font-weight-bold;
   text-align: center;
+  text-transform: uppercase;
 }
 
 .checkout__tax-note {

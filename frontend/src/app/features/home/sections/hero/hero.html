@@ -1,0 +1,50 @@
+@if (slides().length > 0) {
+  <section class="hero"
+    (pointerdown)="onPointerDown($event)"
+    (pointerup)="onPointerUp($event)">
+    <div class="hero__frame">
+      <!-- Background: responsive desktop/mobile image -->
+      <div class="hero__bg">
+        <picture>
+          <source media="(max-width: 768px)" [srcset]="slides()[activeSlide()].mobileImage" />
+          <img
+            class="hero__bg-img"
+            [src]="slides()[activeSlide()].desktopImage"
+            [alt]="slides()[activeSlide()].title"
+          />
+        </picture>
+      </div>
+
+      <!-- Text overlay -->
+      <div class="hero__overlay" [class]="'hero__overlay hero__overlay--' + slides()[activeSlide()].textAlign">
+        <div class="hero__content">
+          <h1 class="hero__h1">{{ slides()[activeSlide()].title }}</h1>
+          <p class="hero__sub">{{ slides()[activeSlide()].subtitle }}</p>
+          <div class="hero__actions">
+            <a [routerLink]="slides()[activeSlide()].ctaLink" class="hero__cta">
+              {{ slides()[activeSlide()].ctaText }}
+            </a>
+          </div>
+
+          <!-- Dot pagination -->
+          @if (slides().length > 1) {
+            <div class="hero__dots">
+              @for (slide of slides(); track slide._id; let i = $index) {
+                <button
+                  class="hero__dot"
+                  [class.hero__dot--active]="i === activeSlide()"
+                  (click)="goToSlide(i)"
+                  [attr.aria-label]="'Slide ' + (i + 1)"
+                >
+                  @if (i === activeSlide()) {
+                    <span class="hero__dot-progress"></span>
+                  }
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+}

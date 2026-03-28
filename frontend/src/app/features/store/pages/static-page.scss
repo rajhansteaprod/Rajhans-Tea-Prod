@@ -8,20 +8,22 @@
 
 .static-page__hero {
   @include section-padding;
+  padding-top: $space-section * 1.5;
+  padding-bottom: $space-section * 1.5;
   text-align: center;
-  background: $color-bg-warm;
-  border-bottom: 1px solid $color-border-light;
+  background: $color-bg-dark;
+
+  @include respond-to(md) {
+    padding-top: $space-section;
+    padding-bottom: $space-section;
+  }
 }
 
 .static-page__title {
-  font-family: $font-family-display;
-  font-size: clamp($font-size-xxl, 4vw, $font-size-section);
-  font-weight: $font-weight-regular;
-  line-height: $line-height-tight;
-  letter-spacing: $letter-spacing-display;
-  color: $color-text-primary;
+  @include mega-headline(clamp($font-size-xxxl, 8vw, $font-size-mega));
+  color: $color-text-inverse;
   margin: 0;
-  max-width: $max-width-narrow;
+  max-width: $max-width-content;
   margin-left: auto;
   margin-right: auto;
 }
@@ -30,8 +32,8 @@
   @include content-container($max-width-narrow);
   padding-top: $space-xxl;
   padding-bottom: $space-section;
-  font-family: $font-family;
-  font-size: $font-size-md;
+  font-family: $font-family-display;
+  font-size: $font-size-lg;
   color: $color-text-primary;
   line-height: $line-height-relaxed;
 
@@ -39,9 +41,9 @@
   h2,
   h3,
   h4 {
-    font-family: $font-family-display;
-    font-weight: $font-weight-regular;
-    letter-spacing: $letter-spacing-display;
+    font-family: $font-family-heading;
+    font-weight: $font-weight-bold;
+    letter-spacing: $letter-spacing-heading;
     line-height: $line-height-tight;
     color: $color-text-primary;
     margin-top: $space-xxl;
@@ -49,10 +51,14 @@
   }
 
   h2 {
-    font-size: $font-size-xxl;
+    font-size: $font-size-xxxl;
   }
 
   h3 {
+    font-size: $font-size-xxl;
+  }
+
+  h4 {
     font-size: $font-size-xl;
   }
 
@@ -86,16 +92,18 @@
   blockquote {
     margin: $space-xl 0;
     padding: $space-lg $space-xl;
-    border-left: 3px solid $color-primary;
+    border-left: 4px solid $color-primary;
     background: $color-bg-warm;
     font-style: italic;
     color: $color-text-secondary;
+    border-radius: 0;
   }
 
   img {
     max-width: 100%;
     height: auto;
     margin: $space-xl 0;
+    border-radius: 0;
   }
 
   hr {
@@ -111,42 +119,49 @@
   text-align: center;
   @include section-padding;
   padding-top: $space-section * 1.5;
+  background: $color-bg-dark;
+  min-height: 60vh;
+  @include flex-center;
+  flex-direction: column;
 }
 
-.not-found__eyebrow {
-  @include eyebrow-text;
-  display: block;
+.not-found__code {
+  font-family: $font-family-heading;
+  font-size: $font-size-mega;
+  font-weight: $font-weight-bold;
   color: $color-primary;
+  display: block;
   margin-bottom: $space-md;
-  font-size: $font-size-sm;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .not-found__title {
-  font-family: $font-family-display;
-  font-size: $font-size-xxxl;
-  font-weight: $font-weight-regular;
-  color: $color-text-primary;
+  @include mega-headline($font-size-xxxl);
+  color: $color-text-inverse;
   margin: 0 0 $space-sm;
-  letter-spacing: $letter-spacing-display;
 }
 
 .not-found__sub {
-  font-size: $font-size-md;
-  color: $color-text-tertiary;
+  font-family: $font-family-display;
+  font-size: $font-size-lg;
+  color: rgba($color-text-inverse, 0.6);
   margin: 0 0 $space-xxl;
+  font-style: italic;
 }
 
 .not-found__link {
   display: inline-block;
-  padding: $space-sm $space-xxl;
+  padding: $space-md $space-xxl;
   background: $color-primary;
   color: $color-text-inverse;
   text-decoration: none;
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
+  border-radius: 0;
   transition: all $transition-fast;
 
   &:hover {
@@ -159,6 +174,7 @@
 .loading {
   @include flex-center;
   padding: $space-section;
+  min-height: 60vh;
 }
 
 .spinner {

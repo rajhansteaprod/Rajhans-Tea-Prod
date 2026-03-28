@@ -6,8 +6,10 @@ export const firebaseTokenSchema = z.object({
   }),
 });
 
+// refreshToken comes from httpOnly cookie OR body (fallback)
+// Both are optional at validation level — controller checks for either
 export const refreshTokenSchema = z.object({
   body: z.object({
-    refreshToken: z.string().min(1, 'Refresh token is required'),
+    refreshToken: z.string().min(1).optional(),
   }),
 });

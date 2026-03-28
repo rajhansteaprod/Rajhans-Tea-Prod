@@ -18,7 +18,14 @@
       "Bash(curl -s \"http://localhost/api/v1/catalog/products?priceMin=500&priceMax=600\")",
       "Bash(curl -s \"http://localhost/api/v1/search/autocomplete?q=Raj&limit=8\")",
       "Bash(curl -s \"http://localhost/api/v1/search?q=&page=1&limit=20&sort=relevance\")",
-      "Bash(grep -rl \"template: \\\\`\" --include=\"*.ts\")"
+      "Bash(grep -rl \"template: \\\\`\" --include=\"*.ts\")",
+      "Bash(find 'c:\\\\Users\\\\91626\\\\Desktop\\\\DEVELOPMENT APPLICATIONS\\\\Rajhans Tea' -type f -name *.js -o -name *.json -o -name *.ts -o -name *.env*)",
+      "Bash(find 'C:\\\\Users\\\\91626\\\\Desktop\\\\DEVELOPMENT APPLICATIONS\\\\Rajhans Ecommerce\\\\backend' -type f -name *.ts -o -name *.js)",
+      "Bash(xargs ls:*)",
+      "Bash(xargs wc:*)",
+      "Bash(grep -E \"\\\\.md$|\\\\.yml$|\\\\.yaml$\")",
+      "Bash(wc -l c:/Users/91626/Desktop/DEVELOPMENT APPLICATIONS/Rajhans Tea/backend/src/modules/**/*.ts)",
+      "Bash(ipconfig)"
     ]
   }
 }

@@ -8,37 +8,37 @@
 // ═══ Hero ═══
 .collections__hero {
   @include section-padding;
+  padding-top: $space-section * 1.5;
+  padding-bottom: $space-section * 1.5;
   text-align: center;
-  background: $color-bg-warm;
-  border-bottom: 1px solid $color-border-light;
+  background: $color-bg-dark;
+
+  @include respond-to(md) {
+    padding-top: $space-section;
+    padding-bottom: $space-section;
+  }
 }
 
 .collections__hero-inner {
-  @include content-container($max-width-narrow);
-}
-
-.collections__eyebrow {
-  @include eyebrow-text;
-  display: block;
-  margin-bottom: $space-md;
-  color: $color-primary;
+  @include content-container($max-width-content);
 }
 
 .collections__title {
-  font-family: $font-family-display;
-  font-size: clamp($font-size-xxxl, 5vw, $font-size-section);
-  font-weight: $font-weight-regular;
-  line-height: $line-height-tight;
-  letter-spacing: $letter-spacing-display;
-  color: $color-text-primary;
+  @include mega-headline(clamp($font-size-display, 10vw, $font-size-mega));
+  color: $color-text-inverse;
   margin: 0 0 $space-md;
 }
 
 .collections__sub {
-  font-family: $font-family;
-  font-size: $font-size-md;
-  color: $color-text-tertiary;
+  font-family: $font-family-display;
+  font-size: $font-size-xl;
+  color: rgba($color-text-inverse, 0.6);
   margin: 0;
+  font-style: italic;
+
+  @include respond-to(md) {
+    font-size: $font-size-lg;
+  }
 }
 
 // ═══ Grid ═══
@@ -63,7 +63,12 @@
   display: block;
   text-decoration: none;
   overflow: hidden;
-  @include hover-lift(-6px);
+  border-radius: 0;
+  transition: transform 0.6s $ease-expo-out;
+
+  &:hover {
+    transform: scale(1.02);
+  }
 }
 
 .collection-card__image {
@@ -71,16 +76,16 @@
   aspect-ratio: 16 / 10;
   overflow: hidden;
   background: $color-bg-dark;
+  border-radius: 0;
 
   img {
     @include image-cover;
     transition: transform 0.8s $ease-expo-out;
-    opacity: 0.85;
+    border-radius: 0;
   }
 
   &:hover img {
-    transform: scale(1.05);
-    opacity: 0.7;
+    transform: scale(1.08);
   }
 }
 
@@ -89,13 +94,14 @@
   height: 100%;
   @include flex-center;
   background: $color-bg-dark;
+  border-radius: 0;
 
   span {
-    font-family: $font-family-display;
+    font-family: $font-family-heading;
     font-size: $font-size-display;
-    font-weight: $font-weight-regular;
+    font-weight: $font-weight-bold;
     color: rgba($color-text-inverse, 0.15);
-    letter-spacing: $letter-spacing-display;
+    text-transform: uppercase;
   }
 }
 
@@ -106,21 +112,22 @@
   flex-direction: column;
   justify-content: flex-end;
   padding: $space-xxl;
-  background: linear-gradient(0deg, rgba($color-bg-dark, 0.8) 0%, transparent 60%);
+  background: linear-gradient(0deg, rgba($color-bg-dark, 0.85) 0%, transparent 60%);
+  border-radius: 0;
 }
 
 .collection-card__name {
-  font-family: $font-family-display;
-  font-size: clamp($font-size-xl, 2.5vw, $font-size-xxl);
-  font-weight: $font-weight-regular;
+  font-family: $font-family-heading;
+  font-size: clamp($font-size-xl, 3vw, $font-size-xxxl);
+  font-weight: $font-weight-bold;
   color: $color-text-inverse;
   margin: 0 0 $space-xs;
-  letter-spacing: $letter-spacing-display;
+  letter-spacing: $letter-spacing-heading;
 }
 
 .collection-card__desc {
-  font-family: $font-family;
-  font-size: $font-size-sm;
+  font-family: $font-family-display;
+  font-size: $font-size-md;
   color: rgba($color-text-inverse, 0.7);
   margin: 0 0 $space-md;
   max-width: 400px;
@@ -128,8 +135,10 @@
 }
 
 .collection-card__cta {
-  @include eyebrow-text;
-  font-size: 10px;
+  font-family: $font-family-nav;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
   color: $color-primary;
   letter-spacing: $letter-spacing-wide;
 }

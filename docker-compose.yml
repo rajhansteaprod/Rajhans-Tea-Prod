@@ -65,7 +65,7 @@ services:
       - REDIS_PORT=6379
       - JWT_ACCESS_SECRET=dev-access-secret-change-me
       - JWT_REFRESH_SECRET=dev-refresh-secret-change-me
-      - CORS_ORIGIN=http://localhost:4201
+      - CORS_ORIGIN=http://localhost:4201,http://192.168.1.6:4201
       - FIREBASE_PROJECT_ID=sarara-b9eac
       - GOOGLE_APPLICATION_CREDENTIALS=/app/backend/firebase-service-account.json
       - RAZORPAY_KEY_ID=rzp_test_STo8X60gyG9PvZ
