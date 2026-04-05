@@ -80,7 +80,7 @@ export class RazorpayService {
         name: 'Rajhans Tea',
         description: 'Order Payment',
         prefill: options.prefill,
-        theme: { color: '#CC5803' },
+        theme: { color: '#FC4747' },
         handler: (response: RazorpayResponse) => {
           resolve(response);
         },

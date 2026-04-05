@@ -136,7 +136,7 @@ export class PaymentStore {
    * 2. Open Razorpay modal (frontend)
    * 3. Verify payment (backend)
    */
-  async pay(address: AddressForm, walletAmount = 0): Promise<boolean> {
+  async pay(address: AddressForm, walletAmount = 0, loyaltyPoints = 0): Promise<boolean> {
     this._paymentLoading.set(true);
     this._paymentError.set(null);
     this._paymentSuccess.set(false);
@@ -146,7 +146,7 @@ export class PaymentStore {
       const orderRes = await this.http
         .post<ApiResponse<CreateOrderResponse & { paidViaWallet?: boolean }>>(
           `${this.api}/payments/orders`,
-          { address, walletAmount },
+          { address, walletAmount, loyaltyPoints },
           { headers: this.sessionHeaders() },
         )
         .toPromise();

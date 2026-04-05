@@ -1,0 +1,60 @@
+<section class="profile">
+  <h1 class="profile__title">Edit Profile</h1>
+
+  <form class="profile__form" (ngSubmit)="save()">
+    <div class="profile__field">
+      <label class="profile__label" for="firstName">First Name</label>
+      <input
+        class="profile__input"
+        id="firstName"
+        type="text"
+        [(ngModel)]="form.firstName"
+        name="firstName"
+        placeholder="First name"
+      />
+    </div>
+
+    <div class="profile__field">
+      <label class="profile__label" for="lastName">Last Name</label>
+      <input
+        class="profile__input"
+        id="lastName"
+        type="text"
+        [(ngModel)]="form.lastName"
+        name="lastName"
+        placeholder="Last name"
+      />
+    </div>
+
+    <div class="profile__field">
+      <label class="profile__label" for="email">Email</label>
+      <input
+        class="profile__input"
+        id="email"
+        type="email"
+        [(ngModel)]="form.email"
+        name="email"
+        placeholder="you@example.com"
+      />
+    </div>
+
+    <div class="profile__field">
+      <label class="profile__label" for="phone">Phone</label>
+      <input
+        class="profile__input profile__input--readonly"
+        id="phone"
+        type="text"
+        [value]="phone"
+        readonly
+      />
+    </div>
+
+    @if (message()) {
+      <p class="profile__message">{{ message() }}</p>
+    }
+
+    <button class="profile__save" type="submit" [disabled]="saving()">
+      {{ saving() ? 'Saving...' : 'Save' }}
+    </button>
+  </form>
+</section>

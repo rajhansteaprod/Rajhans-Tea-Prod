@@ -1,6 +1,7 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export interface IAddressDoc {
+  _id: Types.ObjectId;
   label: string;
   street: string;
   city: string;
@@ -17,7 +18,7 @@ export interface IUserDoc extends Document {
   email?: string;
   role: 'customer' | 'admin';
   isPhoneVerified: boolean;
-  addresses: IAddressDoc[];
+  addresses: Types.DocumentArray<IAddressDoc>;
   avatar?: string;
   isActive: boolean;
   lastLogin?: Date;

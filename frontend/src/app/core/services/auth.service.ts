@@ -9,6 +9,7 @@ interface AuthUser {
   phone: string;
   firstName?: string;
   lastName?: string;
+  email?: string;
   role: string;
 }
 
@@ -38,6 +39,15 @@ export class AuthService {
   readonly user = this._user.asReadonly();
   readonly isLoggedIn = computed(() => !!this._user());
   readonly isAdmin = computed(() => this._user()?.role === 'admin');
+
+  /** Update user data in signal + localStorage (e.g. after profile edit) */
+  updateUser(partial: Partial<AuthUser>): void {
+    const current = this._user();
+    if (!current) return;
+    const updated = { ...current, ...partial };
+    this._user.set(updated);
+    localStorage.setItem('user', JSON.stringify(updated));
+  }
 
   constructor(
     private http: HttpClient,

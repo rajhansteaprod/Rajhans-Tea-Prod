@@ -13,6 +13,7 @@ import {
 } from '../../inventory/jobs/queues/fulfillment.queue';
 import { getPromotionsQueue, PromotionJobs } from '../../promotions/jobs/queues/promotions.queue';
 import { WalletService } from './wallet.service';
+import { LoyaltyService } from '../../promotions/services/loyalty.service';
 import { BadRequestError, NotFoundError } from '../../../utils/api-error';
 import { IShippingAddress } from '../models/payment.model';
 import { StockReservation } from '../../cart/models/stock-reservation.model';
@@ -40,6 +41,7 @@ export class PaymentService {
   private checkoutService = new CheckoutService();
   private cartService = new CartService();
   private walletService = new WalletService();
+  private loyaltyService = new LoyaltyService();
 
   // ---------------------------------------------------------------------------
   // CREATE RAZORPAY ORDER
@@ -51,6 +53,7 @@ export class PaymentService {
     address: IShippingAddress,
     idempotencyKey_: string,
     walletAmount = 0,
+    loyaltyPoints = 0,
   ): Promise<CreateOrderResult | { paymentId: string; paidViaWallet: true }> {
     let idempotencyKey = idempotencyKey_;
 
@@ -88,8 +91,24 @@ export class PaymentService {
       throw new BadRequestError('Some items are out of stock');
     }
 
+    // Calculate loyalty discount (if applicable)
+    let loyaltyPointsUsed = 0;
+    let loyaltyDiscountPaise = 0;
+
+    if (loyaltyPoints > 0 && userId) {
+      const redemption = await this.loyaltyService.calculateRedemption(
+        userId,
+        loyaltyPoints,
+        summary.total,
+      );
+      if (redemption.valid) {
+        loyaltyPointsUsed = redemption.points;
+        loyaltyDiscountPaise = Math.round(redemption.discount * 100);
+      }
+    }
+
     // Calculate wallet deduction (if applicable)
-    const totalPaise = Math.round(summary.total * 100);
+    const totalPaise = Math.round(summary.total * 100) - loyaltyDiscountPaise;
     let walletDeductPaise = 0;
 
     if (walletAmount > 0 && userId) {
@@ -102,6 +121,11 @@ export class PaymentService {
     }
 
     const razorpayAmountPaise = totalPaise - walletDeductPaise;
+
+    // Deduct loyalty points BEFORE payment (if applicable)
+    if (loyaltyPointsUsed > 0 && userId) {
+      await this.loyaltyService.redeemPoints(userId, loyaltyPointsUsed, idempotencyKey);
+    }
 
     // Full wallet payment — debit wallet NOW, no Razorpay needed
     if (razorpayAmountPaise <= 0 && userId) {
@@ -117,8 +141,10 @@ export class PaymentService {
         sessionId,
         userId: userId ? (userId as never) : null,
         razorpayOrderId: `wallet_${idempotencyKey.slice(0, 20)}`,
-        amountPaise: totalPaise,
+        amountPaise: totalPaise + loyaltyDiscountPaise,
         walletDeductPaise,
+        loyaltyPointsUsed,
+        loyaltyDiscountPaise,
         currency: 'INR',
         status: 'captured',
         checkoutSnapshot: {
@@ -190,6 +216,8 @@ export class PaymentService {
       },
       shippingAddress: address,
       walletDeductPaise,
+      loyaltyPointsUsed,
+      loyaltyDiscountPaise,
       idempotencyKey,
     });
 
@@ -245,6 +273,14 @@ export class PaymentService {
     if (!isValid) {
       await this.paymentRepo.updateStatus(payment._id.toString(), 'failed');
       await this.releaseStockForPayment(payment.sessionId);
+      // Revert loyalty points if they were deducted during order creation
+      if (payment.loyaltyPointsUsed > 0 && payment.userId) {
+        await this.loyaltyService.revertRedemption(
+          payment.userId.toString(),
+          payment.loyaltyPointsUsed,
+          payment._id.toString(),
+        );
+      }
       throw new BadRequestError('Payment signature verification failed');
     }
 

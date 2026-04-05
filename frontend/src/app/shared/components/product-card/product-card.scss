@@ -1,132 +1,431 @@
 @use '../../../core/design-tokens/tokens' as *;
 @use '../../../core/design-tokens/mixins' as *;
 
-// ═══════════════════════════════════════
-// PRODUCT CARD — Kusmi Tea style
-// Borderless, clean, image-dominant
-// ═══════════════════════════════════════
-
 .card {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100%;
+}
+
+// ── Image Wrap (carousel container) ──
+.card__image-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  aspect-ratio: 3/4;
+  background: $color-bg-secondary;
+  margin-bottom: $space-md;
   display: block;
   text-decoration: none;
   color: inherit;
 
-  &.horizontal {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: $space-lg;
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.4s ease;
 
-    @include respond-to(sm) {
-      grid-template-columns: 1fr;
+    &.active {
+      opacity: 1;
     }
   }
 }
 
-.card__img-wrap {
-  position: relative;
-  aspect-ratio: 3 / 4;
-  overflow: hidden;
-  background: $color-bg-warm;
-
-  .horizontal & {
-    aspect-ratio: 4 / 5;
-  }
-}
-
-.card__img {
-  @include image-cover;
-  transition: transform 0.6s $ease-expo-out;
-
-  .card:hover & {
-    transform: scale(1.04);
-  }
-}
-
-.card__img-placeholder {
-  width: 100%;
-  height: 100%;
-  @include flex-center;
-  color: $color-text-disabled;
-}
-
-// Quick-add circle icon — Kusmi style (bottom-right of image)
-.card__quick-add {
+// ── Image dots (carousel indicator) ──
+.card__dots {
   position: absolute;
   bottom: $space-md;
-  right: $space-md;
-  width: 38px;
-  height: 38px;
-  @include flex-center;
-  border-radius: $radius-full;
-  border: 1px solid $color-border;
-  background: $color-bg-tertiary;
-  color: $color-text-primary;
-  cursor: pointer;
-  opacity: 0;
-  transform: translateY($space-xs);
-  transition: all 0.3s $ease-expo-out;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 2;
 
-  .card:hover & {
-    opacity: 1;
-    transform: translateY(0);
+  span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(252, 255, 247, 0.6);
+    transition: all 0.3s ease;
+
+    &.active {
+      background: white;
+      width: 24px;
+      border-radius: 3px;
+    }
+  }
+}
+
+// ── Wishlist button (top-right of image) ──
+.card__wishlist-btn {
+  position: absolute;
+  top: $space-md;
+  right: $space-md;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-mono-dark;
+  transition: all 0.2s ease;
+  z-index: 3;
+
+  svg {
+    width: 18px;
+    height: 18px;
   }
 
   &:hover {
-    background: $color-primary;
-    border-color: $color-primary;
-    color: $color-text-inverse;
+    background: $color-mono-dark;
+    color: white;
+    transform: scale(1.1);
+  }
+
+  &.wishlisted {
+    background: $color-mono-brown;
+    color: white;
   }
 }
 
-.card__badge {
+// ── Add to Cart button (bottom-right of image) ──
+.card__cart-btn {
   position: absolute;
-  top: $space-md;
-  left: $space-md;
-  padding: $space-xxs $space-sm;
-  background: $color-bg-dark;
-  color: $color-text-inverse;
-  font-family: $font-family-nav;
-  font-size: 10px;
-  font-weight: $font-weight-bold;
-  letter-spacing: $letter-spacing-eyebrow;
-  text-transform: uppercase;
+  bottom: $space-md;
+  right: $space-md;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: white;
+  color: $color-mono-dark;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 3;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background: $color-mono-dark;
+    color: white;
+    transform: scale(1.1);
+  }
 }
 
+// ── Body (text info) ──
 .card__body {
-  padding: $space-md 0 0;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  gap: $space-sm;
+  flex: 1;
+  align-items: stretch;
+}
 
-  .horizontal & {
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
+.card__meta {
+  display: block;
+  font-family: $font-family;
+  font-size: 11px;
+  font-weight: $font-weight-semibold;
+  color: rgba($color-mono-dark, 0.5);
+  letter-spacing: 0.05em;
+  margin: 0;
 }
 
 .card__name {
-  font-family: $font-family-display;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-medium;
-  color: $color-text-primary;
-  margin: 0 0 $space-xxs;
-  line-height: $line-height-tight;
-  letter-spacing: 0.02em;
-  @include truncate(2);
-}
-
-// Dot-separated attributes — Kusmi style
-.card__attr {
   font-family: $font-family;
-  font-size: $font-size-sm;
-  color: $color-text-tertiary;
-  display: block;
-  margin-bottom: $space-xs;
+  font-size: 14px;
+  font-weight: $font-weight-semibold;
+  color: $color-mono-dark;
+  margin: 0;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .card__price {
-  font-family: $font-family-nav;
-  font-size: $font-size-md;
+  display: block;
+  font-family: $font-family;
+  font-size: 15px;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
-  display: block;
+  margin: 0;
+}
+
+// ── Footer (Price + Buy button inline) ──
+.card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-sm;
+  margin-top: auto;
+}
+
+// ── Price Section ──
+.card__price-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card__price-label {
+  font-family: $font-family;
+  font-size: 12px;
+  font-weight: $font-weight-semibold;
+  color: rgba($color-mono-dark, 0.5);
+  
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+// ── Buy Now button ──
+.card__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  background: $color-mono-dark;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: $font-family;
+  font-size: 12px;
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  &:hover {
+    background: $color-mono-brown;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// ── Size variants ──
+.card--sm {
+  .card__image-wrap {
+    aspect-ratio: 1/1;
+    margin-bottom: $space-sm;
+    border-radius: 8px;
+  }
+
+  .card__wishlist-btn {
+    width: 36px;
+    height: 36px;
+    top: $space-sm;
+    right: $space-sm;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .card__cart-btn {
+    width: 36px;
+    height: 36px;
+    bottom: $space-sm;
+    right: $space-sm;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .card__meta {
+    font-size: 9px;
+  }
+
+  .card__name {
+    font-size: 12px;
+  }
+
+  .card__price {
+    font-size: 12px;
+  }
+
+  .card__price-label {
+    font-size: 9px;
+  }
+
+  .card__cta {
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+}
+
+.card--lg {
+  .card__image-wrap {
+    aspect-ratio: 3/4;
+    margin-bottom: $space-lg;
+    border-radius: 16px;
+  }
+
+  .card__wishlist-btn {
+    width: 48px;
+    height: 48px;
+    top: $space-lg;
+    right: $space-lg;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .card__cart-btn {
+    width: 48px;
+    height: 48px;
+    bottom: $space-lg;
+    right: $space-lg;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .card__name {
+    font-size: 16px;
+  }
+
+  .card__price {
+    font-size: 16px;
+  }
+
+  .card__price-label {
+    font-size: 10px;
+  }
+
+  .card__cta {
+    padding: 12px 18px;
+    font-size: 13px;
+  }
+}
+
+// ── Compact variant (legacy - keeps backwards compat) ──
+.card.compact {
+  .card__image-wrap {
+    aspect-ratio: 1 / 1;
+    margin-bottom: $space-sm;
+  }
+
+  .card__wishlist-btn {
+    width: 36px;
+    height: 36px;
+    top: $space-sm;
+    right: $space-sm;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .card__cart-btn {
+    width: 36px;
+    height: 36px;
+    bottom: $space-sm;
+    right: $space-sm;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .card__meta {
+    font-size: 9px;
+  }
+
+  .card__name {
+    font-size: $font-size-sm;
+  }
+
+  .card__price {
+    font-size: $font-size-lg;
+  }
+
+  .card__price-label {
+    font-size: 9px;
+  }
+
+  .card__cta {
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+}
+
+// ── Mobile responsive ──
+@include respond-to(md) {
+  .card {
+    .card__image-wrap {
+      border-radius: 8px;
+    }
+
+    .card__wishlist-btn {
+      width: 38px;
+      height: 38px;
+      top: $space-sm;
+      right: $space-sm;
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .card__cart-btn {
+      width: 38px;
+      height: 38px;
+      bottom: $space-sm;
+      right: $space-sm;
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .card__name {
+      font-size: 13px;
+    }
+
+    .card__price {
+      font-size: 14px;
+    }
+
+    .card__price-label {
+      font-size: 9px;
+    }
+
+    .card__cta {
+      padding: 9px 12px;
+      font-size: 11px;
+    }
+  }
 }

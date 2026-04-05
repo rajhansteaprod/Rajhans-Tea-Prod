@@ -1,0 +1,35 @@
+<section class="referral">
+  <h1 class="referral__title">Refer a Friend</h1>
+
+  @if (data(); as d) {
+    <div class="referral__code-block">
+      <span class="referral__code">{{ d.code }}</span>
+      <button class="referral__copy" (click)="copyCode()">
+        {{ copied() ? 'Copied' : 'Copy' }}
+      </button>
+    </div>
+
+    <div class="referral__stats">
+      <div class="referral__stat">
+        <span class="referral__stat-value">{{ d.totalReferred }}</span>
+        <span class="referral__stat-label">Friends referred</span>
+      </div>
+      <div class="referral__stat">
+        <span class="referral__stat-value">{{ d.completedCount }}</span>
+        <span class="referral__stat-label">Completed referrals</span>
+      </div>
+    </div>
+
+    <div class="referral__how">
+      <h2 class="referral__section-title">How it works</h2>
+      <ol class="referral__steps">
+        <li class="referral__step">Share your referral code with a friend</li>
+        <li class="referral__step">Your friend signs up using the code</li>
+        <li class="referral__step">Your friend places their first order</li>
+        <li class="referral__step">You earn loyalty points</li>
+      </ol>
+    </div>
+  } @else {
+    <p class="referral__loading">Loading...</p>
+  }
+</section>

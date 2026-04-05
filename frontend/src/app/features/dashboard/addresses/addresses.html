@@ -1,0 +1,77 @@
+<section class="addresses">
+  <div class="addresses__header">
+    <h1 class="addresses__title">My Addresses</h1>
+    <button class="addresses__add" (click)="openAdd()">Add address</button>
+  </div>
+
+  @if (showForm()) {
+    <form class="addresses__form" (ngSubmit)="save()">
+      <h2 class="addresses__form-title">{{ editingId() ? 'Edit address' : 'New address' }}</h2>
+
+      <div class="addresses__field">
+        <label class="addresses__label" for="label">Label</label>
+        <input class="addresses__input" id="label" type="text" [(ngModel)]="form.label" name="label" placeholder="e.g. Home, Office" />
+      </div>
+
+      <div class="addresses__field">
+        <label class="addresses__label" for="street">Street</label>
+        <input class="addresses__input" id="street" type="text" [(ngModel)]="form.street" name="street" placeholder="Street address" />
+      </div>
+
+      <div class="addresses__row">
+        <div class="addresses__field">
+          <label class="addresses__label" for="city">City</label>
+          <input class="addresses__input" id="city" type="text" [(ngModel)]="form.city" name="city" placeholder="City" />
+        </div>
+        <div class="addresses__field">
+          <label class="addresses__label" for="state">State</label>
+          <input class="addresses__input" id="state" type="text" [(ngModel)]="form.state" name="state" placeholder="State" />
+        </div>
+      </div>
+
+      <div class="addresses__row">
+        <div class="addresses__field">
+          <label class="addresses__label" for="postalCode">Postal Code</label>
+          <input class="addresses__input" id="postalCode" type="text" [(ngModel)]="form.postalCode" name="postalCode" placeholder="PIN code" />
+        </div>
+        <div class="addresses__field">
+          <label class="addresses__label" for="country">Country</label>
+          <input class="addresses__input" id="country" type="text" [(ngModel)]="form.country" name="country" placeholder="Country" />
+        </div>
+      </div>
+
+      <div class="addresses__form-actions">
+        <button class="addresses__btn addresses__btn--primary" type="submit" [disabled]="saving()">
+          {{ saving() ? 'Saving...' : 'Save' }}
+        </button>
+        <button class="addresses__btn addresses__btn--secondary" type="button" (click)="cancel()">Cancel</button>
+      </div>
+    </form>
+  }
+
+  @if (addresses().length === 0 && !showForm()) {
+    <p class="addresses__empty">No addresses yet.</p>
+  }
+
+  <div class="addresses__list">
+    @for (addr of addresses(); track addr._id) {
+      <div class="addresses__card">
+        <div class="addresses__card-top">
+          <span class="addresses__card-label">{{ addr.label }}</span>
+          @if (addr.isDefault) {
+            <span class="addresses__badge">Default</span>
+          }
+        </div>
+        <p class="addresses__card-line">{{ addr.street }}</p>
+        <p class="addresses__card-line">{{ addr.city }}, {{ addr.state }} {{ addr.postalCode }}</p>
+        <div class="addresses__card-actions">
+          <button class="addresses__link" (click)="openEdit(addr)">Edit</button>
+          <button class="addresses__link" (click)="remove(addr._id)">Delete</button>
+          @if (!addr.isDefault) {
+            <button class="addresses__link" (click)="setDefault(addr._id)">Set as default</button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</section>

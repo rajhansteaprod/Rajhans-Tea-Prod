@@ -12,9 +12,18 @@
     </a>
   </div>
 
+  <!-- Filter Tabs -->
+  <div class="orders__filters">
+    @for (f of filters; track f.key) {
+      <button class="orders__filter" [class.active]="activeFilter() === f.key" (click)="setFilter(f.key)">
+        {{ f.label }}
+      </button>
+    }
+  </div>
+
   @if (store.loading()) {
     <div class="orders__loading"><div class="orders__spinner"></div></div>
-  } @else if (store.orders().length === 0) {
+  } @else if (filteredOrders().length === 0) {
     <div class="orders__empty">
       <div class="orders__empty-icon">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
@@ -25,11 +34,11 @@
       </div>
       <h2 class="orders__empty-title">No orders yet</h2>
       <p class="orders__empty-desc">Your order history will appear here after your first purchase.</p>
-      <a class="orders__btn-primary" routerLink="/">Start Shopping</a>
+      <a class="orders__btn-primary" routerLink="/products">Start Shopping</a>
     </div>
   } @else {
     <div class="orders__list">
-      @for (order of store.orders(); track order._id) {
+      @for (order of filteredOrders(); track order._id) {
         <article class="orders__card">
           <!-- Header -->
           <div class="orders__card-header">

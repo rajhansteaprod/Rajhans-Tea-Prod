@@ -30,8 +30,9 @@
 
 // --- Typography ---
 @mixin heading($size: $font-size-xl) {
+  font-family: $font-family-heading;
   font-size: $size;
-  font-weight: $font-weight-medium;
+  font-weight: $font-weight-semibold;
   line-height: $line-height-tight;
   color: $color-text-primary;
 }
@@ -58,11 +59,11 @@
   border: 1px solid $color-border-light;
 }
 
-// --- Display Typography (Playfair Display) ---
+// --- Display Typography (Poppins) ---
 @mixin display-text($size: $font-size-display) {
   font-family: $font-family-display;
   font-size: $size;
-  font-weight: $font-weight-regular;
+  font-weight: $font-weight-bold;
   line-height: $line-height-tight;
   letter-spacing: $letter-spacing-heading;
   color: $color-text-primary;
@@ -89,7 +90,7 @@
   @include respond-to(md) { padding-top: $space-section-sm; padding-bottom: $space-section-sm; }
 }
 
-// --- Eyebrow Text (small uppercase label) ---
+// --- Eyebrow Text (small uppercase label) — Poppins ---
 @mixin eyebrow-text {
   font-family: $font-family-nav;
   font-size: $font-size-xs;
@@ -99,7 +100,7 @@
   color: $color-text-tertiary;
 }
 
-// --- Mega Headline (luxury serif, ALL CAPS — Mariage Frères style) ---
+// --- Mega Headline (Poppins bold, ALL CAPS) ---
 @mixin mega-headline($size: $font-size-hero) {
   font-family: $font-family-heading;
   font-size: $size;
@@ -110,7 +111,7 @@
   color: $color-text-primary;
 }
 
-// --- Ghost Button (outlined, Mariage Frères style) ---
+// --- Ghost Button (outlined, Poppins) ---
 @mixin ghost-button($border-color: $color-text-inverse, $text-color: $color-text-inverse) {
   display: inline-flex;
   align-items: center;
@@ -119,7 +120,7 @@
   background: transparent;
   color: $text-color;
   border: 1px solid $border-color;
-  font-family: $font-family-nav;
+  font-family: $font-family-heading;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
   letter-spacing: $letter-spacing-luxury;
@@ -145,7 +146,7 @@
   }
 }
 
-// --- Luxury Nav Link (Mariage Freres-style spaced uppercase) ---
+// --- Luxury Nav Link (Poppins spaced uppercase) ---
 @mixin luxury-nav-link {
   font-family: $font-family-nav;
   font-size: 11px;

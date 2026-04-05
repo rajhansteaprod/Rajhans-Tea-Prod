@@ -212,6 +212,15 @@
   &:disabled { opacity: 0.3; cursor: not-allowed; }
 }
 
+.checkout__qty-static {
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  min-width: 24px;
+  text-align: center;
+}
+
 .checkout__line-total {
   font-family: $font-family-nav;
   font-size: $font-size-sm;
@@ -233,6 +242,27 @@
   transition: all $transition-fast;
 
   &:hover { background: rgba($color-error, 0.08); color: $color-error; }
+}
+
+.checkout__buynow-notice {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-md $space-lg;
+  margin-bottom: $space-lg;
+  background: rgba($color-bg-teal, 0.08);
+  border: 1px solid $color-bg-teal;
+  border-radius: 0;
+  color: $color-bg-teal;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
+
+  svg {
+    flex-shrink: 0;
+    color: $color-bg-teal;
+  }
 }
 
 // ═══ Address Form ═══
@@ -727,4 +757,34 @@
   font-size: $font-size-xs;
   color: $color-text-disabled;
   line-height: $line-height-relaxed;
+}
+
+// ── Loyalty Points Input ──
+.checkout__loyalty-input {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  margin-top: $space-sm;
+  padding-top: $space-sm;
+}
+
+.checkout__loyalty-label {
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  color: rgba($color-mono-dark, 0.5);
+  white-space: nowrap;
+}
+
+.checkout__loyalty-field {
+  width: 120px;
+  padding: $space-xs $space-sm;
+  border: 1px solid rgba($color-mono-dark, 0.15);
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  color: $color-mono-dark;
+  outline: none;
+
+  &:focus {
+    border-color: $color-mono-dark;
+  }
 }

@@ -1,0 +1,47 @@
+<section class="loyalty">
+  <h1 class="loyalty__title">Loyalty Points</h1>
+
+  @if (data(); as d) {
+    <div class="loyalty__balance">
+      <span class="loyalty__balance-number">{{ d.points }}</span>
+      <span class="loyalty__balance-label">points available</span>
+    </div>
+
+    <div class="loyalty__stats">
+      <div class="loyalty__stat">
+        <span class="loyalty__stat-value">{{ d.totalEarned }}</span>
+        <span class="loyalty__stat-label">Total earned</span>
+      </div>
+      <div class="loyalty__stat">
+        <span class="loyalty__stat-value">{{ d.totalRedeemed }}</span>
+        <span class="loyalty__stat-label">Total redeemed</span>
+      </div>
+    </div>
+
+    <div class="loyalty__how">
+      <h2 class="loyalty__section-title">How it works</h2>
+      <p class="loyalty__how-text">Earn {{ d.pointsPerHundred || 10 }} points for every &#x20B9;100 spent. Redeem points on future orders for instant discounts.</p>
+    </div>
+
+    @if (d.transactions && d.transactions.length > 0) {
+      <div class="loyalty__history">
+        <h2 class="loyalty__section-title">Transaction history</h2>
+        <div class="loyalty__list">
+          @for (tx of d.transactions; track tx._id) {
+            <div class="loyalty__tx">
+              <div class="loyalty__tx-left">
+                <span class="loyalty__tx-desc">{{ tx.description }}</span>
+                <span class="loyalty__tx-date">{{ tx.createdAt | date:'mediumDate' }}</span>
+              </div>
+              <span class="loyalty__tx-points" [class.loyalty__tx-points--earn]="tx.type === 'earn'" [class.loyalty__tx-points--redeem]="tx.type === 'redeem'">
+                {{ tx.type === 'earn' ? '+' : '-' }}{{ tx.points }}
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  } @else {
+    <p class="loyalty__loading">Loading...</p>
+  }
+</section>

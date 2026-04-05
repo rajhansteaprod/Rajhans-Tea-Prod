@@ -68,6 +68,11 @@ export const ADMIN_ROUTES: Routes = [
           import('./cms/cms-management').then((m) => m.CmsManagementComponent),
       },
       {
+        path: 'wallets',
+        loadComponent: () =>
+          import('./wallets/wallet-management').then((m) => m.WalletManagementComponent),
+      },
+      {
         path: 'interface/hero-slides',
         loadComponent: () =>
           import('./interface/hero-slides/hero-slides').then((m) => m.HeroSlidesComponent),

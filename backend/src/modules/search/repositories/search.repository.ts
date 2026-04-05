@@ -138,7 +138,7 @@ export class SearchRepository {
     query: string,
     limit = 8,
   ): Promise<{ type: 'product' | 'category'; name: string; slug: string; image?: string }[]> {
-    const regex = { $regex: `^${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, $options: 'i' };
+    const regex = { $regex: query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
 
     const [products, categories] = await Promise.all([
       Product.find({ name: regex, status: 'active' })

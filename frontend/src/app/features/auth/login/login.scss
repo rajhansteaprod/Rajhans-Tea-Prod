@@ -16,12 +16,13 @@
   }
 }
 
-// ═══ Brand Panel (Left) ═══
+// ═══ Brand Panel (Left) — Gradient with Features ═══
 .login__brand {
-  background: $color-bg-maroon;
+  background: linear-gradient(160deg, #4A0E2B 0%, #2D081A 100%);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
   padding: $space-xxxl;
   position: relative;
   overflow: hidden;
@@ -31,68 +32,98 @@
   }
 }
 
-.login__brand-content {
-  position: relative;
-  z-index: 1;
-  max-width: 460px;
+.login__brand-top {
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
-.login__brand-eyebrow {
-  display: block;
-  font-family: $font-family-nav;
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-eyebrow;
-  text-transform: uppercase;
-  color: rgba($color-text-inverse, 0.5);
-  margin-bottom: $space-lg;
-}
-
-.login__brand-title {
-  margin: 0 0 $space-xl;
-}
-
-.login__brand-line {
-  display: block;
+.login__brand-logo {
   font-family: $font-family-heading;
-  font-size: $font-size-hero;
-  font-weight: $font-weight-bold;
-  line-height: 0.95;
-  letter-spacing: $letter-spacing-mega;
-  color: $color-text-inverse;
-  text-transform: uppercase;
-
-  &--accent {
-    color: rgba($color-text-inverse, 0.3);
-  }
-
-  @include respond-to(lg) {
-    font-size: $font-size-display;
-  }
-}
-
-.login__brand-divider {
-  width: 60px;
-  height: 3px;
-  background: rgba($color-text-inverse, 0.25);
-  margin-bottom: $space-lg;
-}
-
-.login__brand-tagline {
-  font-family: $font-family-display;
   font-size: $font-size-lg;
-  font-style: italic;
-  color: rgba($color-text-inverse, 0.4);
-  margin: 0;
+  font-weight: $font-weight-bold;
+  color: $color-text-inverse;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color $transition-normal;
+
+  &:hover {
+    color: rgba($color-text-inverse, 0.8);
+  }
 }
 
-// ═══ Form Panel (Right) ═══
-.login__form-panel {
-  background: $color-bg-warm;
+.login__brand-content {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+}
+
+.login__brand-headline {
+  font-family: $font-family-heading;
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: $font-weight-bold;
+  color: $color-text-inverse;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  margin: 0;
+  max-width: 380px;
+  text-align: left;
+}
+
+.login__brand-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-md;
+  width: 100%;
+}
+
+.login__feature-card {
+  background: rgba(252, 255, 247, 0.08);
+  border-radius: 12px;
+  padding: $space-lg;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: $space-sm;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(252, 255, 247, 0.12);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(252, 255, 247, 0.12);
+    transform: translateY(-4px);
+  }
+}
+
+.login__feature-icon {
+  font-size: 28px;
+  line-height: 1;
+  display: block;
+}
+
+.login__feature-text {
+  font-family: $font-family;
+  font-size: 13px;
+  font-weight: $font-weight-medium;
+  color: rgba(252, 255, 247, 0.85);
+  line-height: 1.4;
+  margin: 0;
+}
+
+// ═══ Form Panel (Right) — Clean White ═══
+.login__form-panel {
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: $space-xxl;
+  position: relative;
 
   @include respond-to(md) {
     padding: $space-xl $space-lg;
@@ -103,6 +134,28 @@
   @include respond-to(xs) {
     padding: $space-section-sm $space-md $space-xl;
     align-items: flex-start;
+  }
+}
+
+.login__logo-mobile {
+  display: none;
+  font-family: $font-family-heading;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  margin-bottom: $space-xl;
+  transition: color $transition-normal;
+
+  &:hover {
+    color: $color-bg-maroon;
+  }
+
+  @include respond-to(md) {
+    display: block;
   }
 }
 
@@ -135,7 +188,7 @@
 .login__step-dot {
   width: 10px;
   height: 10px;
-  border-radius: 0;
+  border-radius: 50%;
   background: $color-border;
   transition: all $transition-normal;
   flex-shrink: 0;
@@ -244,7 +297,7 @@
 .login__phone-group {
   display: flex;
   border: 2px solid $color-border;
-  border-radius: 0;
+  border-radius: $space-xs;
   overflow: hidden;
   transition: all $transition-fast;
   background: $color-bg-tertiary;
@@ -302,30 +355,31 @@
   width: 100%;
   aspect-ratio: 1;
   max-width: 52px;
-  border: 2px solid $color-border;
-  border-radius: 0;
+  border: 3px solid #ddd;
+  border-radius: 8px;
   text-align: center;
   font-size: $font-size-xl;
   font-weight: $font-weight-bold;
   font-family: $font-family-nav;
   color: $color-text-primary;
-  background: $color-bg-tertiary;
+  background: white;
   outline: none;
   transition: all $transition-fast;
   caret-color: $color-bg-maroon;
 
   &:focus {
     border-color: $color-bg-maroon;
-    box-shadow: 0 0 0 3px rgba($color-bg-maroon, 0.1);
+    box-shadow: 0 0 0 4px rgba($color-bg-maroon, 0.12);
   }
 
   &.filled {
-    border-color: $color-success;
-    background: rgba($color-success, 0.04);
+    border-color: $color-bg-maroon;
+    background: rgba($color-bg-maroon, 0.03);
+    box-shadow: 0 0 0 2px rgba($color-bg-maroon, 0.08);
   }
 }
 
-// ═══ Submit Button ═══
+/* ═══ Submit Button ═══ */
 .login__btn-submit {
   display: flex;
   align-items: center;
@@ -336,33 +390,33 @@
   background: $color-bg-maroon;
   color: $color-text-inverse;
   border: none;
-  border-radius: 0;
+  border-radius: 8px;
   font-family: $font-family-nav;
   font-size: $font-size-md;
   font-weight: $font-weight-bold;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all $transition-normal;
+  transition: all 0.3s ease;
+}
 
-  &:hover:not(:disabled) {
-    background: $color-primary-hover;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba($color-bg-maroon, 0.3);
-  }
+.login__btn-submit:hover:not(:disabled) {
+  background: $color-primary-hover;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba($color-bg-maroon, 0.3);
+}
 
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
+.login__btn-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
 
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
+.login__btn-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
-  &.loading {
-    pointer-events: none;
-  }
+.login__btn-submit.loading {
+  pointer-events: none;
 }
 
 .login__spinner {

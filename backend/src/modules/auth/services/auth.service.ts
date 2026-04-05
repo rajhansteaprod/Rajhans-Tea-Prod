@@ -144,6 +144,137 @@ export class AuthService {
   }
 
   // ---------------------------------------------------------------------------
+  // Profile & Address management
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Update basic profile fields (firstName, lastName, email).
+   */
+  async updateProfile(
+    userId: string,
+    data: { firstName?: string; lastName?: string; email?: string },
+  ) {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundError('User not found');
+
+    const updated = await this.userRepo.updateById(userId, data);
+    return updated;
+  }
+
+  /**
+   * Return the addresses array for a given user.
+   */
+  async getAddresses(userId: string) {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundError('User not found');
+    return user.addresses;
+  }
+
+  /**
+   * Push a new address onto the user's addresses array.
+   * If it's marked as default (or is the first address), ensure only one default.
+   */
+  async addAddress(
+    userId: string,
+    address: {
+      label: string;
+      street: string;
+      city: string;
+      state: string;
+      postalCode: string;
+      country?: string;
+      isDefault?: boolean;
+    },
+  ) {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundError('User not found');
+
+    // First address is always default
+    if (user.addresses.length === 0) {
+      address.isDefault = true;
+    }
+
+    // If new address is default, unset existing defaults
+    if (address.isDefault) {
+      user.addresses.forEach((a) => (a.isDefault = false));
+    }
+
+    user.addresses.push(address as never);
+    await user.save();
+    return user.addresses;
+  }
+
+  /**
+   * Update a specific address inside the user's addresses array.
+   */
+  async updateAddress(
+    userId: string,
+    addressId: string,
+    data: Partial<{
+      label: string;
+      street: string;
+      city: string;
+      state: string;
+      postalCode: string;
+      country: string;
+      isDefault: boolean;
+    }>,
+  ) {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundError('User not found');
+
+    const address = user.addresses.id(addressId);
+    if (!address) throw new NotFoundError('Address not found');
+
+    // If setting this address as default, unset others
+    if (data.isDefault) {
+      user.addresses.forEach((a) => (a.isDefault = false));
+    }
+
+    Object.assign(address, data);
+    await user.save();
+    return user.addresses;
+  }
+
+  /**
+   * Remove an address from the array.
+   */
+  async deleteAddress(userId: string, addressId: string) {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundError('User not found');
+
+    const address = user.addresses.id(addressId);
+    if (!address) throw new NotFoundError('Address not found');
+
+    const wasDefault = address.isDefault;
+    address.deleteOne();
+
+    // If the deleted address was the default and others remain, promote the first
+    if (wasDefault && user.addresses.length > 0) {
+      user.addresses[0].isDefault = true;
+    }
+
+    await user.save();
+    return user.addresses;
+  }
+
+  /**
+   * Set a specific address as the default; unsets all others.
+   */
+  async setDefaultAddress(userId: string, addressId: string) {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundError('User not found');
+
+    const address = user.addresses.id(addressId);
+    if (!address) throw new NotFoundError('Address not found');
+
+    user.addresses.forEach((a) => (a.isDefault = false));
+    address.isDefault = true;
+    await user.save();
+    return user.addresses;
+  }
+
+  // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
 

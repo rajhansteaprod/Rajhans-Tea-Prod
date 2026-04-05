@@ -1,107 +1,119 @@
 @use '../../../../core/design-tokens/tokens' as *;
 @use '../../../../core/design-tokens/mixins' as *;
 
-:host {
-  display: block;
-}
+:host { display: block; }
 
-.statement {
-  background: $color-bg-dark;
-  @include section-padding;
-  @include flex-center;
-  min-height: 60vh;
-  position: relative;
+// ═══════════════════════════════════════
+// USP SECTION — Split-Panel Editorial Layout
+// ═══════════════════════════════════════
+
+.usp {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: calc(100vh - #{$header-height});
   overflow: hidden;
 
   @include respond-to(md) {
-    min-height: 45vh;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    height: auto;
   }
 }
 
-.statement__inner {
-  @include content-container($max-width-content);
-  text-align: center;
-  position: relative;
+// ── LEFT: Dark content panel ──
+.usp__left {
+  background: $color-bg-dark;
+  display: flex;
+  align-items: center;
+  padding: $space-xxxl;
+
+  @include respond-to(lg) {
+    padding: $space-xxl;
+  }
+
+  @include respond-to(md) {
+    padding: $space-xxl $space-lg;
+  }
 }
 
-// ── Eyebrow ──
-.statement__eyebrow {
-  font-family: $font-family-nav;
+.usp__content {
+  display: flex;
+  flex-direction: column;
+  gap: $space-lg;
+  max-width: 520px;
+}
+
+.usp__eyebrow {
+  font-family: $font-family-heading;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
   letter-spacing: $letter-spacing-luxury;
   text-transform: uppercase;
-  color: rgba($color-gold, 0.5);
-  display: block;
-  margin-bottom: $space-xxl;
+  color: $color-primary;
 }
 
-// ── Mega headline ──
-.statement__text {
-  @include mega-headline;
-  color: $color-text-inverse;
-  margin: 0 0 $space-xxl;
-  font-size: clamp($font-size-display, 10vw, $font-size-mega);
-  position: relative;
-  z-index: 1;
-
-  @include respond-to(md) {
-    font-size: clamp($font-size-xxxl, 12vw, $font-size-hero);
-  }
-}
-
-.statement__line {
-  display: block;
-}
-
-// ── Ornamental divider (Mariage Frères flourish) ──
-.statement__divider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 0 $space-xxl;
-
-  span {
-    display: block;
-    width: 50px;
-    height: 1px;
-    background: $color-gold;
-    position: relative;
-
-    &::before,
-    &::after {
-      content: '';
-      position: absolute;
-      top: -3px;
-      width: 7px;
-      height: 7px;
-      border: 1px solid $color-gold;
-      border-radius: 50%;
-      background: $color-bg-dark;
-    }
-
-    &::before {
-      left: -14px;
-    }
-
-    &::after {
-      right: -14px;
-    }
-  }
-}
-
-.statement__sub {
-  font-family: $font-family-display;
-  font-size: $font-size-lg;
-  font-style: italic;
-  font-weight: $font-weight-regular;
-  color: rgba($color-text-inverse, 0.45);
+.usp__heading {
+  font-family: $font-family-heading;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: $font-weight-bold;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $color-mono-light;
   margin: 0;
+}
+
+.usp__body {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  line-height: $line-height-relaxed;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+
+  em {
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.85);
+  }
+}
+
+.usp__cta {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: $space-md $space-xl;
+  margin-top: $space-md;
+  background: $color-primary;
+  color: $color-mono-dark;
+  font-family: $font-family-heading;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-luxury;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: $radius-md;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $color-mono-light;
+    color: $color-mono-dark;
+  }
+}
+
+// ── RIGHT: Image panel ──
+.usp__right {
   position: relative;
-  z-index: 1;
-  letter-spacing: 0.02em;
+  overflow: hidden;
 
   @include respond-to(md) {
-    font-size: $font-size-md;
+    height: 60vw;
+    min-height: 300px;
   }
+}
+
+.usp__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }

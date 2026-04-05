@@ -55,6 +55,7 @@ export class AdminLayoutComponent {
       collapsed: false,
       items: [
         { label: 'Payments', icon: '<svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>', route: '/admin/payments' },
+        { label: 'Wallets', icon: '<svg viewBox="0 0 24 24"><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5zm-4 1a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" stroke="currentColor" stroke-width="2" fill="none"/></svg>', route: '/admin/wallets' },
       ],
     },
     {

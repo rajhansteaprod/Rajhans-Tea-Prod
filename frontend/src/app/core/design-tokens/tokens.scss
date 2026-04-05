@@ -1,54 +1,74 @@
 // ============================================
 // RAJHANS TEA - DESIGN TOKENS
-// Luxury premium tea brand design system
+// Monochromatic design system based on #FC4747
 // ============================================
 
-// --- Brand Colors ---
-$color-primary: #4A0E2B;
-$color-primary-hover: #3A0B22;
-$color-primary-active: #2D081A;
-$color-primary-light: rgba(74, 14, 43, 0.08);
-$color-secondary: #C9A94E;
-$color-secondary-hover: #B8983F;
-$color-accent: #8B6F4E;
-$color-accent-light: rgba(139, 111, 78, 0.12);
+// --- Primary Scale (H=0, S=97%) ---
+$color-primary-50:  #FFF0F0;  // HSL(0, 97%, 97%)
+$color-primary-100: #FFDCDC;  // HSL(0, 97%, 93%)
+$color-primary-200: #FEAAAA;  // HSL(0, 97%, 83%)
+$color-primary-300: #FD7777;  // HSL(0, 97%, 73%)
+$color-primary-400: #FC5E5E;  // HSL(0, 97%, 68%)
+$color-primary-500: #FC4747;  // HSL(0, 97%, 63%) — BASE
+$color-primary-600: #FB1313;  // HSL(0, 97%, 53%)
+$color-primary-700: #C90303;  // HSL(0, 97%, 40%)
+$color-primary-800: #7E0202;  // HSL(0, 97%, 25%)
+$color-primary-900: #3C0101;  // HSL(0, 97%, 12%)
+
+// --- Aliases (legacy names → scale) ---
+$color-primary: $color-primary-500;
+$color-primary-hover: $color-primary-600;
+$color-primary-active: $color-primary-500;
+$color-primary-light: rgba(252, 71, 71, 0.08);
+
+$color-secondary: $color-primary-400;
+$color-secondary-hover: $color-primary-500;
+$color-accent: $color-primary-700;
+$color-accent-light: rgba(201, 3, 3, 0.12);
+
+// --- Mono Palette (header + mega menu) — independent of primary ---
+$color-mono-dark: #000000;
+$color-mono-light: #FFFFFF;
+$color-mono-brown: #666666;
+$color-mono-brown-light: rgba(102, 102, 102, 0.08);
+$color-mono-brown-hover: #555555;
 
 // --- Gold Palette ---
-$color-gold: #C9A94E;
-$color-gold-light: #D4B65E;
-$color-gold-dark: #B8963A;
-$color-gold-muted: rgba(201, 169, 78, 0.15);
+$color-gold: $color-primary-400;
+$color-gold-light: $color-primary-300;
+$color-gold-dark: $color-primary-600;
+$color-gold-muted: rgba(252, 94, 94, 0.15);
 
 // --- Semantic Colors ---
-$color-success: #57886C;
-$color-warning: #D4A853;
-$color-error: #C0392B;
-$color-info: #7B8FA1;
+$color-success: $color-primary-700;
+$color-warning: $color-primary-400;
+$color-error: $color-primary-600;
+$color-info: $color-primary-300;
 
 // --- Background Colors ---
-$color-bg-primary: #FAF7F2;
-$color-bg-secondary: #F2EDE6;
+$color-bg-primary: $color-primary-50;
+$color-bg-secondary: $color-primary-100;
 $color-bg-tertiary: #FFFFFF;
-$color-bg-dark: #1C1118;
-$color-bg-warm: #F5EFE6;
-$color-bg-teal: #2D5A4A;
-$color-bg-amber: #C9A94E;
-$color-bg-maroon: #4A0E2B;
-$color-bg-rich: #2A1520;
-$color-bg-gold: #C9A94E;
-$color-overlay: rgba(28, 17, 24, 0.50);
+$color-bg-dark: $color-primary-900;
+$color-bg-warm: $color-primary-50;
+$color-bg-teal: $color-primary-800;
+$color-bg-amber: $color-primary-400;
+$color-bg-maroon: $color-primary-800;
+$color-bg-rich: $color-primary-900;
+$color-bg-gold: $color-primary-400;
+$color-overlay: rgba(60, 1, 1, 0.50);
 
 // --- Text Colors ---
-$color-text-primary: #2A1520;
-$color-text-secondary: #5C4550;
-$color-text-tertiary: #8A7580;
-$color-text-disabled: #B8ADB1;
-$color-text-inverse: #FFFFFF;
+$color-text-primary: $color-primary-900;
+$color-text-secondary: $color-primary-800;
+$color-text-tertiary: $color-primary-600;
+$color-text-disabled: $color-primary-300;
+$color-text-inverse: $color-primary-50;
 
 // --- Border Colors ---
-$color-border: #E2D8CC;
-$color-border-light: #EDE6DA;
-$color-border-focus: #4A0E2B;
+$color-border: $color-primary-200;
+$color-border-light: $color-primary-100;
+$color-border-focus: $color-primary-500;
 
 // --- Spacing ---
 $space-xxs: 4px;
@@ -60,16 +80,20 @@ $space-xl: 32px;
 $space-xxl: 48px;
 $space-xxxl: 64px;
 
-// --- Typography ---
-$font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-$font-family-display: 'Playfair Display', 'Georgia', 'Times New Roman', serif;
-$font-family-heading: 'Playfair Display', 'Georgia', serif;
-$font-family-nav: 'Inter', -apple-system, sans-serif;
+// --- Typography: Font Families ---
+// Body text and general content
+$font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$font-family-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+// Headings, buttons, labels, nav items
+$font-family-heading: 'Poppins', -apple-system, sans-serif;
+$font-family-display: 'Poppins', -apple-system, sans-serif;
+$font-family-nav: 'Poppins', -apple-system, sans-serif;
 
 $font-size-xs: 12px;
 $font-size-sm: 14px;
 $font-size-md: 16px;
-$font-size-nav: 14px;
+$font-size-nav: 12px;
 $font-size-lg: 20px;
 $font-size-xl: 24px;
 $font-size-xxl: 32px;
@@ -104,11 +128,11 @@ $radius-xxl: 24px;
 $radius-full: 9999px;
 
 // --- Shadows ---
-$shadow-sm: 0 1px 3px rgba(28, 17, 24, 0.04);
-$shadow-md: 0 4px 16px rgba(28, 17, 24, 0.05);
-$shadow-lg: 0 8px 32px rgba(28, 17, 24, 0.07);
-$shadow-xl: 0 16px 56px rgba(28, 17, 24, 0.10);
-$shadow-glow: 0 0 0 3px rgba(74, 14, 43, 0.12);
+$shadow-sm: 0 1px 3px rgba(60, 1, 1, 0.04);
+$shadow-md: 0 4px 16px rgba(60, 1, 1, 0.05);
+$shadow-lg: 0 8px 32px rgba(60, 1, 1, 0.07);
+$shadow-xl: 0 16px 56px rgba(60, 1, 1, 0.10);
+$shadow-glow: 0 0 0 3px rgba(252, 71, 71, 0.12);
 
 // --- Breakpoints ---
 $breakpoint-xs: 480px;
@@ -148,3 +172,8 @@ $z-modal-backdrop: 1040;
 $z-modal: 1050;
 $z-popover: 1060;
 $z-tooltip: 1070;
+
+// --- Layout Heights ---
+$header-height: 70px;
+$header-height-md: 60px;
+$bottom-nav-height: 60px;

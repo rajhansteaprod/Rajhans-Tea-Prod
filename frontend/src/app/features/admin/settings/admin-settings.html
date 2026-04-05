@@ -1,7 +1,7 @@
 <div class="page">
   <div class="page-header">
     <h1 class="page-title">Settings</h1>
-    <p class="page-sub">Store configuration and feature toggles</p>
+    <p class="page-sub">Store configuration, features, and promotion settings</p>
   </div>
 
   @if (settings()) {
@@ -56,6 +56,63 @@
           </label>
         </div>
       </div>
+
+      <!-- Loyalty Settings -->
+      @if (loyaltySettings()) {
+        <div class="settings-card">
+          <h3 class="card-title">Loyalty Points Configuration</h3>
+          <div class="form-field">
+            <label>Earn Rate (points per ₹100)</label>
+            <input type="number" [(ngModel)]="loyaltySettings().earnRate" min="0" />
+          </div>
+          <div class="form-field">
+            <label>Redeem Rate (₹ per 100 points)</label>
+            <input type="number" [(ngModel)]="loyaltySettings().redeemRate" min="0" />
+          </div>
+          <div class="form-field">
+            <label>Min Points to Redeem</label>
+            <input type="number" [(ngModel)]="loyaltySettings().minRedeemPoints" min="1" />
+          </div>
+          <div class="form-field">
+            <label>Max Redeem % of Order</label>
+            <input type="number" [(ngModel)]="loyaltySettings().maxRedeemPercent" min="1" max="100" />
+          </div>
+          <div class="form-field">
+            <label>Points Expiry (days)</label>
+            <input type="number" [(ngModel)]="loyaltySettings().expiryDays" min="1" />
+          </div>
+        </div>
+      }
+
+      <!-- Referral Settings -->
+      @if (referralSettings()) {
+        <div class="settings-card">
+          <h3 class="card-title">Referral Configuration</h3>
+          <div class="form-field">
+            <label>Referrer Reward Type</label>
+            <select [(ngModel)]="referralSettings().referrerRewardType">
+              <option value="loyalty_points">Loyalty Points</option>
+              <option value="wallet_credit">Wallet Credit</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Referrer Reward Amount</label>
+            <input type="number" [(ngModel)]="referralSettings().referrerRewardAmount" min="0" />
+          </div>
+          <div class="form-field">
+            <label>Referee Coupon Value (₹)</label>
+            <input type="number" [(ngModel)]="referralSettings().refereeCouponValue" min="0" />
+          </div>
+          <div class="form-field">
+            <label>Referee Min Order (₹)</label>
+            <input type="number" [(ngModel)]="referralSettings().refereeCouponMinOrder" min="0" />
+          </div>
+          <div class="form-field">
+            <label>Code Prefix</label>
+            <input [(ngModel)]="referralSettings().codePrefix" maxlength="10" />
+          </div>
+        </div>
+      }
     </div>
 
     <div class="save-bar">

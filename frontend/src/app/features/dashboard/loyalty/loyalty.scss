@@ -1,0 +1,165 @@
+@use '../../../core/design-tokens/tokens' as *;
+@use '../../../core/design-tokens/mixins' as *;
+
+.loyalty {
+  @include content-container($max-width-narrow);
+  padding-top: $space-section-sm;
+  padding-bottom: $space-section-sm;
+
+  @include respond-to(md) {
+    padding-top: $space-xxl;
+    padding-bottom: $space-xxl;
+  }
+}
+
+.loyalty__title {
+  font-family: $font-family;
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-regular;
+  color: $color-mono-dark;
+  margin: 0 0 $space-xxl;
+  line-height: $line-height-tight;
+}
+
+// Balance
+.loyalty__balance {
+  @include flex-column;
+  align-items: flex-start;
+  margin-bottom: $space-xxl;
+}
+
+.loyalty__balance-number {
+  font-family: $font-family;
+  font-size: $font-size-display;
+  font-weight: $font-weight-medium;
+  color: $color-mono-dark;
+  line-height: 1;
+  letter-spacing: $letter-spacing-tight;
+
+  @include respond-to(md) {
+    font-size: $font-size-xxxl;
+  }
+}
+
+.loyalty__balance-label {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  color: rgba(0, 0, 0, 0.35);
+  margin-top: $space-xs;
+}
+
+// Stats row
+.loyalty__stats {
+  display: flex;
+  gap: $space-xxl;
+  margin-bottom: $space-xxl;
+  padding-bottom: $space-xxl;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+  @include respond-to(xs) {
+    gap: $space-xl;
+  }
+}
+
+.loyalty__stat {
+  @include flex-column;
+}
+
+.loyalty__stat-value {
+  font-family: $font-family;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-medium;
+  color: $color-mono-dark;
+  line-height: 1;
+}
+
+.loyalty__stat-label {
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  color: rgba(0, 0, 0, 0.35);
+  margin-top: $space-xxs;
+}
+
+// How it works
+.loyalty__how {
+  margin-bottom: $space-xxl;
+}
+
+.loyalty__section-title {
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: rgba(0, 0, 0, 0.4);
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+  margin: 0 0 $space-md;
+}
+
+.loyalty__how-text {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  color: rgba(0, 0, 0, 0.5);
+  line-height: $line-height-relaxed;
+  margin: 0;
+  max-width: 480px;
+}
+
+// History
+.loyalty__history {
+  margin-bottom: $space-xxl;
+}
+
+.loyalty__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.loyalty__tx {
+  @include flex-between;
+  padding: $space-md $space-lg;
+  background: $color-mono-light;
+
+  @include respond-to(sm) {
+    padding: $space-md;
+  }
+}
+
+.loyalty__tx-left {
+  @include flex-column;
+  gap: 2px;
+}
+
+.loyalty__tx-desc {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  color: $color-mono-dark;
+}
+
+.loyalty__tx-date {
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  color: rgba(0, 0, 0, 0.3);
+}
+
+.loyalty__tx-points {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+
+  &--earn {
+    color: $color-mono-dark;
+  }
+
+  &--redeem {
+    color: rgba(0, 0, 0, 0.4);
+  }
+}
+
+.loyalty__loading {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  color: rgba(0, 0, 0, 0.35);
+}

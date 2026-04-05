@@ -1,178 +1,125 @@
 @use '../../../../core/design-tokens/tokens' as *;
 @use '../../../../core/design-tokens/mixins' as *;
 
-:host {
-  display: block;
-}
+:host { display: block; }
 
-.featured {
+// ═══════════════════════════════════════
+// FEATURED PRODUCTS CAROUSEL — Full-Height Section
+// ═══════════════════════════════════════
+
+.fp {
+  width: 100%;
+  height: calc(100vh - #{$header-height});
+  padding: $space-xl $space-xxxl;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: $space-section;
   background: $color-bg-primary;
-  @include section-padding;
-}
-
-// ── Header with eyebrow + title + view all ──
-.featured__header {
-  @include content-container($max-width-wide);
-  text-align: center;
-  margin-bottom: $space-xxxl;
-  position: relative;
-}
-
-.featured__eyebrow {
-  font-family: $font-family-nav;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-luxury;
-  text-transform: uppercase;
-  color: $color-gold;
-  display: block;
-  margin-bottom: $space-md;
-}
-
-.featured__title {
-  @include mega-headline;
-  font-size: clamp($font-size-xxxl, 5vw, $font-size-display);
-  margin: 0 0 $space-lg;
-
-  @include respond-to(md) {
-    font-size: clamp($font-size-xxl, 8vw, $font-size-xxxl);
-  }
-}
-
-.featured__view-all {
-  font-family: $font-family-nav;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-luxury;
-  text-transform: uppercase;
-  color: $color-text-tertiary;
-  text-decoration: none;
-  transition: color 0.3s ease;
-
-  &:hover {
-    color: $color-primary;
-  }
-}
-
-// ── Product grid — equal cards, Kusmi Tea style ──
-.featured__grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: $space-xl;
-  max-width: $max-width-wide;
-  margin: 0 auto;
-  padding: 0 clamp($space-lg, 5vw, $space-xxxl);
 
   @include respond-to(lg) {
-    grid-template-columns: repeat(2, 1fr);
+    padding: $space-xl $space-lg;
   }
 
-  @include respond-to(sm) {
-    grid-template-columns: 1fr;
-    max-width: 400px;
+  @include respond-to(md) {
+    height: calc(100vh - #{$header-height-md} - #{$bottom-nav-height});
+    padding: $space-lg $space-lg;
+    margin-bottom: $space-section-sm;
   }
 }
 
-// ── Individual card — borderless, clean (Kusmi style) ──
-.featured__card {
-  display: block;
-  text-decoration: none;
-  color: inherit;
-  transition: none;
-}
-
-.featured__card-image {
-  aspect-ratio: 3 / 4;
-  overflow: hidden;
-  background: $color-bg-warm;
+// ── Header: Title + Arrows ──
+.fp__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: $space-lg;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.6s $ease-expo-out;
-  }
-
-  .featured__card:hover & img {
-    transform: scale(1.04);
-  }
+  flex-shrink: 0;
+  z-index: 5;
 }
 
-// ── Card info — all cards show details ──
-.featured__card-info {
-  text-align: left;
-}
-
-.featured__card-category {
-  font-family: $font-family-nav;
-  font-size: 11px;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-luxury;
-  text-transform: uppercase;
-  color: $color-text-tertiary;
-  display: block;
-  margin-bottom: $space-xxs;
-}
-
-.featured__card-name {
-  font-family: $font-family-display;
+.fp__title {
+  font-family: $font-family-heading;
   font-size: $font-size-xl;
-  font-weight: $font-weight-medium;
-  color: $color-text-primary;
-  margin: 0 0 $space-xxs;
-  letter-spacing: 0.02em;
+  font-weight: $font-weight-semibold;
+  color: $color-mono-dark;
+  margin: 0;
 }
 
-.featured__card-attr {
-  font-family: $font-family;
-  font-size: $font-size-sm;
-  color: $color-text-tertiary;
-  margin: 0 0 $space-sm;
-}
-
-.featured__card-price {
-  font-family: $font-family-nav;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
-  color: $color-text-primary;
-}
-
-// ── Skeleton loading ──
-.featured__card--skeleton {
-  .skeleton-box {
-    aspect-ratio: 3 / 4;
-    margin-bottom: $space-lg;
-    background: linear-gradient(90deg,
-      rgba($color-bg-dark, 0.06) 25%,
-      rgba($color-bg-dark, 0.02) 50%,
-      rgba($color-bg-dark, 0.06) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-}
-
-.skeleton-lines {
-  @include flex-column;
+.fp__arrows {
+  display: flex;
   gap: $space-sm;
 }
 
-.skeleton-line {
-  height: $space-md;
-  background: linear-gradient(90deg,
-    rgba($color-bg-dark, 0.06) 25%,
-    rgba($color-bg-dark, 0.02) 50%,
-    rgba($color-bg-dark, 0.06) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+.fp__arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-md;
+  background: $color-mono-light;
+  color: $color-mono-dark;
+  cursor: pointer;
+  transition: all $transition-fast;
+  flex-shrink: 0;
 
-  &--sm { width: 80px; height: $space-sm; }
-  &--lg { width: 160px; }
+  &:hover:not(:disabled) {
+    border-color: $color-mono-dark;
+    background: $color-mono-dark;
+    color: $color-mono-light;
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
 }
 
-@keyframes shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+// ── Carousel Viewport: Strict Clipping Container ──
+.fp__viewport {
+  width: 100%;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  position: relative;
+  min-height: 0;
+}
+
+// ── Track: Flex Container for Cards ──
+.fp__track {
+  display: flex;
+  gap: $space-lg;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  align-items: center;
+  will-change: transform;
+
+  @include respond-to(md) {
+    gap: $space-md;
+  }
+}
+
+// ── Item: Individual Card Container ──
+.fp__item {
+  flex: 0 0 calc((100% - 2 * #{$space-lg}) / 3);
+  transition: transform $transition-normal;
+  min-width: 0;
+  min-height: 0;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:hover {
+    transform: translateY(-4px);
+  }
+
+  @include respond-to(md) {
+    flex: 0 0 100%;
+  }
 }

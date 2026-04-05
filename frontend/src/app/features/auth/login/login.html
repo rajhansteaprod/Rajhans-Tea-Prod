@@ -1,19 +1,33 @@
 <div class="login">
   <!-- Left: Brand Panel -->
   <div class="login__brand">
+    <div class="login__brand-top">
+      <a routerLink="/" class="login__brand-logo">RAJHANS TEA</a>
+    </div>
     <div class="login__brand-content">
-      <span class="login__brand-eyebrow">Welcome to</span>
-      <h1 class="login__brand-title">
-        <span class="login__brand-line">RAJHANS</span>
-        <span class="login__brand-line login__brand-line--accent">TEA</span>
-      </h1>
-      <div class="login__brand-divider"></div>
-      <p class="login__brand-tagline">Est. Since Generations</p>
+      <h1 class="login__brand-headline">Welcome Back to the World of Fresh Indian Tea's!</h1>
+    </div>
+    <div class="login__brand-features">
+      <div class="login__feature-card">
+        <span class="login__feature-icon">⭐</span>
+        <p class="login__feature-text">Premium Quality Teas Direct from Source</p>
+      </div>
+      <div class="login__feature-card">
+        <span class="login__feature-icon">⭐</span>
+        <p class="login__feature-text">Shipped across India & 125+ countries</p>
+      </div>
+      <div class="login__feature-card">
+        <span class="login__feature-icon">⭐</span>
+        <p class="login__feature-text">Trusted by 10k+ tea lovers</p>
+      </div>
     </div>
   </div>
 
   <!-- Right: Auth Form -->
   <div class="login__form-panel">
+    <!-- Logo for mobile (hidden on desktop) -->
+    <a routerLink="/" class="login__logo-mobile">RAJHANS TEA</a>
+
     <div class="login__form-inner" [class.entered]="entered()">
       <!-- Step dots -->
       <div class="login__steps">
@@ -23,17 +37,12 @@
       </div>
 
       <div class="login__header">
-        <h2 class="login__title">
-          {{ step() === 'phone' ? 'SIGN IN' : 'VERIFY OTP' }}
-        </h2>
+        <h2 class="login__title">Login Now</h2>
         <p class="login__subtitle">
           {{ step() === 'phone'
-            ? 'Enter your mobile number to continue'
-            : 'Enter the 6-digit code sent to' }}
+            ? 'Enter Mobile Number'
+            : 'Enter the 6-digit code sent to +91 ' + phone() }}
         </p>
-        @if (step() === 'otp') {
-          <p class="login__phone-display">+91 {{ phone() }}</p>
-        }
       </div>
 
       @if (error()) {
@@ -138,8 +147,8 @@
 
       <p class="login__terms">
         By continuing, you agree to our
-        <a href="#">Terms of Service</a> &amp;
-        <a href="#">Privacy Policy</a>
+        <a routerLink="/page/terms-of-service" target="_blank">Terms of Service</a> &amp;
+        <a routerLink="/page/privacy-policy" target="_blank">Privacy Policy</a>
       </p>
     </div>
   </div>

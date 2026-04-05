@@ -1,5 +1,5 @@
 import { Component, signal, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
@@ -8,7 +8,7 @@ import { FirebaseService } from '../../../core/services/firebase.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, RouterLink],
   templateUrl: './login.html',
   styleUrls: ['./login.scss'],
 })
@@ -38,7 +38,9 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   ) {}
 
   ngOnInit(): void {
+    // Initialize invisible reCAPTCHA - must be done before sendOtp() is called
     this.firebaseService.initRecaptcha('recaptcha-container');
+
     setTimeout(() => this.entered.set(true), 100);
 
     if (this.route.snapshot.queryParamMap.get('reason') === 'banned') {
@@ -79,6 +81,8 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
     this.error.set(null);
 
     try {
+      // Firebase will use the reCAPTCHA verifier initialized in ngOnInit()
+      // On error, Firebase auto-reinitializes the verifier
       await this.firebaseService.sendOtp(this.phone());
       this.step.set('otp');
       this.startCooldown(60);
@@ -87,8 +91,6 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to send OTP';
       this.error.set(msg);
-      // Re-init recaptcha on failure
-      this.firebaseService.initRecaptcha('recaptcha-container');
     } finally {
       this.loading.set(false);
     }
@@ -179,9 +181,9 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
     this.otpDigits.set(['', '', '', '', '', '']);
     this.error.set(null);
     this.clearCooldown();
-    this.firebaseService.initRecaptcha('recaptcha-container');
     setTimeout(() => this.phoneInputEl?.nativeElement.focus(), 100);
   }
+
 
   private focusOtpInput(index: number): void {
     if (!this.otpInputElements.length) {
@@ -212,4 +214,5 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
       this.cooldownInterval = null;
     }
   }
+
 }

@@ -65,6 +65,7 @@ export const getLoyaltyAccount = async (req: Request, res: Response) => {
     totalRedeemed: account.totalRedeemed,
     earnRate: settings.earnRate,
     redeemRate: settings.redeemRate,
+    minRedeemPoints: settings.minRedeemPoints,
     transactions: history.transactions,
   });
 };

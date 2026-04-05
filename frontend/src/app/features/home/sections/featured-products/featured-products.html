@@ -1,39 +1,40 @@
-<section class="featured" #section>
-  <div class="featured__header">
-    <span class="featured__eyebrow">Our Selection</span>
-    <h2 class="featured__title">Meet Our Teas</h2>
-    <a routerLink="/products" class="featured__view-all">View All</a>
-  </div>
-
-  @if (loading()) {
-    <div class="featured__grid">
-      @for (i of [1,2,3]; track i) {
-        <div class="featured__card featured__card--skeleton">
-          <div class="skeleton-box"></div>
-          <div class="skeleton-lines">
-            <div class="skeleton-line skeleton-line--sm"></div>
-            <div class="skeleton-line skeleton-line--lg"></div>
-          </div>
+@if (!loading()) {
+  <section class="fp">
+    <!-- Header row -->
+    <div class="fp__header">
+      <h2 class="fp__title">Featured</h2>
+      @if (showArrows()) {
+        <div class="fp__arrows">
+          <button class="fp__arrow" (click)="prev()" [disabled]="!canPrev()" aria-label="Previous">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="fp__arrow" (click)="next()" [disabled]="!canNext()" aria-label="Next">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
       }
     </div>
-  } @else {
-    <div class="featured__grid">
-      @for (product of products(); track product._id; let i = $index) {
-        <a class="featured__card" [routerLink]="'/product/' + product.slug">
-          <div class="featured__card-image">
-            @if (product.images?.[0]) {
-              <img [src]="product.images[0]" [alt]="product.name" loading="lazy" />
-            }
+
+    <!-- Product cards -->
+    <div class="fp__viewport"
+      (mousedown)="onMouseDown($event)"
+      (mousemove)="onMouseMove($event)"
+      (mouseup)="onMouseUp()"
+      (mouseleave)="onMouseUp()"
+      (touchstart)="onTouchStart($event)"
+      (touchmove)="onTouchMove($event)"
+      (touchend)="onTouchEnd()">
+      <div class="fp__track" [style.transform]="'translateX(' + (-currentIndex() * 100 / 3) + '%)'">
+        @for (p of products(); track p._id) {
+          <div class="fp__item">
+            <app-product-card [product]="p" variant="default" />
           </div>
-          <div class="featured__card-info">
-            <span class="featured__card-category">{{ product.category?.name || 'Tea' }}</span>
-            <h3 class="featured__card-name">{{ product.name }}</h3>
-            <p class="featured__card-attr">CTC Tea &middot; Premium &middot; Assam</p>
-            <span class="featured__card-price">&#8377;{{ product.basePrice }}</span>
-          </div>
-        </a>
-      }
+        }
+      </div>
     </div>
-  }
-</section>
+  </section>
+}

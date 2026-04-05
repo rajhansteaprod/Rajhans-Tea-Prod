@@ -1,78 +1,88 @@
-import {
-  Component,
-  OnInit,
-  AfterViewInit,
-  OnDestroy,
-  ElementRef,
-  inject,
-  signal,
-} from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { CatalogService, Product } from '../../../../core/services/catalog.service';
-import { CartStore } from '../../../../core/services/cart.store';
 import { ProductCardComponent } from '../../../../shared/components/product-card/product-card';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 @Component({
   selector: 'app-featured-products',
   standalone: true,
-  imports: [CommonModule, RouterLink, ProductCardComponent],
+  imports: [CommonModule, ProductCardComponent],
   templateUrl: './featured-products.html',
   styleUrls: ['./featured-products.scss'],
 })
-export class FeaturedProductsComponent implements OnInit, AfterViewInit, OnDestroy {
-  private readonly catalog = inject(CatalogService);
-  private readonly cart = inject(CartStore);
-  private readonly el = inject(ElementRef);
+export class FeaturedProductsComponent implements OnInit {
+  private catalog = inject(CatalogService);
 
   readonly products = signal<Product[]>([]);
   readonly loading = signal(true);
+  readonly currentIndex = signal(0);
 
-  private ctx: gsap.Context | null = null;
+  readonly showArrows = computed(() => this.products().length > 3);
+  readonly canPrev = computed(() => this.currentIndex() > 0);
+  readonly canNext = computed(() => this.currentIndex() + 3 < this.products().length);
+
+  private startX = 0;
+  private isDragging = false;
 
   ngOnInit(): void {
-    this.catalog
-      .getProductsPublic({ limit: 3, sortBy: 'createdAt', sortOrder: 'desc' })
-      .subscribe({
-        next: (res) => {
-          this.products.set(res.data);
-          this.loading.set(false);
-        },
-        error: () => this.loading.set(false),
-      });
+    this.catalog.getProductsPublic({ isFeatured: true, limit: 12 }).subscribe({
+      next: (res) => {
+        this.products.set(res.data);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
   }
 
-  addToCart(productId: string): void {
-    this.cart.addItem(productId);
+  prev(): void {
+    if (this.canPrev()) this.currentIndex.update(i => i - 1);
   }
 
-  ngAfterViewInit(): void {
-    const root = this.el.nativeElement as HTMLElement;
-
-    this.ctx = gsap.context(() => {
-      ScrollTrigger.create({
-        trigger: root.querySelector('.featured')!,
-        start: 'top 75%',
-        once: true,
-        onEnter: () => {
-          gsap.from(root.querySelector('.featured__header')!, {
-            opacity: 0, y: 20, duration: 0.6, ease: 'expo.out',
-          });
-
-          gsap.from(root.querySelectorAll('.card'), {
-            opacity: 0, y: 40, duration: 0.7, ease: 'expo.out',
-            stagger: 0.12, delay: 0.2,
-          });
-        },
-      });
-    }, root);
+  next(): void {
+    if (this.canNext()) this.currentIndex.update(i => i + 1);
   }
 
-  ngOnDestroy(): void {
-    this.ctx?.revert();
+  readonly visibleProducts = computed(() =>
+    this.products().slice(this.currentIndex(), this.currentIndex() + 3)
+  );
+
+  onMouseDown(e: MouseEvent): void {
+    this.isDragging = true;
+    this.startX = e.clientX;
+  }
+
+  onMouseMove(e: MouseEvent): void {
+    if (!this.isDragging) return;
+
+    const diff = this.startX - e.clientX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) this.next();
+      else this.prev();
+      this.isDragging = false;
+    }
+  }
+
+  onMouseUp(): void {
+    this.isDragging = false;
+  }
+
+  onTouchStart(e: TouchEvent): void {
+    this.isDragging = true;
+    this.startX = e.touches[0].clientX;
+  }
+
+  onTouchMove(e: TouchEvent): void {
+    if (!this.isDragging) return;
+
+    const diff = this.startX - e.touches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) this.next();
+      else this.prev();
+      this.isDragging = false;
+    }
+  }
+
+  onTouchEnd(): void {
+    this.isDragging = false;
   }
 }

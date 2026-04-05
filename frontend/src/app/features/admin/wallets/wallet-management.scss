@@ -1,0 +1,210 @@
+@use '../../../core/design-tokens/tokens' as *;
+@use '../../../core/design-tokens/mixins' as *;
+
+.page { max-width: 1200px; }
+
+.page-header {
+  @include flex-between;
+  margin-bottom: $space-xl;
+}
+
+.page-title {
+  font-family: $font-family;
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin: 0 0 $space-xxs;
+}
+
+.page-subtitle {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin: 0;
+}
+
+.wallet-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-xl;
+
+  @include respond-to(md) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wallet-card {
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border-light;
+  padding: $space-xl;
+
+  &__title {
+    font-family: $font-family;
+    font-size: $font-size-md;
+    font-weight: $font-weight-bold;
+    color: $color-text-primary;
+    margin: 0 0 $space-lg;
+  }
+}
+
+.form-field {
+  @include flex-column;
+  gap: $space-xxs;
+  margin-bottom: $space-md;
+}
+
+.form-label {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $color-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+}
+
+.form-input {
+  padding: $space-sm $space-md;
+  border: 1.5px solid $color-border;
+  font-size: $font-size-sm;
+  font-family: $font-family;
+  color: $color-text-primary;
+  background: $color-bg-tertiary;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus { border-color: $color-primary; }
+}
+
+.input-row {
+  display: flex;
+  gap: $space-sm;
+
+  .form-input { flex: 1; }
+}
+
+.btn-primary {
+  padding: $space-sm $space-lg;
+  background: $color-primary;
+  color: $color-text-inverse;
+  border: none;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  font-family: $font-family;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover { background: $color-primary-hover; }
+  &:disabled { opacity: 0.5; cursor: default; }
+  &.full-width { width: 100%; }
+}
+
+.error-msg {
+  margin-top: $space-sm;
+  padding: $space-xs $space-sm;
+  background: rgba($color-error, 0.08);
+  border: 1px solid rgba($color-error, 0.2);
+  color: $color-error;
+  font-size: $font-size-sm;
+}
+
+.credit-msg {
+  margin-top: $space-md;
+  font-size: $font-size-sm;
+  color: $color-success;
+  font-weight: $font-weight-medium;
+}
+
+// Wallet info
+.wallet-info {
+  margin-top: $space-lg;
+}
+
+.wallet-balance {
+  @include flex-column;
+  gap: $space-xxs;
+  margin-bottom: $space-lg;
+  padding: $space-lg;
+  background: rgba($color-mono-dark, 0.03);
+
+  &__label {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    text-transform: uppercase;
+    letter-spacing: $letter-spacing-wide;
+  }
+
+  &__value {
+    font-size: $font-size-xxxl;
+    font-weight: $font-weight-bold;
+    color: $color-text-primary;
+  }
+}
+
+.wallet-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-md;
+  margin-bottom: $space-lg;
+}
+
+.wallet-stat {
+  @include flex-column;
+  gap: 2px;
+
+  &__label {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+  }
+
+  &__value {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+  }
+}
+
+.wallet-section-title {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  color: $color-text-tertiary;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+  margin: 0 0 $space-sm;
+  padding-bottom: $space-xs;
+  border-bottom: 1px solid $color-border-light;
+}
+
+.wallet-txns {
+  @include flex-column;
+}
+
+.wallet-txn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-sm 0;
+  border-bottom: 1px solid rgba($color-mono-dark, 0.04);
+
+  &__info {
+    @include flex-column;
+    gap: 2px;
+  }
+
+  &__type {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+
+    &.credit { color: $color-success; }
+    &.debit { color: $color-error; }
+  }
+
+  &__desc {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+  }
+
+  &__date {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    white-space: nowrap;
+  }
+}

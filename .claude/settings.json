@@ -25,7 +25,24 @@
       "Bash(xargs wc:*)",
       "Bash(grep -E \"\\\\.md$|\\\\.yml$|\\\\.yaml$\")",
       "Bash(wc -l c:/Users/91626/Desktop/DEVELOPMENT APPLICATIONS/Rajhans Tea/backend/src/modules/**/*.ts)",
-      "Bash(ipconfig)"
+      "Bash(ipconfig)",
+      "Bash(curl -s -X PUT \"http://localhost/api/v1/auth/profile\" -H \"Content-Type: application/json\" -d '{\"\"firstName\"\":\"\"Test\"\"}')",
+      "Bash(find . -name *nginx* -type f)",
+      "Bash(grep -n \"padding\\\\|margin-top\\\\|top:\" frontend/src/app/layouts/main-layout/*.scss)",
+      "Bash(npm run:*)",
+      "Bash(grep -o \"mega-menu-inner\" \"c:/Users/91626/Desktop/DEVELOPMENT APPLICATIONS/Rajhans Tea/frontend/dist/frontend/browser/\"*.js)",
+      "Bash(pkill -f \"ng serve\")",
+      "Bash(pkill -f \"npm start\")",
+      "Bash(curl -s http://localhost:4200)",
+      "Bash(pkill -9 node)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /PID 22428 /F)",
+      "Bash(taskkill /PID 10336 /F)",
+      "Bash(taskkill /PID 10692 /F)",
+      "Bash(cd /c/Users/91626/Desktop/DEVELOPMENT APPLICATIONS/Rajhans Tea)",
+      "Bash(cd /c/Users/91626/Desktop/DEVELOPMENT APPLICATIONS/Rajhans Tea/frontend)",
+      "Bash(npm start:*)"
     ]
   }
 }

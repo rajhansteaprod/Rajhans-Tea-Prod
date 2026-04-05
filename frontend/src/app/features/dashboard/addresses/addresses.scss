@@ -1,0 +1,222 @@
+@use '../../../core/design-tokens/tokens' as *;
+@use '../../../core/design-tokens/mixins' as *;
+
+.addresses {
+  @include content-container($max-width-narrow);
+  padding-top: $space-section-sm;
+  padding-bottom: $space-section-sm;
+
+  @include respond-to(md) {
+    padding-top: $space-xxl;
+    padding-bottom: $space-xxl;
+  }
+}
+
+.addresses__header {
+  @include flex-between;
+  margin-bottom: $space-xxl;
+
+  @include respond-to(sm) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $space-md;
+  }
+}
+
+.addresses__title {
+  font-family: $font-family;
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-regular;
+  color: $color-mono-dark;
+  margin: 0;
+  line-height: $line-height-tight;
+}
+
+.addresses__add {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-mono-light;
+  background: $color-mono-dark;
+  border: none;
+  padding: $space-xs $space-lg;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.8);
+  }
+}
+
+// Form
+.addresses__form {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: $space-xl;
+  margin-bottom: $space-xxl;
+  max-width: 560px;
+}
+
+.addresses__form-title {
+  font-family: $font-family;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-regular;
+  color: $color-mono-dark;
+  margin: 0 0 $space-lg;
+}
+
+.addresses__field {
+  margin-bottom: $space-md;
+  flex: 1;
+}
+
+.addresses__row {
+  display: flex;
+  gap: $space-md;
+
+  @include respond-to(xs) {
+    flex-direction: column;
+  }
+}
+
+.addresses__label {
+  display: block;
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: rgba(0, 0, 0, 0.4);
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+  margin-bottom: $space-xxs;
+}
+
+.addresses__input {
+  width: 100%;
+  padding: $space-sm $space-md;
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  color: $color-mono-dark;
+  background: $color-mono-light;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 0;
+  outline: none;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: rgba(0, 0, 0, 0.2);
+  }
+}
+
+.addresses__form-actions {
+  display: flex;
+  gap: $space-md;
+  margin-top: $space-lg;
+}
+
+.addresses__btn {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  padding: $space-xs $space-lg;
+  cursor: pointer;
+  border: none;
+
+  &--primary {
+    color: $color-mono-light;
+    background: $color-mono-dark;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &:hover:not(:disabled) {
+      background: rgba(0, 0, 0, 0.8);
+    }
+  }
+
+  &--secondary {
+    color: $color-mono-dark;
+    background: none;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+
+    &:hover {
+      border-color: rgba(0, 0, 0, 0.2);
+    }
+  }
+}
+
+// List
+.addresses__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: rgba(0, 0, 0, 0.06);
+
+  &:empty {
+    background: none;
+  }
+}
+
+.addresses__card {
+  padding: $space-lg $space-xl;
+  background: $color-mono-light;
+
+  @include respond-to(sm) {
+    padding: $space-md;
+  }
+}
+
+.addresses__card-top {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  margin-bottom: $space-xs;
+}
+
+.addresses__card-label {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-mono-dark;
+}
+
+.addresses__badge {
+  font-family: $font-family;
+  font-size: 11px;
+  font-weight: $font-weight-medium;
+  color: $color-mono-brown;
+  letter-spacing: 0.02em;
+}
+
+.addresses__card-line {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 0;
+  line-height: $line-height-normal;
+}
+
+.addresses__card-actions {
+  display: flex;
+  gap: $space-lg;
+  margin-top: $space-md;
+}
+
+.addresses__link {
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  color: rgba(0, 0, 0, 0.35);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+
+  &:hover {
+    color: $color-mono-dark;
+  }
+}
+
+.addresses__empty {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  color: rgba(0, 0, 0, 0.35);
+}

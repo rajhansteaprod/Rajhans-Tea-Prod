@@ -42,12 +42,6 @@ export const routes: Routes = [
           import('./features/store/pages/static-page').then((m) => m.StaticPageComponent),
       },
       {
-        path: 'dashboard',
-        canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/dashboard/dashboard').then((m) => m.DashboardComponent),
-      },
-      {
         path: 'wishlist',
         loadComponent: () =>
           import('./features/store/wishlist/wishlist-page').then((m) => m.WishlistPageComponent),
@@ -58,17 +52,49 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/store/checkout/checkout-page').then((m) => m.CheckoutPageComponent),
       },
+      // Dashboard shell with sidebar + child routes
       {
-        path: 'orders',
+        path: 'dashboard',
         canActivate: [authGuard],
         loadComponent: () =>
-          import('./features/store/orders/order-history-page').then((m) => m.OrderHistoryPageComponent),
-      },
-      {
-        path: 'wallet',
-        canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/store/wallet/wallet-page').then((m) => m.WalletPageComponent),
+          import('./features/dashboard/dashboard').then((m) => m.DashboardComponent),
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./features/store/orders/order-history-page').then((m) => m.OrderHistoryPageComponent),
+          },
+          {
+            path: 'addresses',
+            loadComponent: () =>
+              import('./features/dashboard/addresses/addresses').then((m) => m.AddressesComponent),
+          },
+          {
+            path: 'profile',
+            loadComponent: () =>
+              import('./features/dashboard/profile/profile').then((m) => m.ProfileComponent),
+          },
+          {
+            path: 'wallet',
+            loadComponent: () =>
+              import('./features/store/wallet/wallet-page').then((m) => m.WalletPageComponent),
+          },
+          {
+            path: 'wishlist',
+            loadComponent: () =>
+              import('./features/store/wishlist/wishlist-page').then((m) => m.WishlistPageComponent),
+          },
+          {
+            path: 'loyalty',
+            loadComponent: () =>
+              import('./features/dashboard/loyalty/loyalty').then((m) => m.LoyaltyComponent),
+          },
+          {
+            path: 'referral',
+            loadComponent: () =>
+              import('./features/dashboard/referral/referral').then((m) => m.ReferralComponent),
+          },
+        ],
       },
     ],
   },

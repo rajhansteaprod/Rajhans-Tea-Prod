@@ -1,0 +1,88 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Wallet Management</h1>
+      <p class="page-subtitle">Lookup user wallets and credit balance</p>
+    </div>
+  </div>
+
+  <!-- Two column layout -->
+  <div class="wallet-grid">
+    <!-- LEFT: Lookup -->
+    <div class="wallet-card">
+      <h2 class="wallet-card__title">Lookup User Wallet</h2>
+      <div class="form-field">
+        <label class="form-label">User ID</label>
+        <div class="input-row">
+          <input class="form-input" type="text" [(ngModel)]="lookupUserId" placeholder="Enter user ID" (keyup.enter)="lookupWallet()" />
+          <button class="btn-primary" (click)="lookupWallet()" [disabled]="lookupLoading() || !lookupUserId.trim()">
+            {{ lookupLoading() ? 'Loading...' : 'Lookup' }}
+          </button>
+        </div>
+      </div>
+
+      @if (lookupError()) {
+        <div class="error-msg">{{ lookupError() }}</div>
+      }
+
+      @if (wallet()) {
+        <div class="wallet-info">
+          <div class="wallet-balance">
+            <span class="wallet-balance__label">Balance</span>
+            <span class="wallet-balance__value">&#8377;{{ wallet()!.balance | number:'1.2-2' }}</span>
+          </div>
+          <div class="wallet-stats">
+            <div class="wallet-stat">
+              <span class="wallet-stat__label">Total Credited</span>
+              <span class="wallet-stat__value">&#8377;{{ wallet()!.totalCredited | number:'1.2-2' }}</span>
+            </div>
+            <div class="wallet-stat">
+              <span class="wallet-stat__label">Total Debited</span>
+              <span class="wallet-stat__value">&#8377;{{ wallet()!.totalDebited | number:'1.2-2' }}</span>
+            </div>
+          </div>
+
+          @if (wallet()!.transactions.length > 0) {
+            <h3 class="wallet-section-title">Recent Transactions</h3>
+            <div class="wallet-txns">
+              @for (txn of wallet()!.transactions; track txn._id) {
+                <div class="wallet-txn">
+                  <div class="wallet-txn__info">
+                    <span class="wallet-txn__type" [class.credit]="txn.type === 'credit'" [class.debit]="txn.type === 'debit'">
+                      {{ txn.type === 'credit' ? '+' : '-' }}&#8377;{{ txn.amount | number:'1.2-2' }}
+                    </span>
+                    <span class="wallet-txn__desc">{{ txn.description || txn.source }}</span>
+                  </div>
+                  <span class="wallet-txn__date">{{ txn.createdAt | date:'dd MMM, h:mm a' }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- RIGHT: Credit -->
+    <div class="wallet-card">
+      <h2 class="wallet-card__title">Credit Wallet</h2>
+      <div class="form-field">
+        <label class="form-label">User ID</label>
+        <input class="form-input" type="text" [(ngModel)]="creditUserId" placeholder="Enter user ID" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Amount (&#8377;)</label>
+        <input class="form-input" type="number" [(ngModel)]="creditAmount" min="1" placeholder="0" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Description (optional)</label>
+        <input class="form-input" type="text" [(ngModel)]="creditDescription" placeholder="e.g. Refund, Reward" />
+      </div>
+      <button class="btn-primary full-width" (click)="creditWallet()" [disabled]="crediting() || !creditUserId.trim() || creditAmount <= 0">
+        {{ crediting() ? 'Crediting...' : 'Credit Wallet' }}
+      </button>
+      @if (creditMessage()) {
+        <div class="credit-msg">{{ creditMessage() }}</div>
+      }
+    </div>
+  </div>
+</div>

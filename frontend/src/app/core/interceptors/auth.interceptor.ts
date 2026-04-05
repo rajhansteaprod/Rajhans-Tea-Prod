@@ -7,12 +7,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const token = authService.getAccessToken();
 
-  // Don't attach token for auth endpoints (except /me and /logout-all)
-  const isAuthEndpoint = req.url.includes('/auth/') &&
+  // Don't attach token for public auth endpoints (login, refresh)
+  // DO attach for authenticated auth endpoints (me, profile, addresses, sessions, logout-all)
+  const isPublicAuthEndpoint = req.url.includes('/auth/') &&
     !req.url.includes('/auth/me') &&
-    !req.url.includes('/auth/logout-all');
+    !req.url.includes('/auth/logout-all') &&
+    !req.url.includes('/auth/profile') &&
+    !req.url.includes('/auth/addresses') &&
+    !req.url.includes('/auth/sessions');
 
-  if (token && !isAuthEndpoint) {
+  if (token && !isPublicAuthEndpoint) {
     req = req.clone({
       setHeaders: { Authorization: `Bearer ${token}` },
       withCredentials: true,

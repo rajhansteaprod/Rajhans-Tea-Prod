@@ -1,299 +1,206 @@
 @use '../../core/design-tokens/tokens' as *;
 @use '../../core/design-tokens/mixins' as *;
 
-// ═══════════════════════════════════════════
-// DASHBOARD — Barcoopbevy bold condensed style
-// ═══════════════════════════════════════════
-
-.dashboard {
-  @include content-container($max-width-narrow);
-  padding-top: $space-section-sm;
-  padding-bottom: $space-section-sm;
+.account {
+  max-width: $max-width-wide;
+  margin: 0 auto;
+  padding: $space-xxl clamp($space-lg, 5vw, $space-xxxl);
+  padding-top: 120px;
 
   @include respond-to(md) {
-    padding-top: $space-xxl;
-    padding-bottom: $space-xxl;
+    padding-top: 90px;
+    padding-left: $space-md;
+    padding-right: $space-md;
   }
 }
 
-// ═══ Welcome ═══
-.dashboard__welcome {
-  @include flex-between;
+// ── Header ──
+.account__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   margin-bottom: $space-xxl;
-  gap: $space-xl;
+  padding-bottom: $space-xl;
+  border-bottom: 1px solid rgba($color-mono-dark, 0.08);
+  gap: $space-lg;
 
   @include respond-to(sm) {
-    flex-direction: column-reverse;
-    align-items: flex-start;
-    gap: $space-lg;
+    flex-direction: column;
   }
 }
 
-.dashboard__welcome-left {
-  flex: 1;
-}
-
-.dashboard__eyebrow {
-  font-family: $font-family-nav;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-eyebrow;
-  text-transform: uppercase;
-  display: block;
-  margin-bottom: $space-sm;
-  color: $color-bg-maroon;
-}
-
-.dashboard__title {
-  font-family: $font-family-heading;
-  font-size: $font-size-display;
+.account__title {
+  font-family: $font-family;
+  font-size: clamp(24px, 4vw, 32px);
   font-weight: $font-weight-bold;
-  line-height: $line-height-tight;
-  letter-spacing: $letter-spacing-heading;
-  color: $color-text-primary;
-  margin: 0 0 $space-sm;
-
-  @include respond-to(md) {
-    font-size: $font-size-xxxl;
-  }
-
-  @include respond-to(sm) {
-    font-size: $font-size-xxl;
-  }
+  color: $color-mono-dark;
+  margin: 0 0 $space-xxs;
 }
 
-.dashboard__name {
-  color: $color-bg-maroon;
-}
-
-.dashboard__subtitle {
-  font-family: $font-family-display;
-  font-size: $font-size-lg;
-  color: $color-text-tertiary;
-  line-height: $line-height-relaxed;
+.account__subtitle {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  color: rgba($color-mono-dark, 0.5);
   margin: 0;
 }
 
-.dashboard__avatar-wrap {
-  @include flex-column;
+.account__admin-btn {
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $color-mono-light;
+  background: $color-mono-dark;
+  padding: $space-sm $space-lg;
+  text-decoration: none;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba($color-mono-dark, 0.85);
+  }
+}
+
+// ── Mobile menu toggle ──
+.account__mobile-toggle {
+  display: none;
   align-items: center;
   gap: $space-xs;
-  flex-shrink: 0;
-}
-
-.dashboard__avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: 0;
-  background: $color-bg-warm;
-  color: $color-text-secondary;
-  @include flex-center;
-  font-family: $font-family-heading;
-  font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
-  border: 2px solid $color-border-light;
-
-  &.admin {
-    background: $color-bg-maroon;
-    color: $color-text-inverse;
-    border-color: $color-bg-maroon;
-  }
-}
-
-.dashboard__role {
-  font-family: $font-family-nav;
-  font-size: 11px;
-  font-weight: $font-weight-bold;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
-  color: $color-text-inverse;
-  background: $color-bg-maroon;
-  padding: 2px $space-sm;
-  border-radius: 0;
-}
-
-// ═══ Stats ═══
-.dashboard__stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: $space-md;
-  margin-bottom: $space-xxl;
-}
-
-.dashboard__stat {
-  display: flex;
-  align-items: center;
-  gap: $space-md;
-  padding: $space-lg $space-xl;
-  background: $color-bg-tertiary;
-  border: 1px solid $color-border-light;
-  border-radius: 0;
-  transition: all $transition-fast;
-
-  &:hover {
-    border-color: $color-border;
-    box-shadow: $shadow-md;
-    transform: translateY(-2px);
-  }
-
-  &:nth-child(1) { border-top: 3px solid $color-bg-teal; }
-  &:nth-child(2) { border-top: 3px solid $color-bg-amber; }
-  &:nth-child(3) { border-top: 3px solid $color-bg-maroon; }
-  &:nth-child(4) { border-top: 3px solid $color-text-primary; }
-}
-
-.dashboard__stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 0;
-  @include flex-center;
-  flex-shrink: 0;
-
-  ::ng-deep svg { width: 24px; height: 24px; }
-  ::ng-deep path, ::ng-deep circle, ::ng-deep rect {
-    stroke: currentColor;
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-}
-
-.dashboard__stat-body {
-  @include flex-column;
-  gap: 2px;
-}
-
-.dashboard__stat-value {
-  font-family: $font-family-nav;
-  font-size: $font-size-xxl;
-  font-weight: $font-weight-bold;
-  color: $color-text-primary;
-  letter-spacing: $letter-spacing-tight;
-  line-height: 1;
-}
-
-.dashboard__stat-label {
-  font-family: $font-family-nav;
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
-}
-
-// ═══ Sections ═══
-.dashboard__section {
-  margin-bottom: $space-xxl;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-}
-
-.dashboard__section-heading {
-  font-family: $font-family-nav;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
-  letter-spacing: $letter-spacing-eyebrow;
-  text-transform: uppercase;
-  color: $color-text-tertiary;
-  margin: 0 0 $space-lg;
-  padding-bottom: $space-sm;
-  border-bottom: 2px solid $color-border-light;
-}
-
-// ═══ Actions ═══
-.dashboard__actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: $space-sm;
-}
-
-.dashboard__action {
-  display: flex;
-  align-items: center;
-  gap: $space-md;
-  padding: $space-md $space-lg;
-  background: $color-bg-tertiary;
-  border: 1px solid $color-border-light;
-  border-radius: 0;
-  cursor: pointer;
-  font-family: $font-family;
-  text-align: left;
   width: 100%;
-  transition: all $transition-normal;
+  padding: $space-md;
+  margin-bottom: $space-md;
+  border: 1px solid rgba($color-mono-dark, 0.1);
+  background: none;
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-mono-dark;
+  cursor: pointer;
 
-  &:hover {
-    border-color: $color-bg-maroon;
-    background: $color-bg-warm;
+  @include respond-to(md) {
+    display: flex;
+  }
+}
 
-    .dashboard__action-arrow {
-      transform: translateX(4px);
-      color: $color-bg-maroon;
+// ── Layout: sidebar + content ──
+.account__layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: $space-xxl;
+  align-items: flex-start;
+
+  @include respond-to(lg) {
+    grid-template-columns: 240px 1fr;
+    gap: $space-xl;
+  }
+
+  @include respond-to(md) {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+// ── Sidebar ──
+.account__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xxs;
+  position: sticky;
+  top: 120px;
+
+  @include respond-to(md) {
+    display: none;
+    position: static;
+    margin-bottom: $space-lg;
+
+    &.open {
+      display: flex;
     }
   }
 }
 
-.dashboard__action-emoji {
-  font-size: 20px;
-  line-height: 1;
-}
-
-.dashboard__action-label {
-  flex: 1;
-  font-family: $font-family-nav;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-
-.dashboard__action-arrow {
-  color: $color-text-disabled;
-  transition: all $transition-fast;
-  flex-shrink: 0;
-}
-
-// ═══ Info Card ═══
-.dashboard__info {
-  background: $color-bg-tertiary;
-  border: 1px solid $color-border-light;
-  border-radius: 0;
-  overflow: hidden;
-}
-
-.dashboard__info-row {
-  @include flex-between;
-  padding: $space-md $space-xl;
-
-  &:not(:last-child) {
-    border-bottom: 1px solid $color-border-light;
-  }
-}
-
-.dashboard__info-label {
-  font-family: $font-family-nav;
-  font-size: $font-size-sm;
-  color: $color-text-tertiary;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.dashboard__info-value {
+.account__nav-item {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  padding: $space-sm $space-md;
+  font-family: $font-family;
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
-  color: $color-text-primary;
+  color: rgba($color-mono-dark, 0.7);
+  text-decoration: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  border-radius: 8px;
 
-  &--cap {
-    text-transform: uppercase;
-    font-family: $font-family-nav;
-    font-weight: $font-weight-bold;
-    letter-spacing: 0.04em;
+  // Icon container
+  ::ng-deep svg {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    padding: 8px;
+    box-sizing: content-box;
+    border-radius: 8px;
+    background: rgba($color-mono-dark, 0.05);
+    stroke: rgba($color-mono-dark, 0.5);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
   }
 
-  &--mono {
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    font-size: $font-size-xs;
-    color: $color-text-secondary;
+  &:hover {
+    color: $color-mono-dark;
+    background: rgba($color-mono-dark, 0.03);
+
+    ::ng-deep svg {
+      stroke: $color-mono-dark;
+      background: rgba($color-mono-dark, 0.08);
+    }
   }
+
+  // Active state — highlighted bg like reference
+  &.active {
+    color: $color-mono-brown;
+    background: rgba($color-mono-brown, 0.06);
+    font-weight: $font-weight-semibold;
+
+    ::ng-deep svg {
+      background: rgba($color-mono-brown, 0.12);
+      stroke: $color-mono-brown;
+    }
+  }
+
+  &--logout {
+    color: rgba($color-mono-dark, 0.4);
+
+    ::ng-deep svg {
+      background: rgba($color-mono-dark, 0.03);
+      stroke: rgba($color-mono-dark, 0.3);
+    }
+
+    &:hover {
+      color: $color-error;
+      background: rgba($color-error, 0.04);
+
+      ::ng-deep svg {
+        stroke: $color-error;
+        background: rgba($color-error, 0.08);
+      }
+    }
+  }
+}
+
+.account__nav-divider {
+  height: 1px;
+  background: rgba($color-mono-dark, 0.06);
+  margin: $space-xs 0;
+}
+
+// ── Content ──
+.account__content {
+  min-height: 400px;
 }

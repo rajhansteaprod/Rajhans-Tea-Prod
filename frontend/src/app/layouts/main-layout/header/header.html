@@ -1,311 +1,261 @@
-    <header class="nav" [class.scrolled]="scrolled()" [class.transparent]="isTransparent()" [class.hidden]="navHidden()" [class.mega-active]="megaOpen()">
+    <!-- ══════ SINGLE LAYER HEADER ══════ -->
+    <header class="nav nav-unified">
       <div class="nav-inner">
-        <!-- Logo left -->
-        <a routerLink="/" class="logo" (click)="closeMega()">
+        <!-- MOBILE LEFT: Hamburger -->
+        <button class="burger burger-mobile" [class.active]="mobileOpen()" (click)="toggleMobile()" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+
+        <!-- LEFT: Logo -->
+        <a routerLink="/" class="logo" (click)="closeAll()">
           <span class="logo-name">RAJHANS TEA</span>
         </a>
 
-        <!-- Right nav links (desktop) -->
-        <nav class="nav-links" [class.open]="mobileOpen()">
-          <button class="nav-link" [class.active]="megaOpen()" (click)="navigateTo('/products')" (mouseenter)="onNavHover()">
-            SHOP
-            <svg class="nav-chevron" [class.flip]="megaOpen()" width="10" height="10" viewBox="0 0 24 24" fill="none">
+        <!-- CENTER: Nav Links -->
+        <nav class="nav-links hide-mobile">
+          <button class="nav-link" (mouseenter)="openShop(); onCatHover(null)" (click)="navigateTo('/products')">
+            All Products
+            <svg class="nav-chevron" [class.flip]="shopOpen()" width="10" height="10" viewBox="0 0 24 24" fill="none">
               <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
-          <a routerLink="/page/about-us" class="nav-link" (click)="closeAll()">OUR STORY</a>
-          <a routerLink="/page/blog" class="nav-link" (click)="closeAll()">ABOUT</a>
-          <button class="nav-link nav-link--cart" (click)="cart.toggleSidebar()">
-            BASKET
+          <a routerLink="/page/about-us" class="nav-link" (click)="closeAll()">Our Story</a>
+          <a routerLink="/page/blog" class="nav-link" (click)="closeAll()">Cup of Stories</a>
+          <a routerLink="/page/reseller" class="nav-link" (click)="closeAll()">Buy in bulk</a>
+        </nav>
+
+        <!-- RIGHT: Icons -->
+        <div class="nav-right">
+          <!-- Search (hidden for now) -->
+          @if (false) {
+            <div class="nav-search-wrapper">
+              <div class="nav-search">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <input
+                  class="nav-search__input"
+                  type="text"
+                  placeholder="Search tea, coffee, spices..."
+                  [(ngModel)]="searchQuery"
+                  (keyup.enter)="doSearch()"
+                  (input)="onSearchInput($event)"
+                  (focus)="onSearchFocus()"
+                  (blur)="onSearchBlur()"
+                />
+                @if (searchQuery) {
+                  <button class="nav-search__clear" (click)="clearSearch()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  </button>
+                }
+              </div>
+
+              <!-- Search Dropdown Suggestions -->
+              @if (searchFocused() && (searchQuery.length > 0 || recentSearches().length > 0)) {
+                <div class="nav-search-dropdown">
+                  @if (searchQuery.length > 0) {
+                    <!-- Search Results -->
+                    @if (searchSuggestions().length > 0) {
+                      <div class="search-section">
+                        @for (suggestion of searchSuggestions(); track suggestion.slug) {
+                          <a
+                            class="search-item"
+                            [routerLink]="'/product/' + suggestion.slug"
+                            (click)="onSuggestionClick(suggestion.name); closeSearch()"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                            <span class="search-item__text">{{ suggestion.name }}</span>
+                          </a>
+                        }
+                      </div>
+                    } @else {
+                      <div class="search-empty">
+                        <p>No results found</p>
+                      </div>
+                    }
+                  } @else {
+                    <!-- Recent Searches -->
+                    @if (recentSearches().length > 0) {
+                      <div class="search-section">
+                        <div class="search-section__title">Recent Searches</div>
+                        @for (item of recentSearches(); track item) {
+                          <a
+                            class="search-item"
+                            (click)="setSearch(item); doSearch()"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                            <span class="search-item__text">{{ item }}</span>
+                          </a>
+                        }
+                      </div>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Wishlist -->
+          <a routerLink="/wishlist" class="nav-icon" (click)="closeAll()" title="Wishlist">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+            @if (cart.wishlistIds().size > 0) { <span class="nav-badge">{{ cart.wishlistIds().size }}</span> }
+          </a>
+
+          <!-- Cart -->
+          <button class="nav-icon" (click)="cart.toggleSidebar()" title="Cart">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="21" r="1" stroke="currentColor" stroke-width="1.8"/><circle cx="20" cy="21" r="1" stroke="currentColor" stroke-width="1.8"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             @if (cart.cartCount() > 0) { <span class="nav-badge">{{ cart.cartCount() }}</span> }
           </button>
 
-          <!-- Mobile-only links -->
-          <div class="mobile-links">
-            <a routerLink="/products" class="nav-link" (click)="closeAll()">PRODUCTS</a>
-            <a routerLink="/wishlist" class="nav-link" (click)="closeAll()">WISHLIST</a>
-            @if (auth.isLoggedIn()) {
-              <a routerLink="/dashboard" class="nav-link" (click)="closeAll()">ACCOUNT</a>
-              <a routerLink="/orders" class="nav-link" (click)="closeAll()">ORDERS</a>
-              @if (auth.isAdmin()) {
-                <a routerLink="/admin" class="nav-link" (click)="closeAll()">ADMIN</a>
-              }
-              <button class="nav-link nav-link--danger" (click)="auth.logout(); closeAll()">SIGN OUT</button>
-            } @else {
-              <a routerLink="/auth/login" class="nav-link" (click)="closeAll()">SIGN IN</a>
-            }
-          </div>
-        </nav>
-
-        <!-- Right icons (mobile: search + burger only) -->
-        <div class="nav-actions">
-          <button class="action-icon" (click)="toggleSearch()" aria-label="Search">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.6"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          </button>
-          <a routerLink="/wishlist" class="action-icon hide-mobile" aria-label="Wishlist">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-            @if (cart.wishlistIds().size > 0) { <span class="badge">{{ cart.wishlistIds().size }}</span> }
-          </a>
+          <!-- Account -->
           @if (auth.isLoggedIn()) {
-            <a routerLink="/dashboard" class="action-icon hide-mobile" aria-label="Account">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.6"/></svg>
+            <a routerLink="/dashboard" class="nav-icon hide-mobile" (click)="closeAll()" title="Account">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/></svg>
             </a>
           } @else {
-            <a routerLink="/auth/login" class="action-icon hide-mobile" aria-label="Sign In">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.6"/></svg>
+            <a routerLink="/auth/login" class="nav-icon hide-mobile" (click)="closeAll()" title="Account">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/></svg>
             </a>
           }
-          <button class="burger" [class.active]="mobileOpen()" (click)="toggleMobile()" aria-label="Menu">
-            <span></span><span></span><span></span>
-          </button>
         </div>
       </div>
     </header>
 
     <!-- ══════ MEGA MENU ══════ -->
-    @if (megaOpen()) {
-      <div class="mega" (click)="closeMega()">
-        <div class="mega-content" [style.top.px]="scrolled() ? 68 : 72" (click)="$event.stopPropagation()" (mouseleave)="closeMega()">
-          <div class="mega-layout">
-            <!-- LEFT: Categories -->
-            <aside class="mega-sidebar">
-              <h3 class="mega-heading">CATEGORIES</h3>
-              <button class="mega-cat" [class.mega-cat--active]="!activeCatId()" (mouseenter)="onCatHover(null)" (click)="navigateTo('/products')" [style.--i]="0">
-                <div class="mega-cat-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
-                </div>
-                <span class="mega-cat-name">All Products</span>
-                <svg class="mega-cat-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
-              @for (cat of categories(); track cat._id; let i = $index) {
-                <button class="mega-cat" [class.mega-cat--active]="activeCatId() === cat._id" (mouseenter)="onCatHover(cat._id)" (click)="navigateTo('/catalog/' + cat.slug)" [style.--i]="i + 1">
-                  @if (cat.image) {
-                    <img [src]="cat.image" class="mega-cat-thumb" />
-                  } @else {
-                    <div class="mega-cat-icon">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-                    </div>
-                  }
-                  <span class="mega-cat-name">{{ cat.name }}</span>
-                  <svg class="mega-cat-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </button>
+    @if (shopOpen()) {
+      <div class="mega-menu" (mouseenter)="cancelNavTimer()" (mouseleave)="closeShop()">
+        <div class="mega-menu-inner">
+          <!-- COLUMN 1: PRODUCTS -->
+          <div class="mega-column">
+            <h3 class="mega-column__heading">Products</h3>
+            <ul class="mega-column__list">
+              @for (p of featuredProducts().slice(0, 6); track p._id) {
+                <li><a class="mega-column__item" [routerLink]="'/product/' + p.slug" (click)="closeShop()">{{ p.name }}</a></li>
               }
-              <div class="mega-sidebar-divider"></div>
-              <button class="mega-cat mega-cat--browse" (click)="navigateTo('/collections')" [style.--i]="categories().length + 2">
-                <div class="mega-cat-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-                </div>
-                <span class="mega-cat-name">Collections</span>
-                <svg class="mega-cat-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
-            </aside>
+            </ul>
+          </div>
 
-            <!-- RIGHT: Products -->
-            <section class="mega-main">
-              <h3 class="mega-heading">{{ activeCatId() ? 'PRODUCTS' : 'ALL PRODUCTS' }}</h3>
-              @if (megaLoading()) {
-                <div class="mega-loading">
-                  <div class="mega-spinner"></div>
-                </div>
+          <!-- COLUMN 2: CATEGORIES -->
+          <div class="mega-column">
+            <h3 class="mega-column__heading">Categories</h3>
+            <ul class="mega-column__list">
+              <li><a class="mega-column__item" (click)="navigateTo('/products')">All Products</a></li>
+              @for (cat of categories(); track cat._id) {
+                <li><a class="mega-column__item" [routerLink]="'/catalog/' + cat.slug" (click)="closeShop()">{{ cat.name }}</a></li>
               }
-              @if (!megaLoading() && featuredProducts().length === 0) {
-                <div class="mega-empty">
-                  <p>No products found in this category.</p>
-                  <button class="btn-buy" (click)="navigateTo('/products')">Browse All</button>
-                </div>
+            </ul>
+          </div>
+
+          <!-- COLUMN 3: COLLECTIONS -->
+          <div class="mega-column">
+            <h3 class="mega-column__heading">Collections</h3>
+            <ul class="mega-column__list">
+              <li><a class="mega-column__item" (click)="navigateTo('/products')">Premium Selection</a></li>
+              <li><a class="mega-column__item" (click)="navigateTo('/products')">Best Sellers</a></li>
+              <li><a class="mega-column__item" (click)="navigateTo('/products')">New Arrivals</a></li>
+              @for (cat of categories().slice(0, 3); track cat._id) {
+                <li><a class="mega-column__item" [routerLink]="'/catalog/' + cat.slug" (click)="closeShop()">{{ cat.name }} Collection</a></li>
               }
-              <div class="mega-products" [class.loading]="megaLoading()">
-                @for (p of featuredProducts(); track p._id; let i = $index) {
-                  <div class="mega-card" [style.--i]="i">
-                    <a [routerLink]="'/product/' + p.slug" class="mega-card-image" (click)="closeMegaDelayed()">
-                      @if (p.images?.[0]) {
-                        <img [src]="p.images[0]" [alt]="p.name" loading="lazy" />
-                      }
-                      @if (p.inStock === false) {
-                        <span class="mega-card-badge mega-card-badge--oos">Sold Out</span>
-                      }
-                    </a>
-                    <div class="mega-card-info">
-                      <span class="mega-card-cat">{{ p.category?.name || 'Tea' }}</span>
-                      <a [routerLink]="'/product/' + p.slug" class="mega-card-name" (click)="closeMegaDelayed()">{{ p.name }}</a>
-                      @if (p.shortDescription) {
-                        <p class="mega-card-desc">{{ p.shortDescription }}</p>
-                      }
-                      <span class="mega-card-price">&#8377;{{ p.basePrice }}</span>
-                      <div class="mega-card-actions">
-                        <button class="btn-add-cart" (click)="addToCart(p._id, $event)" [disabled]="p.inStock === false">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="1.8"/></svg>
-                          Add to Cart
-                        </button>
-                        <a [routerLink]="'/product/' + p.slug" class="btn-buy" (click)="closeMegaDelayed()">Buy Now</a>
-                      </div>
-                    </div>
+            </ul>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ══════ MOBILE DRAWER ══════ -->
+    <nav class="mobile-drawer" [class.open]="mobileOpen()">
+      <!-- Shop Section (Collapsible) -->
+      <div class="mobile-drawer__section">
+        <button class="mobile-drawer__section-header" (click)="toggleShopSection()">
+          <span>SHOP</span>
+          <svg class="mobile-drawer__chevron" [class.flip]="shopSectionOpen()" width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        @if (shopSectionOpen()) {
+          <!-- Categories -->
+          <div class="mobile-drawer__categories">
+            <button class="mobile-drawer__category" (click)="navigateTo('/products'); closeAll()">
+              All Products
+            </button>
+            @for (cat of categories(); track cat._id) {
+              <button class="mobile-drawer__category" (click)="navigateTo('/catalog/' + cat.slug); closeAll()">
+                {{ cat.name }}
+              </button>
+            }
+          </div>
+
+          <!-- Products Slider -->
+          @if (featuredProducts().length > 0) {
+            <div class="mobile-drawer__products-slider">
+              <div class="mobile-drawer__products-scroll">
+                @for (p of featuredProducts(); track p._id) {
+                  <div class="mobile-drawer__product-card" (click)="navigateTo('/product/' + p.slug); closeAll()">
+                    @if (p.images?.[0]) {
+                      <img [src]="p.images[0]" [alt]="p.name" class="mobile-drawer__product-img" />
+                    }
+                    <span class="mobile-drawer__product-name">{{ p.name }}</span>
+                    <span class="mobile-drawer__product-price">₹{{ p.basePrice }}</span>
                   </div>
                 }
               </div>
-            </section>
-          </div>
-        </div>
+            </div>
+          }
+        }
       </div>
+
+      <!-- Other Links Section -->
+      <div class="mobile-drawer__section">
+        <a routerLink="/page/about-us" class="mobile-drawer__link" (click)="closeAll()">Our Story</a>
+        <a routerLink="/page/blog" class="mobile-drawer__link" (click)="closeAll()">Cup of Stories</a>
+        <a routerLink="/page/reseller" class="mobile-drawer__link" (click)="closeAll()">Buy in bulk</a>
+        <a routerLink="/page/contact-us" class="mobile-drawer__link" (click)="closeAll()">Contact Us</a>
+        <a routerLink="/wishlist" class="mobile-drawer__link" (click)="closeAll()">Wishlist</a>
+      </div>
+
+      <!-- User Section -->
+      <div class="mobile-drawer__footer">
+        @if (auth.isLoggedIn()) {
+          <a routerLink="/dashboard" class="mobile-drawer__link" (click)="closeAll()">Account</a>
+          <a routerLink="/orders" class="mobile-drawer__link" (click)="closeAll()">Orders</a>
+          @if (auth.isAdmin()) {
+            <a routerLink="/admin" class="mobile-drawer__link" (click)="closeAll()">Admin</a>
+          }
+          <button class="mobile-drawer__link mobile-drawer__link--danger" (click)="auth.logout(); closeAll()">
+            Sign Out
+          </button>
+        } @else {
+          <a routerLink="/auth/login" class="mobile-drawer__link" (click)="closeAll()">Sign In</a>
+        }
+      </div>
+    </nav>
+
+    @if (mobileOpen()) {
+      <div class="mobile-backdrop" (click)="closeMobile()"></div>
     }
 
-    <!-- ══════ SEARCH OVERLAY ══════ -->
-    @if (searchOpen()) {
-      <div class="search-overlay" (click)="closeSearch()">
-        <div class="search-modal" (click)="$event.stopPropagation()">
-          <!-- Search Input -->
-          <div class="search-header">
-            <svg class="search-header-icon" width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.8"/>
-              <path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
-            <input
-              class="search-input"
-              placeholder="What are you looking for?"
-              [(ngModel)]="searchQuery"
-              (input)="searchStore.autocomplete(searchQuery)"
-              (keyup.enter)="doSearch()"
-              (keyup.escape)="closeSearch()"
-              #searchInput
-            />
-            @if (searchQuery) {
-              <button class="search-clear" (click)="searchQuery = ''; searchStore.closeSuggestions()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
-                  <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-              </button>
-            }
-            <button class="search-close" (click)="closeSearch()" aria-label="Close search">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            </button>
-          </div>
-
-          <!-- Quick Links (no query) -->
-          @if (!searchQuery) {
-            <div class="search-body">
-              <div class="search-section">
-                <span class="search-section-label">Quick Links</span>
-                <div class="search-quick-links">
-                  <button class="quick-link" (click)="navigateFromSearch('/products')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
-                    All Products
-                  </button>
-                  <button class="quick-link" (click)="navigateFromSearch('/collections')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-                    Collections
-                  </button>
-                  <button class="quick-link" (click)="navigateFromSearch('/page/about-us')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    Our Story
-                  </button>
-                </div>
-              </div>
-              @if (featuredProducts().length > 0) {
-                <div class="search-section">
-                  <span class="search-section-label">Popular Products</span>
-                  @for (p of featuredProducts().slice(0, 3); track p._id) {
-                    <button class="search-product-item" (click)="navigateFromSearch('/product/' + p.slug)">
-                      <div class="search-product-thumb">
-                        @if (p.images?.[0]) { <img [src]="p.images[0]" [alt]="p.name" /> }
-                      </div>
-                      <div class="search-product-info">
-                        <span class="search-product-name">{{ p.name }}</span>
-                        <span class="search-product-price">&#8377;{{ p.basePrice }}</span>
-                      </div>
-                      <svg class="search-item-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                  }
-                </div>
-              }
-            </div>
-          }
-
-          <!-- Search Results -->
-          @if (searchQuery && searchStore.suggestionsOpen()) {
-            <div class="search-body">
-              @if (productSuggestions().length > 0) {
-                <div class="search-section">
-                  <span class="search-section-label">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" stroke-width="1.5"/></svg>
-                    Products
-                  </span>
-                  @for (s of productSuggestions(); track s.slug) {
-                    <button class="search-product-item" (click)="navigateFromSearch('/product/' + s.slug)">
-                      <div class="search-product-thumb">
-                        @if (s.image) { <img [src]="s.image" [alt]="s.name" /> }
-                      </div>
-                      <div class="search-product-info">
-                        <span class="search-product-name">{{ s.name }}</span>
-                        <span class="search-product-meta">Product</span>
-                      </div>
-                      <svg class="search-item-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                  }
-                </div>
-              }
-              @if (categorySuggestions().length > 0) {
-                <div class="search-section">
-                  <span class="search-section-label">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.5"/></svg>
-                    Categories
-                  </span>
-                  @for (s of categorySuggestions(); track s.slug) {
-                    <button class="search-cat-item" (click)="navigateFromSearch('/catalog/' + s.slug)">
-                      <div class="search-cat-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-                      </div>
-                      <span class="search-cat-name">{{ s.name }}</span>
-                      <svg class="search-item-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                  }
-                </div>
-              }
-              <div class="search-section search-section--muted">
-                <span class="search-section-label">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="1.5"/><polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.5"/></svg>
-                  Journal
-                </span>
-                <p class="search-coming-soon">Blog search coming soon</p>
-              </div>
-            </div>
-          }
-
-          <!-- Loading -->
-          @if (searchQuery && searchStore.suggestionsLoading() && !searchStore.suggestionsOpen()) {
-            <div class="search-body">
-              <div class="search-loading">
-                <div class="search-spinner"></div>
-                <span>Searching...</span>
-              </div>
-            </div>
-          }
-
-          <!-- No results -->
-          @if (searchQuery && !searchStore.suggestionsLoading() && searchStore.suggestions().length === 0 && searchQuery.length >= 2) {
-            <div class="search-body">
-              <div class="search-empty">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-                  <circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.2"/>
-                  <path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                  <path d="M8 11h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                </svg>
-                <span class="search-empty-text">No results for "{{ searchQuery }}"</span>
-                <span class="search-empty-hint">Try a different search term</span>
-              </div>
-            </div>
-          }
-
-          <!-- Footer -->
-          <div class="search-footer">
-            <span class="search-footer-hint">
-              <kbd>&#8593;</kbd><kbd>&#8595;</kbd> Navigate
-              <kbd>&#8629;</kbd> Search
-              <kbd>esc</kbd> Close
-            </span>
-          </div>
-        </div>
-      </div>
-    }
-
-    @if (mobileOpen()) { <div class="mobile-backdrop" (click)="closeMobile()"></div> }
+    <!-- ══════ BOTTOM MOBILE NAV (Home, Categories, Help, Account) ══════ -->
+    <nav class="mobile-bottom-nav show-mobile">
+      <a routerLink="/" class="mobile-bottom-nav__link" (click)="closeAll()" title="Home">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 10l9-9 9 9v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-11z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><polyline points="9 21 9 12 15 12 15 21" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        <span>Home</span>
+      </a>
+      <button class="mobile-bottom-nav__link" (click)="navigateTo('/products'); closeAll()" title="Categories">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.8"/></svg>
+        <span>Categories</span>
+      </button>
+      <button class="mobile-bottom-nav__link" (click)="closeAll()" title="Help">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 17v.01M9 9a3 3 0 1 1 6 0c0-1-1.5-1.5-1.5-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Help</span>
+      </button>
+      @if (auth.isLoggedIn()) {
+        <a routerLink="/dashboard" class="mobile-bottom-nav__link" (click)="closeAll()" title="Account">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          <span>Account</span>
+        </a>
+      } @else {
+        <a routerLink="/auth/login" class="mobile-bottom-nav__link" (click)="closeAll()" title="Account">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          <span>Account</span>
+        </a>
+      }
+    </nav>

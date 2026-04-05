@@ -1,100 +1,115 @@
 @use '../../../core/design-tokens/tokens' as *;
 @use '../../../core/design-tokens/mixins' as *;
 
-// ═══════════════════════════════════════════
-// ORDER HISTORY — Barcoopbevy bold condensed
-// ═══════════════════════════════════════════
-
 .orders {
-  @include content-container($max-width-narrow);
-  padding-top: $space-section-sm;
-  padding-bottom: $space-section-sm;
-
-  @include respond-to(md) {
-    padding-top: $space-xxl;
-    padding-bottom: $space-xxl;
-  }
+  width: 100%;
 }
 
-// ═══ Header ═══
+// ── Header ──
 .orders__header {
-  @include flex-between;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   margin-bottom: $space-xxl;
   gap: $space-lg;
 
   @include respond-to(sm) {
     flex-direction: column;
-    align-items: flex-start;
   }
 }
 
 .orders__eyebrow {
-  font-family: $font-family-nav;
-  font-size: $font-size-sm;
+  font-family: $font-family;
+  font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-eyebrow;
+  letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
+  color: $color-mono-brown;
   display: block;
   margin-bottom: $space-xs;
-  color: $color-bg-maroon;
 }
 
 .orders__title {
-  font-family: $font-family-heading;
-  font-size: $font-size-display;
+  font-family: $font-family;
+  font-size: clamp(28px, 4vw, 40px);
   font-weight: $font-weight-bold;
-  letter-spacing: $letter-spacing-heading;
-  color: $color-text-primary;
+  color: $color-mono-dark;
   margin: 0;
   line-height: 1;
-
-  @include respond-to(md) {
-    font-size: $font-size-xxxl;
-  }
 }
 
 .orders__back {
   display: inline-flex;
   align-items: center;
   gap: $space-xs;
-  font-family: $font-family-nav;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
-  color: $color-text-secondary;
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $color-mono-dark;
   text-decoration: none;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: $letter-spacing-wide;
   padding: $space-sm $space-lg;
-  border: 2px solid $color-border-light;
-  border-radius: 0;
-  transition: all $transition-fast;
+  border: 1px solid rgba($color-mono-dark, 0.15);
   white-space: nowrap;
-  flex-shrink: 0;
 
   &:hover {
-    color: $color-bg-maroon;
-    border-color: $color-bg-maroon;
+    border-color: $color-mono-dark;
   }
 }
 
-// ═══ Loading ═══
+// ── Filter Tabs ──
+.orders__filters {
+  display: flex;
+  gap: 0;
+  margin-bottom: $space-xl;
+  border-bottom: 1px solid rgba($color-mono-dark, 0.08);
+  overflow-x: auto;
+}
+
+.orders__filter {
+  padding: $space-sm $space-lg;
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: rgba($color-mono-dark, 0.5);
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    color: $color-mono-dark;
+  }
+
+  &.active {
+    color: $color-mono-dark;
+    border-bottom-color: $color-mono-dark;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+// ── Loading ──
 .orders__loading {
   @include flex-center;
   padding: $space-section-sm 0;
 }
 
 .orders__spinner {
-  width: 32px;
-  height: 32px;
-  border: 2px solid $color-border-light;
-  border-top-color: $color-bg-maroon;
-  border-radius: $radius-full;
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba($color-mono-dark, 0.1);
+  border-top-color: $color-mono-dark;
+  border-radius: 50%;
   animation: orderSpin 0.7s linear infinite;
 }
 
 @keyframes orderSpin { to { transform: rotate(360deg); } }
 
-// ═══ Empty State ═══
+// ── Empty ──
 .orders__empty {
   @include flex-column;
   align-items: center;
@@ -104,77 +119,75 @@
 }
 
 .orders__empty-icon {
-  width: 96px;
-  height: 96px;
+  width: 80px;
+  height: 80px;
   @include flex-center;
-  border-radius: 0;
-  background: $color-bg-warm;
-  color: $color-text-disabled;
-  margin-bottom: $space-sm;
+  background: rgba($color-mono-dark, 0.04);
+  color: rgba($color-mono-dark, 0.25);
+  border-radius: 50%;
 }
 
 .orders__empty-title {
-  font-family: $font-family-heading;
-  font-size: $font-size-xxl;
+  font-family: $font-family;
+  font-size: $font-size-xl;
   font-weight: $font-weight-bold;
-  color: $color-text-primary;
+  color: $color-mono-dark;
   margin: 0;
 }
 
 .orders__empty-desc {
-  font-family: $font-family-display;
-  font-size: $font-size-md;
-  color: $color-text-tertiary;
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  color: rgba($color-mono-dark, 0.5);
   margin: 0;
-  max-width: 360px;
+  max-width: 320px;
 }
 
 .orders__btn-primary {
   display: inline-flex;
-  padding: $space-sm $space-xxl;
-  background: $color-bg-maroon;
-  color: $color-text-inverse;
-  border-radius: 0;
-  font-family: $font-family-nav;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  padding: $space-sm $space-xl;
+  background: $color-mono-dark;
+  color: $color-mono-light;
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
   text-decoration: none;
-  letter-spacing: 0.04em;
+  letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
-  transition: all $transition-fast;
-  margin-top: $space-sm;
 
   &:hover {
-    background: $color-primary-hover;
-    transform: translateY(-1px);
+    background: rgba($color-mono-dark, 0.85);
   }
 }
 
-// ═══ Order List ═══
+// ── Order List ──
 .orders__list {
   @include flex-column;
   gap: $space-lg;
-}
+  background: rgba($color-mono-dark, 0.03);
+  padding: $space-lg;
 
-// ═══ Order Card ═══
-.orders__card {
-  background: $color-bg-tertiary;
-  border: 1px solid $color-border-light;
-  border-radius: 0;
-  overflow: hidden;
-  transition: border-color $transition-fast, box-shadow $transition-fast;
-
-  &:hover {
-    border-color: $color-border;
-    box-shadow: $shadow-md;
+  @include respond-to(sm) {
+    padding: $space-sm;
+    gap: $space-md;
   }
 }
 
+// ── Order Card ──
+.orders__card {
+  border: 1px solid rgba($color-mono-dark, 0.1);
+  overflow: hidden;
+  background: $color-mono-light;
+  box-shadow: 0 1px 4px rgba($color-mono-dark, 0.04);
+}
+
+// Card Header — order number + status badge
 .orders__card-header {
-  @include flex-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: $space-lg $space-xl;
-  background: $color-bg-warm;
-  border-bottom: 1px solid $color-border-light;
+  border-bottom: 1px solid rgba($color-mono-dark, 0.06);
 
   @include respond-to(sm) {
     flex-direction: column;
@@ -189,75 +202,82 @@
 }
 
 .orders__card-number {
-  font-family: $font-family-nav;
-  font-size: $font-size-lg;
+  font-family: $font-family;
+  font-size: $font-size-md;
   font-weight: $font-weight-bold;
-  color: $color-text-primary;
-  letter-spacing: 0.02em;
+  color: $color-mono-dark;
 }
 
 .orders__card-date {
+  font-family: $font-family;
   font-size: $font-size-xs;
-  color: $color-text-tertiary;
+  color: rgba($color-mono-dark, 0.4);
 }
 
 .orders__status {
   padding: $space-xxs $space-md;
-  border-radius: 0;
-  font-family: $font-family-nav;
-  font-size: $font-size-xs;
+  font-family: $font-family;
+  font-size: 10px;
   font-weight: $font-weight-bold;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
+  background: rgba($color-mono-dark, 0.06);
+  color: rgba($color-mono-dark, 0.6);
 
-  &[data-status="confirmed"] { background: rgba($color-primary, 0.1); color: $color-primary; }
-  &[data-status="processing"] { background: $color-accent-light; color: $color-accent; }
+  &[data-status="confirmed"] { background: rgba($color-mono-brown, 0.1); color: $color-mono-brown; }
+  &[data-status="processing"] { background: rgba($color-mono-brown, 0.1); color: $color-mono-brown; }
   &[data-status="shipped"],
   &[data-status="in_transit"],
-  &[data-status="out_for_delivery"] { background: rgba(70, 130, 180, 0.1); color: #4682B4; }
-  &[data-status="delivered"] { background: rgba($color-bg-teal, 0.12); color: $color-bg-teal; }
+  &[data-status="out_for_delivery"] { background: rgba($color-mono-dark, 0.08); color: $color-mono-dark; }
+  &[data-status="delivered"] { background: rgba($color-mono-dark, 0.08); color: $color-mono-dark; }
   &[data-status="cancelled"],
-  &[data-status="returned"] { background: rgba($color-error, 0.1); color: $color-error; }
+  &[data-status="returned"] { background: rgba($color-error, 0.08); color: $color-error; }
 }
 
-// ═══ Items ═══
+// Items — each line item
 .orders__items {
-  padding: $space-md $space-xl;
+  padding: 0 $space-xl;
 }
 
 .orders__line {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: $space-lg;
-  padding: $space-sm 0;
-  font-size: $font-size-sm;
-  border-bottom: 1px solid $color-border-light;
+  display: flex;
+  align-items: center;
+  padding: $space-md 0;
+  border-bottom: 1px solid rgba($color-mono-dark, 0.04);
 
   &:last-child { border-bottom: none; }
 }
 
 .orders__line-name {
-  color: $color-text-primary;
+  flex: 1;
+  font-family: $font-family;
+  font-size: $font-size-sm;
   font-weight: $font-weight-medium;
+  color: $color-mono-dark;
 }
 
 .orders__line-qty {
-  color: $color-text-tertiary;
+  font-family: $font-family;
   font-size: $font-size-xs;
+  color: rgba($color-mono-dark, 0.4);
+  margin-right: $space-lg;
 }
 
 .orders__line-price {
-  font-family: $font-family-nav;
-  color: $color-text-primary;
-  font-weight: $font-weight-bold;
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-mono-dark;
 }
 
-// ═══ Footer ═══
+// Footer — address + total
 .orders__card-footer {
-  @include flex-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: $space-md $space-xl;
-  border-top: 1px solid $color-border-light;
-  background: $color-bg-secondary;
+  border-top: 1px solid rgba($color-mono-dark, 0.06);
+  background: rgba($color-mono-dark, 0.02);
 
   @include respond-to(sm) {
     flex-direction: column;
@@ -275,14 +295,22 @@
   display: flex;
   align-items: center;
   gap: $space-xs;
+  font-family: $font-family;
   font-size: $font-size-xs;
-  color: $color-text-tertiary;
+  color: rgba($color-mono-dark, 0.5);
+
+  svg {
+    flex-shrink: 0;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+  }
 }
 
 .orders__courier {
+  font-family: $font-family;
   font-size: $font-size-xs;
-  color: $color-accent;
-  font-family: monospace;
+  color: rgba($color-mono-dark, 0.4);
 }
 
 .orders__footer-right {
@@ -292,37 +320,35 @@
 }
 
 .orders__total {
-  font-family: $font-family-nav;
-  font-size: $font-size-xl;
+  font-family: $font-family;
+  font-size: $font-size-lg;
   font-weight: $font-weight-bold;
-  color: $color-text-primary;
+  color: $color-mono-dark;
 }
 
 .orders__btn-track {
   display: inline-flex;
   align-items: center;
   gap: $space-xxs;
-  font-family: $font-family-nav;
+  font-family: $font-family;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
-  color: #4682B4;
+  font-weight: $font-weight-semibold;
+  color: $color-mono-dark;
   text-decoration: none;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: $space-xxs $space-md;
-  border: 2px solid #4682B4;
-  border-radius: 0;
-  transition: all $transition-fast;
+  letter-spacing: $letter-spacing-wide;
+  padding: $space-xxs $space-sm;
+  border: 1px solid rgba($color-mono-dark, 0.2);
 
   &:hover {
-    background: rgba(70, 130, 180, 0.08);
+    border-color: $color-mono-dark;
   }
 }
 
-// ═══ Timeline ═══
+// ── Timeline ──
 .orders__timeline {
   padding: $space-md $space-xl $space-lg;
-  border-top: 1px solid $color-border-light;
+  border-top: 1px solid rgba($color-mono-dark, 0.06);
 }
 
 .orders__timeline-item {
@@ -331,7 +357,7 @@
   gap: $space-sm;
   padding: $space-xs 0;
   position: relative;
-  padding-left: $space-lg;
+  padding-left: $space-xl;
 
   &:not(:last-child)::before {
     content: '';
@@ -339,8 +365,8 @@
     left: 5px;
     top: 18px;
     bottom: -4px;
-    width: 2px;
-    background: $color-border-light;
+    width: 1px;
+    background: rgba($color-mono-dark, 0.1);
   }
 }
 
@@ -350,17 +376,16 @@
   top: 4px;
   width: 12px;
   height: 12px;
-  border-radius: 0;
-  border: 2px solid $color-border;
-  background: $color-bg-tertiary;
+  border-radius: 50%;
+  background: rgba($color-mono-dark, 0.15);
 
-  &[data-status="confirmed"] { border-color: $color-primary; background: $color-primary; }
-  &[data-status="processing"] { border-color: $color-accent; background: $color-accent; }
+  &[data-status="confirmed"],
+  &[data-status="processing"] { background: $color-mono-brown; }
   &[data-status="shipped"],
   &[data-status="in_transit"],
-  &[data-status="out_for_delivery"] { border-color: #4682B4; background: #4682B4; }
-  &[data-status="delivered"] { border-color: $color-bg-teal; background: $color-bg-teal; }
-  &[data-status="cancelled"] { border-color: $color-error; background: $color-error; }
+  &[data-status="out_for_delivery"],
+  &[data-status="delivered"] { background: $color-mono-dark; }
+  &[data-status="cancelled"] { background: $color-error; }
 }
 
 .orders__timeline-content {
@@ -369,26 +394,27 @@
 }
 
 .orders__timeline-status {
-  font-family: $font-family-nav;
+  font-family: $font-family;
   font-size: $font-size-sm;
   font-weight: $font-weight-bold;
-  color: $color-text-primary;
+  color: $color-mono-dark;
   text-transform: uppercase;
 }
 
 .orders__timeline-date {
+  font-family: $font-family;
   font-size: $font-size-xs;
-  color: $color-text-tertiary;
+  color: rgba($color-mono-dark, 0.4);
 }
 
 .orders__timeline-note {
-  font-family: $font-family-display;
+  font-family: $font-family;
   font-size: $font-size-xs;
-  color: $color-text-secondary;
+  color: rgba($color-mono-dark, 0.5);
   font-style: italic;
 }
 
-// ═══ Pagination ═══
+// ── Pagination ──
 .orders__pagination {
   @include flex-center;
   gap: $space-lg;
@@ -396,30 +422,28 @@
 }
 
 .orders__page-btn {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   @include flex-center;
-  border: 2px solid $color-border-light;
-  border-radius: 0;
+  border: 1px solid rgba($color-mono-dark, 0.15);
   background: transparent;
-  color: $color-text-secondary;
+  color: $color-mono-dark;
   cursor: pointer;
-  transition: all $transition-fast;
 
   &:hover:not(:disabled) {
-    border-color: $color-bg-maroon;
-    color: $color-bg-maroon;
+    border-color: $color-mono-dark;
   }
 
   &:disabled {
-    opacity: 0.3;
+    opacity: 0.2;
     cursor: not-allowed;
   }
 }
 
 .orders__page-info {
-  font-family: $font-family-nav;
-  font-size: $font-size-sm;
-  color: $color-text-tertiary;
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  color: rgba($color-mono-dark, 0.4);
   text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
 }

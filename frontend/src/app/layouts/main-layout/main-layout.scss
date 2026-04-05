@@ -11,6 +11,12 @@
 
 .content {
   flex: 1;
+  padding-top: $header-height; // single unified header (70px)
+
+  @include respond-to(md) {
+    padding-top: $header-height-md; // header only on mobile (60px)
+    padding-bottom: $bottom-nav-height; // bottom mobile nav (60px)
+  }
 }
 
 // ═══════════════════════════════════════

@@ -27,16 +27,24 @@
       <!-- STEP 1: CART -->
       @if (currentStep() === 'cart') {
         <div class="checkout__panel">
-          <h2 class="checkout__panel-title">REVIEW YOUR CART</h2>
+          <h2 class="checkout__panel-title">
+            @if (isBuyNow()) { QUICK CHECKOUT } @else { REVIEW YOUR CART }
+          </h2>
 
-          @if (cart.cartItems().length === 0) {
+          @if (displayCartItems().length === 0) {
             <div class="checkout__empty">
-              <p>Your cart is empty.</p>
+              <p>@if (isBuyNow()) { Loading product... } @else { Your cart is empty. }</p>
               <a routerLink="/" class="checkout__link">BROWSE PRODUCTS</a>
             </div>
           } @else {
+            @if (isBuyNow()) {
+              <div class="checkout__buynow-notice">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <span>Quick checkout — this product will not be added to your saved cart</span>
+              </div>
+            }
             <div class="checkout__cart-items">
-              @for (item of cart.cartItems(); track item.productId) {
+              @for (item of displayCartItems(); track item.productId) {
                 <div class="checkout__line-item">
                   <div class="checkout__line-image">
                     @if (item.image) {
@@ -54,22 +62,28 @@
                     <p class="checkout__line-unit">&#8377;{{ item.basePrice | number:'1.0-0' }} each</p>
                   </div>
                   <div class="checkout__line-qty">
-                    <button class="checkout__qty-btn" (click)="cart.updateQty(item.productId, item.qty - 1)">&#8722;</button>
-                    <span>{{ item.qty }}</span>
-                    <button class="checkout__qty-btn" (click)="cart.updateQty(item.productId, item.qty + 1)" [disabled]="item.qty >= 10">+</button>
+                    @if (isBuyNow()) {
+                      <span class="checkout__qty-static">{{ item.qty }}</span>
+                    } @else {
+                      <button class="checkout__qty-btn" (click)="cart.updateQty(item.productId, item.qty - 1)">&#8722;</button>
+                      <span>{{ item.qty }}</span>
+                      <button class="checkout__qty-btn" (click)="cart.updateQty(item.productId, item.qty + 1)" [disabled]="item.qty >= 10">+</button>
+                    }
                   </div>
                   <p class="checkout__line-total">&#8377;{{ item.lineTotal | number:'1.0-0' }}</p>
-                  <button class="checkout__remove-btn" (click)="cart.removeItem(item.productId)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                  </button>
+                  @if (!isBuyNow()) {
+                    <button class="checkout__remove-btn" (click)="cart.removeItem(item.productId)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  }
                 </div>
               }
             </div>
 
             <div class="checkout__panel-footer">
-              <button class="checkout__btn-next" (click)="goTo('address')" [disabled]="cart.cartItems().length === 0">
+              <button class="checkout__btn-next" (click)="goTo('address')" [disabled]="displayCartItems().length === 0">
                 CONTINUE TO ADDRESS
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -183,6 +197,32 @@
             </div>
           }
 
+          <!-- Loyalty Points Option -->
+          @if (auth.isLoggedIn() && loyaltyBalance() >= loyaltyMinRedeem()) {
+            <div class="checkout__wallet-option">
+              <div class="checkout__wallet-row">
+                <label class="checkout__wallet-toggle">
+                  <input type="checkbox" [(ngModel)]="useLoyalty" />
+                  <span class="checkout__toggle-track"><span class="checkout__toggle-thumb"></span></span>
+                  <span class="checkout__toggle-label">REDEEM LOYALTY POINTS</span>
+                </label>
+                <span class="checkout__wallet-avail">{{ loyaltyBalance() }} pts (min {{ loyaltyMinRedeem() }})</span>
+              </div>
+              @if (useLoyalty) {
+                <div class="checkout__loyalty-input">
+                  <label class="checkout__loyalty-label">Points to redeem</label>
+                  <input type="number" class="checkout__loyalty-field" [(ngModel)]="loyaltyPointsInput" [max]="loyaltyBalance()" [min]="loyaltyMinRedeem()" />
+                </div>
+                @if (loyaltyDiscount() > 0) {
+                  <div class="checkout__wallet-deduction">
+                    <span>Loyalty discount ({{ loyaltyPointsInput }} pts)</span>
+                    <span class="checkout__wallet-deduct-val">&#8722;&#8377;{{ loyaltyDiscount() | number:'1.2-2' }}</span>
+                  </div>
+                }
+              }
+            </div>
+          }
+
           <!-- Wallet Option -->
           @if (auth.isLoggedIn()) {
             <div class="checkout__wallet-option">
@@ -264,7 +304,7 @@
     </div>
 
     <!-- Price Panel -->
-    @if (currentStep() !== 'cart' || cart.cartItems().length > 0) {
+    @if (currentStep() !== 'cart' || displayCartItems().length > 0) {
       <aside class="checkout__aside">
         <div class="checkout__price-card">
           <h3 class="checkout__price-heading">PRICE DETAILS</h3>
@@ -302,8 +342,8 @@
               }
             } @else {
               <div class="checkout__price-row">
-                <span>Subtotal ({{ cart.cartCount() }} items)</span>
-                <span>&#8377;{{ cart.cartSubtotal() | number:'1.0-0' }}</span>
+                <span>Subtotal ({{ displayCartCount() }} items)</span>
+                <span>&#8377;{{ displayCartSubtotal() | number:'1.0-0' }}</span>
               </div>
               <div class="checkout__price-row checkout__price-row--shipping">
                 <span>Delivery</span>
@@ -312,7 +352,7 @@
               <div class="checkout__divider"></div>
               <div class="checkout__price-row checkout__price-row--total">
                 <span>Total (approx.)</span>
-                <span>&#8377;{{ cart.cartSubtotal() | number:'1.0-0' }}</span>
+                <span>&#8377;{{ displayCartSubtotal() | number:'1.0-0' }}</span>
               </div>
               <p class="checkout__tax-note">Final price with discounts &amp; taxes shown in Step 3</p>
             }

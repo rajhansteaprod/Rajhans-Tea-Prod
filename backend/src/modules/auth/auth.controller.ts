@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthService } from './services/auth.service';
-import { sendSuccess, sendCreated } from '../../utils/api-response';
+import { sendSuccess, sendCreated, sendNoContent } from '../../utils/api-response';
 import { extractDeviceInfo } from '../../utils/device-parser';
 import { BadRequestError } from '../../utils/api-error';
 
@@ -74,4 +74,48 @@ export const me = async (req: Request, res: Response) => {
     req.user!.role as 'admin' | 'customer',
   );
   sendSuccess(res, result, 'User profile');
+};
+
+// ── Profile Update ───────────────────────────────────────────────────────────
+
+export const updateProfile = async (req: Request, res: Response) => {
+  const updated = await authService.updateProfile(req.user!.userId, req.body);
+  sendSuccess(res, updated, 'Profile updated successfully');
+};
+
+// ── Address CRUD ─────────────────────────────────────────────────────────────
+
+export const getAddresses = async (req: Request, res: Response) => {
+  const addresses = await authService.getAddresses(req.user!.userId);
+  sendSuccess(res, addresses, 'Addresses retrieved successfully');
+};
+
+export const addAddress = async (req: Request, res: Response) => {
+  const addresses = await authService.addAddress(req.user!.userId, req.body);
+  sendCreated(res, addresses, 'Address added successfully');
+};
+
+export const updateAddress = async (req: Request, res: Response) => {
+  const addressId = req.params.addressId as string;
+  const addresses = await authService.updateAddress(
+    req.user!.userId,
+    addressId,
+    req.body,
+  );
+  sendSuccess(res, addresses, 'Address updated successfully');
+};
+
+export const deleteAddress = async (req: Request, res: Response) => {
+  const addressId = req.params.addressId as string;
+  await authService.deleteAddress(req.user!.userId, addressId);
+  sendNoContent(res);
+};
+
+export const setDefaultAddress = async (req: Request, res: Response) => {
+  const addressId = req.params.addressId as string;
+  const addresses = await authService.setDefaultAddress(
+    req.user!.userId,
+    addressId,
+  );
+  sendSuccess(res, addresses, 'Default address updated successfully');
 };

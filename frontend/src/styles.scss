@@ -1,7 +1,7 @@
 @use 'app/core/design-tokens/tokens' as *;
 @use 'styles/theme';
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap');
 
 *,
 *::before,
@@ -18,11 +18,40 @@ html {
 }
 
 body {
-  font-family: $font-family;
+  font-family: $font-family-body;
+  font-weight: $font-weight-regular;
   color: $color-text-primary;
-  background-color: $color-bg-primary;
+   
   line-height: $line-height-normal;
   min-height: 100vh;
+}
+
+// Headings: Poppins font family
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-tight;
+}
+
+h1 { font-size: $font-size-mega; }
+h2 { font-size: $font-size-display; }
+h3 { font-size: $font-size-xxl; }
+h4 { font-size: $font-size-xl; }
+h5 { font-size: $font-size-lg; }
+h6 { font-size: $font-size-md; }
+
+// Buttons inherit Poppins
+button {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-medium;
+}
+
+// Form inputs use DM Sans
+input,
+textarea,
+select {
+  font-family: $font-family-body;
+  font-weight: $font-weight-regular;
 }
 
 a {
@@ -58,7 +87,7 @@ img {
 }
 
 ::selection {
-  background: rgba(74, 14, 43, 0.15);
+  background: rgba(252, 71, 71, 0.15);
   color: $color-text-primary;
 }
 
