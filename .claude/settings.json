@@ -42,7 +42,9 @@
       "Bash(taskkill /PID 10692 /F)",
       "Bash(cd /c/Users/91626/Desktop/DEVELOPMENT APPLICATIONS/Rajhans Tea)",
       "Bash(cd /c/Users/91626/Desktop/DEVELOPMENT APPLICATIONS/Rajhans Tea/frontend)",
-      "Bash(npm start:*)"
+      "Bash(npm start:*)",
+      "Bash(timeout 15 node dist/frontend/server/server.js)",
+      "Bash(curl -s http://localhost:4000/)"
     ]
   }
 }

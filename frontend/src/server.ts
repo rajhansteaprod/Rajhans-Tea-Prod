@@ -14,8 +14,7 @@ export function app(): express.Express {
   server.use(compression());
 
   // Serve static files from /browser
-  server.get(
-    '*.*',
+  server.use(
     express.static(DIST_FOLDER, {
       maxAge: '1y',
     })
@@ -32,10 +31,15 @@ export function app(): express.Express {
     indexHtml = '<html><body>Frontend not built. Run "npm run build" first.</body></html>';
   }
 
-  // Serve the Angular app for all routes
-  server.get('*', (req, res) => {
+  // Serve the Angular app for all routes (use regex to catch all non-file routes)
+  server.get(/^\/(?!.*\.)/, (req, res) => {
     res.set('Content-Type', 'text/html');
     res.send(indexHtml);
+  });
+
+  // Fallback for any other requests
+  server.use((req, res) => {
+    res.status(404).send('<html><body>Not Found</body></html>');
   });
 
   return server;
@@ -51,13 +55,10 @@ function run(): void {
   });
 }
 
-// Webpack will replace 'require' with '__webpack_require__'
-// '__non_webpack_require__' is a proxy to Node 'require'
-// The below code is to ensure that the server is run only when it is not required and is in test env
-declare const __non_webpack_require__: NodeRequire;
-const mainModule = __non_webpack_require__.main;
-const moduleFilename = mainModule && mainModule.filename;
-
-if (moduleFilename === __filename || moduleFilename === undefined) {
+// Run server when invoked directly
+// For webpack bundles: webpack will replace 'require' with __webpack_require__
+// For direct Node.js execution: check if this is the main module
+const isMainModule = require.main === module;
+if (isMainModule) {
   run();
 }

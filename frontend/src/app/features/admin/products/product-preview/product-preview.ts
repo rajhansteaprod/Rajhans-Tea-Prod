@@ -1,16 +1,20 @@
 import {
   Component, OnInit, OnDestroy, AfterViewInit,
   ElementRef, ViewChild, ViewChildren, QueryList,
-  signal, ChangeDetectorRef, ChangeDetectionStrategy,
+  signal, ChangeDetectorRef, ChangeDetectionStrategy, inject,
 } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CatalogService, Product } from '../../../../core/services/catalog.service';
+import { PlatformService } from '../../../../core/services/platform.service';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import * as THREE from 'three';
 
-gsap.registerPlugin(ScrollTrigger);
+// Only register GSAP plugin in browser
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 @Component({
   selector: 'app-product-preview',
@@ -59,6 +63,7 @@ export class ProductPreviewComponent implements OnInit, AfterViewInit, OnDestroy
     private route: ActivatedRoute,
     private catalog: CatalogService,
     private cdr: ChangeDetectorRef,
+    private platform: PlatformService,
   ) {}
 
   ngOnInit() {
@@ -76,8 +81,10 @@ export class ProductPreviewComponent implements OnInit, AfterViewInit, OnDestroy
         }
         this.loading.set(false);
         this.cdr.detectChanges();
-        // Run animations after view updates
-        setTimeout(() => this.initAnimations(), 80);
+        // Run animations after view updates (browser only)
+        if (this.platform.isBrowser) {
+          setTimeout(() => this.initAnimations(), 80);
+        }
       },
       error: (err) => {
         this.error.set(err?.error?.message ?? 'Failed to load product');
@@ -109,8 +116,8 @@ export class ProductPreviewComponent implements OnInit, AfterViewInit, OnDestroy
     const p = this.product();
     if (!p) return;
 
-    // Crossfade animation
-    if (this.mainImageWrapper?.nativeElement) {
+    // Crossfade animation (browser only)
+    if (this.platform.isBrowser && this.mainImageWrapper?.nativeElement) {
       const img = this.mainImageWrapper.nativeElement.querySelector('.main-image');
       if (img) {
         gsap.to(img, {
@@ -133,6 +140,9 @@ export class ProductPreviewComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   private initAnimations() {
+    // Only run animations in browser
+    if (!this.platform.isBrowser) return;
+
     const p = this.product();
     if (!p) return;
 
@@ -284,6 +294,9 @@ export class ProductPreviewComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   private init3DViewer() {
+    // Only initialize 3D viewer in browser
+    if (!this.platform.isBrowser) return;
+
     const container = this.viewer3dCanvas?.nativeElement;
     if (!container) return;
 
