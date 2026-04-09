@@ -4,6 +4,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { pairwise, filter, switchMap, startWith } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
+import { PlatformService } from './platform.service';
 
 // ─── API types (mirror backend) ───────────────────────────────────────────────
 
@@ -84,6 +85,7 @@ interface ApiResponse<T> {
 export class CartStore {
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
+  private readonly platform = inject(PlatformService);
   private readonly api = environment.apiUrl;
 
   // Stable session ID — generated once, lives in localStorage
@@ -278,10 +280,10 @@ export class CartStore {
   }
 
   private getOrCreateSessionId(): string {
-    const existing = localStorage.getItem('guestSessionId');
+    const existing = this.platform.localStorage.getItem('guestSessionId');
     if (existing) return existing;
     const id = crypto.randomUUID();
-    localStorage.setItem('guestSessionId', id);
+    this.platform.localStorage.setItem('guestSessionId', id);
     return id;
   }
 }

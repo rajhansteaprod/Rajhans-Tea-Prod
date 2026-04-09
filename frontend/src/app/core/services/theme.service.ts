@@ -1,16 +1,21 @@
-import { Injectable, signal, effect } from '@angular/core';
+import { Injectable, signal, effect, inject } from '@angular/core';
+import { PlatformService } from './platform.service';
 
 export type Theme = 'light' | 'dark';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
+  private readonly platform = inject(PlatformService);
   readonly theme = signal<Theme>(this.getInitialTheme());
 
   constructor() {
     effect(() => {
       const t = this.theme();
-      document.documentElement.setAttribute('data-theme', t);
-      localStorage.setItem('theme', t);
+      // Only update DOM in browser
+      if (this.platform.document) {
+        this.platform.document.documentElement.setAttribute('data-theme', t);
+      }
+      this.platform.localStorage.setItem('theme', t);
     });
   }
 
@@ -19,8 +24,11 @@ export class ThemeService {
   }
 
   private getInitialTheme(): Theme {
-    const saved = localStorage.getItem('theme') as Theme | null;
+    const saved = this.platform.localStorage.getItem('theme') as Theme | null;
     if (saved === 'light' || saved === 'dark') return saved;
-    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+    // Default to light theme on server, check system preference on browser
+    if (!this.platform.isBrowser) return 'light';
+    return this.platform.window?.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
 }

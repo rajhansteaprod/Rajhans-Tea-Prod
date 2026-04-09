@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { PlatformService } from './platform.service';
 
 export type Language = 'en' | 'hi';
 
@@ -125,6 +126,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
 @Injectable({ providedIn: 'root' })
 export class I18nService {
+  private readonly platform = inject(PlatformService);
   readonly language = signal<Language>(this.getInitialLanguage());
 
   t(key: string): string {
@@ -133,8 +135,11 @@ export class I18nService {
 
   setLanguage(lang: Language): void {
     this.language.set(lang);
-    localStorage.setItem('language', lang);
-    document.documentElement.setAttribute('lang', lang);
+    this.platform.localStorage.setItem('language', lang);
+    // Only update DOM in browser
+    if (this.platform.document) {
+      this.platform.document.documentElement.setAttribute('lang', lang);
+    }
   }
 
   toggle(): void {
@@ -142,7 +147,7 @@ export class I18nService {
   }
 
   private getInitialLanguage(): Language {
-    const saved = localStorage.getItem('language') as Language | null;
+    const saved = this.platform.localStorage.getItem('language') as Language | null;
     if (saved === 'en' || saved === 'hi') return saved;
     return 'en';
   }

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { io, Socket } from 'socket.io-client';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
+import { PlatformService } from './platform.service';
 
 export interface NotificationItem {
   _id: string;
@@ -22,6 +23,7 @@ interface PaginatedResponse<T> { success: boolean; data: T[]; meta: any; }
 export class NotificationStore {
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
+  private readonly platform = inject(PlatformService);
   private readonly api = environment.apiUrl;
   private socket: Socket | null = null;
 
@@ -32,7 +34,8 @@ export class NotificationStore {
   readonly latestNotification = signal<NotificationItem | null>(null);
 
   constructor() {
-    if (this.auth.isLoggedIn()) {
+    // Only initialize Socket.io connection in browser
+    if (this.platform.isBrowser && this.auth.isLoggedIn()) {
       this.connect();
       this.loadUnreadCount();
     }
@@ -41,6 +44,8 @@ export class NotificationStore {
   // ─── WebSocket Connection ──────────────────────────────────────────────────
 
   connect(): void {
+    // Only connect in browser
+    if (!this.platform.isBrowser) return;
     if (this.socket?.connected) return;
 
     const token = this.auth.getAccessToken();

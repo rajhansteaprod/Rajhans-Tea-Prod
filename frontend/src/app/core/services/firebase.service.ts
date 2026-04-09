@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import {
   getAuth,
@@ -8,21 +8,29 @@ import {
   ConfirmationResult,
 } from 'firebase/auth';
 import { environment } from '../../../environments/environment';
+import { PlatformService } from './platform.service';
 
 @Injectable({ providedIn: 'root' })
 export class FirebaseService {
-  private app: FirebaseApp;
-  private auth: Auth;
+  private readonly platform = inject(PlatformService);
+  private app: FirebaseApp | null = null;
+  private auth: Auth | null = null;
   private confirmationResult: ConfirmationResult | null = null;
   private recaptchaVerifier: RecaptchaVerifier | null = null;
 
   constructor() {
-    this.app = initializeApp(environment.firebase);
-    this.auth = getAuth(this.app);
-    this.auth.useDeviceLanguage();
+    // Only initialize Firebase in browser environment
+    if (this.platform.isBrowser) {
+      this.app = initializeApp(environment.firebase);
+      this.auth = getAuth(this.app);
+      this.auth.useDeviceLanguage();
+    }
   }
 
   initRecaptcha(containerId: string): void {
+    // Only initialize in browser
+    if (!this.platform.isBrowser || !this.auth) return;
+
     // Clean up existing verifier
     if (this.recaptchaVerifier) {
       try {
@@ -44,6 +52,9 @@ export class FirebaseService {
   }
 
   async sendOtp(phoneNumber: string): Promise<void> {
+    if (!this.platform.isBrowser || !this.auth) {
+      throw new Error('Firebase not initialized');
+    }
     if (!this.recaptchaVerifier) {
       throw new Error('reCAPTCHA not initialized');
     }
@@ -79,6 +90,9 @@ export class FirebaseService {
   }
 
   async verifyOtp(otp: string): Promise<string> {
+    if (!this.platform.isBrowser) {
+      throw new Error('Cannot verify OTP on server');
+    }
     if (!this.confirmationResult) {
       throw new Error('No OTP was sent. Please request a new one.');
     }

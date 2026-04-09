@@ -1,8 +1,9 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { PlatformService } from './platform.service';
 
 interface AuthUser {
   _id: string;
@@ -32,6 +33,7 @@ interface RefreshResponse {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly apiUrl = `${environment.apiUrl}/auth`;
+  private readonly platform = inject(PlatformService);
 
   private _user = signal<AuthUser | null>(this.loadUserFromStorage());
   private _accessToken = signal<string | null>(this.loadTokenFromStorage());
@@ -46,7 +48,7 @@ export class AuthService {
     if (!current) return;
     const updated = { ...current, ...partial };
     this._user.set(updated);
-    localStorage.setItem('user', JSON.stringify(updated));
+    this.platform.localStorage.setItem('user', JSON.stringify(updated));
   }
 
   constructor(
@@ -62,8 +64,8 @@ export class AuthService {
         tap((res) => {
           this._user.set(res.data.user);
           this._accessToken.set(res.data.tokens.accessToken);
-          localStorage.setItem('user', JSON.stringify(res.data.user));
-          localStorage.setItem('accessToken', res.data.tokens.accessToken);
+          this.platform.localStorage.setItem('user', JSON.stringify(res.data.user));
+          this.platform.localStorage.setItem('accessToken', res.data.tokens.accessToken);
           // refreshToken is now in httpOnly cookie — not stored in localStorage
         }),
       );
@@ -76,7 +78,7 @@ export class AuthService {
       .pipe(
         tap((res) => {
           this._accessToken.set(res.data.tokens.accessToken);
-          localStorage.setItem('accessToken', res.data.tokens.accessToken);
+          this.platform.localStorage.setItem('accessToken', res.data.tokens.accessToken);
         }),
       );
   }
@@ -119,16 +121,16 @@ export class AuthService {
   private clearAuth(): void {
     this._user.set(null);
     this._accessToken.set(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('accessToken');
+    this.platform.localStorage.removeItem('user');
+    this.platform.localStorage.removeItem('accessToken');
   }
 
   private loadUserFromStorage(): AuthUser | null {
-    const user = localStorage.getItem('user');
+    const user = this.platform.localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
   }
 
   private loadTokenFromStorage(): string | null {
-    return localStorage.getItem('accessToken');
+    return this.platform.localStorage.getItem('accessToken');
   }
 }

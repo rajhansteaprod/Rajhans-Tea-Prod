@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/frontend/server",
+    "module": "commonjs",
+    "target": "es2020",
+    "moduleResolution": "node",
+    "lib": ["es2020"],
+    "declaration": false,
+    "noEmitOnError": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node", "express"]
+  },
+  "include": [
+    "src/server.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
