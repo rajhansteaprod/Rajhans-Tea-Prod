@@ -116,4 +116,16 @@
   object-fit: cover;
   object-position: center;
   display: block;
+
+  &--placeholder {
+    background: linear-gradient(135deg, rgba(252, 71, 71, 0.1) 0%, rgba(252, 71, 71, 0.05) 100%);
+    border: 2px dashed $color-primary;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+    text-align: center;
+    padding: $space-xl;
+  }
 }
