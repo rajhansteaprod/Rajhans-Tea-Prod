@@ -28,15 +28,16 @@ export function app(): express.Express {
     return next();
   });
 
-  // Parse JSON bodies
-  server.use(express.json({ limit: '50mb' }));
-  server.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-  // Proxy API requests to backend (handles multipart form data, JSON, etc.)
+  // Proxy API requests to backend FIRST (before body parsing)
+  // This preserves multipart/form-data and other raw request bodies
   server.use('/api', httpProxy(API_URL, {
     proxyReqPathResolver: (req: express.Request) => req.originalUrl,
     proxyReqBodyDecorator: (bodyContent: any) => bodyContent,
   }));
+
+  // Parse JSON bodies ONLY for non-API routes
+  server.use(express.json({ limit: '50mb' }));
+  server.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
   // Serve static files from /browser
   server.use(
