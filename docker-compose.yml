@@ -89,14 +89,11 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
-    container_name: rajhans-tea-frontend
+      dockerfile: Dockerfile.ssr
+    container_name: frontend
     restart: unless-stopped
     ports:
-      - "4201:4200"
-    volumes:
-      - ./frontend/src:/app/src
-      - ./frontend/angular.json:/app/angular.json
+      - "4000:4000"
     depends_on:
       - backend
 
