@@ -2,7 +2,7 @@ import express from 'express';
 import { join } from 'path';
 import compression from 'compression';
 import { readFileSync } from 'fs';
-import httpProxy from 'express-http-proxy';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 // Declare Node.js globals for CommonJS
 declare const require: any;
@@ -30,9 +30,11 @@ export function app(): express.Express {
 
   // Proxy API requests to backend FIRST (before body parsing)
   // This preserves multipart/form-data and other raw request bodies
-  server.use('/api', httpProxy(API_URL, {
-    proxyReqPathResolver: (req: express.Request) => req.originalUrl,
-    proxyReqBodyDecorator: (bodyContent: any) => bodyContent,
+  server.use('/api', createProxyMiddleware({
+    target: API_URL,
+    changeOrigin: true,
+    ws: true,
+    logLevel: 'debug',
   }));
 
   // Parse JSON bodies ONLY for non-API routes
