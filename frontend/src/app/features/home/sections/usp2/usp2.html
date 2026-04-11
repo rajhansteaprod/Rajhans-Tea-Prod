@@ -1,0 +1,83 @@
+<section class="carousel-section">
+  <!-- BRAND MARK TOP LEFT -->
+  <div class="brand-mark">
+    <div class="brand-emblem">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C9 2 7 4 7 7c0 2.5 1.5 4.5 4 5.5V20h2v-7.5c2.5-1 4-3 4-5.5 0-3-2-5-5-5zm0 2c1.7 0 3 1.3 3 3 0 1.5-0.8 2.8-2 3.5V9h-2v1.5C9.8 9.8 9 8.5 9 7c0-1.7 1.3-3 3-3z"/>
+        <path d="M8 21h8v1H8z" opacity="0.6"/>
+      </svg>
+    </div>
+    <div class="brand-name">
+      Rajhans
+      <small>Premium Tea Estate</small>
+    </div>
+  </div>
+
+  <!-- SLIDE COUNTER TOP RIGHT -->
+  <div class="slide-count">
+    <span id="curr">{{ currentIndex() + 1 }}</span> / {{ totalSlides() }}
+  </div>
+
+  <!-- SLIDES -->
+  @for (slide of slides(); track slide.id) {
+    <div class="slide" [class.active]="currentIndex() === $index">
+      <div class="slide-bg" [style.backgroundImage]="'url(' + slide.image + ')'"></div>
+      <div class="slide-inner">
+        <!-- LEFT: CONTENT -->
+        <div class="slide-content">
+          <p class="eyebrow">{{ slide.eyebrow }}</p>
+          <h1 class="slide-title">
+            {{ slide.title }}<br><em>{{ slide.titleHighlight }}</em>
+          </h1>
+          <p class="slide-subtitle">{{ slide.subtitle }}</p>
+          <div class="cta-row">
+            <button class="btn-primary">{{ slide.ctaPrimary }}</button>
+            <button class="btn-secondary">{{ slide.ctaSecondary }}</button>
+          </div>
+        </div>
+
+        <!-- RIGHT: USP PANEL -->
+        <div class="usp-panel">
+          @for (usp of slide.usps; track $index) {
+            <div class="usp-item">
+              <div class="usp-icon">{{ usp.icon }}</div>
+              <div class="usp-text">
+                <p class="usp-title">{{ usp.title }}</p>
+                <p class="usp-desc">{{ usp.desc }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- NAVIGATION DOTS BOTTOM LEFT -->
+  <div class="nav-dots">
+    @for (slide of slides(); track slide.id; let i = $index) {
+      <button
+        class="dot"
+        [class.active]="currentIndex() === i"
+        (click)="goToSlide(i)"
+        [attr.aria-label]="'Go to slide ' + (i + 1)"
+      ></button>
+    }
+  </div>
+
+  <!-- NAVIGATION ARROWS BOTTOM RIGHT -->
+  <div class="nav-arrows">
+    <button class="arrow-btn" (click)="prevSlide()" aria-label="Previous slide">
+      <svg viewBox="0 0 24 24">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+    <button class="arrow-btn" (click)="nextSlide()" aria-label="Next slide">
+      <svg viewBox="0 0 24 24">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-bar" [style.width.%]="progress()"></div>
+</section>
