@@ -44,7 +44,22 @@
       "Bash(cd /c/Users/91626/Desktop/DEVELOPMENT APPLICATIONS/Rajhans Tea/frontend)",
       "Bash(npm start:*)",
       "Bash(timeout 15 node dist/frontend/server/server.js)",
-      "Bash(curl -s http://localhost:4000/)"
+      "Bash(curl -s http://localhost:4000/)",
+      "Bash(grep -E \"\\\\.\\(ts|html\\)$\")",
+      "Bash(lsof -ti:4200)",
+      "Bash(xargs kill:*)",
+      "Bash(curl -s -I http://localhost:4000)",
+      "Bash(curl -s http://localhost:4000)",
+      "Bash(docker build:*)",
+      "Bash(docker run:*)",
+      "Bash(docker stop:*)",
+      "Bash(docker rm:*)",
+      "Bash(docker start:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker-compose build:*)",
+      "Bash(docker buildx:*)",
+      "Bash(curl -s http://localhost:4000/api/v1/catalog/categories -H \"Content-Type: application/json\")",
+      "Bash(curl -s -I http://localhost/assets/)"
     ]
   }
 }

@@ -43,12 +43,18 @@ export class AdminOrderListComponent implements OnInit {
   readonly meta = signal<{ page: number; totalPages: number } | null>(null);
   readonly selectedOrder = signal<OrderItem | null>(null);
   readonly cancelTarget = signal<OrderItem | null>(null);
+  readonly shipmentTarget = signal<OrderItem | null>(null);
 
   searchQuery = '';
   statusFilter = '';
   newStatus = '';
   statusNote = '';
   cancelReason = '';
+  shipmentMethod = 'standard';
+  trackingNumber = '';
+  courierName = '';
+  estimatedDelivery = '';
+  notifyCustomer = true;
   private searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
   statCards = [
@@ -109,11 +115,43 @@ export class AdminOrderListComponent implements OnInit {
     });
   }
 
-  shipOrder(orderId: string): void {
-    this.http.post(`${this.api}/admin/orders/${orderId}/ship`, {}).subscribe({
-      next: () => { this.loadOrders(); this.loadStats(); },
-      error: (err) => alert(err.error?.message || 'Ship failed'),
+  openShipment(o: OrderItem): void {
+    this.shipmentTarget.set(o);
+    this.shipmentMethod = 'standard';
+    this.trackingNumber = '';
+    this.courierName = '';
+    this.estimatedDelivery = this.getTomorrowDate();
+    this.notifyCustomer = true;
+  }
+
+  processShipment(): void {
+    if (!this.shipmentTarget() || !this.trackingNumber || !this.courierName) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    const payload = {
+      method: this.shipmentMethod,
+      trackingNumber: this.trackingNumber,
+      courierName: this.courierName,
+      estimatedDelivery: this.estimatedDelivery,
+      notifyCustomer: this.notifyCustomer,
+    };
+
+    this.http.post(`${this.api}/admin/orders/${this.shipmentTarget()!._id}/ship`, payload).subscribe({
+      next: () => {
+        this.shipmentTarget.set(null);
+        this.loadOrders();
+        this.loadStats();
+      },
+      error: (err) => alert(err.error?.message || 'Shipment processing failed'),
     });
+  }
+
+  private getTomorrowDate(): string {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
   }
 
   openCancel(o: OrderItem): void { this.cancelTarget.set(o); this.cancelReason = ''; }

@@ -142,10 +142,8 @@ picture {
   align-items: center;
   gap: $space-sm;
   padding: $space-md $space-xxl;
-  background: $color-primary;
-  color: $color-mono-dark;
-  border: none;
-  border-radius: $radius-md;
+  background: $color-mono-dark;
+  color: $color-mono-light;
   font-family: $font-family-heading;
   font-size: $font-size-sm;
   font-weight: $font-weight-bold;
@@ -162,8 +160,8 @@ picture {
   }
 
   &:hover {
-    background: $color-mono-dark;
-    color: $color-text-inverse;
+    background: $color-mono-light;
+    color: $color-mono-dark;
   }
 
   &:focus-visible {

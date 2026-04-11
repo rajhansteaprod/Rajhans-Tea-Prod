@@ -6,7 +6,7 @@
     </div>
     <div class="header-actions">
       @if (categories().length > 0) {
-        <button class="btn-danger-outline" (click)="deleteAll()" [disabled]="saving()">
+        <button class="btn-danger-outline" (click)="openDeleteAllConfirm()" [disabled]="saving()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
             <polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -72,7 +72,7 @@
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
                   </button>
-                  <button class="icon-btn delete" (click)="deleteCategory(cat._id)" title="Delete">
+                  <button class="icon-btn delete" (click)="openDeleteConfirm(cat._id)" title="Delete">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                       <polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                       <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -108,6 +108,44 @@
       </table>
     }
   </div>
+
+  <!-- Delete confirmation modal -->
+  @if (deleteConfirmId()) {
+    <div class="modal-overlay" (click)="cancelDelete()">
+      <div class="modal-box confirm-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">Delete Category?</h2>
+        </div>
+        <div class="modal-body">
+          <p>This category will be permanently deleted. This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" (click)="cancelDelete()">Keep It</button>
+          <button class="btn-danger" (click)="confirmDelete()">Delete Category</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Delete all confirmation modal -->
+  @if (deleteConfirmAll()) {
+    <div class="modal-overlay" (click)="cancelDeleteAll()">
+      <div class="modal-box confirm-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">Delete All Categories?</h2>
+        </div>
+        <div class="modal-body">
+          <p><strong>All {{ categories().length }} categories</strong> will be permanently deleted. This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" (click)="cancelDeleteAll()">Keep All</button>
+          <button class="btn-danger" (click)="confirmDeleteAll()" [disabled]="saving()">
+            {{ saving() ? 'Deleting…' : 'Delete All' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </div>
 
 <!-- Create modal -->

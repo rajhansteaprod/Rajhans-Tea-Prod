@@ -59,7 +59,10 @@
                 <div class="actions">
                   <button class="btn-sm" (click)="selectedOrder.set(o)" title="Details">👁</button>
                   @if (o.status === 'confirmed') {
-                    <button class="btn-sm ship" (click)="shipOrder(o._id)" title="Ship">🚚</button>
+                    <button class="btn-ship" (click)="openShipment(o)" title="Process Shipment">
+                      <span class="icon">⚙️</span>
+                      <span class="text">PROCESS<br/>SHIPMENT</span>
+                    </button>
                   }
                   @if (o.status === 'confirmed' || o.status === 'processing') {
                     <button class="btn-sm cancel" (click)="openCancel(o)" title="Cancel">✕</button>
@@ -135,6 +138,91 @@
         <div class="modal-actions">
           <button (click)="cancelTarget.set(null)">Back</button>
           <button class="btn-danger" [disabled]="!cancelReason" (click)="confirmCancel()">Cancel Order</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Shipment Modal -->
+  @if (shipmentTarget()) {
+    <div class="backdrop" (click)="shipmentTarget.set(null)"></div>
+    <div class="modal shipment-modal">
+      <div class="modal-head">
+        <div>
+          <h2>Process Shipment</h2>
+          <p class="order-ref">Order {{ shipmentTarget()!.orderNumber }}</p>
+        </div>
+        <button (click)="shipmentTarget.set(null)">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Order Summary -->
+        <div class="summary-section">
+          <p><strong>Customer:</strong> {{ shipmentTarget()!.shippingAddress.name }} ({{ shipmentTarget()!.shippingAddress.phone }})</p>
+          <p><strong>Items:</strong> {{ shipmentTarget()!.items.length }} item(s)</p>
+          <p><strong>Total:</strong> ₹{{ shipmentTarget()!.total | number:'1.2-2' }}</p>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Step 1: Shipping Method -->
+        <div class="form-section">
+          <h3>Step 1: Select Shipping Method</h3>
+          <div class="shipping-options">
+            <label class="radio-option">
+              <input type="radio" [(ngModel)]="shipmentMethod" value="standard" />
+              <span>Standard Delivery (3-5 days) - ₹0</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" [(ngModel)]="shipmentMethod" value="express" />
+              <span>Express Delivery (1-2 days) - ₹50</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" [(ngModel)]="shipmentMethod" value="overnight" />
+              <span>Overnight Delivery - ₹200</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Step 2: Tracking Details -->
+        <div class="form-section">
+          <h3>Step 2: Enter Tracking Details</h3>
+          <div class="form-group">
+            <label>Tracking Number *</label>
+            <input type="text" [(ngModel)]="trackingNumber" placeholder="e.g., SHIP123456789" />
+          </div>
+          <div class="form-group">
+            <label>Courier *</label>
+            <select [(ngModel)]="courierName">
+              <option value="">Select courier...</option>
+              <option value="Delhivery">Delhivery</option>
+              <option value="FedEx">FedEx</option>
+              <option value="DHL">DHL</option>
+              <option value="Shiprocket">Shiprocket</option>
+              <option value="India Post">India Post</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Estimated Delivery Date *</label>
+            <input type="date" [(ngModel)]="estimatedDelivery" />
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Step 3: Notification -->
+        <div class="form-section">
+          <label class="checkbox-option">
+            <input type="checkbox" [(ngModel)]="notifyCustomer" />
+            <span>Send tracking notification to customer</span>
+            <small>(Customer gets SMS + Email with tracking link)</small>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="shipmentTarget.set(null)">Cancel</button>
+          <button class="btn-primary" [disabled]="!trackingNumber || !courierName" (click)="processShipment()">Process & Notify</button>
         </div>
       </div>
     </div>

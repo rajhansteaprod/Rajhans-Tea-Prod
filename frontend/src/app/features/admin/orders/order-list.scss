@@ -420,3 +420,219 @@
   &:hover { opacity: 0.9; }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
+
+// === Shipment Button ===
+.btn-ship {
+  padding: $space-xs $space-md;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border: 1.5px solid #666666;
+  background: transparent;
+  color: #666666;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: $font-weight-semibold;
+  font-family: $font-family;
+  min-width: 90px;
+  transition: all $transition-fast;
+
+  .icon {
+    font-size: 14px;
+    display: block;
+  }
+
+  .text {
+    line-height: 1.1;
+    white-space: normal;
+  }
+
+  &:hover {
+    background: rgba(102, 102, 102, 0.05);
+    border-color: $color-primary;
+    color: $color-primary;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// === Shipment Modal ===
+.shipment-modal {
+  width: 700px;
+
+  .modal-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $space-md;
+
+    div {
+      flex: 1;
+
+      h2 {
+        margin-bottom: $space-xxs;
+      }
+
+      .order-ref {
+        font-size: $font-size-xs;
+        color: $color-text-tertiary;
+        margin: 0;
+      }
+    }
+
+    button {
+      align-self: flex-start;
+    }
+  }
+}
+
+.summary-section {
+  padding: $space-md;
+  background: $color-bg-secondary;
+  border-radius: 0;
+  margin-bottom: $space-lg;
+
+  p {
+    margin: 0 0 $space-xs;
+    font-size: $font-size-sm;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: $color-text-primary;
+      font-weight: $font-weight-semibold;
+    }
+  }
+}
+
+.divider {
+  height: 1px;
+  background: $color-border-light;
+  margin: $space-lg 0;
+}
+
+.form-section {
+  margin-bottom: $space-lg;
+
+  h3 {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    text-transform: none;
+    letter-spacing: normal;
+    margin: 0 0 $space-md;
+    text-transform: uppercase;
+    letter-spacing: $letter-spacing-wide;
+    color: $color-text-tertiary;
+    font-size: $font-size-xs;
+  }
+}
+
+.form-group {
+  margin-bottom: $space-md;
+
+  label {
+    display: block;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    text-transform: uppercase;
+    letter-spacing: $letter-spacing-wide;
+    margin-bottom: $space-xs;
+  }
+
+  input,
+  select {
+    width: 100%;
+    padding: $space-sm $space-md;
+    border: 1.5px solid $color-border;
+    border-radius: 0;
+    font-size: $font-size-sm;
+    font-family: $font-family;
+    background: $color-bg-tertiary;
+    color: $color-text-primary;
+    outline: none;
+    box-sizing: border-box;
+    transition: all $transition-fast;
+
+    &:focus {
+      border-color: $color-primary;
+      box-shadow: $shadow-glow;
+    }
+  }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%238A7D81' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+  }
+}
+
+.shipping-options {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+}
+
+.radio-option,
+.checkbox-option {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-sm;
+  cursor: pointer;
+  font-size: $font-size-sm;
+
+  input[type="radio"],
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    cursor: pointer;
+  }
+
+  span {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xxs;
+  }
+
+  small {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+  }
+}
+
+.btn-primary {
+  background: $color-primary;
+  color: $color-text-inverse;
+  border-color: $color-primary;
+  font-weight: $font-weight-semibold;
+
+  &:hover:not(:disabled) {
+    background: $color-primary-hover;
+    border-color: $color-primary-hover;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-secondary {
+  border-color: $color-border;
+  color: $color-text-primary;
+
+  &:hover {
+    background: $color-bg-secondary;
+    border-color: $color-text-primary;
+  }
+}

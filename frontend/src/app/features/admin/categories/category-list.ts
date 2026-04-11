@@ -1,7 +1,8 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CatalogService, Category, CreateCategoryPayload } from '../../../core/services/catalog.service';
+import { PlatformService } from '../../../core/services/platform.service';
 
 interface CategoryForm {
   name: string;
@@ -24,6 +25,9 @@ const emptyForm = (): CategoryForm => ({
   styleUrls: ['./category-list.scss'],
 })
 export class CategoryListComponent implements OnInit {
+  private readonly catalog = inject(CatalogService);
+  private readonly platform = inject(PlatformService);
+
   categories     = signal<Category[]>([]);
   loading        = signal(false);
   saving         = signal(false);
@@ -33,8 +37,8 @@ export class CategoryListComponent implements OnInit {
   editingId   = signal<string | null>(null);
   editForm    = signal<CategoryForm>(emptyForm());
   createForm  = signal<CategoryForm>(emptyForm());
-
-  constructor(private catalog: CatalogService) {}
+  deleteConfirmId = signal<string | null>(null);
+  deleteConfirmAll = signal(false);
 
   ngOnInit() { this.load(); }
 
@@ -133,7 +137,12 @@ export class CategoryListComponent implements OnInit {
     this.saving.set(true);
     this.catalog.updateCategory(cat._id, { isActive: !cat.isActive }).subscribe({
       next: () => { this.saving.set(false); this.load(); },
-      error: (err) => { this.saving.set(false); alert(err?.error?.message ?? 'Failed to update status'); },
+      error: (err) => {
+        this.saving.set(false);
+        const msg = err?.error?.message ?? 'Failed to update status';
+        if (this.platform.isBrowser) alert(msg);
+        else this.formError.set(msg);
+      },
     });
   }
 
@@ -153,28 +162,54 @@ export class CategoryListComponent implements OnInit {
       },
       error: () => {
         this.uploadingImage.set(false);
-        alert('Failed to upload image');
+        const msg = 'Failed to upload image';
+        if (this.platform.isBrowser) alert(msg);
+        else this.formError.set(msg);
       },
     });
   }
 
-  deleteCategory(id: string) {
-    if (!confirm('Delete this category? This cannot be undone.')) return;
+  openDeleteConfirm(id: string) {
+    this.deleteConfirmId.set(id);
+  }
+
+  confirmDelete() {
+    const id = this.deleteConfirmId();
+    if (!id) return;
+    this.deleteConfirmId.set(null);
     this.catalog.deleteCategory(id).subscribe({
       next: () => this.categories.update((list) => list.filter((c) => c._id !== id)),
-      error: (err) => alert(err?.error?.message ?? 'Failed to delete category'),
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Failed to delete category';
+        if (this.platform.isBrowser) alert(msg);
+        else this.formError.set(msg);
+      },
     });
   }
 
-  deleteAll() {
-    if (!confirm('Delete ALL categories? This cannot be undone.')) return;
+  cancelDelete() {
+    this.deleteConfirmId.set(null);
+  }
+
+  openDeleteAllConfirm() {
+    this.deleteConfirmAll.set(true);
+  }
+
+  confirmDeleteAll() {
+    this.deleteConfirmAll.set(false);
     this.saving.set(true);
     this.catalog.deleteAllCategories().subscribe({
       next: () => { this.saving.set(false); this.categories.set([]); },
       error: (err) => {
         this.saving.set(false);
-        alert(err?.error?.message ?? 'Failed to delete categories');
+        const msg = err?.error?.message ?? 'Failed to delete categories';
+        if (this.platform.isBrowser) alert(msg);
+        else this.formError.set(msg);
       },
     });
+  }
+
+  cancelDeleteAll() {
+    this.deleteConfirmAll.set(false);
   }
 }
