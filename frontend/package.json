@@ -10,7 +10,7 @@
     "build:ssr": "npm run build && npm run build:server",
     "build:server": "tsc -p tsconfig.server.json",
     "serve:ssr": "node dist/frontend/server/server.js",
-    "dev:ssr": "nodemon"
+    "dev:ssr": "nodemon --poll 1000"
   },
   "prettier": {
     "printWidth": 100,

@@ -1,7 +1,7 @@
 @use 'app/core/design-tokens/tokens' as *;
 @use 'styles/theme';
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap');
+// Fonts imported in index.html to avoid SSR build issues with external stylesheets
 
 *,
 *::before,

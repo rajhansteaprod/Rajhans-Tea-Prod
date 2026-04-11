@@ -3,6 +3,9 @@
   "ext": "ts,html,scss",
   "ignore": ["src/**/*.spec.ts", "dist/**/*"],
   "delay": 1000,
+  "legacyWatch": false,
+  "usePolling": true,
+  "interval": 1000,
   "exec": "npm run build:ssr && npm run serve:ssr",
   "env": {
     "NODE_ENV": "development"

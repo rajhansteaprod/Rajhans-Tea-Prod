@@ -59,7 +59,13 @@
       "Bash(docker-compose build:*)",
       "Bash(docker buildx:*)",
       "Bash(curl -s http://localhost:4000/api/v1/catalog/categories -H \"Content-Type: application/json\")",
-      "Bash(curl -s -I http://localhost/assets/)"
+      "Bash(curl -s -I http://localhost/assets/)",
+      "Bash(docker-compose down:*)",
+      "Bash(docker-compose ps:*)",
+      "Bash(docker-compose restart:*)",
+      "Bash(awk '{print $6, $7, $8}')",
+      "Bash(docker system:*)",
+      "Bash(curl -s http://localhost:3100/api/v1/health)"
     ]
   }
 }
