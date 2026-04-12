@@ -5,14 +5,13 @@ import { Meta, Title } from '@angular/platform-browser';
 import { HttpClient } from '@angular/common/http';
 import { CartStore } from '../../../core/services/cart.store';
 import { ReviewStore, RatingSummary } from '../../../core/services/review.store';
-import { ProductRailComponent } from '../../../shared/components/product-rail/product-rail';
 import { ProductReviewsComponent } from './reviews/product-reviews';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, ProductRailComponent, ProductReviewsComponent],
+  imports: [CommonModule, RouterLink, ProductReviewsComponent],
   templateUrl: './product-detail.html',
   styleUrls: ['./product-detail.scss'],
 })

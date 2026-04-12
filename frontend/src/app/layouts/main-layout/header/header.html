@@ -124,17 +124,7 @@
     @if (shopOpen()) {
       <div class="mega-menu" (mouseenter)="cancelNavTimer()" (mouseleave)="closeShop()">
         <div class="mega-menu-inner">
-          <!-- COLUMN 1: PRODUCTS -->
-          <div class="mega-column">
-            <h3 class="mega-column__heading">Products</h3>
-            <ul class="mega-column__list">
-              @for (p of featuredProducts().slice(0, 6); track p._id) {
-                <li><a class="mega-column__item" [routerLink]="'/product/' + p.slug" (click)="closeShop()">{{ p.name }}</a></li>
-              }
-            </ul>
-          </div>
-
-          <!-- COLUMN 2: CATEGORIES -->
+          <!-- COLUMN 1: CATEGORIES -->
           <div class="mega-column">
             <h3 class="mega-column__heading">Categories</h3>
             <ul class="mega-column__list">
@@ -191,7 +181,7 @@
               <div class="mobile-drawer__products-scroll">
                 @for (p of featuredProducts(); track p._id) {
                   <div class="mobile-drawer__product-card" (click)="navigateTo('/product/' + p.slug); closeAll()">
-                    @if (p.images?.[0]) {
+                    @if (p.images[0]) {
                       <img [src]="p.images[0]" [alt]="p.name" class="mobile-drawer__product-img" />
                     }
                     <span class="mobile-drawer__product-name">{{ p.name }}</span>

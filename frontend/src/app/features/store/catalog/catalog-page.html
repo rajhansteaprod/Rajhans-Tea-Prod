@@ -28,7 +28,7 @@
         @for (p of store.results(); track p._id) {
           <a [routerLink]="'/product/' + p.slug" class="catalog-card">
             <div class="catalog-card__image">
-              @if (p.images?.[0]) {
+              @if (p.images[0]) {
                 <img [src]="p.images[0]" [alt]="p.name" loading="lazy" />
               } @else {
                 <div class="catalog-card__placeholder"></div>

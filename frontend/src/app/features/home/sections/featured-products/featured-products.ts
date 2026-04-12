@@ -1,88 +1,77 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CatalogService, Product } from '../../../../core/services/catalog.service';
-import { ProductCardComponent } from '../../../../shared/components/product-card/product-card';
+import { CartStore } from '../../../../core/services/cart.store';
 
 @Component({
   selector: 'app-featured-products',
   standalone: true,
-  imports: [CommonModule, ProductCardComponent],
+  imports: [CommonModule],
   templateUrl: './featured-products.html',
   styleUrls: ['./featured-products.scss'],
 })
 export class FeaturedProductsComponent implements OnInit {
   private catalog = inject(CatalogService);
+  readonly cart = inject(CartStore);
 
   readonly products = signal<Product[]>([]);
   readonly loading = signal(true);
-  readonly currentIndex = signal(0);
-
-  readonly showArrows = computed(() => this.products().length > 3);
-  readonly canPrev = computed(() => this.currentIndex() > 0);
-  readonly canNext = computed(() => this.currentIndex() + 3 < this.products().length);
-
-  private startX = 0;
-  private isDragging = false;
+  readonly imageIndices = signal<{ [key: string]: number }>({});
 
   ngOnInit(): void {
     this.catalog.getProductsPublic({ isFeatured: true, limit: 12 }).subscribe({
       next: (res) => {
         this.products.set(res.data);
+        const indices: { [key: string]: number } = {};
+        res.data.forEach(p => indices[p._id] = 0);
+        this.imageIndices.set(indices);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
     });
   }
 
-  prev(): void {
-    if (this.canPrev()) this.currentIndex.update(i => i - 1);
+  getProductImage(product: Product): string {
+    const idx = this.imageIndices()[product._id] || 0;
+    return product.images[idx] || product.images[0];
   }
 
-  next(): void {
-    if (this.canNext()) this.currentIndex.update(i => i + 1);
+  nextImage(product: Product, e: Event): void {
+    e.stopPropagation();
+    const idx = this.imageIndices()[product._id] || 0;
+    const nextIdx = (idx + 1) % product.images.length;
+    this.imageIndices.update(indices => ({
+      ...indices,
+      [product._id]: nextIdx
+    }));
   }
 
-  readonly visibleProducts = computed(() =>
-    this.products().slice(this.currentIndex(), this.currentIndex() + 3)
-  );
-
-  onMouseDown(e: MouseEvent): void {
-    this.isDragging = true;
-    this.startX = e.clientX;
+  prevImage(product: Product, e: Event): void {
+    e.stopPropagation();
+    const idx = this.imageIndices()[product._id] || 0;
+    const prevIdx = idx === 0 ? product.images.length - 1 : idx - 1;
+    this.imageIndices.update(indices => ({
+      ...indices,
+      [product._id]: prevIdx
+    }));
   }
 
-  onMouseMove(e: MouseEvent): void {
-    if (!this.isDragging) return;
-
-    const diff = this.startX - e.clientX;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) this.next();
-      else this.prev();
-      this.isDragging = false;
-    }
+  selectImage(product: Product, index: number): void {
+    this.imageIndices.update(indices => ({
+      ...indices,
+      [product._id]: index
+    }));
   }
 
-  onMouseUp(): void {
-    this.isDragging = false;
+  getRating(): number {
+    return 4;
   }
 
-  onTouchStart(e: TouchEvent): void {
-    this.isDragging = true;
-    this.startX = e.touches[0].clientX;
+  getReviewCount(): number {
+    return 0;
   }
 
-  onTouchMove(e: TouchEvent): void {
-    if (!this.isDragging) return;
-
-    const diff = this.startX - e.touches[0].clientX;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) this.next();
-      else this.prev();
-      this.isDragging = false;
-    }
-  }
-
-  onTouchEnd(): void {
-    this.isDragging = false;
+  addToCart(product: Product): void {
+    this.cart.addItem(product._id, 1);
   }
 }

@@ -107,7 +107,7 @@
             <div class="card" [style.--i]="i">
               <!-- Image -->
               <a [routerLink]="'/product/' + p.slug" class="card__img-wrap">
-                @if (p.images?.[0]) {
+                @if (p.images[0]) {
                   <img [src]="p.images[0]" [alt]="p.name" loading="lazy" class="card__img" />
                 } @else {
                   <div class="card__img-placeholder">
@@ -130,7 +130,7 @@
 
               <!-- Info -->
               <div class="card__body">
-                <span class="card__category">{{ p.category?.name || 'Tea' }}</span>
+                <span class="card__category">{{ p.category.name || 'Tea' }}</span>
                 <a [routerLink]="'/product/' + p.slug" class="card__name">{{ p.name }}</a>
                 <div class="card__bottom">
                   <span class="card__price">&#8377;{{ p.basePrice }}</span>

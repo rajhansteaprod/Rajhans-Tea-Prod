@@ -3,8 +3,8 @@ import {
   ElementRef, ViewChild, ViewChildren, QueryList,
   signal, ChangeDetectorRef, ChangeDetectionStrategy, inject,
 } from '@angular/core';
-import { CommonModule, DecimalPipe } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { CatalogService, Product } from '../../../../core/services/catalog.service';
 import { PlatformService } from '../../../../core/services/platform.service';
 import gsap from 'gsap';
@@ -19,7 +19,7 @@ if (typeof window !== 'undefined') {
 @Component({
   selector: 'app-product-preview',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, RouterLink],
+  imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-preview.html',
   styleUrls: ['./product-preview.scss'],

@@ -1,6 +1,6 @@
-import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse, HttpEvent } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { BehaviorSubject, catchError, filter, Subject, switchMap, take, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, filter, Observable, Subject, switchMap, take, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -93,7 +93,7 @@ function handle401Error(
   authService: AuthService,
   req: any,
   next: any
-): any {
+): Observable<HttpEvent<any>> {
   // ─────────────────────────────────────────────────────────────────────────
   // PREVENT CONCURRENT REFRESH ATTEMPTS
   // ─────────────────────────────────────────────────────────────────────────
@@ -107,7 +107,7 @@ function handle401Error(
     refreshTokenSubject.next(null);
 
     return authService.refreshToken().pipe(
-      switchMap((res: any) => {
+      switchMap((res: any): Observable<HttpEvent<any>> => {
         // Refresh succeeded: update the subject so queued requests can retry
         isRefreshing = false;
         const newToken = res.data.tokens.accessToken;
@@ -119,7 +119,7 @@ function handle401Error(
         });
         return next(newReq);
       }),
-      catchError((refreshError: HttpErrorResponse) => {
+      catchError((refreshError: any): Observable<never> => {
         // Refresh failed: user must login again
         isRefreshing = false;
         authService.logout();
@@ -129,16 +129,16 @@ function handle401Error(
   } else {
     // Refresh already in progress: wait for the new token
     return refreshTokenSubject.pipe(
-      filter((token) => token != null),
+      filter((token): token is string => token != null),
       take(1),
-      switchMap((newToken: string) => {
+      switchMap((newToken: string): Observable<HttpEvent<any>> => {
         // Retry original request with refreshed token
         const newReq = req.clone({
           setHeaders: { Authorization: `Bearer ${newToken}` },
         });
         return next(newReq);
       }),
-      catchError(() => {
+      catchError((): Observable<never> => {
         // If we get here, refresh failed after waiting
         authService.logout();
         return throwError(() => new Error('Token refresh failed'));

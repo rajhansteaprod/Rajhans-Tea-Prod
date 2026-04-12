@@ -6,9 +6,19 @@ import { logger } from '../utils/logger';
 import { config } from '../config';
 
 export const errorHandler = (err: Error, req: Request, res: Response, _next: NextFunction) => {
+  console.error('🚨 ERROR HANDLER CAUGHT:', {
+    path: req.path,
+    method: req.method,
+    message: err.message,
+    name: err.name,
+  });
   logger.error({ err, requestId: req.requestId }, err.message);
 
   if (err instanceof ApiError) {
+    console.error('🚨 ApiError:', {
+      statusCode: err.statusCode,
+      message: err.message,
+    });
     return res.status(err.statusCode).json({
       success: false,
       statusCode: err.statusCode,

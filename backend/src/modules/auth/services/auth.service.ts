@@ -34,13 +34,35 @@ export class AuthService {
    * @param deviceInfo - Device/browser info extracted from the HTTP request.
    */
   async verifyFirebaseToken(idToken: string, deviceInfo: IDeviceInfo) {
+    console.log('🔐 [Backend] verifyFirebaseToken called');
+    console.log('🔑 [Backend] Received token length:', idToken.length);
+    console.log('🔑 [Backend] Token preview:', idToken.substring(0, 50) + '...');
+
     const firebaseAuth = getFirebaseAuth();
+
+    if (!firebaseAuth) {
+      console.error('❌ [Backend] Firebase Auth not initialized!');
+      throw new UnauthorizedError('Firebase not initialized');
+    }
 
     let decodedToken;
     try {
+      console.log('🔐 [Backend] Calling firebaseAuth.verifyIdToken()...');
       decodedToken = await firebaseAuth.verifyIdToken(idToken);
-    } catch {
-      throw new UnauthorizedError('Invalid or expired Firebase token');
+      console.log('✅ [Backend] Token verified successfully');
+      console.log('👤 [Backend] User ID:', decodedToken.uid);
+      console.log('📱 [Backend] Phone:', decodedToken.phone_number);
+    } catch (error: any) {
+      // Log the actual Firebase error for debugging
+      console.error('❌ [Backend] Firebase token verification FAILED');
+      console.error('❌ [Backend] Error details:', {
+        code: error?.code,
+        message: error?.message,
+        name: error?.name,
+        errorInfo: error?.errorInfo,
+        fullError: error?.toString(),
+      });
+      throw new UnauthorizedError(`Firebase verification failed: ${error?.message || 'Unknown error'}`);
     }
 
     const phone = decodedToken.phone_number;

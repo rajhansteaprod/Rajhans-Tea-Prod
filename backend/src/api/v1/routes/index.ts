@@ -13,6 +13,7 @@ import auditRoutes from '../../../modules/audit/audit.routes';
 import settingsRoutes from '../../../modules/settings/settings.routes';
 import cmsRoutes from '../../../modules/cms/cms.routes';
 import searchRoutes from '../../../modules/search/search.routes';
+import newsletterRoutes from '../../../modules/newsletter/newsletter.routes';
 
 const router = Router();
 
@@ -30,5 +31,6 @@ router.use(auditRoutes);
 router.use(settingsRoutes);
 router.use(cmsRoutes);
 router.use(searchRoutes);
+router.use(newsletterRoutes);
 
 export default router;

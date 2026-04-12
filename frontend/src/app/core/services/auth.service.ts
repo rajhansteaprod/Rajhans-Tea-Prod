@@ -58,10 +58,16 @@ export class AuthService {
 
   /** Send Firebase ID token to backend, get our JWT tokens back */
   verifyFirebaseToken(idToken: string): Observable<VerifyTokenResponse> {
+    console.log('🔐 [Frontend] Sending idToken to backend:', {
+      endpoint: `${this.apiUrl}/verify-token`,
+      tokenLength: idToken.length,
+      tokenPreview: idToken.substring(0, 50) + '...',
+    });
     return this.http
       .post<VerifyTokenResponse>(`${this.apiUrl}/verify-token`, { idToken }, { withCredentials: true })
       .pipe(
         tap((res) => {
+          console.log('✅ [Frontend] Backend verified successfully');
           this._user.set(res.data.user);
           this._accessToken.set(res.data.tokens.accessToken);
           this.platform.localStorage.setItem('user', JSON.stringify(res.data.user));

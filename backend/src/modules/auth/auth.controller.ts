@@ -7,13 +7,17 @@ import { BadRequestError } from '../../utils/api-error';
 const authService = new AuthService();
 
 export const verifyFirebaseToken = async (req: Request, res: Response) => {
+  console.log('📡 /verify-token endpoint called');
   const { idToken } = req.body;
+  console.log('🔑 Received idToken:', idToken.substring(0, 50) + '...');
 
   // Capture device info (browser, OS, IP) to store with the refresh token.
   // This is what powers the "active sessions" feature.
   const deviceInfo = extractDeviceInfo(req);
+  console.log('📱 Device info:', deviceInfo);
 
   const result = await authService.verifyFirebaseToken(idToken, deviceInfo);
+  console.log('✅ Firebase verification successful');
 
   // Set refresh token as httpOnly cookie — JS cannot read it (XSS protection)
   res.cookie('refreshToken', result.tokens.refreshToken, {

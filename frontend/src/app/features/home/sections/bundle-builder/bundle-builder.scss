@@ -1,0 +1,199 @@
+@use '../../../../core/design-tokens/tokens' as *;
+@use '../../../../core/design-tokens/mixins' as *;
+
+:host { display: block; }
+
+.bundle {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-xxxl;
+  align-items: center;
+  min-height: 550px;
+  padding: $space-xxxl;
+  background-size: cover;
+  background-position: center right;
+  background-repeat: no-repeat;
+  overflow: visible;
+
+  // Dark overlay for better text readability
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 255, 255, 0));
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  @include respond-to(lg) {
+    gap: $space-xxl;
+    min-height: 500px;
+    padding: $space-xxl;
+
+    &::before {
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.75) 45%, rgba(255, 255, 255, 0));
+    }
+  }
+
+  @include respond-to(md) {
+    grid-template-columns: 1fr;
+    gap: $space-xxl;
+    min-height: auto;
+    padding: $space-xxl $space-lg;
+
+    &::before {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(255, 255, 255, 0.95) 100%);
+    }
+  }
+}
+
+.bundle__left {
+  position: relative;
+  z-index: 2;
+}
+
+.bundle__content {
+  display: flex;
+  flex-direction: column;
+  gap: $space-lg;
+  max-width: 500px;
+}
+
+.bundle__heading {
+  font-family: $font-family-heading;
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: $font-weight-bold;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: $color-mono-dark;
+  margin: 0;
+  text-transform: none;
+}
+
+.bundle__description {
+  font-family: $font-family-body;
+  font-size: $font-size-md;
+  line-height: $line-height-relaxed;
+  color: rgba($color-mono-dark, 0.65);
+  margin: 0;
+}
+
+.bundle__divider {
+  width: 60px;
+  height: 3px;
+  background: $color-primary;
+  border-radius: $radius-full;
+  margin: $space-sm 0;
+}
+
+.bundle__offer {
+  font-family: $font-family-heading;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-mono-dark;
+  margin: 0;
+  letter-spacing: 0.02em;
+
+  strong {
+    font-weight: $font-weight-bold;
+    color: $color-primary;
+  }
+}
+
+.bundle__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-md $space-xl;
+  margin-top: $space-md;
+  background: $color-mono-dark;
+  color: $color-mono-light;
+  font-family: $font-family-heading;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: $radius-md;
+  transition: all $transition-fast;
+  border: 2px solid $color-mono-dark;
+
+  &:hover {
+    background: $color-mono-light;
+    color: $color-mono-dark;
+    border-color: $color-mono-dark;
+  }
+}
+
+// ── RIGHT: Tea Feature Pointers ──
+.bundle__right {
+  position: relative;
+  z-index: 2;
+}
+
+.bundle__features {
+  display: flex;
+  flex-direction: column;
+  gap: $space-lg;
+}
+
+.bundle__feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-md;
+  padding: $space-md;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 0;
+  border: 1px solid rgba($color-primary, 0.15);
+  backdrop-filter: blur(10px);
+  transition: all $transition-normal;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba($color-primary, 0.3);
+    transform: translateX(8px);
+  }
+
+  @include respond-to(md) {
+    gap: $space-md;
+    padding: $space-md;
+  }
+}
+
+.bundle__feature-icon {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba($color-primary, 0.15), rgba($color-secondary, 0.1));
+  border-radius: 0;
+  color: $color-primary;
+
+  svg {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.bundle__feature-title {
+  font-family: $font-family-heading;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  color: $color-mono-dark;
+  margin: 0 0 $space-xs 0;
+  letter-spacing: 0.01em;
+}
+
+.bundle__feature-desc {
+  font-family: $font-family-body;
+  font-size: $font-size-xs;
+  color: rgba($color-mono-dark, 0.6);
+  margin: 0;
+  line-height: 1.4;
+}

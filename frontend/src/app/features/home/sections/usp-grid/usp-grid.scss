@@ -1,0 +1,173 @@
+@use '../../../../core/design-tokens/tokens' as *;
+@use '../../../../core/design-tokens/mixins' as *;
+
+:host { display: block; }
+
+.usp-grid {
+  padding: $space-xxxl $space-xxxl;
+  background: $color-mono-light;
+
+  @include respond-to(lg) {
+    padding: $space-xxl $space-lg;
+  }
+
+  @include respond-to(md) {
+    padding: $space-xl $space-md;
+  }
+}
+
+// ═══ HEADER SECTION ═══
+.usp-grid__header {
+  text-align: center;
+  margin-bottom: $space-xxxl;
+  animation: fadeInDown 0.6s ease-out;
+
+  @include respond-to(md) {
+    margin-bottom: $space-xxl;
+  }
+}
+
+.usp-grid__eyebrow {
+  display: inline-block;
+  font-family: $font-family-heading;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-luxury;
+  text-transform: uppercase;
+  color: $color-primary;
+  margin-bottom: $space-md;
+}
+
+.usp-grid__title {
+  font-family: $font-family-heading;
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: $font-weight-bold;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: $color-mono-dark;
+  margin: 0 0 $space-lg 0;
+}
+
+.usp-grid__subtitle {
+  font-family: $font-family-body;
+  font-size: $font-size-md;
+  line-height: $line-height-relaxed;
+  color: $color-mono-brown;
+  margin: 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+// ═══ IMAGE SECTION ═══
+.usp-grid__image-container {
+  margin-bottom: $space-xxxl;
+  border-radius: 0;
+  overflow: hidden;
+  animation: fadeInUp 0.7s ease-out 0.2s both;
+
+  @include respond-to(md) {
+    margin-bottom: $space-xxl;
+  }
+}
+
+.usp-grid__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.4s ease;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+}
+
+// ═══ GRID ITEMS SECTION ═══
+.usp-grid__items {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $space-xxl;
+
+  @include respond-to(lg) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-xl;
+  }
+
+  @include respond-to(md) {
+    grid-template-columns: 1fr;
+    gap: $space-lg;
+  }
+}
+
+// ═══ INDIVIDUAL USP ITEM ═══
+.usp-grid__item {
+  padding: $space-xl;
+  background: $color-mono-light;
+  border: 1px solid rgba($color-mono-dark, 0.08);
+  border-radius: 0;
+  text-align: center;
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.6s ease-out both;
+
+  @for $i from 1 through 4 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{0.1s * $i};
+    }
+  }
+
+  &:hover {
+    border-color: rgba($color-primary, 0.2);
+    box-shadow: 0 8px 24px rgba($color-primary, 0.1);
+    transform: translateY(-4px);
+  }
+}
+
+.usp-grid__icon {
+  font-size: 48px;
+  margin-bottom: $space-md;
+  display: block;
+  line-height: 1;
+}
+
+.usp-grid__item-title {
+  font-family: $font-family-heading;
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: $color-mono-dark;
+  margin: 0 0 $space-sm 0;
+  letter-spacing: 0.01em;
+}
+
+.usp-grid__item-description {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  line-height: $line-height-relaxed;
+  color: rgba($color-mono-dark, 0.65);
+  margin: 0;
+}
+
+// ═══ ANIMATIONS ═══
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

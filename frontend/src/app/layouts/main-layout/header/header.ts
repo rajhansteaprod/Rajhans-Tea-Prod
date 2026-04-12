@@ -13,12 +13,10 @@ import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartStore } from '../../../core/services/cart.store';
 import { CatalogService, Product, Category } from '../../../core/services/catalog.service';
-import { ProductCardComponent } from '../../../shared/components/product-card/product-card';
-
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ProductCardComponent],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './header.html',
   styleUrls: ['./header.scss'],
 })

@@ -1,0 +1,155 @@
+═══════════════════════════════════════════════════════════════════════════════
+  RAJHANS TEA - LOCAL FRONTEND + DOCKER BACKEND (OPTION A)
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ SETUP COMPLETE - READY TO START DEVELOPMENT
+
+═══════════════════════════════════════════════════════════════════════════════
+🚀 HOW TO START
+═══════════════════════════════════════════════════════════════════════════════
+
+Step 1: Start Docker Backend Services
+─────────────────────────────────────
+cd c:\Users\91626\Desktop\DEVELOPMENT APPLICATIONS\Rajhans Tea
+docker-compose up -d
+
+Expected: All containers running (mongo, redis, backend, mongo-express)
+
+
+Step 2: Start Frontend Locally with Hot-Reload
+───────────────────────────────────────────────
+cd frontend
+npm run dev:ssr
+
+Expected: "Node Express server listening on http://localhost:4000"
+
+
+Step 3: Open in Browser
+───────────────────────
+http://localhost:4000
+
+Done! ✅
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🔄 WHAT CHANGED
+═══════════════════════════════════════════════════════════════════════════════
+
+docker-compose.yml
+  ✅ Removed frontend service (runs locally now)
+  ✅ Removed nginx service
+  ✅ Updated backend CORS to allow localhost:4000
+  ✅ Kept: MongoDB, Redis, Backend, Mongo-Express
+
+frontend/src/environments/environment.ts
+  ✅ Changed apiUrl to: http://localhost:3100/api/v1
+  ✅ Points to Docker backend on port 3100
+
+Committed to branch: v2
+  ✅ All changes saved
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🔥 WHAT IS HOT-RELOAD?
+═══════════════════════════════════════════════════════════════════════════════
+
+Edit any file in frontend/src/:
+  - .ts files (TypeScript)
+  - .html files (Templates)
+  - .scss files (Styles)
+
+Save → Nodemon detects change → Auto-rebuild → Refresh browser → See changes
+
+NO manual rebuild needed!
+NO docker rebuild needed!
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📍 WHERE DOES EVERYTHING RUN?
+═══════════════════════════════════════════════════════════════════════════════
+
+YOUR COMPUTER:
+  Frontend:  http://localhost:4000
+
+DOCKER CONTAINERS:
+  Backend:   http://localhost:3100/api/v1
+  MongoDB:   localhost:27019
+  Redis:     localhost:6381
+  Mongo-UI:  http://localhost:8082
+
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ VALIDATION: TEST IT NOW
+═══════════════════════════════════════════════════════════════════════════════
+
+After starting both:
+
+1. Browser shows: http://localhost:4000 (home page loads)
+2. Edit header.scss color
+3. Save → Terminal shows rebuild
+4. Refresh browser → New color applied
+5. No CORS errors in browser console
+6. Products load from API
+7. Login/Auth works
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📖 FULL GUIDE
+═══════════════════════════════════════════════════════════════════════════════
+
+Read: SETUP_OPTION_A.md (in this directory)
+
+Contains:
+  - Detailed architecture diagram
+  - Step-by-step hot-reload testing
+  - Troubleshooting guide
+  - API verification commands
+  - All keyboard shortcuts
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🆘 QUICK TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ "Cannot connect to localhost:3100"
+   → Check: docker-compose ps
+   → Restart: docker-compose restart backend
+
+❌ "Hot-reload not working"
+   → Check terminal 2 for rebuild messages
+   → Try: Ctrl+C then npm run dev:ssr
+
+❌ "Port 4000 already in use"
+   → Restart frontend: Ctrl+C then npm run dev:ssr
+
+❌ "CORS errors in console"
+   → Restart backend: docker-compose restart backend
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 SUCCESS CRITERIA
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ Frontend runs locally (http://localhost:4000)
+✅ Backend runs in Docker (http://localhost:3100)
+✅ API calls work (same as Docker version)
+✅ Authentication works
+✅ Hot-reload works (<1 second rebuilds)
+✅ No CORS errors
+✅ Same data as Docker version
+
+
+═══════════════════════════════════════════════════════════════════════════════
+👉 YOU'RE READY TO CODE!
+═══════════════════════════════════════════════════════════════════════════════
+
+All setup is complete. Start development:
+
+Terminal 1: docker-compose up -d
+Terminal 2: cd frontend && npm run dev:ssr
+Browser:   http://localhost:4000
+
+Edit code → Auto-rebuild → Refresh → See changes
+
+Questions? See: SETUP_OPTION_A.md
+═══════════════════════════════════════════════════════════════════════════════

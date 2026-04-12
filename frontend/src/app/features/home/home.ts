@@ -1,14 +1,24 @@
 import { Component } from '@angular/core';
 import { HeroComponent } from './sections/hero/hero';
-import { BundleBuilderComponent } from './sections/bundle-builder/bundle-builder';
 import { BigStatementComponent } from './sections/big-statement/big-statement';
+import { UspGridComponent } from './sections/usp-grid/usp-grid';
 import { FeaturedProductsComponent } from './sections/featured-products/featured-products';
-import { Usp2Component } from './sections/usp2/usp2';
+import { BundleBuilderComponent } from './sections/bundle-builder/bundle-builder';
+import { StorytellingComponent } from './sections/storytelling/storytelling';
+import { TestimonialComponent } from './sections/testimonial/testimonial';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [HeroComponent, BundleBuilderComponent, BigStatementComponent, FeaturedProductsComponent, Usp2Component],
+  imports: [
+    HeroComponent,
+    BigStatementComponent,
+    UspGridComponent,
+    FeaturedProductsComponent,
+    BundleBuilderComponent,
+    StorytellingComponent,
+    TestimonialComponent,
+  ],
   templateUrl: './home.html',
   styleUrls: ['./home.scss'],
 })

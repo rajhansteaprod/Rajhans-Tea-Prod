@@ -124,7 +124,7 @@
                 }
               </a>
               <div class="search__card-body">
-                <p class="search__card-category">{{ product.category?.name || '' }}</p>
+                <p class="search__card-category">{{ product.category.name || '' }}</p>
                 <p class="search__card-name">{{ product.name }}</p>
                 <p class="search__card-price">₹{{ product.basePrice | number:'1.0-0' }}</p>
               </div>

@@ -5,7 +5,6 @@ import {
   ElementRef,
   inject,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -23,7 +22,7 @@ interface JourneyStep {
 @Component({
   selector: 'app-farm-to-cup',
   standalone: true,
-  imports: [RouterLink],
+  imports: [],
   templateUrl: './farm-to-cup.html',
   styleUrls: ['./farm-to-cup.scss'],
 })

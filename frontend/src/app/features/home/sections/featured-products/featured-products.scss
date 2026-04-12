@@ -4,122 +4,275 @@
 :host { display: block; }
 
 // ═══════════════════════════════════════
-// FEATURED PRODUCTS CAROUSEL — Full-Height Section
+// FEATURED PRODUCTS — Product Grid with Image Carousels
 // ═══════════════════════════════════════
 
-.fp {
-  width: 100%;
-  height: calc(100vh - #{$header-height});
-  padding: $space-xl $space-xxxl;
-  display: flex;
-  flex-direction: column;
-  margin-bottom: $space-section;
-  background: $color-bg-primary;
-
-  @include respond-to(lg) {
-    padding: $space-xl $space-lg;
-  }
+.featured {
+  padding: $space-section clamp($space-lg, 5vw, $space-xxxl);
+  background: $color-mono-light;
 
   @include respond-to(md) {
-    height: calc(100vh - #{$header-height-md} - #{$bottom-nav-height});
-    padding: $space-lg $space-lg;
-    margin-bottom: $space-section-sm;
+    padding: $space-section-sm $space-lg;
   }
 }
 
-// ── Header: Title + Arrows ──
-.fp__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: $space-lg;
-  flex-shrink: 0;
-  z-index: 5;
+// ── Header ──
+.featured__header {
+  text-align: center;
+  margin-bottom: $space-section;
+
+  @include respond-to(md) {
+    margin-bottom: $space-xxl;
+  }
 }
 
-.fp__title {
+.featured__title {
   font-family: $font-family-heading;
-  font-size: $font-size-xl;
-  font-weight: $font-weight-semibold;
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: $font-weight-bold;
   color: $color-mono-dark;
+  margin: 0 0 $space-sm 0;
+  letter-spacing: -0.02em;
+}
+
+.featured__subtitle {
+  font-family: $font-family-body;
+  font-size: $font-size-md;
+  color: rgba($color-mono-dark, 0.65);
   margin: 0;
 }
 
-.fp__arrows {
-  display: flex;
-  gap: $space-sm;
+// ── Product Grid ──
+.featured__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $space-xl;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @include respond-to(lg) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: $space-lg;
+  }
+
+  @include respond-to(md) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-md;
+  }
+
+  @include respond-to(sm) {
+    grid-template-columns: 1fr;
+  }
 }
 
-.fp__arrow {
+// ═══════════════════════════════════════
+// PRODUCT CARD WITH IMAGE CAROUSEL
+// ═══════════════════════════════════════
+
+.product-card {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1.5px solid $color-border;
-  border-radius: $radius-md;
+  flex-direction: column;
   background: $color-mono-light;
-  color: $color-mono-dark;
-  cursor: pointer;
-  transition: all $transition-fast;
-  flex-shrink: 0;
+  border-radius: 0;
+  overflow: hidden;
+  transition: all $transition-normal;
+  box-shadow: 0 2px 8px rgba($color-mono-dark, 0.04);
 
-  &:hover:not(:disabled) {
-    border-color: $color-mono-dark;
-    background: $color-mono-dark;
-    color: $color-mono-light;
-  }
-
-  &:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
+  &:hover {
+    box-shadow: 0 12px 32px rgba($color-mono-dark, 0.12);
+    transform: translateY(-8px);
   }
 }
 
-// ── Carousel Viewport: Strict Clipping Container ──
-.fp__viewport {
+// ── Image Container with Carousel ──
+.product-card__image-container {
+  position: relative;
   width: 100%;
-  flex: 1;
+  aspect-ratio: 1;
+  background: #f5f5f5;
   overflow: hidden;
+  flex-shrink: 0;
+}
+
+.product-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: opacity 0.3s ease;
+}
+
+// ── Navigation Arrows ──
+.product-card__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
   border-radius: 0;
   display: flex;
   align-items: center;
-  position: relative;
-  min-height: 0;
-}
+  justify-content: center;
+  cursor: pointer;
+  color: $color-mono-dark;
+  transition: all $transition-fast;
+  z-index: 3;
 
-// ── Track: Flex Container for Cards ──
-.fp__track {
-  display: flex;
-  gap: $space-lg;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  align-items: center;
-  will-change: transform;
-
-  @include respond-to(md) {
-    gap: $space-md;
-  }
-}
-
-// ── Item: Individual Card Container ──
-.fp__item {
-  flex: 0 0 calc((100% - 2 * #{$space-lg}) / 3);
-  transition: transform $transition-normal;
-  min-width: 0;
-  min-height: 0;
-  cursor: grab;
-
-  &:active {
-    cursor: grabbing;
+  svg {
+    width: 18px;
+    height: 18px;
   }
 
   &:hover {
-    transform: translateY(-4px);
+    background: $color-mono-light;
+    box-shadow: 0 4px 12px rgba($color-mono-dark, 0.15);
   }
 
-  @include respond-to(md) {
-    flex: 0 0 100%;
+  &--left {
+    left: $space-md;
+  }
+
+  &--right {
+    right: $space-md;
+  }
+}
+
+// ── Image Dot Indicators ──
+.product-card__dots {
+  position: absolute;
+  bottom: $space-md;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: $space-sm;
+  z-index: 3;
+}
+
+.product-card__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.5);
+  border: none;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.8);
+  }
+
+  &--active {
+    background: $color-primary;
+    width: 24px;
+    border-radius: 0;
+  }
+}
+
+// ── Product Content ──
+.product-card__content {
+  padding: $space-lg;
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+  flex: 1;
+}
+
+.product-card__name {
+  font-family: $font-family-heading;
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: $color-mono-dark;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.product-card__description {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  color: rgba($color-mono-dark, 0.65);
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// ── Rating ──
+.product-card__rating {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+}
+
+.product-card__stars {
+  display: flex;
+  gap: 2px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    color: #d1d5db;
+    transition: color $transition-fast;
+
+    &.filled {
+      color: #fbbf24;
+    }
+  }
+}
+
+.product-card__reviews {
+  font-family: $font-family-body;
+  font-size: $font-size-xs;
+  color: rgba($color-mono-dark, 0.5);
+}
+
+// ── Price ──
+.product-card__price {
+  display: flex;
+  align-items: baseline;
+  gap: $space-sm;
+}
+
+.product-card__price-current {
+  font-family: $font-family-heading;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-mono-dark;
+}
+
+.product-card__price-original {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  color: rgba($color-mono-dark, 0.5);
+  text-decoration: line-through;
+}
+
+// ── CTA Button ──
+.product-card__cta {
+  padding: $space-md;
+  background: $color-mono-dark;
+  color: $color-mono-light;
+  border: 2px solid $color-mono-dark;
+  border-radius: 0;
+  font-family: $font-family-heading;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all $transition-fast;
+  margin-top: auto;
+
+  &:hover {
+    background: $color-mono-light;
+    color: $color-mono-dark;
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 }

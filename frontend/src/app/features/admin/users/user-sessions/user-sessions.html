@@ -108,7 +108,7 @@
               </span>
               <span class="meta-sep">·</span>
               <span class="meta-item ua-detail" [title]="session.userAgent">
-                {{ session.userAgent | slice:0:60 }}{{ (session.userAgent?.length ?? 0) > 60 ? '…' : '' }}
+                {{ session.userAgent | slice:0:60 }}{{ (session.userAgent.length ?? 0) > 60 ? '…' : '' }}
               </span>
             </div>
           </div>

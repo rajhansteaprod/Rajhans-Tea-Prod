@@ -1,0 +1,29 @@
+<section class="usp-grid">
+  <!-- Header Section -->
+  <div class="usp-grid__header">
+    <span class="usp-grid__eyebrow">Why Choose Us</span>
+    <h2 class="usp-grid__title">Pure Leaves, Pure Taste</h2>
+    <p class="usp-grid__subtitle">
+      We believe in quality over quantity. Every leaf is carefully selected and crafted to deliver an exceptional tea experience.
+    </p>
+  </div>
+
+  <!-- Hero Image -->
+  <div class="usp-grid__image-container">
+    <img
+      [src]="imageSrc"
+      [alt]="imageAlt"
+      class="usp-grid__image"
+      loading="lazy"
+    />
+  </div>
+
+  <!-- USP Grid Items -->
+  <div class="usp-grid__items">
+    <div *ngFor="let item of uspItems" class="usp-grid__item">
+      <div class="usp-grid__icon">{{ item.icon }}</div>
+      <h3 class="usp-grid__item-title">{{ item.title }}</h3>
+      <p class="usp-grid__item-description">{{ item.description }}</p>
+    </div>
+  </div>
+</section>

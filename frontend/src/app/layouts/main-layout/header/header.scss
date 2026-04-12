@@ -47,7 +47,7 @@
 
 .logo {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: $space-xs;
@@ -114,7 +114,7 @@
 
 .logo-name {
   font-family: $font-family-body;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: $font-weight-medium;
   color: $color-mono-dark;
   letter-spacing: 0.12em;
@@ -425,17 +425,18 @@
   max-width: 100%;
   padding: $space-xl;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, auto);
   gap: $space-xxl;
+  justify-content: center;
 
   @include respond-to(lg) {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, auto);
     gap: $space-lg;
     padding: $space-lg;
   }
 
   @include respond-to(md) {
-    grid-template-columns: 1fr;
+    grid-template-columns: auto;
     gap: $space-lg;
     padding: $space-lg;
   }

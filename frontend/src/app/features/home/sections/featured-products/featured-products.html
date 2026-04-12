@@ -1,40 +1,97 @@
-@if (!loading()) {
-  <section class="fp">
-    <!-- Header row -->
-    <div class="fp__header">
-      <h2 class="fp__title">Featured</h2>
-      @if (showArrows()) {
-        <div class="fp__arrows">
-          <button class="fp__arrow" (click)="prev()" [disabled]="!canPrev()" aria-label="Previous">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-          <button class="fp__arrow" (click)="next()" [disabled]="!canNext()" aria-label="Next">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
-      }
+@if (!loading() && products().length > 0) {
+  <section class="featured">
+    <!-- Header -->
+    <div class="featured__header">
+      <h2 class="featured__title">Featured Products</h2>
+      <p class="featured__subtitle">Discover our handpicked selection of premium teas</p>
     </div>
 
-    <!-- Product cards -->
-    <div class="fp__viewport"
-      (mousedown)="onMouseDown($event)"
-      (mousemove)="onMouseMove($event)"
-      (mouseup)="onMouseUp()"
-      (mouseleave)="onMouseUp()"
-      (touchstart)="onTouchStart($event)"
-      (touchmove)="onTouchMove($event)"
-      (touchend)="onTouchEnd()">
-      <div class="fp__track" [style.transform]="'translateX(' + (-currentIndex() * 100 / 3) + '%)'">
-        @for (p of products(); track p._id) {
-          <div class="fp__item">
-            <app-product-card [product]="p" variant="default" />
+    <!-- Product Grid -->
+    <div class="featured__grid">
+      @for (product of products(); track product._id) {
+        <div class="product-card">
+          <!-- Image Carousel -->
+          <div class="product-card__image-container">
+            <img
+              [src]="getProductImage(product)"
+              [alt]="product.name"
+              class="product-card__image"
+            />
+
+            <!-- Navigation Arrows -->
+            @if (product.images.length > 1) {
+              <button
+                class="product-card__arrow product-card__arrow--left"
+                (click)="prevImage(product, $event)"
+                aria-label="Previous image"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+              <button
+                class="product-card__arrow product-card__arrow--right"
+                (click)="nextImage(product, $event)"
+                aria-label="Next image"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+            }
+
+            <!-- Image Dots -->
+            @if (product.images.length > 1) {
+              <div class="product-card__dots">
+                @for (img of product.images; track $index) {
+                  <button
+                    class="product-card__dot"
+                    [class.product-card__dot--active]="(imageIndices()[product._id] || 0) === $index"
+                    (click)="selectImage(product, $index)"
+                    [attr.aria-label]="'Image ' + ($index + 1)"
+                  ></button>
+                }
+              </div>
+            }
           </div>
-        }
-      </div>
+
+          <!-- Product Info -->
+          <div class="product-card__content">
+            <h3 class="product-card__name">{{ product.name }}</h3>
+            <p class="product-card__description">{{ product.description || product.category.name }}</p>
+
+            <!-- Rating -->
+            <div class="product-card__rating">
+              <div class="product-card__stars">
+                @for (i of [1, 2, 3, 4, 5]; track i) {
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    [class.filled]="i <= getRating()"
+                    fill="currentColor"
+                  >
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                }
+              </div>
+              @if (getReviewCount() > 0) {
+                <span class="product-card__reviews">({{ getReviewCount() }})</span>
+              }
+            </div>
+
+            <!-- Price -->
+            <div class="product-card__price">
+              <span class="product-card__price-current">₹{{ product.basePrice | number:'1.0-0' }}</span>
+            </div>
+
+            <!-- Add to Cart Button -->
+            <button class="product-card__cta" (click)="addToCart(product)">
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      }
     </div>
   </section>
 }

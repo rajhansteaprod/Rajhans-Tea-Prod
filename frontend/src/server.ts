@@ -9,7 +9,7 @@ declare const require: any;
 declare const module: any;
 
 const PORT = process.env['PORT'] || 4000;
-const API_URL = process.env['API_URL'] || 'http://localhost:3000';
+const API_URL = process.env['API_URL'] || 'http://localhost:3100';
 const DIST_FOLDER = join(process.cwd(), 'dist/frontend/browser');
 
 // The Express app is exported so that it can be used by serverless functions.
@@ -34,6 +34,13 @@ export function app(): express.Express {
     target: API_URL,
     changeOrigin: true,
     ws: true,
+    logLevel: 'debug',
+  }));
+
+  // Proxy uploaded files to backend
+  server.use('/uploads', createProxyMiddleware({
+    target: API_URL,
+    changeOrigin: true,
     logLevel: 'debug',
   }));
 
