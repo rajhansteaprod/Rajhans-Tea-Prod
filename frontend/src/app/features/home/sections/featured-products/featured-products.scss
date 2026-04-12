@@ -9,6 +9,7 @@
 
 .featured {
   background: $color-mono-light;
+  padding: 0 $space-xxxl;
 
   @include respond-to(md) {
     padding: $space-section-sm $space-lg;
