@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { NewsletterService } from './newsletter.service';
-import logger from '../../core/logger';
+import { logger } from '../../utils/logger';
 
 const newsletterService = new NewsletterService();
 

@@ -8,7 +8,6 @@
 // ═══════════════════════════════════════
 
 .featured {
-  padding: $space-section clamp($space-lg, 5vw, $space-xxxl);
   background: $color-mono-light;
 
   @include respond-to(md) {
@@ -47,7 +46,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: $space-xl;
-  max-width: 1400px;
+  max-width: 1700px;
   margin: 0 auto;
 
   @include respond-to(lg) {
@@ -77,6 +76,7 @@
   overflow: hidden;
   transition: all $transition-normal;
   box-shadow: 0 2px 8px rgba($color-mono-dark, 0.04);
+  cursor: pointer;
 
   &:hover {
     box-shadow: 0 12px 32px rgba($color-mono-dark, 0.12);
@@ -84,7 +84,7 @@
   }
 }
 
-// ── Image Container with Carousel ──
+// ── Image Container with Hover Reflection ──
 .product-card__image-container {
   position: relative;
   width: 100%;
@@ -95,79 +95,30 @@
 }
 
 .product-card__image {
+  position: absolute;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
   display: block;
-  transition: opacity 0.3s ease;
-}
+  transition: opacity $transition-normal ease;
 
-// ── Navigation Arrows ──
-.product-card__arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  border-radius: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: $color-mono-dark;
-  transition: all $transition-fast;
-  z-index: 3;
+  &--main {
+    opacity: 1;
+    z-index: 2;
 
-  svg {
-    width: 18px;
-    height: 18px;
+    &.product-card__image--hidden {
+      opacity: 0;
+    }
   }
 
-  &:hover {
-    background: $color-mono-light;
-    box-shadow: 0 4px 12px rgba($color-mono-dark, 0.15);
-  }
+  &--reflected {
+    opacity: 0;
+    z-index: 1;
 
-  &--left {
-    left: $space-md;
-  }
-
-  &--right {
-    right: $space-md;
-  }
-}
-
-// ── Image Dot Indicators ──
-.product-card__dots {
-  position: absolute;
-  bottom: $space-md;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: $space-sm;
-  z-index: 3;
-}
-
-.product-card__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 0;
-  background: rgba(255, 255, 255, 0.5);
-  border: none;
-  cursor: pointer;
-  transition: all $transition-fast;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.8);
-  }
-
-  &--active {
-    background: $color-primary;
-    width: 24px;
-    border-radius: 0;
+    &.product-card__image--visible {
+      opacity: 1;
+    }
   }
 }
 
@@ -251,6 +202,48 @@
   text-decoration: line-through;
 }
 
+// ── Wishlist Heart Icon ──
+.product-card__wishlist {
+  position: absolute;
+  top: $space-md;
+  right: $space-md;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba($color-mono-dark, 0.3);
+  transition: all $transition-fast;
+  z-index: 4;
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  &:hover {
+    background: $color-mono-light;
+    box-shadow: 0 4px 12px rgba($color-mono-dark, 0.15);
+    transform: scale(1.05);
+  }
+
+  &--active {
+    color: #ff4757;
+    background: rgba(255, 71, 87, 0.1);
+  }
+}
+
+// ── Action Buttons Container ──
+.product-card__actions {
+  display: flex;
+  gap: $space-sm;
+  margin-top: auto;
+}
+
 // ── CTA Button ──
 .product-card__cta {
   padding: $space-md;
@@ -265,7 +258,9 @@
   letter-spacing: 0.04em;
   cursor: pointer;
   transition: all $transition-fast;
-  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     background: $color-mono-light;
@@ -274,5 +269,31 @@
 
   &:active {
     transform: scale(0.98);
+  }
+
+  &--primary {
+    flex: 1;
+    min-height: 44px;
+  }
+
+  &--icon {
+    width: 44px;
+    min-height: 44px;
+    flex-shrink: 0;
+    padding: $space-sm;
+    background: rgba($color-mono-dark, 0.1);
+    color: $color-mono-dark;
+    border: 2px solid rgba($color-mono-dark, 0.2);
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background: $color-mono-dark;
+      color: $color-mono-light;
+      border-color: $color-mono-dark;
+    }
   }
 }

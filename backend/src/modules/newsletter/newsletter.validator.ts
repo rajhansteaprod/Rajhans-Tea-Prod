@@ -1,11 +1,12 @@
-import Joi from 'joi';
+import { z } from 'zod';
 
-export const subscribeSchema = Joi.object({
-  email: Joi.string()
-    .email({ minDomainSegments: 2 })
-    .required()
-    .messages({
-      'string.email': 'Please provide a valid email address',
-      'any.required': 'Email is required',
-    }),
+export const subscribeSchema = z.object({
+  body: z.object({
+    email: z
+      .string({ required_error: 'Email is required' })
+      .email('Please provide a valid email address')
+      .min(1, 'Email is required'),
+  }),
+  query: z.object({}).passthrough().optional(),
+  params: z.object({}).passthrough().optional(),
 });

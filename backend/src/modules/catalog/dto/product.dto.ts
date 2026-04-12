@@ -15,6 +15,7 @@ export interface ProductAdminView {
   collections: { _id: string; name: string; slug: string }[];
   basePrice: number;
   images: string[];
+  reflectedImage?: string;
   attributes: Record<string, string>;
   tags: string[];
   status: ProductStatus;
@@ -38,6 +39,7 @@ export interface ProductPublicView {
   collections: { _id: string; name: string; slug: string }[];
   basePrice: number;
   images: string[];
+  reflectedImage?: string;
   attributes: Record<string, string>;
   tags: string[];
   isFeatured: boolean;
@@ -93,6 +95,7 @@ export class ProductDTO {
       collections: extractCollections(product),
       basePrice: product.basePrice,
       images: product.images ?? [],
+      reflectedImage: product.reflectedImage,
       attributes: attributesToRecord(product.attributes),
       tags: product.tags ?? [],
       status: product.status,
@@ -116,6 +119,7 @@ export class ProductDTO {
       collections: extractCollections(product),
       basePrice: product.basePrice,
       images: product.images ?? [],
+      reflectedImage: product.reflectedImage,
       attributes: attributesToRecord(product.attributes),
       tags: product.tags ?? [],
       isFeatured: product.isFeatured,

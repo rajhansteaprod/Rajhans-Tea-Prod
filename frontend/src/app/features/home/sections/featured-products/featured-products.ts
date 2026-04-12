@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { CatalogService, Product } from '../../../../core/services/catalog.service';
 import { CartStore } from '../../../../core/services/cart.store';
 
@@ -12,55 +13,35 @@ import { CartStore } from '../../../../core/services/cart.store';
 })
 export class FeaturedProductsComponent implements OnInit {
   private catalog = inject(CatalogService);
+  private router = inject(Router);
   readonly cart = inject(CartStore);
 
   readonly products = signal<Product[]>([]);
   readonly loading = signal(true);
-  readonly imageIndices = signal<{ [key: string]: number }>({});
+  readonly hoveringProducts = signal<Set<string>>(new Set());
 
   ngOnInit(): void {
     this.catalog.getProductsPublic({ isFeatured: true, limit: 12 }).subscribe({
       next: (res) => {
         this.products.set(res.data);
-        const indices: { [key: string]: number } = {};
-        res.data.forEach(p => indices[p._id] = 0);
-        this.imageIndices.set(indices);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
     });
   }
 
-  getProductImage(product: Product): string {
-    const idx = this.imageIndices()[product._id] || 0;
-    return product.images[idx] || product.images[0];
+  setHovering(productId: string, isHovering: boolean): void {
+    const hoveringSet = new Set(this.hoveringProducts());
+    if (isHovering) {
+      hoveringSet.add(productId);
+    } else {
+      hoveringSet.delete(productId);
+    }
+    this.hoveringProducts.set(hoveringSet);
   }
 
-  nextImage(product: Product, e: Event): void {
-    e.stopPropagation();
-    const idx = this.imageIndices()[product._id] || 0;
-    const nextIdx = (idx + 1) % product.images.length;
-    this.imageIndices.update(indices => ({
-      ...indices,
-      [product._id]: nextIdx
-    }));
-  }
-
-  prevImage(product: Product, e: Event): void {
-    e.stopPropagation();
-    const idx = this.imageIndices()[product._id] || 0;
-    const prevIdx = idx === 0 ? product.images.length - 1 : idx - 1;
-    this.imageIndices.update(indices => ({
-      ...indices,
-      [product._id]: prevIdx
-    }));
-  }
-
-  selectImage(product: Product, index: number): void {
-    this.imageIndices.update(indices => ({
-      ...indices,
-      [product._id]: index
-    }));
+  isHovering(productId: string): boolean {
+    return this.hoveringProducts().has(productId);
   }
 
   getRating(): number {
@@ -71,7 +52,30 @@ export class FeaturedProductsComponent implements OnInit {
     return 0;
   }
 
-  addToCart(product: Product): void {
+  addToCart(product: Product, event: Event): void {
+    event.stopPropagation();
     this.cart.addItem(product._id, 1);
+  }
+
+  buyNow(product: Product, event: Event): void {
+    event.stopPropagation();
+    // Add product to temporary cart for checkout
+    this.cart.addItem(product._id, 1);
+    // Redirect to checkout
+    this.router.navigate(['/checkout']);
+  }
+
+  goToProduct(product: Product): void {
+    // Navigate to product detail page using product slug
+    this.router.navigate(['/products', product.slug]);
+  }
+
+  toggleWishlist(product: Product, event: Event): void {
+    event.stopPropagation();
+    this.cart.toggleWishlist(product._id);
+  }
+
+  isWishlisted(productId: string): boolean {
+    return this.cart.isWishlisted(productId)();
   }
 }

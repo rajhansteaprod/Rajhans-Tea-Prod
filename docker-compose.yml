@@ -9,6 +9,7 @@ services:
     volumes:
       - mongo-data:/data/db
       - ./infrastructure/docker/mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./infrastructure/docker/mongo/mongo-seed.js:/docker-entrypoint-initdb.d/mongo-seed.js:ro
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -25,6 +26,7 @@ services:
     volumes:
       - mongo-test-data:/data/db
       - ./infrastructure/docker/mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./infrastructure/docker/mongo/mongo-seed.js:/docker-entrypoint-initdb.d/mongo-seed.js:ro
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s

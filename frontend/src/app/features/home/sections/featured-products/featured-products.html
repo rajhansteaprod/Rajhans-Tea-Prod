@@ -7,52 +7,44 @@
     </div>
 
     <!-- Product Grid -->
-    <div class="featured__grid">
+    <div class="featured__grid">1
       @for (product of products(); track product._id) {
-        <div class="product-card">
-          <!-- Image Carousel -->
-          <div class="product-card__image-container">
+        <div class="product-card" (click)="goToProduct(product)">
+          <!-- Single Image with Hover Reflection -->
+          <div
+            class="product-card__image-container"
+            (mouseenter)="setHovering(product._id, true)"
+            (mouseleave)="setHovering(product._id, false)"
+          >
+            <!-- Main Image -->
             <img
-              [src]="getProductImage(product)"
+              [src]="product.images[0]"
               [alt]="product.name"
-              class="product-card__image"
+              class="product-card__image product-card__image--main"
+              [class.product-card__image--hidden]="isHovering(product._id)"
             />
 
-            <!-- Navigation Arrows -->
-            @if (product.images.length > 1) {
-              <button
-                class="product-card__arrow product-card__arrow--left"
-                (click)="prevImage(product, $event)"
-                aria-label="Previous image"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </button>
-              <button
-                class="product-card__arrow product-card__arrow--right"
-                (click)="nextImage(product, $event)"
-                aria-label="Next image"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </button>
+            <!-- Reflected Image (shown on hover) -->
+            @if (product.reflectedImage) {
+              <img
+                [src]="product.reflectedImage"
+                [alt]="product.name + ' reflection'"
+                class="product-card__image product-card__image--reflected"
+                [class.product-card__image--visible]="isHovering(product._id)"
+              />
             }
 
-            <!-- Image Dots -->
-            @if (product.images.length > 1) {
-              <div class="product-card__dots">
-                @for (img of product.images; track $index) {
-                  <button
-                    class="product-card__dot"
-                    [class.product-card__dot--active]="(imageIndices()[product._id] || 0) === $index"
-                    (click)="selectImage(product, $index)"
-                    [attr.aria-label]="'Image ' + ($index + 1)"
-                  ></button>
-                }
-              </div>
-            }
+            <!-- Wishlist Heart Icon (Top Right) -->
+            <button
+              class="product-card__wishlist"
+              [class.product-card__wishlist--active]="isWishlisted(product._id)"
+              (click)="toggleWishlist(product, $event)"
+              aria-label="Add to wishlist"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
           </div>
 
           <!-- Product Info -->
@@ -85,10 +77,24 @@
               <span class="product-card__price-current">₹{{ product.basePrice | number:'1.0-0' }}</span>
             </div>
 
-            <!-- Add to Cart Button -->
-            <button class="product-card__cta" (click)="addToCart(product)">
-              Add to Cart
-            </button>
+            <!-- Action Buttons -->
+            <div class="product-card__actions">
+              <button class="product-card__cta product-card__cta--primary" (click)="buyNow(product, $event)">
+                Buy Now
+              </button>
+              <button
+                class="product-card__cta product-card__cta--icon"
+                (click)="addToCart(product, $event)"
+                aria-label="Add to cart"
+                title="Add to Cart"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="9" cy="21" r="1"/>
+                  <circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       }

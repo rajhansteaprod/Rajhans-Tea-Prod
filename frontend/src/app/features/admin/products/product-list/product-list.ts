@@ -17,6 +17,7 @@ interface ProductForm {
   collectionIds: string[];
   basePrice: number | '';
   images: string[];
+  reflectedImage: string;
   attributes: AttributeEntry[];
   tags: string;
   status: 'draft' | 'active' | 'archived';
@@ -28,7 +29,7 @@ interface ProductForm {
 const emptyForm = (): ProductForm => ({
   name: '', description: '', shortDescription: '',
   categoryId: '', collectionIds: [], basePrice: '',
-  images: [], attributes: [], tags: '',
+  images: [], reflectedImage: '', attributes: [], tags: '',
   status: 'draft', isFeatured: false,
   stock: 0, trackInventory: false,
 });
@@ -121,6 +122,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
       collectionIds:    product.collections.map((c) => c._id),
       basePrice:        product.basePrice,
       images:           [...product.images],
+      reflectedImage:   product.reflectedImage ?? '',
       attributes:       Object.entries(product.attributes).map(([key, value]) => ({ key, value })),
       tags:             product.tags.join(', '),
       status:           product.status ?? 'draft',
@@ -192,6 +194,27 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.form.update((f) => ({ ...f, images: f.images.filter((_, idx) => idx !== i) }));
   }
 
+  onReflectedImageSelect(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.uploadingImage.set(true);
+    this.catalog.uploadImage(file).subscribe({
+      next: (res) => {
+        this.form.update((f) => ({ ...f, reflectedImage: res.data.url }));
+        this.uploadingImage.set(false);
+        (event.target as HTMLInputElement).value = '';
+      },
+      error: (err) => {
+        alert(err?.error?.message ?? 'Image upload failed');
+        this.uploadingImage.set(false);
+      },
+    });
+  }
+
+  removeReflectedImage() {
+    this.form.update((f) => ({ ...f, reflectedImage: '' }));
+  }
+
   saveForm() {
     const f = this.form();
     const id = this.editingId();
@@ -199,6 +222,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
     if (!f.name.trim()) { this.formError.set('Product name is required'); return; }
     if (!f.categoryId)  { this.formError.set('Category is required'); return; }
     if (f.basePrice === '' || f.basePrice < 0) { this.formError.set('Valid price is required'); return; }
+    if (!f.reflectedImage.trim()) { this.formError.set('Reflected image is required'); return; }
 
     const attrsRecord: Record<string, string> = {};
     for (const { key, value } of f.attributes) {
@@ -215,6 +239,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
       collectionIds:    f.collectionIds,
       basePrice:        Number(f.basePrice),
       images:           f.images,
+      reflectedImage:   f.reflectedImage,
       attributes:       attrsRecord,
       tags,
       status:           f.status,

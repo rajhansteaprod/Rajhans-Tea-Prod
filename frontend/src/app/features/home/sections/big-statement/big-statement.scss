@@ -8,31 +8,21 @@
 // ═══════════════════════════════════════
 
 .usp {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  height: calc(100vh - #{$header-height});
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: calc(90vh - #{$header-height});
+  background-image: url('/sde.png');
+  background-size: cover;
+  background-position: center;
   overflow: hidden;
 
   @include respond-to(md) {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto;
     height: auto;
-  }
-}
-
-// ── LEFT: Dark content panel ──
-.usp__left {
-  background: $color-bg-dark;
-  display: flex;
-  align-items: center;
-  padding: $space-xxxl;
-
-  @include respond-to(lg) {
-    padding: $space-xxl;
-  }
-
-  @include respond-to(md) {
-    padding: $space-xxl $space-lg;
+    min-height: 60vh;
+    background-attachment: scroll;
+    justify-content: center;
   }
 }
 
@@ -40,7 +30,19 @@
   display: flex;
   flex-direction: column;
   gap: $space-lg;
-  max-width: 520px;
+  max-width: 700px;
+  padding: $space-xxxl;
+  text-align: left;
+
+  @include respond-to(lg) {
+    padding: $space-xxl;
+  }
+
+  @include respond-to(md) {
+    padding: $space-xxl $space-lg;
+    text-align: center;
+    align-items: center;
+  }
 }
 
 .usp__eyebrow {
@@ -65,10 +67,14 @@
 
 .usp__body {
   font-family: $font-family-body;
-  font-size: $font-size-sm;
+  font-size: $font-size-lg;
   line-height: $line-height-relaxed;
   color: rgba(255, 255, 255, 0.65);
   margin: 0;
+
+  @include respond-to(md) {
+    font-size: $font-size-sm;
+  }
 
   em {
     font-style: italic;
@@ -82,16 +88,19 @@
   align-self: flex-start;
   padding: $space-md $space-xl;
   margin-top: $space-md;
-  background: $color-primary;
-  color: $color-mono-dark;
+  background: $color-mono-dark;
+  color: $color-mono-light;
   font-family: $font-family-heading;
   font-size: $font-size-sm;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-luxury;
   text-transform: uppercase;
   text-decoration: none;
-  border-radius: $radius-md;
   transition: all $transition-fast;
+
+  @include respond-to(md) {
+    align-self: center;
+  }
 
   &:hover {
     background: $color-mono-light;
@@ -99,33 +108,3 @@
   }
 }
 
-// ── RIGHT: Image panel ──
-.usp__right {
-  position: relative;
-  overflow: hidden;
-
-  @include respond-to(md) {
-    height: 60vw;
-    min-height: 300px;
-  }
-}
-
-.usp__image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-
-  &--placeholder {
-    background: linear-gradient(135deg, rgba(252, 71, 71, 0.1) 0%, rgba(252, 71, 71, 0.05) 100%);
-    border: 2px dashed $color-primary;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: $color-primary;
-    font-weight: $font-weight-semibold;
-    text-align: center;
-    padding: $space-xl;
-  }
-}

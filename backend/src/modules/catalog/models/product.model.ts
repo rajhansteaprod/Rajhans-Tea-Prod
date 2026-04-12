@@ -11,6 +11,7 @@ export interface IProductDoc extends Document {
   collections: Types.ObjectId[];
   basePrice: number;
   images: string[];
+  reflectedImage: string; // Image shown on hover in featured products
   attributes: Map<string, string>;
   tags: string[];
   status: ProductStatus;
@@ -31,6 +32,7 @@ const productSchema = new Schema<IProductDoc>(
     collections: [{ type: Schema.Types.ObjectId, ref: 'Collection' }],
     basePrice: { type: Number, required: true, min: 0 },
     images: [{ type: String }],
+    reflectedImage: { type: String, required: true },
     attributes: { type: Map, of: String, default: {} },
     tags: [{ type: String, trim: true, lowercase: true }],
     status: {

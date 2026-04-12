@@ -63,6 +63,7 @@ export interface Product {
   collections: { _id: string; name: string; slug: string }[];
   basePrice: number;
   images: string[];
+  reflectedImage?: string; // Image shown on hover in featured products
   attributes: Record<string, string>;
   tags: string[];
   // Admin-only (present in /admin/products, absent in /catalog/products)
@@ -123,6 +124,7 @@ export interface CreateProductPayload {
   collectionIds?: string[];
   basePrice: number;
   images?: string[];
+  reflectedImage: string; // Mandatory: Image shown on hover in featured products
   attributes?: Record<string, string>;
   tags?: string[];
   status?: 'draft' | 'active' | 'archived';

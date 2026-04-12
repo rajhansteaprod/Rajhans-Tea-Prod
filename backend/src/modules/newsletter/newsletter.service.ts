@@ -1,5 +1,5 @@
 import { Newsletter } from '../../models/newsletter.model';
-import logger from '../../core/logger';
+import { logger } from '../../utils/logger';
 
 export class NewsletterService {
   /**

@@ -98,6 +98,7 @@ export class ProductService {
     collectionIds?: string[];
     basePrice: number;
     images?: string[];
+    reflectedImage: string;
     attributes?: Record<string, string>;
     tags?: string[];
     status?: ProductStatus;
@@ -131,6 +132,7 @@ export class ProductService {
       collections: (data.collectionIds ?? []) as never,
       basePrice: data.basePrice,
       images: data.images ?? [],
+      reflectedImage: data.reflectedImage,
       attributes: attributesMap as never,
       tags: (data.tags ?? []).map((t) => t.toLowerCase().trim()),
       status: data.status ?? 'draft',
@@ -153,6 +155,7 @@ export class ProductService {
       collectionIds?: string[];
       basePrice?: number;
       images?: string[];
+      reflectedImage?: string;
       attributes?: Record<string, string>;
       tags?: string[];
       status?: ProductStatus;
@@ -193,6 +196,7 @@ export class ProductService {
     if (data.collectionIds !== undefined) update.collections = data.collectionIds;
     if (data.basePrice !== undefined) update.basePrice = data.basePrice;
     if (data.images !== undefined) update.images = data.images;
+    if (data.reflectedImage !== undefined) update.reflectedImage = data.reflectedImage;
     if (data.attributes !== undefined) {
       update.attributes = new Map(Object.entries(data.attributes));
     }
