@@ -1,0 +1,138 @@
+@use '../../../../core/design-tokens/tokens' as *;
+@use '../../../../core/design-tokens/mixins' as *;
+
+:host { display: block; }
+
+// ═══════════════════════════════════════
+// GIFTING SECTION
+// ═══════════════════════════════════════
+
+.gifting {
+  background:#f0f0f0a3;
+  padding: $space-lg 0;
+
+  @include respond-to(md) {
+    padding: $space-md 0;
+  }
+}
+
+// ── Header ──
+.gifting__header {
+  text-align: center;
+  margin-bottom: calc($space-xxxl + $space-md);
+  padding: 0 $space-xxxl;
+
+  @include respond-to(md) {
+    margin-bottom: $space-xxl;
+    padding: 0 $space-lg;
+  }
+}
+
+.gifting__title {
+  font-family: $font-family-heading;
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  margin: 0 0 $space-md 0;
+  letter-spacing: -0.02em;
+}
+
+.gifting__subtitle {
+  font-family: $font-family-body;
+  font-size: $font-size-md;
+  color: rgba($color-mono-dark, 0.65);
+  margin: 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+// ── Gifting Grid ──
+.gifting__grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: $space-xl;
+  max-width: 1700px;
+  margin: 0 auto;
+  padding: 0 $space-xxxl;
+
+  @include respond-to(lg) {
+    gap: $space-lg;
+  }
+
+  @include respond-to(md) {
+    gap: $space-md;
+    padding: 0 $space-lg;
+  }
+}
+
+// ── Gifting Card ──
+.gifting-card {
+  height: 300px;
+  flex: 0 0 calc(50% - $space-lg);
+  position: relative;
+  border-radius: $radius-md;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  transition: all $transition-normal;
+
+  @include respond-to(md) {
+    flex: 0 0 100%;
+  }
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba($color-mono-dark, 0.15);
+
+    .gifting-card__overlay {
+      opacity: 0.5;
+    }
+  }
+}
+
+.gifting-card__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.6) 100%);
+  transition: opacity $transition-normal ease;
+  opacity: 0.4;
+}
+
+.gifting-card__content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: $space-xl;
+  color: $color-mono-light;
+  z-index: 2;
+}
+
+.gifting-card__icon {
+  font-size: 32px;
+  margin-bottom: $space-md;
+  display: inline-block;
+}
+
+.gifting-card__title {
+  font-family: $font-family-heading;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-mono-light;
+  margin: 0 0 $space-md 0;
+  line-height: 1.2;
+}
+
+.gifting-card__description {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  line-height: $line-height-relaxed;
+}

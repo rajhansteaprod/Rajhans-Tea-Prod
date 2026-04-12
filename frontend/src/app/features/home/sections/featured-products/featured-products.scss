@@ -44,24 +44,19 @@
 
 // ── Product Grid ──
 .featured__grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: $space-xl;
   max-width: 1700px;
   margin: 0 auto;
 
   @include respond-to(lg) {
-    grid-template-columns: repeat(3, 1fr);
     gap: $space-lg;
   }
 
   @include respond-to(md) {
-    grid-template-columns: repeat(2, 1fr);
     gap: $space-md;
-  }
-
-  @include respond-to(sm) {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -72,6 +67,7 @@
 .product-card {
   display: flex;
   flex-direction: column;
+  flex: 0 0 calc(25% - #{$space-xl});
   background: $color-mono-light;
   border-radius: 0;
   overflow: hidden;
@@ -79,10 +75,22 @@
   box-shadow: 0 2px 8px rgba($color-mono-dark, 0.04);
   cursor: pointer;
 
-  &:hover {
-    box-shadow: 0 12px 32px rgba($color-mono-dark, 0.12);
-    transform: translateY(-8px);
+  @include respond-to(lg) {
+    flex: 0 0 calc(33.333% - #{$space-lg});
   }
+
+  @include respond-to(md) {
+    flex: 0 0 calc(50% - #{$space-md});
+  }
+
+  @include respond-to(sm) {
+    flex: 0 0 100%;
+  }
+
+  // &:hover {
+  //   box-shadow: 0 12px 32px rgba($color-mono-dark, 0.12);
+  //   transform: translateY(-8px);
+  // }
 }
 
 // ── Image Container with Hover Reflection ──
@@ -116,9 +124,12 @@
   &--reflected {
     opacity: 0;
     z-index: 1;
+    transform: scale(0.95);
+    transition: opacity $transition-normal ease, transform $transition-normal ease;
 
     &.product-card__image--visible {
       opacity: 1;
+      transform: scale(1);
     }
   }
 }

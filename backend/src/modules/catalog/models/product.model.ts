@@ -18,6 +18,7 @@ export interface IProductDoc extends Document {
   isFeatured: boolean;
   stock: number;
   trackInventory: boolean;
+  hasVariants: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,6 +44,7 @@ const productSchema = new Schema<IProductDoc>(
     isFeatured: { type: Boolean, default: false },
     stock: { type: Number, default: 0, min: 0 },
     trackInventory: { type: Boolean, default: false },
+    hasVariants: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

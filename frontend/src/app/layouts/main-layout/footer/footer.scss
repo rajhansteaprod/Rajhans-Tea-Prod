@@ -1,0 +1,152 @@
+@use '../../../core/design-tokens/tokens' as *;
+@use '../../../core/design-tokens/mixins' as *;
+
+:host { display: block; }
+
+// ═══════════════════════════════════════
+// FOOTER — Multi-Column Responsive Layout
+// ═══════════════════════════════════════
+.footer {
+  background: $color-mono-dark;
+  color: $color-text-inverse;
+}
+
+// ── Footer Content Grid ──
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-xxxl;
+  padding: calc($space-xxl + $space-sm) clamp($space-lg, 5vw, $space-xxxl);
+  max-width: $max-width-wide;
+  margin: 0 auto;
+
+  @include respond-to(lg) {
+    gap: $space-xxl;
+  }
+
+  @include respond-to(md) {
+    grid-template-columns: 1fr;
+    gap: $space-xxl;
+    padding: $space-xxl $space-lg;
+  }
+}
+
+// ── Footer Column ──
+.footer-column {
+  display: flex;
+  flex-direction: column;
+  gap: $space-lg;
+}
+
+.footer-column-title {
+  font-family: $font-family-heading;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  color: $color-text-inverse;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-luxury;
+}
+
+// ── Footer Links List ──
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+
+  li {
+    a {
+      font-family: $font-family-body;
+      font-size: $font-size-sm;
+      color: rgba(252, 255, 247, 0.65);
+      text-decoration: none;
+      transition: color 0.3s ease;
+
+      &:hover {
+        color: $color-text-inverse;
+      }
+    }
+  }
+}
+
+// ── Contact Text ──
+.footer-contact-text {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  color: rgba(252, 255, 247, 0.65);
+  margin: 0 0 $space-md 0;
+  line-height: $line-height-relaxed;
+
+  a {
+    color: rgba(252, 255, 247, 0.85);
+    text-decoration: none;
+    transition: color 0.3s ease;
+
+    &:hover {
+      color: $color-text-inverse;
+    }
+  }
+}
+
+// ── Social Links ──
+.footer-social {
+  display: flex;
+  align-items: center;
+  gap: $space-lg;
+  margin-top: $space-sm;
+}
+
+.footer-social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: rgba(252, 255, 247, 0.65);
+  text-decoration: none;
+  transition: color 0.3s ease;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  &:hover {
+    color: $color-text-inverse;
+  }
+}
+
+// ── Trust Section Divider ──
+.footer-trust-section {
+  padding: $space-lg clamp($space-lg, 5vw, $space-xxxl);
+  border-top: 1px solid rgba(252, 255, 247, 0.08);
+  border-bottom: 1px solid rgba(252, 255, 247, 0.08);
+  text-align: left;
+
+  @include respond-to(md) {
+    padding: $space-lg $space-lg;
+  }
+}
+
+.footer-trust-title {
+  font-family: $font-family-heading;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  color: $color-text-inverse;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-luxury;
+}
+
+// ── Copyright ──
+.footer-copyright {
+  text-align: center;
+  padding: $space-md clamp($space-lg, 5vw, $space-xxxl);
+  font-size: $font-size-xs;
+  color: $color-mono-light;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
+}

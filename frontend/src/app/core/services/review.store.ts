@@ -7,7 +7,7 @@ interface ApiResponse<T> { success: boolean; data: T; }
 interface PaginatedResponse<T> { success: boolean; data: T[]; meta: any; }
 
 export interface Review { _id: string; userId: any; productId: any; rating: number; title: string; body: string; images: string[]; isVerifiedPurchase: boolean; status: string; helpfulVotes: number; reportCount: number; adminReply: { body: string; repliedAt: string } | null; isPinned: boolean; createdAt: string; }
-export interface RatingSummary { averageRating: number; totalReviews: number; distribution: { 1: number; 2: number; 3: number; 4: number; 5: number }; }
+export interface RatingSummary { averageRating: number; totalReviews: number; distribution: { 1: number; 2: number; 3: number; 4: number; 5: number }; ratingOneLiner?: string; }
 export interface Question { _id: string; userId: any; productId: any; questionText: string; voteCount: number; answers: { _id: string; userId: any; body: string; isAdminAnswer: boolean; createdAt: string }[]; createdAt: string; }
 
 @Injectable({ providedIn: 'root' })

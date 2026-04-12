@@ -1,15 +1,19 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { CatalogService, Product, Category } from '../../../core/services/catalog.service';
 import { CartStore } from '../../../core/services/cart.store';
 
+// ─ NgModel for two-way binding ─
+class PriceFilter {
+  value: number = 4000;
+}
+
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './products-page.html',
   styleUrls: ['./products-page.scss'],
 })
@@ -26,13 +30,16 @@ export class ProductsPageComponent implements OnInit {
   readonly currentPage = signal(1);
   readonly totalPages = signal(1);
   readonly filterOpen = signal(false);
+  readonly hoveredProductId = signal<string | null>(null);
 
   // Filters
   readonly selectedCategory = signal<string | null>(null);
   readonly selectedTags = signal<string[]>([]);
   readonly sortBy = signal('createdAt:desc');
-  priceMin: number | null = null;
-  priceMax: number | null = null;
+  readonly maxPrice = signal(4000); // Max price (multiple of 200)
+
+  // Price range — using plain property for ngModel two-way binding
+  priceRangeModel = new PriceFilter(); // Holds value for ngModel binding
 
   // Computed
   readonly allTags = computed(() => {
@@ -44,15 +51,14 @@ export class ProductsPageComponent implements OnInit {
   readonly isFiltered = computed(() =>
     !!this.selectedCategory() ||
     this.selectedTags().length > 0 ||
-    this.priceMin !== null ||
-    this.priceMax !== null
+    this.priceRangeModel.value < this.maxPrice()
   );
 
   readonly activeFilterCount = computed(() => {
     let count = 0;
     if (this.selectedCategory()) count++;
     count += this.selectedTags().length;
-    if (this.priceMin !== null || this.priceMax !== null) count++;
+    if (this.priceRangeModel.value < this.maxPrice()) count++;
     return count;
   });
 
@@ -91,8 +97,7 @@ export class ProductsPageComponent implements OnInit {
     };
 
     if (this.selectedCategory()) params['categoryId'] = this.selectedCategory()!;
-    if (this.priceMin !== null) params['priceMin'] = this.priceMin;
-    if (this.priceMax !== null) params['priceMax'] = this.priceMax;
+    if (this.priceRangeModel.value < this.maxPrice()) params['priceMax'] = this.priceRangeModel.value;
 
     this.catalog.getProductsPublic(params).subscribe({
       next: (res) => {
@@ -119,6 +124,19 @@ export class ProductsPageComponent implements OnInit {
     this.loadProducts();
   }
 
+  onPriceRangeChange(): void {
+    this.currentPage.set(1);
+    this.loadProducts();
+  }
+
+  getPriceRangeValue(): number {
+    return this.priceRangeModel.value;
+  }
+
+  getMaxPriceValue(): number {
+    return this.maxPrice();
+  }
+
   toggleTag(tag: string): void {
     const current = this.selectedTags();
     if (current.includes(tag)) {
@@ -133,8 +151,7 @@ export class ProductsPageComponent implements OnInit {
   clearFilters(): void {
     this.selectedCategory.set(null);
     this.selectedTags.set([]);
-    this.priceMin = null;
-    this.priceMax = null;
+    this.priceRangeModel.value = this.maxPrice();
     this.currentPage.set(1);
     this.loadProducts();
     this.filterOpen.set(false);
@@ -167,5 +184,33 @@ export class ProductsPageComponent implements OnInit {
 
   isWishlisted(productId: string): boolean {
     return this.cartStore.wishlistIds().has(productId);
+  }
+
+  setHovering(productId: string, isHovering: boolean): void {
+    this.hoveredProductId.set(isHovering ? productId : null);
+  }
+
+  isHovering(productId: string): boolean {
+    return this.hoveredProductId() === productId;
+  }
+
+  getRating(): number {
+    return 5; // Default rating - can be updated based on product data
+  }
+
+  getReviewCount(): number {
+    return 0; // Default review count - can be updated based on product data
+  }
+
+  goToProduct(product: Product): void {
+    // Navigate to product detail page
+    window.location.href = `/product/${product.slug}`;
+  }
+
+  buyNow(product: Product, event: Event): void {
+    event.stopPropagation();
+    this.addToCart(event, product._id);
+    // Could also navigate to checkout, but for now just add to cart
+    window.location.href = `/product/${product.slug}`;
   }
 }

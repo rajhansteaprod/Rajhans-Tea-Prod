@@ -1,0 +1,21 @@
+<section class="gifting">
+  <!-- Header -->
+  <div class="gifting__header">
+    <h2 class="gifting__title">{{ heading }}</h2>
+    <p class="gifting__subtitle">{{ description }}</p>
+  </div>
+
+  <!-- Gifting Options Grid -->
+  <div class="gifting__grid">
+    @for (option of giftingOptions; track option.title) {
+      <div class="gifting-card" [style.backgroundImage]="'url(' + option.image + ')'">
+        <div class="gifting-card__overlay"></div>
+        <div class="gifting-card__content">
+          <div class="gifting-card__icon">{{ option.icon }}</div>
+          <h3 class="gifting-card__title">{{ option.title }}</h3>
+          <p class="gifting-card__description">{{ option.description }}</p>
+        </div>
+      </div>
+    }
+  </div>
+</section>

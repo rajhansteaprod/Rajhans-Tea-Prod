@@ -53,6 +53,13 @@ export interface Collection {
   updatedAt?: string;
 }
 
+export interface ProductVariant {
+  _id: string;
+  name: string;
+  price: number;
+  stock?: number;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -66,6 +73,7 @@ export interface Product {
   reflectedImage?: string; // Image shown on hover in featured products
   attributes: Record<string, string>;
   tags: string[];
+  variants?: ProductVariant[];
   // Admin-only (present in /admin/products, absent in /catalog/products)
   status?: 'draft' | 'active' | 'archived';
   isFeatured?: boolean;

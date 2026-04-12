@@ -1,4 +1,5 @@
 import { ProductRepository } from '../repositories/product.repository';
+import { ProductVariantRepository } from '../repositories/product-variant.repository';
 import { CategoryRepository } from '../repositories/category.repository';
 import { CollectionRepository } from '../repositories/collection.repository';
 import { ProductDTO } from '../dto';
@@ -23,11 +24,13 @@ interface ProductListQuery {
 
 export class ProductService {
   private productRepo: ProductRepository;
+  private variantRepo: ProductVariantRepository;
   private categoryRepo: CategoryRepository;
   private collectionRepo: CollectionRepository;
 
   constructor() {
     this.productRepo = new ProductRepository();
+    this.variantRepo = new ProductVariantRepository();
     this.categoryRepo = new CategoryRepository();
     this.collectionRepo = new CollectionRepository();
   }
@@ -80,13 +83,15 @@ export class ProductService {
   async getBySlug(slug: string) {
     const product = await this.productRepo.findBySlug(slug);
     if (!product) throw new NotFoundError('Product not found');
-    return ProductDTO.toPublic(product);
+    const variants = product.hasVariants ? await this.variantRepo.findByProductId(product._id.toString()) : undefined;
+    return ProductDTO.toPublic(product, variants);
   }
 
   async getById(id: string) {
     const product = await this.productRepo.findByIdPopulated(id);
     if (!product) throw new NotFoundError('Product not found');
-    return ProductDTO.toAdmin(product);
+    const variants = product.hasVariants ? await this.variantRepo.findByProductIdAll(product._id.toString()) : undefined;
+    return ProductDTO.toAdmin(product, variants);
   }
 
   async create(data: {
@@ -139,6 +144,7 @@ export class ProductService {
       isFeatured: data.isFeatured ?? false,
       stock: data.stock ?? 0,
       trackInventory: data.trackInventory ?? false,
+      hasVariants: false,
     });
 
     return this.getById(product._id.toString());

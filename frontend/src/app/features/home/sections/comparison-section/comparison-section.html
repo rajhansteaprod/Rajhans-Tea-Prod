@@ -1,0 +1,42 @@
+<section class="comparison">
+  <div class="comparison__container">
+    <!-- LEFT: Text Content -->
+    <div class="comparison__text">
+      <h2 class="comparison__heading">{{ heading }}</h2>
+      <p class="comparison__description">{{ description }}</p>
+    </div>
+
+    <!-- RIGHT: Image Comparison Slider -->
+    <div
+      class="comparison__slider"
+      #slider
+      (click)="onSliderClick($event)"
+      (mousedown)="startDragging()"
+      (touchstart)="startDragging()"
+    >
+      <!-- Right Image (Background) -->
+      <img
+        [src]="rightImage"
+        alt="After"
+        class="comparison__image comparison__image--right"
+        draggable="false"
+      />
+
+      <!-- Left Image (Overlay) -->
+      <div class="comparison__image-wrapper" [style.width.%]="sliderPosition">
+        <img
+          [src]="leftImage"
+          alt="Before"
+          class="comparison__image comparison__image--left"
+          draggable="false"
+        />
+      </div>
+
+      <!-- Slider Handle -->
+      <div class="comparison__handle" [style.left.%]="sliderPosition">
+        <div class="comparison__handle-line"></div>
+        <div class="comparison__handle-circle"></div>
+      </div>
+    </div>
+  </div>
+</section>

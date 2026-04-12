@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use '../../../../core/design-tokens/tokens' as *;
 @use '../../../../core/design-tokens/mixins' as *;
 
@@ -160,7 +161,7 @@
   transition: background 0.3s, transform 0.2s;
 
   &:hover {
-    background: lighten($color-primary, 5%);
+    background: color.adjust($color-primary, $lightness: 5%);
     transform: translateY(-1px);
   }
 

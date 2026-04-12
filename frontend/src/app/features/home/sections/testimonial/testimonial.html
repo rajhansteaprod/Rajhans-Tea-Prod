@@ -1,32 +1,34 @@
 <section class="testimonial">
-  <div class="testimonial-inner">
+  <h2 class="testimonial-heading">What People Say</h2>
+  <p class="testimonial-subheading">Trusted by thousands of tea lovers across India</p>
+
+  <div class="testimonial-grid">
     @for (item of testimonials; track item.id) {
       <div class="testimonial-card">
-        <div class="testimonial-content">
-          <div class="testimonial-quote-mark">"</div>
-          <p class="testimonial-quote">{{ item.quote }}</p>
-
-          <div class="testimonial-author">
-            <div class="testimonial-avatar">
-              @if (item.image) {
-                <img [src]="item.image" [alt]="item.name" class="testimonial-image" />
-              } @else {
-                <div class="testimonial-avatar-placeholder"></div>
-              }
-            </div>
-
-            <div class="testimonial-meta">
-              <h3 class="testimonial-name">{{ item.name }}</h3>
-              <p class="testimonial-credentials">{{ item.credentials }}</p>
-            </div>
-          </div>
+        <!-- Star Rating -->
+        <div class="testimonial-stars">
+          @for (isFilled of getRatingArray(item.rating); track $index) {
+            <span class="star" [class.filled]="isFilled">★</span>
+          }
         </div>
 
-        <!-- Decorative dots -->
-        <div class="testimonial-decorations">
-          <span class="dot dot-1"></span>
-          <span class="dot dot-2"></span>
-          <span class="dot dot-3"></span>
+        <!-- Quote -->
+        <p class="testimonial-quote">{{ item.quote }}</p>
+
+        <!-- Author Info -->
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">
+            @if (item.image) {
+              <img [src]="item.image" [alt]="item.name" class="testimonial-image" />
+            } @else {
+              <div class="testimonial-avatar-placeholder"></div>
+            }
+          </div>
+
+          <div class="testimonial-meta">
+            <h4 class="testimonial-name">{{ item.name }}</h4>
+            <p class="testimonial-credentials">{{ item.credentials }}</p>
+          </div>
         </div>
       </div>
     }

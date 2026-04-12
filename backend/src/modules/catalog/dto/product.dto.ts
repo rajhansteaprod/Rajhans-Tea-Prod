@@ -1,6 +1,18 @@
 import { IProductDoc, ProductStatus } from '../models/product.model';
 import { ICategoryDoc } from '../models/category.model';
 import { ICollectionDoc } from '../models/collection.model';
+import { IProductVariantDoc } from '../models/product-variant.model';
+
+// ---------------------------------------------------------------------------
+// Variant view
+// ---------------------------------------------------------------------------
+export interface ProductVariantView {
+  _id: string;
+  name: string;
+  price: number;
+  stock?: number;
+  isActive?: boolean;
+}
 
 // ---------------------------------------------------------------------------
 // Admin view — everything visible (internal management)
@@ -22,6 +34,8 @@ export interface ProductAdminView {
   isFeatured: boolean;
   stock: number;
   trackInventory: boolean;
+  hasVariants: boolean;
+  variants?: ProductVariantView[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +58,8 @@ export interface ProductPublicView {
   tags: string[];
   isFeatured: boolean;
   inStock: boolean;
+  hasVariants: boolean;
+  variants?: ProductVariantView[];
 }
 
 // Keep backward compat
@@ -83,8 +99,18 @@ function extractCollections(product: IProductDoc) {
 // Factory
 // ---------------------------------------------------------------------------
 export class ProductDTO {
+  private static variantsToView(variants?: IProductVariantDoc[]): ProductVariantView[] {
+    return (variants ?? []).map(v => ({
+      _id: v._id.toString(),
+      name: v.name,
+      price: v.price,
+      stock: v.stock,
+      isActive: v.isActive,
+    }));
+  }
+
   /** Admin — all fields exposed */
-  static toAdmin(product: IProductDoc): ProductAdminView {
+  static toAdmin(product: IProductDoc, variants?: IProductVariantDoc[]): ProductAdminView {
     return {
       _id: product._id.toString(),
       name: product.name,
@@ -102,13 +128,15 @@ export class ProductDTO {
       isFeatured: product.isFeatured,
       stock: product.stock ?? 0,
       trackInventory: product.trackInventory ?? false,
+      hasVariants: product.hasVariants ?? false,
+      variants: variants ? this.variantsToView(variants) : undefined,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
     };
   }
 
   /** Public — hides status, stock count, trackInventory, timestamps */
-  static toPublic(product: IProductDoc): ProductPublicView {
+  static toPublic(product: IProductDoc, variants?: IProductVariantDoc[]): ProductPublicView {
     return {
       _id: product._id.toString(),
       name: product.name,
@@ -124,6 +152,8 @@ export class ProductDTO {
       tags: product.tags ?? [],
       isFeatured: product.isFeatured,
       inStock: (product.stock ?? 0) > 0,
+      hasVariants: product.hasVariants ?? false,
+      variants: variants ? this.variantsToView(variants) : undefined,
     };
   }
 

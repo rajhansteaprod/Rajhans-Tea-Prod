@@ -75,6 +75,14 @@ adminRouter.post('/products', validate(createProductSchema), catalog.createProdu
 adminRouter.put('/products/:id', validate(updateProductSchema), catalog.updateProduct);
 adminRouter.delete('/products/:id', validate(productIdSchema), catalog.deleteProduct);
 
+// Product Variants — admin CRUD
+adminRouter.get('/products/:productId/variants', catalog.listVariants);
+adminRouter.post('/products/:productId/variants', catalog.createVariant);
+adminRouter.get('/products/:productId/variants/:variantId', catalog.getVariant);
+adminRouter.put('/products/:productId/variants/:variantId', catalog.updateVariant);
+adminRouter.delete('/products/:productId/variants/:variantId', catalog.deleteVariant);
+adminRouter.post('/products/:productId/variants/reorder', catalog.reorderVariants);
+
 router.use('/admin', adminRouter);
 
 export default router;

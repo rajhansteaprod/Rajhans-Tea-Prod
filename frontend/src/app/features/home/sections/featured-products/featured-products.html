@@ -7,7 +7,7 @@
     </div>
 
     <!-- Product Grid -->
-    <div class="featured__grid">1
+    <div class="featured__grid">
       @for (product of products(); track product._id) {
         <div class="product-card" (click)="goToProduct(product)">
           <!-- Single Image with Hover Reflection -->

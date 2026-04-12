@@ -2,12 +2,14 @@ import { Request, Response } from 'express';
 import { CategoryService } from './services/category.service';
 import { CollectionService } from './services/collection.service';
 import { ProductService } from './services/product.service';
+import { ProductVariantService } from './services/product-variant.service';
 import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../../utils/api-response';
 import { BadRequestError } from '../../utils/api-error';
 
 const categoryService = new CategoryService();
 const collectionService = new CollectionService();
 const productService = new ProductService();
+const variantService = new ProductVariantService();
 
 // ---------------------------------------------------------------------------
 // Category controllers
@@ -122,6 +124,50 @@ export const updateProduct = async (req: Request, res: Response) => {
 export const deleteProduct = async (req: Request, res: Response) => {
   await productService.delete(req.params['id'] as string);
   sendNoContent(res);
+};
+
+// ---------------------------------------------------------------------------
+// Product Variant controllers
+// ---------------------------------------------------------------------------
+
+export const listVariants = async (req: Request, res: Response) => {
+  const productId = req.params['productId'] as string;
+  const variants = await variantService.listByProductId(productId);
+  sendSuccess(res, variants, 'Variants retrieved');
+};
+
+export const createVariant = async (req: Request, res: Response) => {
+  const productId = req.params['productId'] as string;
+  const variant = await variantService.create(productId, req.body);
+  sendCreated(res, variant, 'Variant created successfully');
+};
+
+export const getVariant = async (req: Request, res: Response) => {
+  const variantId = req.params['variantId'] as string;
+  const variant = await variantService.getById(variantId);
+  sendSuccess(res, variant);
+};
+
+export const updateVariant = async (req: Request, res: Response) => {
+  const variantId = req.params['variantId'] as string;
+  const variant = await variantService.update(variantId, req.body);
+  sendSuccess(res, variant, 'Variant updated successfully');
+};
+
+export const deleteVariant = async (req: Request, res: Response) => {
+  const variantId = req.params['variantId'] as string;
+  await variantService.delete(variantId);
+  sendNoContent(res);
+};
+
+export const reorderVariants = async (req: Request, res: Response) => {
+  const productId = req.params['productId'] as string;
+  const { variantIds } = req.body as { variantIds: string[] };
+  if (!Array.isArray(variantIds)) {
+    throw new BadRequestError('variantIds must be an array');
+  }
+  await variantService.reorderVariants(productId, variantIds);
+  sendSuccess(res, { reordered: true }, 'Variants reordered successfully');
 };
 
 // ---------------------------------------------------------------------------

@@ -4,6 +4,8 @@ import { BigStatementComponent } from './sections/big-statement/big-statement';
 import { Usp2Component } from './sections/usp2/usp2';
 import { USPGridComponent } from './sections/usp-grid/usp-grid';
 import { FeaturedProductsComponent } from './sections/featured-products/featured-products';
+import { GiftingSectionComponent } from './sections/gifting-section/gifting-section';
+import { ComparisonSectionComponent } from './sections/comparison-section/comparison-section';
 import { BundleBuilderComponent } from './sections/bundle-builder/bundle-builder';
 import { StorytellingComponent } from './sections/storytelling/storytelling';
 import { TestimonialComponent } from './sections/testimonial/testimonial';
@@ -17,6 +19,8 @@ import { TestimonialComponent } from './sections/testimonial/testimonial';
     Usp2Component,
     USPGridComponent,
     FeaturedProductsComponent,
+    GiftingSectionComponent,
+    ComparisonSectionComponent,
     BundleBuilderComponent,
     StorytellingComponent,
     TestimonialComponent,
