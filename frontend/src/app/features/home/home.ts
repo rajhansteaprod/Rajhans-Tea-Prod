@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { HeroComponent } from './sections/hero/hero';
 import { BigStatementComponent } from './sections/big-statement/big-statement';
-import { UspGridComponent } from './sections/usp-grid/usp-grid';
+import { USPGridComponent } from './sections/usp-grid/usp-grid';
 import { FeaturedProductsComponent } from './sections/featured-products/featured-products';
 import { BundleBuilderComponent } from './sections/bundle-builder/bundle-builder';
 import { StorytellingComponent } from './sections/storytelling/storytelling';
@@ -13,7 +13,7 @@ import { TestimonialComponent } from './sections/testimonial/testimonial';
   imports: [
     HeroComponent,
     BigStatementComponent,
-    UspGridComponent,
+    USPGridComponent,
     FeaturedProductsComponent,
     BundleBuilderComponent,
     StorytellingComponent,
