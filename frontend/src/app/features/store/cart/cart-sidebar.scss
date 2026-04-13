@@ -243,6 +243,13 @@
   letter-spacing: 0.02em;
 }
 
+.item-variant {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin: 0;
+  font-weight: $font-weight-regular;
+}
+
 .item-price {
   font-size: $font-size-xs;
   color: $color-text-tertiary;

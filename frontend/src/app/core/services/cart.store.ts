@@ -10,6 +10,8 @@ import { PlatformService } from './platform.service';
 
 export interface CartItem {
   productId: string;
+  variantId?: string;
+  variantName?: string;
   name: string;
   slug: string;
   image: string;
@@ -182,12 +184,15 @@ export class CartStore {
       });
   }
 
-  addItem(productId: string, qty = 1): void {
+  addItem(productId: string, qty = 1, variantId?: string): void {
     this._cartLoading.set(true);
+    const body: Record<string, unknown> = { productId, qty };
+    if (variantId) body['variantId'] = variantId;
+
     this.http
       .post<ApiResponse<CartView>>(
         `${this.api}/cart/items`,
-        { productId, qty },
+        body,
         { headers: this.headers() },
       )
       .subscribe({

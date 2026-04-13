@@ -246,6 +246,7 @@ tr:hover td { background: rgba(204, 88, 3, 0.02); }
   color: $color-text-tertiary;
 
   &.preview:hover { border-color: $color-secondary; color: $color-secondary; background: rgba(87, 136, 108, 0.08); }
+  &.variants:hover { border-color: $color-accent; color: $color-accent; background: rgba(162, 126, 142, 0.08); }
   &.edit:hover    { border-color: $color-primary;   color: $color-primary;   background: $color-primary-light; }
   &.delete:hover  { border-color: $color-error;     color: $color-error;     background: rgba(192, 57, 43, 0.06); }
 }
@@ -299,6 +300,7 @@ tr:hover td { background: rgba(204, 88, 3, 0.02); }
   @include flex-column;
   max-height: 92vh;
 
+  &.medium { max-width: 600px; }
   &.large { max-width: 800px; }
 }
 
@@ -589,4 +591,84 @@ textarea.form-input { resize: vertical; font-family: inherit; }
 
   &:hover:not(:disabled) { background: $color-primary-hover; }
   &:disabled { opacity: 0.5; cursor: default; }
+}
+
+// === Variant Management ===
+.variant-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $font-size-xs;
+  margin-bottom: $space-lg;
+}
+
+.variant-table thead {
+  background: $color-bg-secondary;
+  border-bottom: 1px solid $color-border-light;
+}
+
+.variant-table th {
+  text-align: left;
+  padding: $space-sm $space-md;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+  color: $color-text-tertiary;
+  white-space: nowrap;
+}
+
+.variant-table td {
+  padding: $space-sm $space-md;
+  color: $color-text-secondary;
+  border-bottom: 1px solid $color-border-light;
+  vertical-align: middle;
+}
+
+.variant-table tr:last-child td { border-bottom: none; }
+.variant-table tr:hover td { background: rgba(204, 88, 3, 0.02); }
+
+.center-cell { text-align: center; }
+
+.action-cell {
+  display: flex;
+  gap: $space-xs;
+  justify-content: flex-end;
+}
+
+.icon-btn-sm {
+  width: 24px;
+  height: 24px;
+  @include flex-center;
+  border: 1px solid $color-border-light;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: all $transition-fast;
+  color: $color-text-tertiary;
+
+  &.edit:hover    { border-color: $color-primary; color: $color-primary; background: $color-primary-light; }
+  &.delete:hover  { border-color: $color-error; color: $color-error; background: rgba(192, 57, 43, 0.06); }
+}
+
+.variant-form-section {
+  border-top: 1px solid $color-border-light;
+  padding-top: $space-lg;
+  margin-top: $space-lg;
+}
+
+.variant-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-sm;
+  margin-top: $space-md;
+}
+
+.form-error {
+  padding: $space-xs $space-sm;
+  background: rgba(192, 57, 43, 0.08);
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  border-radius: 0;
+  color: $color-error;
+  font-size: $font-size-xs;
+  margin-bottom: $space-md;
 }

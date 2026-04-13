@@ -112,6 +112,14 @@
                       <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
                     </svg>
                   </button>
+                  <button class="icon-btn variants" (click)="openVariants(product)" title="Manage Variants">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="5" r="2" stroke="currentColor" stroke-width="2"/>
+                      <circle cx="19" cy="12" r="2" stroke="currentColor" stroke-width="2"/>
+                      <circle cx="12" cy="19" r="2" stroke="currentColor" stroke-width="2"/>
+                      <circle cx="5" cy="12" r="2" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </button>
                   <button class="icon-btn edit" (click)="openEdit(product)" title="Edit">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -357,6 +365,141 @@
           [disabled]="saving() || !form().name || !form().categoryId || form().basePrice === '' || !form().reflectedImage">
           {{ saving() ? (editingId() ? 'Saving…' : 'Creating…') : (editingId() ? 'Save Changes' : 'Create Product') }}
         </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Variant Management Modal -->
+@if (variantProduct()) {
+  <div class="modal-overlay" (click)="closeVariants()">
+    <div class="modal-box medium" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Variants — {{ variantProduct()!.name }}</h2>
+        <button class="modal-close" (click)="closeVariants()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body scrollable">
+        @if (variantLoading()) {
+          <div class="loading-state"><div class="spinner"></div></div>
+        } @else {
+          <!-- Variant List -->
+          @if (variants().length > 0) {
+            <table class="variant-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>SKU</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Active</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (variant of variants(); track variant._id) {
+                  <tr>
+                    <td>{{ variant.name }}</td>
+                    <td>{{ variant.sku || '—' }}</td>
+                    <td class="price-cell">₹{{ variant.price | number }}</td>
+                    <td>{{ variant.stock }}</td>
+                    <td class="center-cell">@if (variant.isActive) { ✓ } @else { ✗ }</td>
+                    <td class="action-cell">
+                      <button class="icon-btn-sm edit" (click)="openVariantForm(variant)" title="Edit">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                      </button>
+                      <button class="icon-btn-sm delete" (click)="deleteVariant(variant._id)" title="Delete">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                          <polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <div class="empty-state">
+              <p>No variants yet. Click "Add Variant" to create one.</p>
+            </div>
+          }
+
+          <!-- Variant Form -->
+          @if (showVariantForm()) {
+            <div class="variant-form-section">
+              <div class="form-grid-3">
+                <div class="form-field span-2">
+                  <label class="form-label">Name *</label>
+                  <input class="form-input" type="text" [ngModel]="variantForm().name"
+                    (ngModelChange)="variantForm.update(f=>({...f,name:$event}))" placeholder="e.g., 100g, Red, Large" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label">SKU</label>
+                  <input class="form-input" type="text" [ngModel]="variantForm().sku"
+                    (ngModelChange)="variantForm.update(f=>({...f,sku:$event}))" placeholder="Optional" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Price (₹) *</label>
+                  <input class="form-input" type="number" min="0" [ngModel]="variantForm().price"
+                    (ngModelChange)="variantForm.update(f=>({...f,price:$event}))" placeholder="0" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Stock</label>
+                  <input class="form-input" type="number" min="0" [ngModel]="variantForm().stock"
+                    (ngModelChange)="variantForm.update(f=>({...f,stock:$event}))" placeholder="0" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Track Inventory</label>
+                  <label class="toggle-label">
+                    <input type="checkbox" [ngModel]="variantForm().trackInventory"
+                      (ngModelChange)="variantForm.update(f=>({...f,trackInventory:$event}))" />
+                    Enable
+                  </label>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Active</label>
+                  <label class="toggle-label">
+                    <input type="checkbox" [ngModel]="variantForm().isActive"
+                      (ngModelChange)="variantForm.update(f=>({...f,isActive:$event}))" />
+                    Enable
+                  </label>
+                </div>
+              </div>
+
+              @if (variantError()) {
+                <div class="form-error">{{ variantError() }}</div>
+              }
+
+              <div class="variant-form-actions">
+                <button class="btn-cancel" (click)="closeVariantForm()">Cancel</button>
+                <button class="btn-save" (click)="saveVariant()"
+                  [disabled]="variantSaving() || !variantForm().name || variantForm().price === ''">
+                  {{ variantSaving() ? 'Saving…' : (editingVariantId() ? 'Update Variant' : 'Add Variant') }}
+                </button>
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <div class="modal-footer">
+        @if (!showVariantForm()) {
+          <button class="btn-primary-create" (click)="openVariantForm()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Add Variant
+          </button>
+        }
+        <button class="btn-cancel" (click)="closeVariants()" style="margin-left: auto;">Close</button>
       </div>
     </div>
   </div>

@@ -56,8 +56,23 @@ export interface Collection {
 export interface ProductVariant {
   _id: string;
   name: string;
+  sku?: string;
   price: number;
-  stock?: number;
+  cost?: number;
+  stock: number;
+  trackInventory: boolean;
+  images?: string[];
+  position: number;
+  isActive: boolean;
+}
+
+export interface CreateVariantPayload {
+  name: string;
+  sku?: string;
+  price: number;
+  stock: number;
+  trackInventory?: boolean;
+  isActive?: boolean;
 }
 
 export interface Product {
@@ -260,6 +275,24 @@ export class CatalogService {
 
   deleteProduct(id: string): Observable<void> {
     return this.http.delete<void>(`${this.adminUrl}/products/${id}`);
+  }
+
+  // --- Product Variants ---
+
+  getVariants(productId: string): Observable<ApiResponse<ProductVariant[]>> {
+    return this.http.get<ApiResponse<ProductVariant[]>>(`${this.adminUrl}/products/${productId}/variants`);
+  }
+
+  createVariant(productId: string, payload: CreateVariantPayload): Observable<ApiResponse<ProductVariant>> {
+    return this.http.post<ApiResponse<ProductVariant>>(`${this.adminUrl}/products/${productId}/variants`, payload);
+  }
+
+  updateVariant(productId: string, variantId: string, payload: Partial<CreateVariantPayload>): Observable<ApiResponse<ProductVariant>> {
+    return this.http.put<ApiResponse<ProductVariant>>(`${this.adminUrl}/products/${productId}/variants/${variantId}`, payload);
+  }
+
+  deleteVariant(productId: string, variantId: string): Observable<void> {
+    return this.http.delete<void>(`${this.adminUrl}/products/${productId}/variants/${variantId}`);
   }
 
   // --- Image upload ---

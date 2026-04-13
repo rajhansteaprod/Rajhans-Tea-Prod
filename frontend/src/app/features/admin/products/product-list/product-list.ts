@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   CatalogService, Product, Category, Collection,
-  CreateProductPayload, UpdateProductPayload,
+  CreateProductPayload, UpdateProductPayload, ProductVariant,
+  CreateVariantPayload,
 } from '../../../../core/services/catalog.service';
 
 interface AttributeEntry { key: string; value: string; }
@@ -26,12 +27,26 @@ interface ProductForm {
   trackInventory: boolean;
 }
 
+interface VariantForm {
+  name: string;
+  sku: string;
+  price: number | '';
+  stock: number;
+  trackInventory: boolean;
+  isActive: boolean;
+}
+
 const emptyForm = (): ProductForm => ({
   name: '', description: '', shortDescription: '',
   categoryId: '', collectionIds: [], basePrice: '',
   images: [], reflectedImage: '', attributes: [], tags: '',
   status: 'draft', isFeatured: false,
   stock: 0, trackInventory: false,
+});
+
+const emptyVariantForm = (): VariantForm => ({
+  name: '', sku: '', price: '',
+  stock: 0, trackInventory: false, isActive: true,
 });
 
 @Component({
@@ -57,6 +72,16 @@ export class ProductListComponent implements OnInit, OnDestroy {
   categoryFilter = signal('');
   currentPage    = signal(1);
   form           = signal<ProductForm>(emptyForm());
+
+  // ── Variant Management ──
+  variantProduct      = signal<Product | null>(null);
+  variants            = signal<ProductVariant[]>([]);
+  variantLoading      = signal(false);
+  variantSaving       = signal(false);
+  variantError        = signal('');
+  showVariantForm     = signal(false);
+  editingVariantId    = signal<string | null>(null);
+  variantForm         = signal<VariantForm>(emptyVariantForm());
 
   private searchTimeout: ReturnType<typeof setTimeout> | null = null;
   private loadEffect = effect(() => {
@@ -286,5 +311,125 @@ export class ProductListComponent implements OnInit, OnDestroy {
 
   previewProduct(id: string) {
     window.open(`/admin/products/preview/${id}`, '_blank');
+  }
+
+  // ── Variant Management ──
+
+  openVariants(product: Product) {
+    this.variantProduct.set(product);
+    this.variantError.set('');
+    this.variants.set([]);
+    this.variantForm.set(emptyVariantForm());
+    this.editingVariantId.set(null);
+    this.showVariantForm.set(false);
+    this.loadVariants(product._id);
+  }
+
+  closeVariants() {
+    this.variantProduct.set(null);
+    this.variants.set([]);
+    this.variantLoading.set(false);
+    this.variantSaving.set(false);
+    this.variantError.set('');
+    this.showVariantForm.set(false);
+    this.editingVariantId.set(null);
+    this.variantForm.set(emptyVariantForm());
+  }
+
+  loadVariants(productId: string) {
+    this.variantLoading.set(true);
+    this.catalog.getVariants(productId).subscribe({
+      next: (res) => {
+        this.variants.set(res.data || []);
+        this.variantLoading.set(false);
+      },
+      error: (err) => {
+        this.variantError.set(err?.error?.message ?? 'Failed to load variants');
+        this.variantLoading.set(false);
+      },
+    });
+  }
+
+  openVariantForm(variant?: ProductVariant) {
+    if (variant) {
+      this.editingVariantId.set(variant._id);
+      this.variantForm.set({
+        name: variant.name,
+        sku: variant.sku ?? '',
+        price: variant.price,
+        stock: variant.stock,
+        trackInventory: variant.trackInventory,
+        isActive: variant.isActive,
+      });
+    } else {
+      this.editingVariantId.set(null);
+      this.variantForm.set(emptyVariantForm());
+    }
+    this.variantError.set('');
+    this.showVariantForm.set(true);
+  }
+
+  closeVariantForm() {
+    this.showVariantForm.set(false);
+    this.editingVariantId.set(null);
+    this.variantForm.set(emptyVariantForm());
+    this.variantError.set('');
+  }
+
+  saveVariant() {
+    const f = this.variantForm();
+    const product = this.variantProduct();
+
+    if (!product) return;
+    if (!f.name.trim()) { this.variantError.set('Variant name is required'); return; }
+    if (f.price === '' || f.price < 0) { this.variantError.set('Valid price is required'); return; }
+
+    this.variantError.set('');
+    this.variantSaving.set(true);
+
+    const payload: CreateVariantPayload = {
+      name: f.name.trim(),
+      sku: f.sku.trim() || undefined,
+      price: Number(f.price),
+      stock: Number(f.stock) || 0,
+      trackInventory: f.trackInventory,
+      isActive: f.isActive,
+    };
+
+    const variantId = this.editingVariantId();
+    const request = variantId
+      ? this.catalog.updateVariant(product._id, variantId, payload)
+      : this.catalog.createVariant(product._id, payload);
+
+    request.subscribe({
+      next: (res) => {
+        if (variantId) {
+          this.variants.update((list) => list.map((v) => v._id === variantId ? res.data : v));
+        } else {
+          this.variants.update((list) => [...list, res.data]);
+        }
+        this.variantSaving.set(false);
+        this.closeVariantForm();
+      },
+      error: (err) => {
+        this.variantError.set(err?.error?.message ?? 'Failed to save variant');
+        this.variantSaving.set(false);
+      },
+    });
+  }
+
+  deleteVariant(variantId: string) {
+    const product = this.variantProduct();
+    if (!product) return;
+    if (!confirm('Delete this variant? This cannot be undone.')) return;
+
+    this.catalog.deleteVariant(product._id, variantId).subscribe({
+      next: () => {
+        this.variants.update((list) => list.filter((v) => v._id !== variantId));
+      },
+      error: (err) => {
+        this.variantError.set(err?.error?.message ?? 'Failed to delete variant');
+      },
+    });
   }
 }

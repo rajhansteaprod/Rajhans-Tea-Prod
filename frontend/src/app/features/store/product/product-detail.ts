@@ -97,7 +97,14 @@ export class ProductDetailComponent implements OnInit {
 
   // ─ Quantity ─
   incrementQty(): void {
-    const max = this.product()?.trackInventory ? (this.product()?.stock ?? 99) : 99;
+    let max = 99;
+    if (this.selectedVariant()) {
+      // Use variant stock if variant is selected
+      max = this.selectedVariant()!.trackInventory ? this.selectedVariant()!.stock : 99;
+    } else if (this.product()) {
+      // Fall back to product stock
+      max = this.product()!.trackInventory ? (this.product()!.stock ?? 99) : 99;
+    }
     if (this.quantity() < max) this.quantity.set(this.quantity() + 1);
   }
 
@@ -107,12 +114,14 @@ export class ProductDetailComponent implements OnInit {
 
   // ─ Cart ─
   addToCart(): void {
-    if (this.product()) this.cartStore.addItem(this.product()!._id, this.quantity());
+    if (this.product()) {
+      this.cartStore.addItem(this.product()!._id, this.quantity(), this.selectedVariant()?._id);
+    }
   }
 
   buyNow(): void {
     if (this.product()) {
-      this.cartStore.addItem(this.product()!._id, this.quantity());
+      this.cartStore.addItem(this.product()!._id, this.quantity(), this.selectedVariant()?._id);
       this.router.navigate(['/checkout']);
     }
   }
