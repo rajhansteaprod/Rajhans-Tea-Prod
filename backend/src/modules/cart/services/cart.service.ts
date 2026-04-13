@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { CartRepository } from '../repositories/cart.repository';
 import { ProductRepository } from '../../catalog/repositories/product.repository';
+import { ProductVariantRepository } from '../../catalog/repositories/product-variant.repository';
 import { BadRequestError, NotFoundError } from '../../../utils/api-error';
 import { IProductDoc } from '../../catalog/models/product.model';
 
@@ -8,12 +9,14 @@ import { IProductDoc } from '../../catalog/models/product.model';
 
 export interface CartItemView {
   productId: string;
+  variantId?: string;
+  variantName?: string;
   name: string;
   slug: string;
   image: string;
   basePrice: number;
   qty: number;
-  lineTotal: number; // basePrice * qty (before pricing engine — for fast display)
+  lineTotal: number; // basePrice/variantPrice * qty (before pricing engine — for fast display)
 }
 
 export interface CartView {
@@ -28,6 +31,7 @@ export interface CartView {
 export class CartService {
   private cartRepo = new CartRepository();
   private productRepo = new ProductRepository();
+  private variantRepo = new ProductVariantRepository();
 
   // ---------------------------------------------------------------------------
   // GET CART
@@ -43,14 +47,29 @@ export class CartService {
       // productId is populated
       const product = item.productId as unknown as IProductDoc;
       const image = product.images?.[0] ?? '';
-      const lineTotal = product.basePrice * item.qty;
+
+      // Use variant price if variant is present, else use base price
+      let price = product.basePrice;
+      let variantName: string | undefined;
+      let variantId: string | undefined;
+
+      if (item.variantId) {
+        const variant = item.variantId as unknown as any;
+        price = variant.price ?? product.basePrice;
+        variantName = variant.name;
+        variantId = variant._id?.toString();
+      }
+
+      const lineTotal = price * item.qty;
 
       return {
         productId: product._id.toString(),
+        variantId,
+        variantName,
         name: product.name,
         slug: product.slug,
         image,
-        basePrice: product.basePrice,
+        basePrice: price,
         qty: item.qty,
         lineTotal,
       };
@@ -70,14 +89,22 @@ export class CartService {
   // ADD / UPDATE ITEM
   // ---------------------------------------------------------------------------
 
-  async addItem(sessionId: string, productId: string, qty: number): Promise<CartView> {
+  async addItem(sessionId: string, productId: string, qty: number, variantId?: string): Promise<CartView> {
     if (qty < 1) throw new BadRequestError('Quantity must be at least 1');
 
     const product = await this.productRepo.findById(productId);
     if (!product) throw new NotFoundError('Product not found');
     if (product.status !== 'active') throw new BadRequestError('Product is not available');
 
-    await this.cartRepo.upsertItem(sessionId, productId, qty);
+    // If variantId provided, validate it exists and belongs to this product
+    if (variantId) {
+      const variant = await this.variantRepo.findById(variantId);
+      if (!variant) throw new NotFoundError('Variant not found');
+      if (variant.productId.toString() !== productId) throw new BadRequestError('Variant does not belong to this product');
+      if (!variant.isActive) throw new BadRequestError('Variant is not available');
+    }
+
+    await this.cartRepo.upsertItem(sessionId, productId, qty, variantId);
     return this.getCart(sessionId);
   }
 

@@ -5,6 +5,7 @@ const objectId = z.string().regex(/^[a-f\d]{24}$/i, 'Invalid product ID');
 export const addItemSchema = z.object({
   body: z.object({
     productId: objectId,
+    variantId: objectId.optional(),
     qty: z.number({ coerce: true }).int().min(1).max(10),
   }),
 });

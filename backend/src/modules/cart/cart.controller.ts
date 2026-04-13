@@ -33,8 +33,8 @@ export const getCart = async (req: Request, res: Response) => {
 
 export const addItem = async (req: Request, res: Response) => {
   const sessionId = getSessionId(req);
-  const { productId, qty } = req.body as { productId: string; qty: number };
-  const data = await cartService.addItem(sessionId, productId, qty);
+  const { productId, variantId, qty } = req.body as { productId: string; variantId?: string; qty: number };
+  const data = await cartService.addItem(sessionId, productId, qty, variantId);
   sendSuccess(res, data, 'Item added to cart');
 };
 

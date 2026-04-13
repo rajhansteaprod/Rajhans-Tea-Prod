@@ -5,12 +5,14 @@ export class CartRepository {
   async findBySession(sessionId: string): Promise<ICartDoc | null> {
     return Cart.findOne({ sessionId })
       .populate('items.productId', 'name slug images basePrice category collections status')
+      .populate('items.variantId', 'name price')
       .exec();
   }
 
   async findByUserId(userId: string): Promise<ICartDoc | null> {
     return Cart.findOne({ userId: new Types.ObjectId(userId) })
       .populate('items.productId', 'name slug images basePrice category collections status')
+      .populate('items.variantId', 'name price')
       .exec();
   }
 
@@ -22,23 +24,28 @@ export class CartRepository {
     return Cart.findOne({ userId: new Types.ObjectId(userId) }).exec();
   }
 
-  async upsertItem(sessionId: string, productId: string, qty: number): Promise<ICartDoc> {
+  async upsertItem(sessionId: string, productId: string, qty: number, variantId?: string): Promise<ICartDoc> {
     const pid = new Types.ObjectId(productId);
+    const vid = variantId ? new Types.ObjectId(variantId) : undefined;
     let cart = await Cart.findOne({ sessionId }).exec();
 
     if (!cart) {
       cart = await Cart.create({
         sessionId,
-        items: [{ productId: pid, qty, addedAt: new Date() }],
+        items: [{ productId: pid, variantId: vid, qty, addedAt: new Date() }],
       });
       return cart;
     }
 
-    const idx = cart.items.findIndex((item) => item.productId.toString() === productId);
+    // Match by productId + variantId pair
+    const idx = cart.items.findIndex((item) =>
+      item.productId.toString() === productId &&
+      (item.variantId?.toString() === variantId || (!item.variantId && !variantId))
+    );
     if (idx >= 0) {
       cart.items[idx].qty = qty;
     } else {
-      cart.items.push({ productId: pid, qty, addedAt: new Date() });
+      cart.items.push({ productId: pid, variantId: vid, qty, addedAt: new Date() });
     }
 
     return cart.save();
