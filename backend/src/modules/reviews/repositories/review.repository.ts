@@ -192,4 +192,12 @@ export class ReviewRepository {
       overallAvgRating: avgResult[0] ? +avgResult[0].avg.toFixed(1) : 0,
     };
   }
+
+  async updateRatingOneLiner(productId: string, ratingOneLiner: string): Promise<void> {
+    await RatingSummary.findOneAndUpdate(
+      { productId: new Types.ObjectId(productId) },
+      { $set: { ratingOneLiner: ratingOneLiner.trim() || undefined } },
+      { upsert: true },
+    ).exec();
+  }
 }

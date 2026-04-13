@@ -162,4 +162,8 @@ export class ReviewService {
   async getMostReported(query: { page?: number; limit?: number } = {}) {
     return this.repo.findMostReported(query);
   }
+
+  async updateRatingOneLiner(productId: string, ratingOneLiner: string): Promise<void> {
+    await this.repo.updateRatingOneLiner(productId, ratingOneLiner);
+  }
 }

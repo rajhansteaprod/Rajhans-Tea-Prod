@@ -7,6 +7,7 @@ import {
   CreateProductPayload, UpdateProductPayload, ProductVariant,
   CreateVariantPayload,
 } from '../../../../core/services/catalog.service';
+import { ReviewStore } from '../../../../core/services/review.store';
 
 interface AttributeEntry { key: string; value: string; }
 
@@ -25,6 +26,7 @@ interface ProductForm {
   isFeatured: boolean;
   stock: number;
   trackInventory: boolean;
+  ratingOneLiner: string; // Admin-editable: "Cleanser Effectiveness, Face Wash Effectiveness, ..."
 }
 
 interface VariantForm {
@@ -41,7 +43,7 @@ const emptyForm = (): ProductForm => ({
   categoryId: '', collectionIds: [], basePrice: '',
   images: [], reflectedImage: '', attributes: [], tags: '',
   status: 'draft', isFeatured: false,
-  stock: 0, trackInventory: false,
+  stock: 0, trackInventory: false, ratingOneLiner: '',
 });
 
 const emptyVariantForm = (): VariantForm => ({
@@ -72,6 +74,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
   categoryFilter = signal('');
   currentPage    = signal(1);
   form           = signal<ProductForm>(emptyForm());
+  ratingSummarySaving = signal(false);
+  ratingSummaryError = signal('');
 
   // ── Variant Management ──
   variantProduct      = signal<Product | null>(null);
@@ -92,7 +96,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.loadProducts(page, search, status, category);
   });
 
-  constructor(private catalog: CatalogService, private router: Router) {}
+  constructor(private catalog: CatalogService, private router: Router, private reviews: ReviewStore) {}
 
   ngOnInit() {
     this.loadMeta();
@@ -154,9 +158,21 @@ export class ProductListComponent implements OnInit, OnDestroy {
       isFeatured:       product.isFeatured ?? false,
       stock:            product.stock ?? 0,
       trackInventory:   product.trackInventory ?? false,
+      ratingOneLiner:   '',
     });
     this.formError.set(null);
+    this.ratingSummaryError.set('');
     this.showForm.set(true);
+
+    // Fetch rating summary to populate ratingOneLiner
+    this.reviews.getRatingSummary(product._id).subscribe({
+      next: (res) => {
+        this.form.update((f) => ({ ...f, ratingOneLiner: res.data.ratingOneLiner || '' }));
+      },
+      error: () => {
+        // Silently fail - rating summary is optional
+      },
+    });
   }
 
   closeForm() {
@@ -288,8 +304,27 @@ export class ProductListComponent implements OnInit, OnDestroy {
           this.products.update((list) => [res.data, ...list]);
           this.meta.update((m) => m ? { ...m, total: m.total + 1 } : m);
         }
-        this.saving.set(false);
-        this.closeForm();
+
+        // Save rating summary (one-liner) if it's an existing product
+        const productId = res.data._id;
+        const ratingOneLiner = f.ratingOneLiner.trim();
+        if (productId && ratingOneLiner) {
+          this.catalog.updateRatingOneLiner(productId, ratingOneLiner).subscribe({
+            next: () => {
+              this.saving.set(false);
+              this.closeForm();
+            },
+            error: (err) => {
+              // Rating summary is optional, just warn and close
+              console.warn('Failed to update rating summary:', err);
+              this.saving.set(false);
+              this.closeForm();
+            },
+          });
+        } else {
+          this.saving.set(false);
+          this.closeForm();
+        }
       },
       error: (err) => {
         this.formError.set(err?.error?.message ?? 'Failed to save product');

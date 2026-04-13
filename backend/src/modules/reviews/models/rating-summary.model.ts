@@ -5,6 +5,7 @@ export interface IRatingSummaryDoc extends Document {
   averageRating: number;
   totalReviews: number;
   distribution: { 1: number; 2: number; 3: number; 4: number; 5: number };
+  ratingOneLiner?: string; // Admin-editable: "Cleanser Effectiveness, Face Wash Effectiveness, Product Results"
   updatedAt: Date;
 }
 
@@ -20,6 +21,7 @@ const ratingSummarySchema = new Schema<IRatingSummaryDoc>(
       4: { type: Number, default: 0 },
       5: { type: Number, default: 0 },
     },
+    ratingOneLiner: { type: String, trim: true, maxlength: 300, default: undefined },
   },
   { timestamps: true },
 );

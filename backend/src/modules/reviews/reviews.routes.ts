@@ -98,6 +98,7 @@ adminRouter.patch('/reviews/questions/:id/approve', ctrl.adminApproveQuestion);
 adminRouter.patch('/reviews/questions/:id/reject', ctrl.adminRejectQuestion);
 adminRouter.get('/reviews/analytics', ctrl.adminGetAnalytics);
 adminRouter.get('/reviews/reported', ctrl.adminGetReported);
+adminRouter.patch('/reviews/products/:productId/rating-summary', ctrl.adminUpdateRatingOneLiner);
 
 router.use('/admin', adminRouter);
 

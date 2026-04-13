@@ -158,3 +158,10 @@ export const adminGetReported = async (req: Request, res: Response) => {
   });
   sendPaginated(res, result.reviews, result.meta, 'Reported reviews');
 };
+
+export const adminUpdateRatingOneLiner = async (req: Request, res: Response) => {
+  const productId = req.params['productId'] as string;
+  const { ratingOneLiner } = req.body;
+  await reviewService.updateRatingOneLiner(productId, ratingOneLiner || '');
+  sendSuccess(res, { updated: true }, 'Rating summary updated');
+};

@@ -302,4 +302,10 @@ export class CatalogService {
     form.append('image', file);
     return this.http.post<ApiResponse<{ url: string }>>(`${this.adminUrl}/uploads`, form);
   }
+
+  // --- Rating Summary ---
+
+  updateRatingOneLiner(productId: string, ratingOneLiner: string): Observable<ApiResponse<{ updated: boolean }>> {
+    return this.http.patch<ApiResponse<{ updated: boolean }>>(`${this.adminUrl}/reviews/products/${productId}/rating-summary`, { ratingOneLiner });
+  }
 }
