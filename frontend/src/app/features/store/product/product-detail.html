@@ -68,10 +68,15 @@
 
           <!-- Rating one-liner -->
           @if (ratingSummary()?.ratingOneLiner) {
-            <p class="pd__rating-highlight">
-              Highly rated by customers for
-              <span class="pd__rating-highlight-text">{{ ratingSummary()?.ratingOneLiner }}</span>
-            </p>
+            <div class="pd__rating-highlight">
+              <svg class="pd__rating-highlight-icon" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.616 0L13.6143 1.94771L15.4861 2.9865L13.6143 4.02527L12.616 5.97298L11.6177 4.02527L9.74584 2.9865L11.6177 1.94771L12.616 0ZM5.80334 2.4614L7.82189 6.39963L11.6067 8.50004L7.82189 10.6004L5.80334 14.5386L3.78479 10.6004L0 8.50004L3.78479 6.39963L5.80334 2.4614ZM14.6345 11.9131L13.373 9.45175L12.1113 11.9131L9.74584 13.2259L12.1113 14.5386L13.373 17L14.6345 14.5386L17 13.2259L14.6345 11.9131Z" fill="currentColor"/>
+              </svg>
+              <div class="pd__rating-highlight-content">
+                <span class="pd__rating-highlight-title">Highly rated by customers for:</span>
+                <span class="pd__rating-highlight-text">{{ ratingSummary()?.ratingOneLiner }}</span>
+              </div>
+            </div>
           }
 
           <!-- Short description -->
