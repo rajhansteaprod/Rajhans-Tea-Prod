@@ -53,12 +53,20 @@ export class FeaturedProductsComponent implements OnInit {
   }
 
   addToCart(product: Product, event: Event): void {
+    
+    
+    
+    event.preventDefault();
     event.stopPropagation();
+    
     this.cart.addItem(product._id, 1);
   }
 
   buyNow(product: Product, event: Event): void {
+    
+    event.preventDefault();
     event.stopPropagation();
+    
     // Add product to temporary cart for checkout
     this.cart.addItem(product._id, 1);
     // Redirect to checkout
@@ -66,12 +74,16 @@ export class FeaturedProductsComponent implements OnInit {
   }
 
   goToProduct(product: Product): void {
+    
     // Navigate to product detail page using product slug
-    this.router.navigate(['/products', product.slug]);
+    this.router.navigate(['/product', product.slug]);
   }
 
   toggleWishlist(product: Product, event: Event): void {
+    
+    event.preventDefault();
     event.stopPropagation();
+    
     this.cart.toggleWishlist(product._id);
   }
 
