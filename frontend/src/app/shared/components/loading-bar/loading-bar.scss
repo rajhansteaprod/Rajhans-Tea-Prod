@@ -1,25 +1,45 @@
 @use '../../../core/design-tokens/tokens' as *;
 
-.loading-bar {
+.loading-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
+  inset: 0;
   z-index: 99999;
-  background: transparent;
-  overflow: hidden;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.loading-bar-inner {
-  height: 100%;
-  background: linear-gradient(90deg, $color-primary, $color-primary-hover, $color-primary);
-  animation: loading 1.5s ease-in-out infinite;
-  width: 40%;
-  border-radius: 0 2px 2px 0;
+.loading-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba($color-mono-dark, 0.1);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
-@keyframes loading {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(350%); }
+.loading-overlay__container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+}
+
+.loading-overlay__spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba($color-mono-dark, 0.1);
+  border-top-color: $color-primary;
+  border-right-color: $color-primary;
+  border-radius: 50%;
+  animation: spin-loader 0.8s linear infinite;
+}
+
+@keyframes spin-loader {
+  to {
+    transform: rotate(360deg);
+  }
 }
