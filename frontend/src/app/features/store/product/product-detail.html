@@ -96,7 +96,8 @@
           <!-- Variant selector -->
           @if (product()?.variants?.length) {
             <div class="pd__variants">
-              <p class="pd__section-label">CHOOSE VARIANT</p>
+              <p class="pd__section-label">CHOOSE VARIANTS</p>
+              <p class="pd__variant-subtitle">Select Size</p>
               <div class="pd__variant-list">
                 @for (v of product()?.variants; track v._id) {
                   <button

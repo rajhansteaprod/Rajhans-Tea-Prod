@@ -245,13 +245,23 @@
 }
 
 .pd__section-label {
-  font-family: $font-family-nav;
-  font-size: $font-size-xs;
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
   font-weight: $font-weight-bold;
-  letter-spacing: 0.1em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: $color-mono-dark;
+  margin: 0 0 $space-lg 0;
+  line-height: 1.4;
+}
+
+.pd__variant-subtitle {
+  font-family: $font-family-body;
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: $color-mono-dark;
   margin: 0 0 $space-md 0;
+  line-height: 1.4;
 }
 
 .pd__variant-list {
@@ -262,26 +272,24 @@
 
 .pd__variant-btn {
   padding: $space-sm $space-lg;
-  border: 2px solid rgba($color-mono-dark, 0.2);
+  border: 2px solid $color-mono-dark;
   border-radius: 0;
-  background: transparent;
-  font-family: $font-family-nav;
+  background: $color-mono-light;
+  font-family: $font-family-body;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
-  color: rgba($color-mono-dark, 0.7);
+  color: $color-mono-dark;
   cursor: pointer;
   transition: all $transition-fast;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
 
   &:hover {
-    border-color: $color-mono-dark;
-    color: $color-mono-dark;
-    background: rgba($color-mono-dark, 0.03);
+    background: rgba($color-mono-dark, 0.05);
   }
 
   &.active {
