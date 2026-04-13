@@ -272,9 +272,9 @@
 
 .pd__variant-btn {
   padding: $space-sm $space-lg;
-  border: 2px solid $color-mono-dark;
+  border: 2px solid #d1d5db;
   border-radius: 0;
-  background: $color-mono-light;
+  background: #ffffff;
   font-family: $font-family-body;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
@@ -289,13 +289,13 @@
   justify-content: center;
 
   &:hover {
-    background: rgba($color-mono-dark, 0.05);
+    border-color: #9ca3af;
   }
 
   &.active {
     border-color: $color-mono-dark;
-    background: $color-mono-dark;
-    color: $color-mono-light;
+    background: #ffffff;
+    color: $color-mono-dark;
   }
 }
 
