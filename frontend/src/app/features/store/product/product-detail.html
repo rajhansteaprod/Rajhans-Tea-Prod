@@ -18,7 +18,12 @@
             (mouseenter)="zoomActive.set(true)"
             (mouseleave)="zoomActive.set(false)"
           >
-            <img [src]="selectedImage()" class="pd__main-img" [alt]="product()?.name" loading="lazy" />
+            <img
+              [src]="selectedImage()"
+              class="pd__main-img"
+              [alt]="product()?.name"
+              loading="lazy"
+            />
             @if (zoomActive()) {
               <div
                 class="pd__zoom-lens"
@@ -58,19 +63,31 @@
                   [class.filled]="i <= (ratingSummary()?.averageRating ?? 0)"
                   fill="currentColor"
                 >
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  <path
+                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                  />
                 </svg>
               }
             </div>
-            <span class="pd__rating-score">{{ (ratingSummary()?.averageRating ?? 0) | number : '1.1-1' }}</span>
+            <span class="pd__rating-score">{{
+              ratingSummary()?.averageRating ?? 0 | number: '1.1-1'
+            }}</span>
             <span class="pd__rating-count">({{ ratingSummary()?.totalReviews ?? 0 }} Reviews)</span>
           </div>
 
           <!-- Rating one-liner -->
           @if (ratingSummary()?.ratingOneLiner) {
             <div class="pd__rating-highlight">
-              <svg class="pd__rating-highlight-icon" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12.616 0L13.6143 1.94771L15.4861 2.9865L13.6143 4.02527L12.616 5.97298L11.6177 4.02527L9.74584 2.9865L11.6177 1.94771L12.616 0ZM5.80334 2.4614L7.82189 6.39963L11.6067 8.50004L7.82189 10.6004L5.80334 14.5386L3.78479 10.6004L0 8.50004L3.78479 6.39963L5.80334 2.4614ZM14.6345 11.9131L13.373 9.45175L12.1113 11.9131L9.74584 13.2259L12.1113 14.5386L13.373 17L14.6345 14.5386L17 13.2259L14.6345 11.9131Z" fill="currentColor"/>
+              <svg
+                class="pd__rating-highlight-icon"
+                viewBox="0 0 17 17"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12.616 0L13.6143 1.94771L15.4861 2.9865L13.6143 4.02527L12.616 5.97298L11.6177 4.02527L9.74584 2.9865L11.6177 1.94771L12.616 0ZM5.80334 2.4614L7.82189 6.39963L11.6067 8.50004L7.82189 10.6004L5.80334 14.5386L3.78479 10.6004L0 8.50004L3.78479 6.39963L5.80334 2.4614ZM14.6345 11.9131L13.373 9.45175L12.1113 11.9131L9.74584 13.2259L12.1113 14.5386L13.373 17L14.6345 14.5386L17 13.2259L14.6345 11.9131Z"
+                  fill="currentColor"
+                />
               </svg>
               <div class="pd__rating-highlight-content">
                 <span class="pd__rating-highlight-title">Highly rated by customers for:</span>
@@ -81,6 +98,10 @@
 
           <!-- Short description -->
           <p class="pd__short-desc">{{ product()?.shortDescription }}</p>
+          <!-- Full description -->
+          @if (product()?.description) {
+            <p class="pd__full-desc">{{ product()?.description }}</p>
+          }
 
           <hr class="pd__divider" />
 
@@ -89,7 +110,14 @@
             <ul class="pd__tags">
               @for (tag of product()?.tags; track tag) {
                 <li class="pd__tag">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
                   {{ tag }}
@@ -102,7 +130,7 @@
           @if (product()?.variants?.length) {
             <div class="pd__variants">
               <p class="pd__section-label">CHOOSE VARIANTS</p>
-              <p class="pd__variant-subtitle">Select Size</p>
+
               <div class="pd__variant-list">
                 @for (v of product()?.variants; track v._id) {
                   <button
@@ -119,23 +147,24 @@
 
           <!-- Price -->
           <div class="pd__price-section">
-            <span class="pd__price">₹{{ effectivePrice() | number : '1.0-0' }}</span>
+            <span class="pd__price">₹{{ effectivePrice() | number: '1.0-0' }}</span>
             <span class="pd__price-note">(incl. of all taxes)</span>
           </div>
 
-          <!-- Quantity + Add to Cart -->
+          <!-- Quantity + Action Buttons -->
+          <button class="pd__buy-now" (click)="buyNow()">BUY NOW</button>
           <div class="pd__purchase-row">
             <div class="pd__qty-control">
               <button (click)="decrementQty()">−</button>
               <span>{{ quantity() }}</span>
               <button (click)="incrementQty()">+</button>
             </div>
+
             <button class="pd__add-to-cart" (click)="addToCart()">ADD TO CART</button>
           </div>
         </div>
       </div>
 
-      
       <!-- Related products: You might also like -->
       @if (relatedProducts().length > 0) {
         <div class="pd__recos">
@@ -202,7 +231,9 @@
                           [class.filled]="i <= getRating()"
                           fill="currentColor"
                         >
-                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          <path
+                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                          />
                         </svg>
                       }
                     </div>
@@ -213,7 +244,7 @@
 
                   <!-- Price -->
                   <div class="card__price">
-                    <span class="card__price-current">₹{{ p.basePrice | number : '1.0-0' }}</span>
+                    <span class="card__price-current">₹{{ p.basePrice | number: '1.0-0' }}</span>
                   </div>
 
                   <!-- Action Buttons -->
@@ -225,7 +256,14 @@
                       aria-label="Add to cart"
                       title="Add to Cart"
                     >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
                         <circle cx="9" cy="21" r="1" />
                         <circle cx="20" cy="21" r="1" />
                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />

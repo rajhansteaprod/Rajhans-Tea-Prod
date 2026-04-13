@@ -134,7 +134,7 @@
 .pd__name {
   font-family: $font-family-heading;
   font-size: clamp(28px, 4vw, 40px);
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-mono-dark;
   margin: 0 0 $space-md 0;
   line-height: 1.25;
@@ -202,7 +202,7 @@
 
 .pd__rating-highlight-content {
   display: flex;
-  flex-direction: column;
+  
   gap: $space-xs;
 }
 
@@ -227,8 +227,18 @@
   font-family: $font-family-body;
   font-size: $font-size-md;
   line-height: 1.6;
+  font-weight: $font-weight-semibold;
   color: rgba($color-mono-dark, 0.7);
   margin: $space-lg 0;
+}
+
+// Full description
+.pd__full-desc {
+  font-family: $font-family-body;
+  font-size: $font-size-md;
+  line-height: 1.6;
+  color: rgba($color-mono-dark, 0.65);
+  margin: 0;
 }
 
 .pd__divider {
@@ -245,7 +255,6 @@
   padding: 0;
   margin: $space-lg 0;
   display: flex;
-  flex-direction: column;
   gap: $space-md;
 }
 
@@ -261,7 +270,7 @@
   svg {
     width: 16px;
     height: 16px;
-    color: $color-primary;
+    color: $color-mono-dark;
     flex-shrink: 0;
     margin-top: 2px;
   }
@@ -349,7 +358,7 @@
   display: block;
 }
 
-// Quantity + Add to Cart
+// Quantity + Action Buttons
 .pd__purchase-row {
   display: flex;
   gap: $space-md;
@@ -358,6 +367,11 @@
 
   @include respond-to(md) {
     gap: $space-sm;
+    flex-wrap: wrap;
+  }
+
+  @include respond-to(sm) {
+    flex-direction: column;
   }
 }
 
@@ -403,7 +417,8 @@
   }
 }
 
-.pd__add-to-cart {
+// Primary Button: Buy Now
+.pd__buy-now {
   flex: 1;
   height: 52px;
   padding: $space-md;
@@ -418,6 +433,7 @@
   text-transform: uppercase;
   cursor: pointer;
   transition: all $transition-fast;
+  width:100%;
 
   &:hover {
     background: rgba($color-mono-dark, 0.9);
@@ -425,6 +441,40 @@
 
   &:active {
     transform: scale(0.98);
+  }
+
+  @include respond-to(sm) {
+    flex: 1;
+  }
+}
+
+// Secondary Button: Add to Cart
+.pd__add-to-cart {
+  flex: 1;
+  height: 52px;
+  padding: $space-md;
+  background: #ffffff;
+  color: $color-mono-dark;
+  border: 2px solid $color-mono-dark;
+  border-radius: 0;
+  font-family: $font-family-heading;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba($color-mono-dark, 0.05);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  @include respond-to(sm) {
+    flex: 1;
   }
 }
 
