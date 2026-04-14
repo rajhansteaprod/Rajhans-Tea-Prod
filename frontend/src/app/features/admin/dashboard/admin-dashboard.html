@@ -120,7 +120,7 @@
             <span class="role-pill" [class.admin]="user.role === 'admin'">{{ user.role }}</span>
           </div>
         }
-        @if (!recentUsers().length && !loading()) {
+        @if (!recentUsers().length) {
           <div class="empty-state">No users yet</div>
         }
       </div>
