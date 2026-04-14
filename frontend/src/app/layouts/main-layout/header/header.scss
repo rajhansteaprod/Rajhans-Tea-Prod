@@ -313,9 +313,7 @@
     height: 100%;
   }
 
-  &:hover {
-    color: $color-primary-600;
-  }
+   
 }
 
 .nav-badge {
@@ -328,7 +326,7 @@
   min-width: 14px;
   height: 14px;
   padding: 0 2px;
-  background: $color-mono-brown;
+  background: $color-mono-dark;
   color: $color-mono-light;
   border-radius: $radius-full;
   font-size: 8px;

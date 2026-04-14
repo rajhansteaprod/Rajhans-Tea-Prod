@@ -87,7 +87,7 @@
 
     <!-- Product Grid -->
     <main class="products__main">
-      @if (loading()) {
+      @if (loading() && !loaderContext.isNavigating()) {
         <div class="products__loading">
           <div class="products__spinner"></div>
         </div>

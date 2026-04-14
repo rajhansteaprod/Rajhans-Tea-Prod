@@ -184,7 +184,7 @@ export class CartStore {
       });
   }
 
-  addItem(productId: string, qty = 1, variantId?: string): void {
+  addItem(productId: string, qty = 1, variantId?: string, openSidebar = true): void {
     this._cartLoading.set(true);
     const body: Record<string, unknown> = { productId, qty };
     if (variantId) body['variantId'] = variantId;
@@ -199,7 +199,7 @@ export class CartStore {
         next: (res) => {
           this.applyCart(res.data);
           this._cartLoading.set(false);
-          this.openSidebar();
+          if (openSidebar) this.openSidebar();
         },
         error: () => this._cartLoading.set(false),
       });
@@ -232,6 +232,49 @@ export class CartStore {
     this.http
       .delete(`${this.api}/cart`, { headers: this.headers() })
       .subscribe({ next: () => this._cartItems.set([]) });
+  }
+
+  // ─── Buy Now (Temporary Cart) ──────────────────────────────────────────────
+
+  /**
+   * Buy Now Flow:
+   * 1. Save current cart to localStorage
+   * 2. Clear the cart
+   * 3. Add the buy-now item
+   * 4. Navigate to checkout
+   * 5. On successful order, permanent cart is restored after checkout
+   */
+  buyNowItem(productId: string, qty = 1, variantId?: string): void {
+    // Save current cart items to localStorage before clearing
+    const currentItems = this._cartItems();
+    this.platform.localStorage.setItem('_savedCart', JSON.stringify(currentItems));
+
+    // Clear the current cart
+    this.clearCart();
+
+    // Add the buy-now item
+    setTimeout(() => {
+      this.addItem(productId, qty, variantId, false);
+    }, 300);
+  }
+
+  /**
+   * Restore the saved cart after checkout
+   * (Call this after successful order placement)
+   */
+  restoreSavedCart(): void {
+    const saved = this.platform.localStorage.getItem('_savedCart');
+    if (saved) {
+      try {
+        const items = JSON.parse(saved);
+        // Reload cart from backend (this will restore the saved items)
+        this.loadCart();
+        this.platform.localStorage.removeItem('_savedCart');
+      } catch {
+        // If parsing fails, just load fresh cart
+        this.loadCart();
+      }
+    }
   }
 
   // ─── Sidebar ───────────────────────────────────────────────────────────────

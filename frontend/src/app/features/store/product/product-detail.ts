@@ -115,14 +115,19 @@ export class ProductDetailComponent implements OnInit {
   // ─ Cart ─
   addToCart(): void {
     if (this.product()) {
-      this.cartStore.addItem(this.product()!._id, this.quantity(), this.selectedVariant()?._id);
+      // Add to cart WITHOUT opening sidebar
+      this.cartStore.addItem(this.product()!._id, this.quantity(), this.selectedVariant()?._id, false);
     }
   }
 
   buyNow(): void {
     if (this.product()) {
-      this.cartStore.addItem(this.product()!._id, this.quantity(), this.selectedVariant()?._id);
-      this.router.navigate(['/checkout']);
+      // Save current cart, clear it, add this item, then checkout
+      this.cartStore.buyNowItem(this.product()!._id, this.quantity(), this.selectedVariant()?._id);
+      // Navigate to checkout after a brief delay to allow cart to be cleared and item added
+      setTimeout(() => {
+        this.router.navigate(['/checkout']);
+      }, 400);
     }
   }
 
