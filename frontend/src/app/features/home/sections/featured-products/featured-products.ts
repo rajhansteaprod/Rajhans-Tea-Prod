@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CatalogService, Product } from '../../../../core/services/catalog.service';
 import { CartStore } from '../../../../core/services/cart.store';
+import { ProductCardComponent } from '../../../../shared/components/product-card/product-card';
 
 @Component({
   selector: 'app-featured-products',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ProductCardComponent],
   templateUrl: './featured-products.html',
   styleUrls: ['./featured-products.scss'],
 })

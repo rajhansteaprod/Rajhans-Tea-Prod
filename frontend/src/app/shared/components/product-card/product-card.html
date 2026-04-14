@@ -1,44 +1,89 @@
-<div class="card" [class.compact]="variant === 'compact'" [class.card--sm]="size === 'sm'" [class.card--lg]="size === 'lg'" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
-  <a [routerLink]="'/product/' + product.slug" class="card__image-wrap">
-    <!-- Image carousel -->
-    @if (product.images && product.images.length > 0) {
-      @for (img of product.images; track $index) {
-        <img [src]="img" [alt]="product.name" [class.active]="activeImage() === $index" loading="lazy" />
-      }
+<div class="product-card" (click)="onCardClick()">
+  <!-- Single Image with Hover Reflection -->
+  <div
+    class="product-card__image-container"
+    (mouseenter)="onHover(true)"
+    (mouseleave)="onHover(false)"
+  >
+    <!-- Main Image -->
+    <img
+      [src]="product.images[0]"
+      [alt]="product.name"
+      class="product-card__image product-card__image--main"
+      [class.product-card__image--hidden]="isHovering"
+      loading="lazy"
+    />
+
+    <!-- Reflected Image (shown on hover) -->
+    @if (product.reflectedImage) {
+      <img
+        [src]="product.reflectedImage"
+        [alt]="product.name + ' reflection'"
+        class="product-card__image product-card__image--reflected"
+        [class.product-card__image--visible]="isHovering"
+        loading="lazy"
+      />
     }
 
-    <!-- Image dots indicator -->
-    @if (product.images && product.images.length > 1) {
-      <div class="card__dots">
-        @for (img of product.images; track $index) {
-          <span [class.active]="activeImage() === $index"></span>
+    <!-- Wishlist Heart Icon (Top Right) -->
+    <button
+      class="product-card__wishlist"
+      [class.product-card__wishlist--active]="isWishlisted"
+      (click)="onToggleWishlist($event)"
+      aria-label="Add to wishlist"
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Product Info -->
+  <div class="product-card__content">
+    <h3 class="product-card__name">{{ product.name }}</h3>
+    <p class="product-card__description">{{ product.description || product.category.name }}</p>
+
+    <!-- Rating -->
+    <div class="product-card__rating">
+      <div class="product-card__stars">
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            [class.filled]="i <= getRating()"
+            fill="currentColor"
+          >
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
         }
       </div>
-    }
+      @if (getReviewCount() > 0) {
+        <span class="product-card__reviews">({{ getReviewCount() }})</span>
+      }
+    </div>
 
-    <!-- Wishlist button overlay (top-right) -->
-    <button class="card__wishlist-btn" (click)="onWishlist($event)" [class.wishlisted]="cart.isWishlisted(product._id)()" title="Add to wishlist">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-    </button>
+    <!-- Price -->
+    <div class="product-card__price">
+      <span class="product-card__price-current">₹{{ product.basePrice | number:'1.0-0' }}</span>
+    </div>
 
-    <!-- Add to cart button overlay (bottom-right) -->
-    <button class="card__cart-btn" (click)="onAddToCart($event)" title="Add to cart">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-    </button>
-  </a>
-
-  <div class="card__body">
-    <span class="card__meta">{{ product.category.name || 'Single Estate' }}</span>
-    <h3 class="card__name">{{ product.name }}</h3>
-
-    <!-- Price and Buy Now button in one line -->
-    <div class="card__footer">
-      <div class="card__price-section">
-        <span class="card__price-label">Price</span>
-        <span class="card__price">&#8377;{{ product.basePrice }}</span>
-      </div>
-      <button class="card__cta" (click)="onBuyNow($event)">
+    <!-- Action Buttons -->
+    <div class="product-card__actions">
+      <button class="product-card__cta product-card__cta--primary" (click)="onBuyNow($event)">
         Buy Now
+      </button>
+      <button
+        class="product-card__cta product-card__cta--icon"
+        (click)="onAddToCart($event)"
+        aria-label="Add to cart"
+        title="Add to Cart"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="9" cy="21" r="1"/>
+          <circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
       </button>
     </div>
   </div>

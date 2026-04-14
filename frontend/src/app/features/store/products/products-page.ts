@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
 import { CatalogService, Product, Category } from '../../../core/services/catalog.service';
 import { CartStore } from '../../../core/services/cart.store';
+import { ProductCardComponent } from '../../../shared/components/product-card/product-card';
 
 // ─ NgModel for two-way binding ─
 class PriceFilter {
@@ -13,7 +14,7 @@ class PriceFilter {
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProductCardComponent],
   templateUrl: './products-page.html',
   styleUrls: ['./products-page.scss'],
 })
@@ -89,7 +90,7 @@ export class ProductsPageComponent implements OnInit {
     this.loading.set(true);
     const [sortField, sortDir] = this.sortBy().split(':');
 
-    const params: Record<string, string | number | boolean> = {
+    const params: Record<string, string | number | boolean | string[]> = {
       page: this.currentPage(),
       limit: 12,
       sortBy: sortField,
@@ -98,6 +99,7 @@ export class ProductsPageComponent implements OnInit {
 
     if (this.selectedCategory()) params['categoryId'] = this.selectedCategory()!;
     if (this.priceRangeModel.value < this.maxPrice()) params['priceMax'] = this.priceRangeModel.value;
+    if (this.selectedTags().length > 0) params['tags'] = this.selectedTags();
 
     this.catalog.getProductsPublic(params).subscribe({
       next: (res) => {
