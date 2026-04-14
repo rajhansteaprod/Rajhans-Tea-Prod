@@ -14,11 +14,7 @@
 
   <!-- Content -->
   <div class="catalog__content">
-    @if (store.loading()) {
-      <div class="catalog__loading">
-        <div class="catalog__spinner"></div>
-      </div>
-    } @else if (!store.hasResults()) {
+    @if (!store.hasResults()) {
       <div class="catalog__empty">
         <p>No products found in this category.</p>
         <a routerLink="/products" class="catalog__back-link">Browse all teas</a>

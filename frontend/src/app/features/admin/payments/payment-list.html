@@ -62,9 +62,7 @@
   </div>
 
   <!-- Payments Table -->
-  @if (loading()) {
-    <div class="loading"><div class="spinner"></div></div>
-  } @else if (payments().length === 0) {
+  @if (payments().length === 0) {
     <div class="empty-state"><p>No payments found.</p></div>
   } @else {
     <div class="table-wrap">

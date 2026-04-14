@@ -26,9 +26,7 @@
       }
     </div>
 
-    @if (loading()) {
-      <div class="wallet__loading"><div class="wallet__spinner"></div></div>
-    } @else if (transactions().length === 0) {
+    @if (transactions().length === 0) {
       <div class="wallet__empty">
         <div class="wallet__empty-icon">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none">

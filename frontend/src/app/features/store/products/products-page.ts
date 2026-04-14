@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
 import { CatalogService, Product, Category } from '../../../core/services/catalog.service';
 import { CartStore } from '../../../core/services/cart.store';
-import { LoaderContextService } from '../../../core/services/loader-context.service';
 
 // ─ NgModel for two-way binding ─
 class PriceFilter {
@@ -22,7 +21,6 @@ export class ProductsPageComponent implements OnInit {
   private readonly catalog = inject(CatalogService);
   private readonly cartStore = inject(CartStore);
   private readonly titleService = inject(Title);
-  readonly loaderContext = inject(LoaderContextService); // ← NEW: Check if global nav is in progress
 
   // State
   readonly products = signal<Product[]>([]);

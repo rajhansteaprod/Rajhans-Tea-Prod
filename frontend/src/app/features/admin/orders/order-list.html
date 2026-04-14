@@ -33,9 +33,7 @@
   </div>
 
   <!-- Table -->
-  @if (loading()) {
-    <div class="loading"><div class="spinner"></div></div>
-  } @else if (orders().length === 0) {
+  @if (orders().length === 0) {
     <div class="empty">No orders found.</div>
   } @else {
     <div class="table-wrap">

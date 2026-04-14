@@ -89,9 +89,7 @@
 
     <!-- Results -->
     <main class="search__results">
-      @if (store.loading()) {
-        <div class="search__loading"><div class="search__spinner"></div></div>
-      } @else if (!store.hasResults()) {
+      @if (!store.hasResults()) {
         <div class="search__empty">
           <div class="search__empty-icon">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none">

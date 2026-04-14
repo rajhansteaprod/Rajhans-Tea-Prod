@@ -67,7 +67,9 @@
       "Bash(docker system:*)",
       "Bash(curl -s http://localhost:3100/api/v1/health)",
       "Bash(timeout 20 bash -c 'for i in {1..20}; do curl -s http://localhost:3100/api/v1/hero-slides 2>/dev/null && echo \"Backend is ready!\" && break; echo \"Attempt $i - waiting...\"; sleep 1; done')",
-      "Bash(curl -s 'http://localhost:3100/api/v1/catalog/products?page=1&limit=1')"
+      "Bash(curl -s 'http://localhost:3100/api/v1/catalog/products?page=1&limit=1')",
+      "Bash(find frontend/src/app/features -name \"*.html\" -type f -exec grep -l \"loading\\(\\)\" {} \\\\;)",
+      "Read(//tmp/**)"
     ]
   }
 }

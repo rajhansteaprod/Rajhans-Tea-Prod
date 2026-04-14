@@ -25,12 +25,7 @@
 
   <!-- Table -->
   <div class="table-card">
-    @if (loading()) {
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <span>Loading categories…</span>
-      </div>
-    } @else if (categories().length === 0) {
+    @if (categories().length === 0) {
       <div class="empty-state">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
           <path d="M3 7h18M3 12h18M3 17h18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>

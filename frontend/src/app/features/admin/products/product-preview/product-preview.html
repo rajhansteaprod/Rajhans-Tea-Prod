@@ -28,11 +28,7 @@
     </div>
   </nav>
 
-  @if (loading()) {
-    <div class="page-loader">
-      <div class="loader-ring"></div>
-    </div>
-  } @else if (error()) {
+  @if (error()) {
     <div class="error-state">
       <h2>Product not found</h2>
       <p>{{ error() }}</p>

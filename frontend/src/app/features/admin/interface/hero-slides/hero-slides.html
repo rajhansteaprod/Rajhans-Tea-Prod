@@ -16,12 +16,7 @@
 
   <!-- Slides Grid -->
   <div class="slides-container">
-    @if (loading()) {
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <span>Loading slides…</span>
-      </div>
-    } @else if (slides().length === 0) {
+    @if (slides().length === 0) {
       <div class="empty-state">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
           <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/>

@@ -27,16 +27,8 @@
     </div>
   </div>
 
-  <!-- Loading state -->
-  @if (loading()) {
-    <div class="panel-loading">
-      <div class="spinner"></div>
-      <span>Loading sessions...</span>
-    </div>
-  }
-
   <!-- Error state -->
-  @else if (error()) {
+  @if (error()) {
     <div class="panel-error">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>

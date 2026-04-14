@@ -1,11 +1,6 @@
 <div class="pd">
-  <!-- Loading spinner -->
-  @if (loading()) {
-    <div class="pd__loading">
-      <div class="pd__spinner"></div>
-    </div>
-  } @else if (product()) {
-    <!-- Main content -->
+  <!-- Main content -->
+  @if (product()) {
     <div class="pd__body">
       <!-- 2-column layout: image + info -->
       <div class="pd__main">

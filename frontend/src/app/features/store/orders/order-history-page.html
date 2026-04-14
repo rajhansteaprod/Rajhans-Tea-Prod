@@ -21,9 +21,7 @@
     }
   </div>
 
-  @if (store.loading()) {
-    <div class="orders__loading"><div class="orders__spinner"></div></div>
-  } @else if (filteredOrders().length === 0) {
+  @if (filteredOrders().length === 0) {
     <div class="orders__empty">
       <div class="orders__empty-icon">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none">

@@ -65,12 +65,7 @@
 
   <!-- Table -->
   <div class="table-card">
-    @if (loading() && !users().length) {
-      <div class="table-loading">
-        <div class="spinner"></div>
-        <span>Loading users...</span>
-      </div>
-    } @else if (!users().length) {
+    @if (!users().length) {
       <div class="table-empty">
         <p>No users found</p>
       </div>
