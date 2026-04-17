@@ -16,7 +16,7 @@
 .page-title {
   font-family: $font-family-heading;
   font-size: $font-size-xxl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   letter-spacing: 0.02em;
 }
@@ -304,7 +304,7 @@
   color: $color-text-secondary;
   @include flex-center;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   flex-shrink: 0;
 
   &.admin { background: $color-primary-light; color: $color-primary; }

@@ -58,6 +58,7 @@ export interface ProductVariant {
   name: string;
   sku?: string;
   price: number;
+  discountPercentage: number;
   cost?: number;
   stock: number;
   trackInventory: boolean;
@@ -70,6 +71,7 @@ export interface CreateVariantPayload {
   name: string;
   sku?: string;
   price: number;
+  discountPercentage: number;
   stock: number;
   trackInventory?: boolean;
   isActive?: boolean;
@@ -84,6 +86,7 @@ export interface Product {
   category: CategoryRef;
   collections: { _id: string; name: string; slug: string }[];
   basePrice: number;
+  discountPercentage: number;
   images: string[];
   reflectedImage?: string; // Image shown on hover in featured products
   attributes: Record<string, string>;
@@ -146,6 +149,7 @@ export interface CreateProductPayload {
   categoryId: string;
   collectionIds?: string[];
   basePrice: number;
+  discountPercentage: number;
   images?: string[];
   reflectedImage: string; // Mandatory: Image shown on hover in featured products
   attributes?: Record<string, string>;
@@ -168,6 +172,8 @@ export interface ProductListParams {
   collectionId?: string;
   status?: string;
   isFeatured?: boolean;
+  tags?: string[];
+  priceMax?: number;
 }
 
 // ---------------------------------------------------------------------------

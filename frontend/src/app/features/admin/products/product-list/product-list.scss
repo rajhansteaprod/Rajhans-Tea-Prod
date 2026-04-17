@@ -17,7 +17,7 @@
 .page-title {
   font-family: $font-family-heading;
   font-size: $font-size-xxl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   letter-spacing: 0.02em;
   margin: 0 0 $space-xxs;
@@ -213,7 +213,7 @@ tr:hover td { background: rgba(204, 88, 3, 0.02); }
 .featured-dot { color: $color-primary; font-size: $font-size-md; }
 
 .stock-val {
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-success;
   &.low { color: $color-warning; }
   &.out { color: $color-error; }
@@ -313,7 +313,7 @@ tr:hover td { background: rgba(204, 88, 3, 0.02); }
 
 .modal-title {
   font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   margin: 0;
 }
@@ -372,7 +372,7 @@ tr:hover td { background: rgba(204, 88, 3, 0.02); }
 
 .section-title {
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;

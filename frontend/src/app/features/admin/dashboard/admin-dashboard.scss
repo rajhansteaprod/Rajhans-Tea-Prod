@@ -35,7 +35,7 @@
 .dash-title {
   font-family: $font-family-heading;
   font-size: $font-size-xxl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   letter-spacing: 0.02em;
 
@@ -175,7 +175,7 @@
 .kpi-value {
   font-family: $font-family-display;
   font-size: 32px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   letter-spacing: 0.02em;
   line-height: 1;
@@ -245,7 +245,7 @@
 .panel-title {
   font-family: $font-family-heading;
   font-size: $font-size-md;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   letter-spacing: 0.02em;
 }
@@ -289,7 +289,7 @@
   color: $color-text-tertiary;
   @include flex-center;
   font-size: 11px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   flex-shrink: 0;
 
   &.admin {

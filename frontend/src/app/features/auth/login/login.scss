@@ -18,7 +18,7 @@
 
 // ═══ Brand Panel (Left) — Gradient with Features ═══
 .login__brand {
-  background: linear-gradient(160deg, #4A0E2B 0%, #2D081A 100%);
+  background: #000000;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -41,8 +41,8 @@
 .login__brand-logo {
   font-family: $font-family-heading;
   font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
-  color: $color-text-inverse;
+  font-weight: $font-weight-medium;
+  color: #ffffff;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-decoration: none;
@@ -50,7 +50,7 @@
   transition: color $transition-normal;
 
   &:hover {
-    color: rgba($color-text-inverse, 0.8);
+    color: rgba(#ffffff, 0.8);
   }
 }
 
@@ -65,8 +65,8 @@
 .login__brand-headline {
   font-family: $font-family-heading;
   font-size: clamp(28px, 3vw, 42px);
-  font-weight: $font-weight-bold;
-  color: $color-text-inverse;
+  font-weight: $font-weight-medium;
+  color: #ffffff;
   line-height: 1.35;
   letter-spacing: -0.02em;
   margin: 0;
@@ -83,7 +83,7 @@
 
 .login__feature-card {
   background: rgba(252, 255, 247, 0.08);
-  border-radius: 12px;
+  
   padding: $space-lg;
   display: flex;
   flex-direction: column;
@@ -141,8 +141,8 @@
   display: none;
   font-family: $font-family-heading;
   font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
-  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  color: #000000;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-decoration: none;
@@ -151,7 +151,7 @@
   transition: color $transition-normal;
 
   &:hover {
-    color: $color-bg-maroon;
+    color: #000000;
   }
 
   @include respond-to(md) {
@@ -189,29 +189,29 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: $color-border;
+  background: #e0e0e0;
   transition: all $transition-normal;
   flex-shrink: 0;
 
   &.active {
-    background: $color-bg-maroon;
-    box-shadow: 0 0 0 3px rgba($color-bg-maroon, 0.2);
+    background: #000000;
+    box-shadow: 0 0 0 3px rgba(#000000, 0.2);
   }
 
   &.done {
-    background: $color-success;
-    box-shadow: 0 0 0 3px rgba($color-success, 0.12);
+    background: #000000;
+    box-shadow: 0 0 0 3px rgba(#000000, 0.12);
   }
 }
 
 .login__step-line {
   height: 2px;
   flex: 1;
-  background: $color-border;
+  background: #e0e0e0;
   transition: background $transition-normal;
 
   &.active {
-    background: $color-bg-maroon;
+    background: #000000;
   }
 }
 
@@ -223,8 +223,8 @@
 .login__title {
   font-family: $font-family-heading;
   font-size: $font-size-xxxl;
-  font-weight: $font-weight-bold;
-  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  color: $color-mono-dark;
   letter-spacing: $letter-spacing-heading;
   margin: 0 0 $space-xs;
 }
@@ -232,7 +232,7 @@
 .login__subtitle {
   font-family: $font-family-display;
   font-size: $font-size-md;
-  color: $color-text-tertiary;
+  color: $color-mono-dark;
   line-height: $line-height-relaxed;
   margin: 0;
 }
@@ -241,7 +241,7 @@
   font-family: $font-family-nav;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
-  color: $color-bg-maroon;
+  color: #000000;
   margin: $space-xxs 0 0;
   text-transform: uppercase;
 }
@@ -251,13 +251,13 @@
   display: flex;
   align-items: center;
   gap: $space-sm;
-  background: rgba($color-error, 0.05);
-  border: 1px solid rgba($color-error, 0.15);
+  background: rgba(#333333, 0.05);
+  border: 1px solid rgba(#333333, 0.15);
   border-radius: 0;
   padding: $space-sm $space-md;
   margin-bottom: $space-lg;
   font-size: $font-size-sm;
-  color: $color-error;
+  color: #333333;
   cursor: pointer;
   animation: loginShake 0.5s ease;
 }
@@ -290,21 +290,21 @@
   font-weight: $font-weight-semibold;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
-  color: $color-text-secondary;
+  color: $color-mono-dark;
 }
 
 // ═══ Phone Input ═══
 .login__phone-group {
   display: flex;
-  border: 2px solid $color-border;
-  border-radius: $space-xs;
+  border: 2px solid #e0e0e0;
+  
   overflow: hidden;
   transition: all $transition-fast;
-  background: $color-bg-tertiary;
+  background: #fafafa;
 
   &:focus-within {
-    border-color: $color-bg-maroon;
-    box-shadow: 0 0 0 3px rgba($color-bg-maroon, 0.1);
+    border-color: #000000;
+    box-shadow: 0 0 0 3px rgba(#000000, 0.1);
   }
 }
 
@@ -313,19 +313,29 @@
   align-items: center;
   gap: $space-xs;
   padding: 0 $space-md;
-  background: $color-bg-secondary;
-  border-right: 2px solid $color-border;
+  background: #f5f5f5;
+  border-right: 2px solid #e0e0e0;
   font-family: $font-family-nav;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
-  color: $color-text-secondary;
+  color: #666666;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .login__flag {
-  font-size: 18px;
-  line-height: 1;
+  width: 24px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
 }
 
 .login__phone-input {
@@ -335,13 +345,13 @@
   padding: $space-md;
   font-size: $font-size-md;
   font-family: $font-family;
-  color: $color-text-primary;
+  color: #000000;
   background: transparent;
   letter-spacing: 0.5px;
   min-width: 0;
 
   &::placeholder {
-    color: $color-text-disabled;
+    color: #cccccc;
   }
 }
 
@@ -356,26 +366,26 @@
   aspect-ratio: 1;
   max-width: 52px;
   border: 3px solid #ddd;
-  border-radius: 8px;
+  
   text-align: center;
   font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   font-family: $font-family-nav;
-  color: $color-text-primary;
+  color: #000000;
   background: white;
   outline: none;
   transition: all $transition-fast;
-  caret-color: $color-bg-maroon;
+  caret-color: #000000;
 
   &:focus {
-    border-color: $color-bg-maroon;
-    box-shadow: 0 0 0 4px rgba($color-bg-maroon, 0.12);
+    border-color: #000000;
+    box-shadow: 0 0 0 4px rgba(#000000, 0.12);
   }
 
   &.filled {
-    border-color: $color-bg-maroon;
-    background: rgba($color-bg-maroon, 0.03);
-    box-shadow: 0 0 0 2px rgba($color-bg-maroon, 0.08);
+    border-color: #000000;
+    background: rgba(#000000, 0.03);
+    box-shadow: 0 0 0 2px rgba(#000000, 0.08);
   }
 }
 
@@ -387,13 +397,13 @@
   gap: $space-xs;
   width: 100%;
   padding: $space-md $space-lg;
-  background: $color-bg-maroon;
-  color: $color-text-inverse;
+  background: #000000;
+  color: #ffffff;
   border: none;
-  border-radius: 8px;
+  
   font-family: $font-family-nav;
   font-size: $font-size-md;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
@@ -401,9 +411,13 @@
 }
 
 .login__btn-submit:hover:not(:disabled) {
-  background: $color-primary-hover;
+  background: #333333;
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba($color-bg-maroon, 0.3);
+  box-shadow: 0 4px 16px rgba(#000000, 0.3);
+  -webkit-transform: translateY(-1px);
+  -moz-transform: translateY(-1px);
+  -ms-transform: translateY(-1px);
+  -o-transform: translateY(-1px);
 }
 
 .login__btn-submit:active:not(:disabled) {
@@ -440,7 +454,7 @@
 .login__link {
   background: none;
   border: none;
-  color: $color-bg-maroon;
+  color: #000000;
   font-family: $font-family-nav;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
@@ -451,11 +465,11 @@
   transition: color $transition-fast;
 
   &:hover:not(:disabled) {
-    color: $color-primary-hover;
+    color: #333333;
   }
 
   &:disabled {
-    color: $color-text-disabled;
+    color: #cccccc;
     cursor: not-allowed;
   }
 }
@@ -465,17 +479,17 @@
   margin-top: $space-xxl;
   font-family: $font-family-display;
   font-size: $font-size-sm;
-  color: $color-text-tertiary;
+  color: #999999;
   text-align: center;
   line-height: $line-height-relaxed;
 
   a {
-    color: $color-text-secondary;
+    color: #666666;
     text-decoration: underline;
     text-underline-offset: 2px;
 
     &:hover {
-      color: $color-bg-maroon;
+      color: #000000;
     }
   }
 }

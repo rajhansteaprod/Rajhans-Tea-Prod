@@ -1,27 +1,34 @@
 @use '../../../core/design-tokens/tokens' as *;
 
+// ─ Host Element (Flex Item in Parent Grid) ─
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 calc(25% - 24px);
+
+  @media (max-width: 1199px) {
+    flex: 0 0 calc(33.333% - 16px);
+  }
+
+  @media (max-width: 768px) {
+    flex: 0 0 calc(50% - 8px);
+  }
+
+  @media (max-width: 480px) {
+    flex: 0 0 100%;
+  }
+}
+
 .product-card {
   display: flex;
   flex-direction: column;
-  flex: 0 0 calc(25% - var(--space-gap, 24px));
   background: $color-mono-light;
   border-radius: 0;
   overflow: hidden;
   transition: all $transition-normal;
   box-shadow: 0 2px 8px rgba($color-mono-dark, 0.04);
   cursor: pointer;
-
-  @media (max-width: 1199px) {
-    flex: 0 0 calc(33.333% - var(--space-gap, 24px));
-  }
-
-  @media (max-width: 768px) {
-    flex: 0 0 calc(50% - var(--space-gap, 24px));
-  }
-
-  @media (max-width: 480px) {
-    flex: 0 0 100%;
-  }
+  flex: 1;
 }
 
 .product-card__image-container {

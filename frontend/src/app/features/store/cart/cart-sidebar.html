@@ -37,13 +37,13 @@
         </div>
         <p class="empty-title">Your cart is empty</p>
         <p class="empty-sub">Discover our collection of premium teas</p>
-        <button class="btn-shop" (click)="cart.closeSidebar()" routerLink="/">
+        <button class="btn-shop" (click)="cart.closeSidebar()" routerLink="/products">
           Continue Shopping
         </button>
       </div>
     } @else {
       <ul class="item-list">
-        @for (item of cart.cartItems(); track item.productId) {
+        @for (item of cart.cartItems(); track item.productId + '-' + (item.variantId || '')) {
           <li class="cart-item">
             <div class="item-image">
               @if (item.image) {
@@ -64,7 +64,7 @@
                 @if (item.variantName) {
                   <p class="item-variant">{{ item.variantName }}</p>
                 }
-                <button class="remove-btn" (click)="cart.removeItem(item.productId)" title="Remove">
+                <button class="remove-btn" (click)="cart.removeItem(item.productId, item.variantId)" title="Remove">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                     <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                   </svg>
@@ -73,13 +73,13 @@
               <p class="item-price">&#8377;{{ item.basePrice | number:'1.0-0' }}</p>
               <div class="qty-row">
                 <div class="qty-controls">
-                  <button class="qty-btn" (click)="cart.updateQty(item.productId, item.qty - 1)">
+                  <button class="qty-btn" (click)="cart.updateQty(item.productId, item.qty - 1, item.variantId)">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                       <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
                   </button>
                   <span class="qty-value">{{ item.qty }}</span>
-                  <button class="qty-btn" (click)="cart.updateQty(item.productId, item.qty + 1)" [disabled]="item.qty >= 10">
+                  <button class="qty-btn" (click)="cart.updateQty(item.productId, item.qty + 1, item.variantId)" [disabled]="item.qty >= 10">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                       <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>

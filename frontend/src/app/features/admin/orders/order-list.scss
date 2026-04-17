@@ -11,7 +11,7 @@
 .page-title {
   font-family: $font-family-heading;
   font-size: $font-size-xxl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   letter-spacing: 0.02em;
   margin: 0 0 $space-xxs;
@@ -50,7 +50,7 @@
 .stat-value {
   display: block;
   font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
 }
 
@@ -177,7 +177,7 @@
 }
 
 .amount {
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-primary;
 }
 
@@ -192,7 +192,7 @@
   padding: 2px $space-xs;
   border-radius: 0;
   font-size: 10px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
 
   &[data-status="confirmed"] { background: rgba(204, 88, 3, 0.1); color: $color-primary; }
@@ -284,7 +284,7 @@
 
   h2 {
     font-size: $font-size-lg;
-    font-weight: $font-weight-bold;
+    font-weight: $font-weight-medium;
     margin: 0;
   }
 

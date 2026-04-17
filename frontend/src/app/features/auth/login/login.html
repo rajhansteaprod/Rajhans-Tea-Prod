@@ -61,7 +61,14 @@
           <label class="login__label">MOBILE NUMBER</label>
           <div class="login__phone-group">
             <div class="login__country">
-              <span class="login__flag">&#127470;&#127475;</span>
+              <svg class="login__flag" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
+                <rect width="900" height="200" fill="#FF9933"/>
+                <rect y="200" width="900" height="200" fill="#FFFFFF"/>
+                <rect y="400" width="900" height="200" fill="#138808"/>
+                <circle cx="450" cy="300" r="60" fill="#000080"/>
+                <circle cx="450" cy="300" r="50" fill="none" stroke="#000080" stroke-width="3"/>
+                <text x="450" y="310" text-anchor="middle" font-size="30" fill="#000080">⚙</text>
+              </svg>
               <span>+91</span>
             </div>
             <input
@@ -82,10 +89,14 @@
             [disabled]="phone().length !== 10 || loading()"
             (click)="onSendOtp()"
           >
-            <span>CONTINUE</span>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            @if (!loading()) {
+              <span>CONTINUE</span>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            } @else {
+              <div class="login__spinner"></div>
+            }
           </button>
         </div>
       }
@@ -117,7 +128,11 @@
             [disabled]="otp().length !== 6 || loading()"
             (click)="onVerifyOtp()"
           >
-            <span>VERIFY &amp; SIGN IN</span>
+            @if (!loading()) {
+              <span>VERIFY &amp; SIGN IN</span>
+            } @else {
+              <div class="login__spinner"></div>
+            }
           </button>
 
           <div class="login__otp-actions">

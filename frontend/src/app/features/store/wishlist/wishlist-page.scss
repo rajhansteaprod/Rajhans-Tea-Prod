@@ -42,7 +42,7 @@
 .wishlist__title {
   font-family: $font-family-heading;
   font-size: $font-size-display;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-heading;
   color: $color-text-primary;
   margin: 0;
@@ -66,7 +66,7 @@
   gap: $space-xs;
   font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-secondary;
   text-decoration: none;
   text-transform: uppercase;
@@ -123,7 +123,7 @@
 .wishlist__empty-title {
   font-family: $font-family-heading;
   font-size: $font-size-xxl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   margin: 0;
 }
@@ -143,7 +143,7 @@
   border-radius: 0;
   font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-decoration: none;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -238,7 +238,7 @@
   border-radius: 0;
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   background: rgba($color-bg-dark, 0.85);
   color: $color-text-inverse;
   letter-spacing: $letter-spacing-wide;
@@ -260,7 +260,7 @@
 .wishlist__product-price {
   font-family: $font-family-nav;
   font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-bg-maroon;
   margin: 0;
 }
@@ -282,7 +282,7 @@
   border-radius: 0;
   font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   cursor: pointer;

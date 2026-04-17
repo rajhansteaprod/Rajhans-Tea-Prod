@@ -32,7 +32,7 @@
 .orders__title {
   font-family: $font-family;
   font-size: clamp(28px, 4vw, 40px);
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-mono-dark;
   margin: 0;
   line-height: 1;
@@ -130,7 +130,7 @@
 .orders__empty-title {
   font-family: $font-family;
   font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-mono-dark;
   margin: 0;
 }
@@ -204,7 +204,7 @@
 .orders__card-number {
   font-family: $font-family;
   font-size: $font-size-md;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-mono-dark;
 }
 
@@ -218,7 +218,7 @@
   padding: $space-xxs $space-md;
   font-family: $font-family;
   font-size: 10px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
   background: rgba($color-mono-dark, 0.06);
@@ -322,7 +322,7 @@
 .orders__total {
   font-family: $font-family;
   font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-mono-dark;
 }
 
@@ -396,7 +396,7 @@
 .orders__timeline-status {
   font-family: $font-family;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-mono-dark;
   text-transform: uppercase;
 }

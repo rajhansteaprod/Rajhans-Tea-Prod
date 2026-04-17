@@ -31,7 +31,7 @@
 .gifting__title {
   font-family: $font-family-heading;
   font-size: clamp(28px, 4vw, 48px);
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-primary;
   margin: 0 0 $space-md 0;
   letter-spacing: -0.02em;
@@ -123,7 +123,7 @@
 .gifting-card__title {
   font-family: $font-family-heading;
   font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-mono-light;
   margin: 0 0 $space-md 0;
   line-height: 1.2;

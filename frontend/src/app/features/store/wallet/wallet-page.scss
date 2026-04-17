@@ -30,7 +30,7 @@
 .wallet__title {
   font-family: $font-family-heading;
   font-size: $font-size-display;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   letter-spacing: $letter-spacing-heading;
   margin: 0 0 $space-xxl;
@@ -64,7 +64,7 @@
 .wallet__balance-label {
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   color: rgba($color-text-inverse, 0.5);
@@ -73,7 +73,7 @@
 .wallet__balance-amount {
   font-family: $font-family-nav;
   font-size: $font-size-display;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-inverse;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -98,7 +98,7 @@
 .wallet__section-title {
   font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   color: $color-text-secondary;
@@ -183,7 +183,7 @@
 .wallet__txn-amount {
   font-family: $font-family-nav;
   font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   white-space: nowrap;
 
   &.credit { color: $color-bg-teal; }
@@ -212,7 +212,7 @@
 .wallet__empty-text {
   font-family: $font-family-heading;
   font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   margin: 0;
 }

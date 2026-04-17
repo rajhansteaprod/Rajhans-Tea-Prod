@@ -17,7 +17,7 @@
 .page-title {
   font-family: $font-family-heading;
   font-size: $font-size-xxl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   letter-spacing: 0.02em;
   margin: 0 0 $space-xxs;
@@ -370,7 +370,7 @@ textarea.form-input { resize: vertical; font-family: inherit; }
 
 .modal-title {
   font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   margin: 0;
 }

@@ -57,7 +57,7 @@
   gap: $space-sm;
   font-family: $font-family-display;
   font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   letter-spacing: 0.04em;
   margin: 0;
@@ -69,7 +69,7 @@
   border-radius: 0;
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   min-width: 22px;
   height: 22px;
   padding: 0 6px;
@@ -140,7 +140,7 @@
 .empty-title {
   font-family: $font-family-display;
   font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   margin: 0;
   letter-spacing: 0.04em;
@@ -160,7 +160,7 @@
   border: none;
   border-radius: 0;
   font-size: 13px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   font-family: $font-family-nav;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -235,7 +235,7 @@
 
 .item-name {
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   font-family: $font-family-display;
   color: $color-text-primary;
   margin: 0;
@@ -293,7 +293,7 @@
 
 .qty-value {
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   font-family: $font-family-nav;
   color: $color-text-primary;
   min-width: 24px;
@@ -302,7 +302,7 @@
 
 .item-line-total {
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   font-family: $font-family-nav;
   color: $color-text-primary;
 }
@@ -340,7 +340,7 @@
 .subtotal-label {
   font-size: 12px;
   font-family: $font-family-nav;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-tertiary;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -349,7 +349,7 @@
 .subtotal-value {
   font-family: $font-family-nav;
   font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
 }
 
@@ -370,7 +370,7 @@
   border: none;
   border-radius: 0;
   font-size: 14px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   font-family: $font-family-nav;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -395,7 +395,7 @@
   border: 2px solid $color-border;
   border-radius: 0;
   font-size: 13px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   font-family: $font-family-nav;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -419,7 +419,7 @@
   border: none;
   font-size: $font-size-xs;
   font-family: $font-family-nav;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   cursor: pointer;

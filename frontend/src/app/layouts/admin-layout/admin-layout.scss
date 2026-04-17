@@ -37,7 +37,7 @@
 
 .mobile-title {
   font-family: $font-family-nav;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   font-size: $font-size-md;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -97,13 +97,13 @@
   @include flex-center;
   font-family: $font-family-heading;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
 }
 
 .logo-text {
   font-family: $font-family-heading;
   font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-inverse;
   letter-spacing: 0.08em;
 }
@@ -111,7 +111,7 @@
 .env-badge {
   font-family: $font-family-nav;
   font-size: 10px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
   color: $color-gold;
@@ -144,7 +144,7 @@
 .nav-group-label {
   font-family: $font-family-nav;
   font-size: 10px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
   color: rgba(252, 255, 247, 0.35);
@@ -236,7 +236,7 @@
 .coming-soon {
   font-family: $font-family-nav;
   font-size: 9px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
   color: rgba(252, 255, 247, 0.25);
@@ -267,7 +267,7 @@
   @include flex-center;
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   flex-shrink: 0;
 }
 
@@ -280,7 +280,7 @@
   font-family: $font-family-nav;
   font-size: $font-size-sm;
   color: $color-text-inverse;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
 }
 

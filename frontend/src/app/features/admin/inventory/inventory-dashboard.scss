@@ -9,7 +9,7 @@
 .page-title {
   font-family: $font-family-heading;
   font-size: $font-size-xxl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   letter-spacing: 0.02em;
   margin: 0 0 $space-xxs;
@@ -48,7 +48,7 @@
 .stat-value {
   display: block;
   font-size: $font-size-xxl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
 
   .warn & { color: $color-warning; }
@@ -101,7 +101,7 @@
   color: $color-text-inverse;
   border-radius: 0;
   font-size: 10px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   min-width: 18px;
   height: 18px;
   padding: 0 $space-xxs;
@@ -228,7 +228,7 @@
 .pname { font-weight: $font-weight-medium; }
 
 .stock-val {
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   padding: 2px $space-xs;
   border-radius: 0;
   font-size: $font-size-sm;
@@ -243,7 +243,7 @@
   padding: 2px $space-xs;
   border-radius: 0;
   font-size: 10px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
 
   &[data-status="active"]   { background: rgba(87, 136, 108, 0.12); color: $color-success; }
@@ -265,8 +265,8 @@
   &[data-type="initial_stock"]      { background: rgba(162, 126, 142, 0.12); color: $color-accent; }
 }
 
-.positive { color: $color-success; font-weight: $font-weight-bold; }
-.negative { color: $color-error; font-weight: $font-weight-bold; }
+.positive { color: $color-success; font-weight: $font-weight-medium; }
+.negative { color: $color-error; font-weight: $font-weight-medium; }
 
 .date {
   font-size: $font-size-xs;
@@ -344,7 +344,7 @@
 
 .alert-type {
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
   color: $color-warning;
@@ -399,7 +399,7 @@
 
   h2 {
     font-size: $font-size-md;
-    font-weight: $font-weight-bold;
+    font-weight: $font-weight-medium;
     margin: 0;
   }
 

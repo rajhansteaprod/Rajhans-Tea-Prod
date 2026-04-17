@@ -36,9 +36,24 @@ export class ProductDetailComponent implements OnInit {
   readonly hoveredProductId = signal<string | null>(null);
 
   // ─ Computed ─
-  readonly effectivePrice = computed(() =>
-    this.selectedVariant()?.price ?? this.product()?.basePrice ?? 0
-  );
+  readonly effectivePrice = computed(() => {
+    const variant = this.selectedVariant();
+    const product = this.product();
+
+    if (variant) {
+      const basePrice = variant.price;
+      const discount = variant.discountPercentage ?? 0;
+      return basePrice - (basePrice * discount / 100);
+    }
+
+    if (product) {
+      const basePrice = product.basePrice;
+      const discount = product.discountPercentage ?? 0;
+      return basePrice - (basePrice * discount / 100);
+    }
+
+    return 0;
+  });
 
   ngOnInit(): void {
     this.route.params.subscribe((params) => {

@@ -168,7 +168,7 @@
 .pd__rating-score {
   font-family: $font-family-heading;
   font-size: $font-size-md;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-mono-dark;
   letter-spacing: -0.01em;
 }
@@ -209,7 +209,7 @@
 .pd__rating-highlight-title {
   font-family: $font-family-body;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: #2c2c2c;
   line-height: 1.4;
 }
@@ -217,7 +217,7 @@
 .pd__rating-highlight-text {
   font-family: $font-family-body;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: #2c2c2c;
   line-height: 1.4;
 }
@@ -284,7 +284,7 @@
 .pd__section-label {
   font-family: $font-family-body;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: 0;
   text-transform: uppercase;
   color: $color-mono-dark;
@@ -295,7 +295,7 @@
 .pd__variant-subtitle {
   font-family: $font-family-body;
   font-size: $font-size-md;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-mono-dark;
   margin: 0 0 $space-md 0;
   line-height: 1.4;
@@ -337,18 +337,94 @@
 }
 
 // Price
-.pd__price-section {
-  margin: $space-xl $space-lg 0;
+// Price Section - Exact replica of reference design
+.pd__price-container {
+  margin: $space-xl 0;
+  padding: $space-lg 0px;
+  background: #fafafa;
+  border-radius: 4px;
 }
 
-.pd__price {
-  font-family: $font-family-heading;
-  font-size: clamp(32px, 5vw, 42px);
-  font-weight: $font-weight-bold;
+.pd__price-label {
+  font-family: $font-family-body;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
   color: $color-mono-dark;
-  display: block;
-  margin: 0 0 $space-xs 0;
+  margin: 0 0 $space-md 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+// Price display row: MRP [original ₹299] [current ₹284] [5% Off badge] [info icon]
+.pd__price-display {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  flex-wrap: wrap;
+  margin-bottom: $space-sm;
+}
+
+.pd__price-mrp {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  color: $color-mono-dark;
+  font-weight: $font-weight-medium;
+}
+
+.pd__price-original {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  color: rgba($color-mono-dark, 0.5);
+  text-decoration: line-through;
+}
+
+.pd__price-current {
+  font-family: $font-family-heading;
+  font-size: 32px;
+  font-weight: $font-weight-medium;
+  color: $color-mono-dark;
   letter-spacing: -0.01em;
+}
+
+.pd__price-badge {
+  background: $color-mono-dark;
+  color: white;
+  font-family: $font-family-body;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  padding: 4px 10px;
+  border-radius: 2px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.pd__price-info {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  color: $color-mono-dark;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  transition: all $transition-fast;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: rgba($color-mono-dark, 0.1);
+  }
+
+  &:focus {
+    outline: 2px solid rgba($color-mono-dark, 0.3);
+    outline-offset: 2px;
+  }
 }
 
 .pd__price-note {
@@ -356,6 +432,7 @@
   font-size: $font-size-xs;
   color: rgba($color-mono-dark, 0.5);
   display: block;
+  margin: 0;
 }
 
 // Quantity + Action Buttons
@@ -390,7 +467,7 @@
     background: transparent;
     font-family: $font-family-heading;
     font-size: $font-size-lg;
-    font-weight: $font-weight-bold;
+    font-weight: $font-weight-medium;
     color: $color-mono-dark;
     cursor: pointer;
     transition: all $transition-fast;
@@ -408,7 +485,7 @@
     min-width: 44px;
     text-align: center;
     font-family: $font-family-heading;
-    font-weight: $font-weight-bold;
+    font-weight: $font-weight-medium;
     color: $color-mono-dark;
     padding: 0 $space-sm;
     border-left: 1px solid rgba($color-mono-dark, 0.15);
@@ -428,7 +505,7 @@
   border-radius: 0;
   font-family: $font-family-heading;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   cursor: pointer;
@@ -459,7 +536,7 @@
   border-radius: 0;
   font-family: $font-family-heading;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   cursor: pointer;
@@ -500,7 +577,7 @@
 .pd__recos-title {
   font-family: $font-family-heading;
   font-size: clamp(24px, 4vw, 32px);
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-mono-dark;
   margin: 0 0 $space-xxl 0;
   letter-spacing: -0.02em;
@@ -638,7 +715,7 @@
 .card__name {
   font-family: $font-family-heading;
   font-size: $font-size-md;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-mono-dark;
   margin: 0;
   line-height: 1.35;
@@ -700,7 +777,7 @@
 .card__price-current {
   font-family: $font-family-heading;
   font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-mono-dark;
   letter-spacing: -0.01em;
 }
@@ -720,7 +797,7 @@
   border-radius: 0;
   font-family: $font-family-heading;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   cursor: pointer;

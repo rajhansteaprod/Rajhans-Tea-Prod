@@ -18,6 +18,7 @@ interface ProductForm {
   categoryId: string;
   collectionIds: string[];
   basePrice: number | '';
+  discountPercentage: number | '';
   images: string[];
   reflectedImage: string;
   attributes: AttributeEntry[];
@@ -33,6 +34,7 @@ interface VariantForm {
   name: string;
   sku: string;
   price: number | '';
+  discountPercentage: number | '';
   stock: number;
   trackInventory: boolean;
   isActive: boolean;
@@ -40,14 +42,14 @@ interface VariantForm {
 
 const emptyForm = (): ProductForm => ({
   name: '', description: '', shortDescription: '',
-  categoryId: '', collectionIds: [], basePrice: '',
+  categoryId: '', collectionIds: [], basePrice: '', discountPercentage: '',
   images: [], reflectedImage: '', attributes: [], tags: '',
   status: 'draft', isFeatured: false,
   stock: 0, trackInventory: false, ratingOneLiner: '',
 });
 
 const emptyVariantForm = (): VariantForm => ({
-  name: '', sku: '', price: '',
+  name: '', sku: '', price: '', discountPercentage: '',
   stock: 0, trackInventory: false, isActive: true,
 });
 
@@ -150,6 +152,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
       categoryId:       product.category._id,
       collectionIds:    product.collections.map((c) => c._id),
       basePrice:        product.basePrice,
+      discountPercentage: product.discountPercentage,
       images:           [...product.images],
       reflectedImage:   product.reflectedImage ?? '',
       attributes:       Object.entries(product.attributes).map(([key, value]) => ({ key, value })),
@@ -263,6 +266,10 @@ export class ProductListComponent implements OnInit, OnDestroy {
     if (!f.name.trim()) { this.formError.set('Product name is required'); return; }
     if (!f.categoryId)  { this.formError.set('Category is required'); return; }
     if (f.basePrice === '' || f.basePrice < 0) { this.formError.set('Valid price is required'); return; }
+    if (f.discountPercentage === '' || f.discountPercentage < 0 || f.discountPercentage > 100) {
+      this.formError.set('Discount percentage must be between 0 and 100');
+      return;
+    }
     if (!f.reflectedImage.trim()) { this.formError.set('Reflected image is required'); return; }
 
     const attrsRecord: Record<string, string> = {};
@@ -279,6 +286,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
       categoryId:       f.categoryId,
       collectionIds:    f.collectionIds,
       basePrice:        Number(f.basePrice),
+      discountPercentage: Number(f.discountPercentage),
       images:           f.images,
       reflectedImage:   f.reflectedImage,
       attributes:       attrsRecord,
@@ -392,6 +400,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
         name: variant.name,
         sku: variant.sku ?? '',
         price: variant.price,
+        discountPercentage: variant.discountPercentage,
         stock: variant.stock,
         trackInventory: variant.trackInventory,
         isActive: variant.isActive,
@@ -418,6 +427,10 @@ export class ProductListComponent implements OnInit, OnDestroy {
     if (!product) return;
     if (!f.name.trim()) { this.variantError.set('Variant name is required'); return; }
     if (f.price === '' || f.price < 0) { this.variantError.set('Valid price is required'); return; }
+    if (f.discountPercentage === '' || f.discountPercentage < 0 || f.discountPercentage > 100) {
+      this.variantError.set('Discount percentage must be between 0 and 100');
+      return;
+    }
 
     this.variantError.set('');
     this.variantSaving.set(true);
@@ -426,6 +439,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
       name: f.name.trim(),
       sku: f.sku.trim() || undefined,
       price: Number(f.price),
+      discountPercentage: Number(f.discountPercentage),
       stock: Number(f.stock) || 0,
       trackInventory: f.trackInventory,
       isActive: f.isActive,

@@ -1,0 +1,195 @@
+<div class="checkout__panel checkout__panel--bag">
+  @if (isEmpty()) {
+    <div class="checkout__empty">
+      <p>
+        @if (isBuyNow()) {
+          Loading product...
+        } @else {
+          Your cart is empty.
+        }
+      </p>
+      <a routerLink="/products" class="checkout__link">BROWSE PRODUCTS</a>
+    </div>
+  } @else {
+    <div class="checkout__bag-container">
+      <!-- LEFT COLUMN: Products -->
+      <div class="checkout__bag-left">
+        <!-- Items Header -->
+        <div class="checkout__cart-header">
+          <span class="checkout__items-label">
+            {{ cartItems().length }} ITEMS IN TOTAL
+          </span>
+        </div>
+
+        <!-- Products Section -->
+        <div class="checkout__products-section">
+          @if (isBuyNow()) {
+            <div class="checkout__buynow-notice">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+                <path
+                  d="M12 8v4M12 16h.01"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <span>Quick checkout — this product will not be added to your saved cart</span>
+            </div>
+          }
+
+          <div class="checkout__products-list">
+            @for (item of cartItems(); track item.productId) {
+              <div class="checkout__product-card">
+                <!-- Left: Image -->
+                <div class="checkout__product-card-left">
+                  <div class="checkout__product-card-image">
+                    @if (item.image) {
+                      <img [src]="item.image" [alt]="item.name" />
+                    } @else {
+                      <div class="checkout__img-ph">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <rect
+                            x="3"
+                            y="3"
+                            width="18"
+                            height="18"
+                            rx="2"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                          />
+                        </svg>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Middle: Product Details -->
+                <div class="checkout__product-card-content">
+                  <p class="checkout__product-card-name">{{ item.name }}</p>
+
+                  @if (item.shortDescription) {
+                    <a
+                      [routerLink]="['/product', item.slug]"
+                      class="checkout__product-card-subdescription-link"
+                    >
+                      {{ item.shortDescription }}
+                    </a>
+                  }
+
+                  @if (item.variantName) {
+                    <span class="checkout__variant-display">{{ item.variantName }}</span>
+                  }
+
+                  <div class="checkout__product-card-qty-price">
+                    <div class="checkout__qty-wrapper">
+                      <span class="checkout__qty-label">Qty:</span>
+                      <div class="checkout__qty-group">
+                        <button
+                          class="checkout__qty-btn-minus"
+                          (click)="updateQty(item.productId, item.qty - 1, item.variantId)"
+                          [disabled]="item.qty === 1"
+                        >
+                          −
+                        </button>
+                        <span class="checkout__qty-value">{{ item.qty }}</span>
+                        <button
+                          class="checkout__qty-btn-plus"
+                          (click)="updateQty(item.productId, item.qty + 1, item.variantId)"
+                          [disabled]="item.qty >= 10"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <!-- Pricing -->
+                    <div class="checkout__product-card-pricing">
+                      <span class="checkout__product-pricing">
+                        <span class="checkout__price-current"
+                          >₹{{ item.basePrice * 0.9 | number: '1.0-0' }}</span
+                        >
+                        <span class="checkout__price-strikethrough"
+                          >₹{{ item.basePrice | number: '1.0-0' }}</span
+                        >
+                        <span class="checkout__price-discount">30% OFF</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right: Remove Button -->
+                <div class="checkout__product-card-right">
+                  @if (!isBuyNow()) {
+                    <button
+                      class="checkout__product-remove-x"
+                      (click)="removeItem(item.productId, item.variantId)"
+                      title="Remove"
+                    >
+                      ×
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Price Summary -->
+      <div class="checkout__bag-right">
+        <span class="checkout__price-heading">PRICE DETAILS</span>
+
+        <div class="checkout__price-row">
+          <span>Total MRP</span>
+          <span>₹{{ cartSubtotal() | number: '1.0-0' }}</span>
+        </div>
+
+        <div class="checkout__price-row">
+          <span>Discount on MRP</span>
+          <span class="checkout__discount-price">-₹{{ cartDiscount() | number: '1.0-0' }}</span>
+        </div>
+
+        <div class="checkout__price-divider"></div>
+
+        <div class="checkout__promo-section">
+          <input
+            type="text"
+            class="checkout__promo-input"
+            placeholder="Enter promo code"
+            [(ngModel)]="promoCode"
+            name="promoCode"
+          />
+          <button class="checkout__promo-btn" (click)="applyPromo()">APPLY</button>
+        </div>
+
+        <div class="checkout__price-divider"></div>
+
+        <div class="checkout__price-row checkout__price-total">
+          <span>Total Amount</span>
+          <span>₹{{ cartTotal() | number: '1.0-0' }}</span>
+        </div>
+
+        <div class="checkout__terms">
+          <p class="checkout__terms-text">
+            By placing your order, you agree to our
+            <a routerLink="/terms" class="checkout__link">Terms of Use</a> and
+            <a routerLink="/privacy" class="checkout__link">Privacy Policy</a>.
+          </p>
+        </div>
+
+        <button class="checkout__btn-next" (click)="goNext()" [disabled]="isEmpty()">
+          NEXT
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M5 12h14M12 5l7 7-7 7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  }
+</div>

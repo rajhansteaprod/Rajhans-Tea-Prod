@@ -1,0 +1,138 @@
+<div class="checkout__panel checkout__panel--address">
+  <h2 class="checkout__panel-title">DELIVERY ADDRESS</h2>
+
+  @if (submitError()) {
+    <div class="checkout__alert">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <div>
+        <p class="checkout__alert-title">{{ submitError() }}</p>
+      </div>
+    </div>
+  }
+
+  <form [formGroup]="form" class="checkout__form">
+    <div class="checkout__form-row">
+      <div class="checkout__form-group">
+        <label class="checkout__form-label">Full Name *</label>
+        <input
+          type="text"
+          class="checkout__form-input"
+          formControlName="name"
+          [class.error]="form.get('name')?.invalid && form.get('name')?.touched"
+          placeholder="Enter your full name"
+        />
+        @if (nameError && form.get('name')?.touched) {
+          <span class="checkout__form-error">{{ nameError }}</span>
+        }
+      </div>
+
+      <div class="checkout__form-group">
+        <label class="checkout__form-label">Phone Number *</label>
+        <input
+          type="tel"
+          class="checkout__form-input"
+          formControlName="phone"
+          [class.error]="form.get('phone')?.invalid && form.get('phone')?.touched"
+          placeholder="10 digit phone number"
+        />
+        @if (phoneError && form.get('phone')?.touched) {
+          <span class="checkout__form-error">{{ phoneError }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="checkout__form-row">
+      <div class="checkout__form-group">
+        <label class="checkout__form-label">Pincode *</label>
+        <input
+          type="text"
+          class="checkout__form-input"
+          formControlName="pincode"
+          [class.error]="form.get('pincode')?.invalid && form.get('pincode')?.touched"
+          placeholder="6 digit pincode"
+        />
+        @if (pincodeError && form.get('pincode')?.touched) {
+          <span class="checkout__form-error">{{ pincodeError }}</span>
+        }
+      </div>
+
+      <div class="checkout__form-group">
+        <label class="checkout__form-label">City *</label>
+        <input
+          type="text"
+          class="checkout__form-input"
+          formControlName="city"
+          [class.error]="form.get('city')?.invalid && form.get('city')?.touched"
+          placeholder="Enter city"
+        />
+        @if (cityError && form.get('city')?.touched) {
+          <span class="checkout__form-error">{{ cityError }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="checkout__form-row">
+      <div class="checkout__form-group">
+        <label class="checkout__form-label">Street Address *</label>
+        <input
+          type="text"
+          class="checkout__form-input"
+          formControlName="street"
+          [class.error]="form.get('street')?.invalid && form.get('street')?.touched"
+          placeholder="House No, Building Name, Road Name"
+        />
+        @if (streetError && form.get('street')?.touched) {
+          <span class="checkout__form-error">{{ streetError }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="checkout__form-row">
+      <div class="checkout__form-group">
+        <label class="checkout__form-label">State *</label>
+        <input
+          type="text"
+          class="checkout__form-input"
+          formControlName="state"
+          [class.error]="form.get('state')?.invalid && form.get('state')?.touched"
+          placeholder="Enter state"
+        />
+        @if (stateError && form.get('state')?.touched) {
+          <span class="checkout__form-error">{{ stateError }}</span>
+        }
+      </div>
+    </div>
+  </form>
+
+  <div class="checkout__panel-footer">
+    <button type="button" class="checkout__btn-back" (click)="goBack()">BACK</button>
+    <button
+      class="checkout__btn-next"
+      (click)="saveAddress()"
+      [disabled]="form.invalid || isSubmitting()"
+    >
+      @if (isSubmitting()) {
+        <div class="checkout__btn-spinner"></div>
+        SAVING...
+      } @else {
+        NEXT
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M5 12h14M12 5l7 7-7 7"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      }
+    </button>
+  </div>
+</div>

@@ -22,7 +22,7 @@
   background: none;
   font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   color: $color-text-tertiary;
@@ -66,7 +66,7 @@
 .reviews__avg-num {
   font-family: $font-family-heading;
   font-size: $font-size-display;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   line-height: 1;
   letter-spacing: $letter-spacing-tight;
@@ -91,7 +91,7 @@
 .reviews__avg-count {
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-tertiary;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
@@ -112,7 +112,7 @@
 .reviews__bar-label {
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-secondary;
   width: 14px;
   text-align: right;
@@ -151,7 +151,7 @@
   color: $color-text-primary;
   font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   cursor: pointer;
@@ -183,7 +183,7 @@
 .reviews__form-label {
   font-family: $font-family-nav;
   font-size: 11px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   color: $color-text-primary;
@@ -254,7 +254,7 @@
   border-radius: 0;
   font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   cursor: pointer;
@@ -308,7 +308,7 @@
 .reviews__verified {
   font-family: $font-family-nav;
   font-size: 10px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   color: $color-secondary;
@@ -328,7 +328,7 @@
 .reviews__card-title {
   font-family: $font-family-heading;
   font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   margin: 0 0 $space-xs;
   letter-spacing: $letter-spacing-normal;
@@ -355,7 +355,7 @@
   background: none;
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-tertiary;
   cursor: pointer;
   transition: color $transition-fast;
@@ -378,7 +378,7 @@
 .reviews__reply-label {
   font-family: $font-family-nav;
   font-size: 11px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   color: $color-primary;
@@ -454,7 +454,7 @@
   border-radius: 0;
   font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   cursor: pointer;
@@ -503,7 +503,7 @@
   flex-shrink: 0;
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   border-radius: 0;
 }
 
@@ -543,7 +543,7 @@
 .qa__a-admin {
   font-family: $font-family-nav;
   font-size: 10px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   color: $color-primary;
@@ -556,7 +556,7 @@
   background: none;
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-primary;
   cursor: pointer;
   letter-spacing: $letter-spacing-wide;
@@ -600,7 +600,7 @@
   border-radius: 0;
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   cursor: pointer;
@@ -621,7 +621,7 @@
   background: transparent;
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
   color: $color-text-secondary;

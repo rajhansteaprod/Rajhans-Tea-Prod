@@ -29,7 +29,7 @@
 .hero__bg {
   position: absolute;
   inset: 0;
-  background: $color-primary;
+  background: $color-mono-dark;
   overflow: hidden;
 }
 
@@ -100,7 +100,7 @@ picture {
 .hero__h1 {
   font-family: $font-family-display;
   font-size: clamp(36px, 5vw, 64px);
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   line-height: 1.15;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -146,7 +146,7 @@ picture {
   color: $color-mono-light;
   font-family: $font-family-heading;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-luxury;
   text-transform: uppercase;
   text-decoration: none;

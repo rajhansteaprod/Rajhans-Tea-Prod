@@ -9,7 +9,7 @@
 // TESTIMONIAL SECTION
 // ═══════════════════════════════════════
 .testimonial {
-  padding: calc($space-xxl + $space-sm) clamp($space-lg, 5vw, $space-xxxl);
+  padding:  0px clamp($space-lg, 5vw, $space-xxxl);
   background: $color-mono-light;
 
   @include respond-to(md) {
@@ -21,7 +21,7 @@
 .testimonial-heading {
   font-family: $font-family-heading;
   font-size: clamp(28px, 4vw, 40px);
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-mono-dark;
   text-align: center;
   margin: 0 0 $space-sm 0;
@@ -69,7 +69,7 @@
   transition: all $transition-normal;
 
   &:hover {
-    border-color: rgba($color-primary, 0.3);
+    border-color: rgba($color-mono-dark, 0.3);
     box-shadow: 0 8px 24px rgba($color-mono-dark, 0.08);
   }
 
@@ -148,7 +148,7 @@
 .testimonial-name {
   font-family: $font-family-heading;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-mono-dark;
   margin: 0;
 }

@@ -1,0 +1,292 @@
+@use '../../../../core/design-tokens/tokens' as *;
+@use '../../../../core/design-tokens/mixins' as *;
+
+.coupon-container {
+  max-width: 1200px;
+}
+
+// === Page Header ===
+.coupon-header {
+  @include flex-between;
+  align-items: flex-start;
+  margin-bottom: $space-xl;
+  gap: $space-md;
+  flex-wrap: wrap;
+
+  > div {
+    flex: 1;
+  }
+}
+
+.page-title {
+  font-family: $font-family-heading;
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  letter-spacing: 0.02em;
+  margin: 0 0 $space-xxs;
+}
+
+.page-subtitle {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin: 0;
+}
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  background: $color-primary;
+  color: $color-text-inverse;
+  border: none;
+  padding: $space-sm $space-md;
+  border-radius: 0;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  font-family: $font-family;
+  cursor: pointer;
+  transition: background $transition-fast;
+  white-space: nowrap;
+
+  &:hover { background: $color-primary-hover; }
+}
+
+// === Form ===
+.coupon-form {
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border-light;
+  border-radius: 0;
+  padding: $space-lg;
+  margin-bottom: $space-xl;
+  box-shadow: $shadow-sm;
+}
+
+.form-header {
+  @include flex-between;
+  margin-bottom: $space-lg;
+  align-items: center;
+
+  h2 {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-medium;
+    color: $color-text-primary;
+    margin: 0;
+  }
+}
+
+.btn-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  cursor: pointer;
+  color: $color-text-tertiary;
+  @include flex-center;
+  transition: all $transition-fast;
+  font-size: $font-size-lg;
+
+  &:hover { background: $color-bg-secondary; color: $color-text-primary; }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-md;
+  margin-bottom: $space-lg;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  @include flex-column;
+  gap: $space-xxs;
+}
+
+.form-group label {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $color-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+}
+
+.form-input,
+.form-select {
+  padding: $space-sm $space-md;
+  border: 1.5px solid $color-border;
+  border-radius: 0;
+  font-size: $font-size-sm;
+  font-family: $font-family;
+  color: $color-text-primary;
+  background: $color-bg-tertiary;
+  transition: all $transition-fast;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus { border-color: $color-primary; box-shadow: $shadow-glow; }
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%238A7D81' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: $space-xl;
+}
+
+.form-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin-right: $space-xs;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  padding-top: 18px;
+}
+
+.form-actions {
+  display: flex;
+  gap: $space-md;
+  justify-content: flex-end;
+
+  .btn-secondary {
+    padding: $space-sm $space-md;
+    border: 1px solid $color-border;
+    border-radius: 0;
+    background: transparent;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    font-family: $font-family;
+    color: $color-text-secondary;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:hover { background: $color-bg-secondary; }
+  }
+}
+
+// === States ===
+.loading-state,
+.error-state {
+  @include flex-column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-md;
+  padding: $space-xxxl;
+  color: $color-text-tertiary;
+  font-size: $font-size-sm;
+}
+
+.error-state {
+  background: rgba(192, 57, 43, 0.08);
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  border-radius: 0;
+  color: $color-error;
+}
+
+// === Table ===
+.coupons-table {
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border-light;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: $shadow-sm;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $font-size-sm;
+}
+
+thead {
+  background: $color-bg-secondary;
+  border-bottom: 1px solid $color-border-light;
+}
+
+th {
+  text-align: left;
+  padding: $space-sm $space-md;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+  color: $color-text-tertiary;
+  white-space: nowrap;
+}
+
+td {
+  padding: $space-sm $space-md;
+  color: $color-text-secondary;
+  border-bottom: 1px solid $color-border-light;
+  vertical-align: middle;
+}
+
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: rgba(204, 88, 3, 0.02); }
+
+.code {
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: $font-weight-semibold;
+  padding: 2px $space-xs;
+  border-radius: 0;
+  display: inline-block;
+
+  &.active { background: rgba(87, 136, 108, 0.12); color: $color-secondary; }
+  &.inactive { background: rgba(58, 45, 50, 0.08); color: $color-text-tertiary; }
+}
+
+.actions {
+  display: flex;
+  gap: $space-xs;
+  justify-content: flex-end;
+}
+
+.btn-icon {
+  width: 30px;
+  height: 30px;
+  @include flex-center;
+  border: 1px solid $color-border-light;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: all $transition-fast;
+  color: $color-text-tertiary;
+  font-size: $font-size-sm;
+
+  &:hover { border-color: $color-primary; color: $color-primary; background: $color-primary-light; }
+
+  &.btn-danger:hover { border-color: $color-error; color: $color-error; background: rgba(192, 57, 43, 0.06); }
+}
+
+// === Empty State ===
+.empty-state {
+  @include flex-column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-md;
+  padding: $space-xxxl;
+  color: $color-text-tertiary;
+  font-size: $font-size-sm;
+
+  p { margin: 0; }
+
+  .btn-primary { margin-top: $space-md; }
+}

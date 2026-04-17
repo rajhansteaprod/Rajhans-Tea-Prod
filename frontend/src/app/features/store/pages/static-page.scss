@@ -42,7 +42,7 @@
   h3,
   h4 {
     font-family: $font-family-heading;
-    font-weight: $font-weight-bold;
+    font-weight: $font-weight-medium;
     letter-spacing: $letter-spacing-heading;
     line-height: $line-height-tight;
     color: $color-text-primary;
@@ -128,7 +128,7 @@
 .not-found__code {
   font-family: $font-family-heading;
   font-size: $font-size-mega;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-primary;
   display: block;
   margin-bottom: $space-md;
@@ -158,7 +158,7 @@
   text-decoration: none;
   font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
   border-radius: 0;

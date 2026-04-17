@@ -57,7 +57,7 @@
 .usp__heading {
   font-family: $font-family-heading;
   font-size: clamp(32px, 4vw, 52px);
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   line-height: 1.1;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -92,7 +92,7 @@
   color: $color-mono-light;
   font-family: $font-family-heading;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-luxury;
   text-transform: uppercase;
   text-decoration: none;
@@ -154,7 +154,7 @@
 .usp__icon-title {
   font-family: $font-family-heading;
   font-size: $font-size-md;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-mono-light;
   margin: 0 0 $space-sm 0;
   line-height: 1.3;

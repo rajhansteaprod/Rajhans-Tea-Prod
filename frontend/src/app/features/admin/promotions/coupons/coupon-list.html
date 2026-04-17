@@ -1,0 +1,196 @@
+<div class="coupon-container">
+  <div class="coupon-header">
+    <div>
+      <h1 class="page-title">COUPONS</h1>
+      <p class="page-subtitle">Manage promotional coupons and discount codes</p>
+    </div>
+    <button class="btn-primary" (click)="openForm()" *ngIf="!showForm()">
+      <span>+ Add Coupon</span>
+    </button>
+  </div>
+
+  <!-- Add/Edit Form -->
+  <div class="coupon-form" *ngIf="showForm()">
+    <div class="form-header">
+      <h2>{{ formData()._id ? 'Edit' : 'Create' }} Coupon</h2>
+      <button class="btn-close" (click)="closeForm()">×</button>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Code</label>
+        <input
+          type="text"
+          [(ngModel)]="formData().code"
+          placeholder="e.g., SUMMER20"
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <input
+          type="text"
+          [(ngModel)]="formData().description"
+          placeholder="e.g., Summer special offer"
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Discount Type</label>
+        <select [(ngModel)]="formData().discountType" class="form-select">
+          <option value="percentage">Percentage</option>
+          <option value="fixed">Fixed Amount</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Discount Value</label>
+        <input
+          type="number"
+          [(ngModel)]="formData().discountValue"
+          placeholder="20"
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Min Order Amount (₹)</label>
+        <input
+          type="number"
+          [(ngModel)]="formData().minOrderAmount"
+          placeholder="0"
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Max Discount Cap (₹)</label>
+        <input
+          type="number"
+          [(ngModel)]="formData().maxDiscountCap"
+          placeholder="Optional"
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Valid From</label>
+        <input
+          type="date"
+          [(ngModel)]="formData().validFrom"
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Valid Until</label>
+        <input
+          type="date"
+          [(ngModel)]="formData().validUntil"
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Usage Limit (Total)</label>
+        <input
+          type="number"
+          [(ngModel)]="formData().usageLimitTotal"
+          placeholder="Optional"
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Usage Per User</label>
+        <input
+          type="number"
+          [(ngModel)]="formData().usageLimitPerUser"
+          placeholder="1"
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Scope</label>
+        <select [(ngModel)]="formData().scope" class="form-select">
+          <option value="all">All Products</option>
+          <option value="products">Specific Products</option>
+          <option value="categories">Specific Categories</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="formData().isActive"
+            class="form-checkbox"
+          />
+          <span>Active</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-primary" (click)="saveCoupon()">Save Coupon</button>
+      <button class="btn-secondary" (click)="closeForm()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading()">
+    <p>Loading coupons...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error()">
+    <p>{{ error() }}</p>
+  </div>
+
+  <!-- Coupons Table -->
+  <div class="coupons-table" *ngIf="!isLoading() && !showForm()">
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Discount</th>
+          <th>Min Order</th>
+          <th>Valid Until</th>
+          <th>Usage</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let coupon of coupons()">
+          <td class="code">{{ coupon.code }}</td>
+          <td>
+            {{ coupon.discountType === 'percentage' ? coupon.discountValue + '%' : '₹' + coupon.discountValue }}
+          </td>
+          <td>₹{{ coupon.minOrderAmount }}</td>
+          <td>{{ coupon.validUntil | date: 'MMM dd, yyyy' }}</td>
+          <td>{{ coupon.usedCount }}{{ coupon.usageLimitTotal ? ' / ' + coupon.usageLimitTotal : '' }}</td>
+          <td>
+            <span class="status-badge" [class.active]="coupon.isActive" [class.inactive]="!coupon.isActive">
+              {{ coupon.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td class="actions">
+            <button class="btn-icon" (click)="editCoupon(coupon)" title="Edit">✎</button>
+            <button class="btn-icon" (click)="toggleStatus(coupon)" title="Toggle Status">◉</button>
+            <button class="btn-icon btn-danger" (click)="deleteCoupon(coupon._id!)" title="Delete">🗑</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="coupons().length === 0">
+      <p>No coupons yet</p>
+      <button class="btn-primary" (click)="openForm()">Create Your First Coupon</button>
+    </div>
+  </div>
+</div>

@@ -18,6 +18,8 @@ export interface CartItem {
   basePrice: number;
   qty: number;
   lineTotal: number;
+  shortDescription?: string;
+  description?: string;
 }
 
 export interface CartView {
@@ -205,25 +207,31 @@ export class CartStore {
       });
   }
 
-  updateQty(productId: string, qty: number): void {
+  updateQty(productId: string, qty: number, variantId?: string): void {
     if (qty < 1) {
-      this.removeItem(productId);
+      this.removeItem(productId, variantId);
       return;
     }
+    const body: Record<string, unknown> = { qty };
+    if (variantId) body['variantId'] = variantId;
+
     this.http
       .put<ApiResponse<CartView>>(
         `${this.api}/cart/items/${productId}`,
-        { qty },
+        body,
         { headers: this.headers() },
       )
       .subscribe({ next: (res) => this.applyCart(res.data) });
   }
 
-  removeItem(productId: string): void {
+  removeItem(productId: string, variantId?: string): void {
+    const body: Record<string, unknown> = {};
+    if (variantId) body['variantId'] = variantId;
+
     this.http
       .delete<ApiResponse<CartView>>(
         `${this.api}/cart/items/${productId}`,
-        { headers: this.headers() },
+        { body, headers: this.headers() },
       )
       .subscribe({ next: (res) => this.applyCart(res.data) });
   }

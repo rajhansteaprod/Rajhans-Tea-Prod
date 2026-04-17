@@ -51,6 +51,13 @@ export class AdminLayoutComponent {
       ],
     },
     {
+      label: 'PROMOTIONS',
+      collapsed: false,
+      items: [
+        { label: 'Coupons', icon: '<svg viewBox="0 0 24 24"><path d="M4 12a1 1 0 0 0 1 1h4a1 1 0 0 0 0-2H5a1 1 0 0 0-1 1zM15 11h4a1 1 0 0 1 0 2h-4a1 1 0 0 1 0-2z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>', route: '/admin/promotions/coupons' },
+      ],
+    },
+    {
       label: 'FINANCE',
       collapsed: false,
       items: [

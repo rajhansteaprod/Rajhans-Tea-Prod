@@ -122,7 +122,7 @@
 .origin__year {
   font-family: $font-family-heading;
   font-size: $font-size-display;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-primary;
   text-transform: uppercase;
   opacity: 0.2;
@@ -349,7 +349,7 @@
 .values__title {
   font-family: $font-family-heading;
   font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   margin: 0 0 $space-xs;
   letter-spacing: $letter-spacing-heading;
@@ -395,7 +395,7 @@
 .proof__number {
   font-family: $font-family-heading;
   font-size: $font-size-display;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-inverse;
   text-transform: uppercase;
   line-height: 1;
@@ -408,7 +408,7 @@
 .proof__label {
   font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
   color: rgba($color-text-inverse, 0.7);
@@ -487,7 +487,7 @@
   list-style: none;
   font-family: $font-family-heading;
   font-size: clamp($font-size-md, 2vw, $font-size-xl);
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
   color: $color-text-inverse;
@@ -510,7 +510,7 @@
 .faq__icon {
   font-family: $font-family-heading;
   font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-inverse;
   transition: transform $transition-normal;
   flex-shrink: 0;
@@ -558,7 +558,7 @@
 .founder__label {
   font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
   color: $color-primary;
@@ -623,7 +623,7 @@
   color: $color-text-inverse;
   font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
   text-decoration: none;

@@ -26,7 +26,7 @@
 .catalog__breadcrumbs {
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
   color: rgba($color-text-inverse, 0.4);
@@ -103,7 +103,7 @@
   margin-top: $space-lg;
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
   color: $color-primary;
@@ -177,7 +177,7 @@
 .catalog-card__name {
   font-family: $font-family-heading;
   font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   margin: 0 0 $space-xxs;
   letter-spacing: $letter-spacing-heading;

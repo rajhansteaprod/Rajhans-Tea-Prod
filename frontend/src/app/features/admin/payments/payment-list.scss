@@ -11,7 +11,7 @@
 .page-title {
   font-family: $font-family-heading;
   font-size: $font-size-xxl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   letter-spacing: 0.02em;
   margin: 0 0 $space-xxs;
@@ -71,7 +71,7 @@
 
 .stat-value {
   font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
 }
 
@@ -196,7 +196,7 @@
 .customer-phone { font-size: $font-size-xs; color: $color-text-tertiary; }
 
 .amount-cell {
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-primary;
   white-space: nowrap;
 }
@@ -206,7 +206,7 @@
   padding: 2px $space-xs;
   border-radius: 0;
   font-size: 10px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
 
@@ -293,7 +293,7 @@
 
   h2 {
     font-size: $font-size-lg;
-    font-weight: $font-weight-bold;
+    font-weight: $font-weight-medium;
     margin: 0;
   }
 }
@@ -368,7 +368,7 @@
   border-bottom: 1px solid $color-border-light;
 
   &:last-child { border-bottom: none; }
-  &.total-row { background: $color-bg-secondary; font-weight: $font-weight-bold; }
+  &.total-row { background: $color-bg-secondary; font-weight: $font-weight-medium; }
 }
 
 .refund-row {

@@ -45,7 +45,7 @@
 .search__title {
   font-family: $font-family-heading;
   font-size: $font-size-display;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-heading;
   color: $color-text-primary;
   margin: 0 0 $space-xxs;
@@ -114,7 +114,7 @@
 .search__filter-title {
   font-family: $font-family-nav;
   font-size: 11px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   color: $color-text-secondary;
@@ -156,7 +156,7 @@
   color: $color-bg-maroon;
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   cursor: pointer;
   padding: $space-xxs 0;
@@ -173,7 +173,7 @@
   color: $color-error;
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   cursor: pointer;
@@ -213,7 +213,7 @@
   border-radius: 0;
   font-family: $font-family-nav;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   cursor: pointer;
   transition: background $transition-fast;
@@ -300,7 +300,7 @@
 .search__empty-title {
   font-family: $font-family-heading;
   font-size: $font-size-xxl;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-text-primary;
   margin: 0;
 }
@@ -319,7 +319,7 @@
   background: transparent;
   font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   text-transform: uppercase;
   cursor: pointer;
   transition: all $transition-fast;
@@ -367,7 +367,7 @@
   border-radius: 0;
   font-family: $font-family-nav;
   font-size: 10px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
   z-index: 1;
@@ -401,7 +401,7 @@
 .search__card-category {
   font-family: $font-family-nav;
   font-size: 10px;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: $letter-spacing-eyebrow;
   text-transform: uppercase;
   color: $color-text-tertiary;
@@ -419,7 +419,7 @@
 .search__card-price {
   font-family: $font-family-nav;
   font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   color: $color-bg-maroon;
   margin: 0;
 }
@@ -439,7 +439,7 @@
   border-radius: 0;
   font-family: $font-family-nav;
   font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-medium;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   cursor: pointer;

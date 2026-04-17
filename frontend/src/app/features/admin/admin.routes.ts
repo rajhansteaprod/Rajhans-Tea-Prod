@@ -77,6 +77,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./interface/hero-slides/hero-slides').then((m) => m.HeroSlidesComponent),
       },
+      {
+        path: 'promotions/coupons',
+        loadComponent: () =>
+          import('./promotions/coupons/coupon-list').then((m) => m.CouponListComponent),
+      },
     ],
   },
 ];
