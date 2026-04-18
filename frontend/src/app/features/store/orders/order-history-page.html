@@ -79,14 +79,14 @@
               }
             </div>
             <div class="orders__footer-right">
-              @if (order.shiprocket.trackingUrl) {
-                <a class="orders__btn-track" [href]="order.shiprocket.trackingUrl" target="_blank">
+              @if (order.shiprocket.shipmentId) {
+                <button class="orders__btn-track" (click)="openTracking(order)">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                     <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
                     <polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                   </svg>
-                  Track
-                </a>
+                  Tracking
+                </button>
               }
               <span class="orders__total">₹{{ order.total | number:'1.0-0' }}</span>
             </div>
@@ -126,3 +126,102 @@
     }
   }
 </section>
+
+<!-- Tracking Modal -->
+@if (selectedOrderForTracking()) {
+  <div class="tracking-backdrop" (click)="closeTracking()"></div>
+  <div class="tracking-modal">
+    <div class="tracking-modal__header">
+      <div>
+        <h2 class="tracking-modal__title">Order {{ selectedOrderForTracking()!.orderNumber }}</h2>
+        <p class="tracking-modal__subtitle">Shiprocket Tracking Details</p>
+      </div>
+      <button class="tracking-modal__close" (click)="closeTracking()">✕</button>
+    </div>
+
+    <div class="tracking-modal__body">
+      <!-- Shipment Status Card -->
+      @if (selectedOrderForTracking()!.shiprocket.shipmentId) {
+        <div class="tracking-card">
+          <div class="tracking-card__header">
+            <span class="tracking-card__label">Shipment Status</span>
+            <span class="tracking-card__badge" [attr.data-status]="selectedOrderForTracking()!.status">
+              {{ formatStatus(selectedOrderForTracking()!.status) }}
+            </span>
+          </div>
+
+          <div class="tracking-details">
+            @if (selectedOrderForTracking()!.shiprocket.courierName) {
+              <div class="tracking-detail-row">
+                <span class="tracking-detail-label">Courier</span>
+                <span class="tracking-detail-value">{{ selectedOrderForTracking()!.shiprocket.courierName }}</span>
+              </div>
+            }
+
+            @if (selectedOrderForTracking()!.shiprocket.awbCode) {
+              <div class="tracking-detail-row">
+                <span class="tracking-detail-label">AWB Code</span>
+                <span class="tracking-detail-value mono">{{ selectedOrderForTracking()!.shiprocket.awbCode }}</span>
+              </div>
+            }
+
+            @if (selectedOrderForTracking()!.shiprocket.estimatedDelivery) {
+              <div class="tracking-detail-row">
+                <span class="tracking-detail-label">Estimated Delivery</span>
+                <span class="tracking-detail-value">
+                  {{ formatDate(selectedOrderForTracking()!.shiprocket.estimatedDelivery) }}
+                  <span class="tracking-days-remaining">({{ getDaysRemaining(selectedOrderForTracking()!.shiprocket.estimatedDelivery) }})</span>
+                </span>
+              </div>
+            }
+
+            @if (selectedOrderForTracking()!.shippingAddress.pincode) {
+              <div class="tracking-detail-row">
+                <span class="tracking-detail-label">Delivery To</span>
+                <span class="tracking-detail-value">
+                  {{ selectedOrderForTracking()!.shippingAddress.city }},
+                  {{ selectedOrderForTracking()!.shippingAddress.state }} -
+                  {{ selectedOrderForTracking()!.shippingAddress.pincode }}
+                </span>
+              </div>
+            }
+          </div>
+
+          @if (selectedOrderForTracking()!.shiprocket.trackingUrl) {
+            <a [href]="selectedOrderForTracking()!.shiprocket.trackingUrl" target="_blank" class="tracking-external-link">
+              View on Shiprocket →
+            </a>
+          }
+        </div>
+      }
+
+      <!-- Status Timeline -->
+      @if (selectedOrderForTracking()!.statusHistory && selectedOrderForTracking()!.statusHistory.length > 0) {
+        <div class="tracking-timeline">
+          <h3 class="tracking-timeline__title">Order Timeline</h3>
+          @for (event of selectedOrderForTracking()!.statusHistory; track event.timestamp) {
+            <div class="timeline-event">
+              <div class="timeline-event__dot" [attr.data-status]="event.status"></div>
+              <div class="timeline-event__content">
+                <span class="timeline-event__status">{{ formatStatus(event.status) }}</span>
+                <span class="timeline-event__date">{{ event.timestamp | date:'dd MMM yyyy, h:mm a' }}</span>
+                @if (event.note) {
+                  <span class="timeline-event__note">{{ event.note }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="tracking-modal__footer">
+      <button class="tracking-modal__btn-close" (click)="closeTracking()">Close</button>
+      @if (selectedOrderForTracking()!.shiprocket.trackingUrl) {
+        <a [href]="selectedOrderForTracking()!.shiprocket.trackingUrl" target="_blank" class="tracking-modal__btn-external">
+          Open Shiprocket Tracking
+        </a>
+      }
+    </div>
+  </div>
+}
