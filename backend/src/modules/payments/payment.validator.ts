@@ -10,6 +10,11 @@ export const createOrderSchema = z.object({
       state: z.string().min(1),
       pincode: z.string().length(6),
     }),
+    items: z.array(z.object({
+      productId: z.string(),
+      variantId: z.string().optional(),
+      qty: z.number().int().positive(),
+    })).optional(),
     walletAmount: z.number({ coerce: true }).min(0).optional(),
   }),
 });

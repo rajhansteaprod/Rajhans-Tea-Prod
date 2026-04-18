@@ -54,6 +54,7 @@ export class PaymentService {
     idempotencyKey_: string,
     walletAmount = 0,
     loyaltyPoints = 0,
+    items?: any[],
   ): Promise<CreateOrderResult | { paymentId: string; paidViaWallet: true }> {
     let idempotencyKey = idempotencyKey_;
 
@@ -80,7 +81,8 @@ export class PaymentService {
     }
 
     // Get checkout summary (runs pricing engine)
-    const summary = await this.checkoutService.getSummary(sessionId);
+    // Pass items if provided (from temporary cart), else fetch from session
+    const summary = await this.checkoutService.getSummary(sessionId, items);
     if (summary.items.length === 0) {
       throw new BadRequestError('Cart is empty');
     }

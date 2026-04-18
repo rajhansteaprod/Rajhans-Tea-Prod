@@ -88,4 +88,16 @@ export class CartRepository {
   ): Promise<void> {
     await Cart.findOneAndUpdate({ sessionId }, { $set: { items } }, { upsert: true }).exec();
   }
+
+  async updateStatus(sessionId: string, status: 'temporary' | 'checkout_started' | 'completed' | 'abandoned'): Promise<void> {
+    const updateData: any = { status };
+    if (status === 'checkout_started') {
+      updateData.checkoutStartedAt = new Date();
+    }
+    await Cart.findOneAndUpdate({ sessionId }, { $set: updateData }).exec();
+  }
+
+  async markAsCompleted(sessionId: string): Promise<void> {
+    await Cart.findOneAndUpdate({ sessionId }, { $set: { status: 'completed' } }).exec();
+  }
 }

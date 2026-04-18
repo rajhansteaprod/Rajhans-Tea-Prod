@@ -58,12 +58,20 @@ export class SummaryStepComponent {
       const address = this.address();
       const phone = address.phone.replace(/\D/g, '').slice(-10); // Get last 10 digits only
 
+      // Convert cart items to API format
+      const items = this.cartItems().map(item => ({
+        productId: item.productId,
+        variantId: item.variantId,
+        qty: item.qty,
+      }));
+
       const orderResponse = await this.http
         .post<any>(`${environment.apiUrl}/payments/orders`, {
           address: {
             ...address,
             phone,
           },
+          items,
           walletAmount: 0,
         }, {
           headers: {

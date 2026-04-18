@@ -44,10 +44,16 @@ export class CheckoutService {
   // Loads cart, runs pricing engine on each item, returns full breakdown
   // ---------------------------------------------------------------------------
 
-  async getSummary(sessionId: string): Promise<CheckoutSummary> {
-    const cart = await this.cartRepo.findBySession(sessionId);
+  async getSummary(sessionId: string, providedItems?: any[]): Promise<CheckoutSummary> {
+    // Use provided items (from temporary cart) or fetch from session
+    let cartItems = providedItems;
 
-    if (!cart || cart.items.length === 0) {
+    if (!cartItems) {
+      const cart = await this.cartRepo.findBySession(sessionId);
+      cartItems = cart?.items ?? [];
+    }
+
+    if (!cartItems || cartItems.length === 0) {
       return {
         sessionId,
         items: [],
@@ -61,17 +67,28 @@ export class CheckoutService {
 
     const lineItems: CheckoutLineItem[] = [];
 
-    for (const item of cart.items) {
-      const product = item.productId as unknown as IProductDoc;
+    for (const item of cartItems) {
+      // Handle both database documents and plain objects from request
+      const productId = item.productId || item.productId;
+      const qty = item.qty;
+
+      // Fetch product details
+      const Product = require('../../catalog/models/product.model').Product;
+      const product = await Product.findById(productId).lean();
+
+      if (!product) {
+        throw new Error(`Product ${productId} not found`);
+      }
+
       const categoryId = product.category?.toString();
-      const collectionIds = (product.collections ?? []).map((c) => c.toString());
+      const collectionIds = (product.collections ?? []).map((c: any) => c.toString());
 
       const pricing = await this.pricingService.calculate({
         productId: product._id.toString(),
         basePrice: product.basePrice,
         categoryId,
         collectionIds,
-        qty: item.qty,
+        qty,
       });
 
       lineItems.push({
