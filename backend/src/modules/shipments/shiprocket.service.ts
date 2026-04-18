@@ -1,6 +1,6 @@
-import { getShippingProvider, ShippingProvider } from '../inventory/services/shipping/shipping.factory';
+import { getShippingProvider } from '../inventory/services/shipping/shipping.factory';
+import { ShippingProvider } from '../inventory/services/shipping/shipping.interface';
 import { OrderRepository } from '../inventory/repositories/order.repository';
-import { IOrderDoc } from '../inventory/models/order.model';
 import { BadRequestError, NotFoundError } from '../../utils/api-error';
 
 export interface CreateShipmentRequest {
@@ -30,7 +30,7 @@ export class ShiprocketServiceImpl {
   private orderRepo = new OrderRepository();
 
   constructor() {
-    this.provider = getShippingProvider('shiprocket');
+    this.provider = getShippingProvider();
   }
 
   /**
@@ -66,7 +66,6 @@ export class ShiprocketServiceImpl {
       awbCode: awbResult?.awbCode || null,
       courierName: awbResult?.courierName || null,
       courierId: awbResult?.courierId || null,
-      status: 'created',
     });
 
     return {
@@ -74,7 +73,7 @@ export class ShiprocketServiceImpl {
       awbCode: awbResult?.awbCode || 'pending',
       courierName: awbResult?.courierName || 'pending',
       trackingUrl: null,
-      status: 'created',
+      status: 'pending',
       estimatedDelivery: null,
     };
   }
@@ -100,17 +99,27 @@ export class ShiprocketServiceImpl {
     const tracking = await this.provider.trackShipment(order.shiprocket.shipmentId);
 
     // Update order tracking info
-    await this.orderRepo.updateShiprocketInfo(orderId, {
-      status: tracking.currentStatus,
-      trackingUrl: tracking.trackingUrl,
-      estimatedDelivery: tracking.estimatedDelivery?.toISOString() || null,
-    });
+    if (tracking.estimatedDelivery) {
+      await this.orderRepo.updateShiprocketInfo(orderId, {
+        trackingUrl: tracking.trackingUrl,
+        estimatedDelivery: tracking.estimatedDelivery,
+      });
+    } else {
+      await this.orderRepo.updateShiprocketInfo(orderId, {
+        trackingUrl: tracking.trackingUrl,
+      });
+    }
 
     return {
       status: tracking.currentStatus,
       trackingUrl: tracking.trackingUrl,
       estimatedDelivery: tracking.estimatedDelivery?.toISOString() || null,
-      activities: tracking.activities,
+      activities: tracking.activities.map((activity) => ({
+        status: activity.status,
+        location: activity.location,
+        date: activity.date,
+        activity: activity.status,
+      })),
     };
   }
 
@@ -153,8 +162,9 @@ export class ShiprocketServiceImpl {
     const pickupResult = await this.provider.schedulePickup(order.shiprocket.shipmentId);
 
     // Update order with pickup date
+    const pickupDate = new Date(pickupResult.pickupScheduledDate);
     await this.orderRepo.updateShiprocketInfo(orderId, {
-      pickupScheduledDate: pickupResult.pickupScheduledDate,
+      pickupScheduledDate: pickupDate,
     });
 
     return pickupResult;
@@ -174,11 +184,6 @@ export class ShiprocketServiceImpl {
     }
 
     await this.provider.cancelOrder(order.shiprocket.orderId);
-
-    // Update order status
-    await this.orderRepo.updateShiprocketInfo(orderId, {
-      status: 'cancelled',
-    });
   }
 
   /**
@@ -190,12 +195,10 @@ export class ShiprocketServiceImpl {
     weight: number = 0.5,
   ): Promise<Array<{ courierId: number; courierName: string; rate: number; estimatedDays: number }>> {
     const rates = await this.provider.getShippingRates(pickupPincode, deliveryPincode, weight);
-    return rates.map((r) => ({
-      courierId: r.courierId,
-      courierName: r.courierName,
-      rate: r.rate,
-      estimatedDays: r.estimatedDays,
-    }));
+    return rates.map((r) => {
+      const { courierId, courierName, rate, estimatedDays } = r;
+      return { courierId, courierName, rate, estimatedDays };
+    });
   }
 
   /**
