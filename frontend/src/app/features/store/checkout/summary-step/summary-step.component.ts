@@ -1,8 +1,10 @@
 import { Component, inject, signal, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { CheckoutService } from '../../../../core/services/checkout.service';
 import { PaymentStore } from '../../../../core/services/payment.store';
 import { RazorpayService } from '../../../../core/services/razorpay.service';
+import { CartStore } from '../../../../core/services/cart.store';
 import { environment } from '../../../../../environments/environment';
 
 @Component({
@@ -15,6 +17,8 @@ import { environment } from '../../../../../environments/environment';
 export class SummaryStepComponent {
   private readonly checkoutService = inject(CheckoutService);
   private readonly razorpayService = inject(RazorpayService);
+  private readonly http = inject(HttpClient);
+  private readonly cartStore = inject(CartStore);
   readonly payment = inject(PaymentStore);
 
   // Outputs
@@ -50,8 +54,27 @@ export class SummaryStepComponent {
 
   private async openRazorpay() {
     try {
+      // Step 1: Create order on backend
+      const orderResponse = await this.http
+        .post<any>(`${environment.apiUrl}/payments/orders`, {
+          address: this.address(),
+          walletAmount: 0,
+          loyaltyPoints: 0,
+        }, {
+          headers: {
+            'X-Session-ID': this.cartStore.sessionId,
+          },
+        })
+        .toPromise();
+
+      const orderId = orderResponse?.data?.id;
+      if (!orderId) {
+        throw new Error('Failed to create order');
+      }
+
+      // Step 2: Open Razorpay with real order ID
       await this.razorpayService.openCheckout({
-        orderId: 'order_' + Date.now(),
+        orderId,
         amountPaise: Math.round(this.cartTotal() * 100),
         currency: 'INR',
         keyId: environment.razorpayKeyId,

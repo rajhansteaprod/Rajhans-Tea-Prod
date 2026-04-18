@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
   apiUrl: '/api/v1',
-  razorpayKeyId: 'rzp_live_YOUR_LIVE_KEY',
+  razorpayKeyId: 'rzp_test_STo8X60gyG9PvZ',
   firebase: {
     apiKey: 'AIzaSyCoIDaxjf0WeEf2XQJuYfl_ffArI-ZNxpE',
     authDomain: 'sarara-b9eac.firebaseapp.com',
