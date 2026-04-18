@@ -83,6 +83,23 @@
       </div>
     </div>
 
+    <!-- Promo Code Section -->
+    <div class="summary-panel">
+      <h3 class="summary-heading">🎟️ Promo Code (Optional)</h3>
+      <div class="summary-promo-input">
+        <input
+          type="text"
+          [(ngModel)]="promoCode"
+          placeholder="Enter promo code"
+          class="summary-promo-field"
+          [disabled]="isPlacing()"
+        />
+      </div>
+      @if (promoError()) {
+        <p class="summary-promo-error">{{ promoError() }}</p>
+      }
+    </div>
+
     <!-- Payment Note -->
     <div class="summary-panel">
       <h3 class="summary-heading">💳 Payment</h3>

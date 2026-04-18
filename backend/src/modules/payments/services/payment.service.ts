@@ -14,6 +14,7 @@ import {
 import { getPromotionsQueue, PromotionJobs } from '../../promotions/jobs/queues/promotions.queue';
 import { WalletService } from './wallet.service';
 import { LoyaltyService } from '../../promotions/services/loyalty.service';
+import { PromoCodeService } from '../../promo/services/promo.service';
 import { BadRequestError, NotFoundError } from '../../../utils/api-error';
 import { IShippingAddress } from '../models/payment.model';
 import { StockReservation } from '../../cart/models/stock-reservation.model';
@@ -38,6 +39,7 @@ export interface VerifyPaymentResult {
 
 export class PaymentService {
   private paymentRepo = new PaymentRepository();
+  private promoService = new PromoCodeService();
   private checkoutService = new CheckoutService();
   private cartService = new CartService();
   private walletService = new WalletService();
@@ -55,6 +57,7 @@ export class PaymentService {
     walletAmount = 0,
     loyaltyPoints = 0,
     items?: any[],
+    promoCode?: string,
   ): Promise<CreateOrderResult | { paymentId: string; paidViaWallet: true }> {
     let idempotencyKey = idempotencyKey_;
 
@@ -105,6 +108,24 @@ export class PaymentService {
       throw new BadRequestError('Some items are out of stock');
     }
 
+    // Validate and calculate promo discount (if applicable)
+    let promoCodeId: any = null;
+    let promoDiscountPaise = 0;
+
+    if (promoCode) {
+      const validation = await this.promoService.validatePromoCode(promoCode);
+      if (!validation.valid) {
+        throw new BadRequestError(validation.error || 'Invalid promo code');
+      }
+
+      const discount = this.promoService.calculateDiscount(
+        validation.code!,
+        summary.total,
+      );
+      promoDiscountPaise = Math.round(discount.discountAmount * 100);
+      promoCodeId = validation.code!._id;
+    }
+
     // Calculate loyalty discount (if applicable)
     let loyaltyPointsUsed = 0;
     let loyaltyDiscountPaise = 0;
@@ -122,7 +143,8 @@ export class PaymentService {
     }
 
     // Calculate wallet deduction (if applicable)
-    const totalPaise = Math.round(summary.total * 100) - loyaltyDiscountPaise;
+    // Total = summary - promo - loyalty
+    const totalPaise = Math.round(summary.total * 100) - promoDiscountPaise - loyaltyDiscountPaise;
     let walletDeductPaise = 0;
 
     if (walletAmount > 0 && userId) {
@@ -155,10 +177,13 @@ export class PaymentService {
         sessionId,
         userId: userId ? (userId as never) : null,
         razorpayOrderId: `wallet_${idempotencyKey.slice(0, 20)}`,
-        amountPaise: totalPaise + loyaltyDiscountPaise,
+        amountPaise: totalPaise + promoDiscountPaise + loyaltyDiscountPaise,
         walletDeductPaise,
         loyaltyPointsUsed,
         loyaltyDiscountPaise,
+        promoCode,
+        promoCodeId,
+        promoDiscountPaise,
         currency: 'INR',
         status: 'captured',
         checkoutSnapshot: {
@@ -232,6 +257,9 @@ export class PaymentService {
       walletDeductPaise,
       loyaltyPointsUsed,
       loyaltyDiscountPaise,
+      promoCode,
+      promoCodeId,
+      promoDiscountPaise,
       idempotencyKey,
     });
 

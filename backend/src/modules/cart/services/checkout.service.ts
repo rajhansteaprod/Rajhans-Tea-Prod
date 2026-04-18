@@ -70,6 +70,7 @@ export class CheckoutService {
     for (const item of cartItems) {
       // Handle both database documents and plain objects from request
       const productId = item.productId || item.productId;
+      const variantId = item.variantId;
       const qty = item.qty;
 
       // Fetch product details
@@ -80,12 +81,22 @@ export class CheckoutService {
         throw new Error(`Product ${productId} not found`);
       }
 
+      // Use variant price if variant selected, otherwise use base price
+      let finalPrice = product.basePrice;
+      if (variantId) {
+        const ProductVariant = require('../../catalog/models/product-variant.model').ProductVariant;
+        const variant = await ProductVariant.findById(variantId).lean();
+        if (variant) {
+          finalPrice = variant.price;
+        }
+      }
+
       const categoryId = product.category?.toString();
       const collectionIds = (product.collections ?? []).map((c: any) => c.toString());
 
       const pricing = await this.pricingService.calculate({
         productId: product._id.toString(),
-        basePrice: product.basePrice,
+        basePrice: finalPrice,
         categoryId,
         collectionIds,
         qty,
@@ -157,13 +168,25 @@ export class CheckoutService {
         throw new Error(`Product not found`);
       }
 
-      // Only check stock if tracking is enabled
-      if (product.trackInventory) {
+      // Check stock from variant if variantId provided, otherwise from product
+      let trackInventory = product.trackInventory;
+      let availableStock = product.stock ?? 999;
+
+      if (item.variantId) {
+        const ProductVariant = require('../../catalog/models/product-variant.model').ProductVariant;
+        const variant = await ProductVariant.findById(item.variantId).lean();
+        if (variant) {
+          trackInventory = variant.trackInventory;
+          availableStock = variant.stock;
+        }
+      }
+
+      if (trackInventory) {
         const reserved = await this.reservationRepo.sumReservedQty(
           product._id.toString(),
           sessionId, // exclude own previous reservation
         );
-        const available = product.stock - reserved;
+        const available = availableStock - reserved;
 
         if (available < item.qty) {
           issues.push({
@@ -181,7 +204,7 @@ export class CheckoutService {
     }
 
     // All items available — create/refresh reservations
-    for (const item of cart.items) {
+    for (const item of items) {
       const product = item.productId as unknown as IProductDoc;
       if (product.trackInventory) {
         await this.reservationRepo.reserve(sessionId, product._id.toString(), item.qty);

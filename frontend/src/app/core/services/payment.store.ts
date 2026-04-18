@@ -136,7 +136,7 @@ export class PaymentStore {
    * 2. Open Razorpay modal (frontend)
    * 3. Verify payment (backend)
    */
-  async pay(address: AddressForm, walletAmount = 0, loyaltyPoints = 0): Promise<boolean> {
+  async pay(address: AddressForm, walletAmount = 0, loyaltyPoints = 0, promoCode = ''): Promise<boolean> {
     this._paymentLoading.set(true);
     this._paymentError.set(null);
     this._paymentSuccess.set(false);
@@ -170,11 +170,17 @@ export class PaymentStore {
         phone: address.phone.replace(/\D/g, '').slice(-10),
       };
 
-      // Step 1: Create order (with optional wallet deduction)
+      // Step 1: Create order (with optional wallet deduction and promo code)
       const orderRes = await this.http
         .post<ApiResponse<CreateOrderResponse & { paidViaWallet?: boolean }>>(
           `${this.api}/payments/orders`,
-          { address: formattedAddress, items, walletAmount, loyaltyPoints },  // ✅ Now includes items
+          {
+            address: formattedAddress,
+            items,
+            walletAmount,
+            loyaltyPoints,
+            ...(promoCode ? { promoCode } : {}),
+          },
           { headers: this.sessionHeaders().set('X-Idempotency-Key', idempotencyKey) },
         )
         .toPromise();

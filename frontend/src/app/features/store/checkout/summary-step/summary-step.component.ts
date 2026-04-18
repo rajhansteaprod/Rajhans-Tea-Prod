@@ -1,5 +1,6 @@
 import { Component, inject, signal, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CheckoutService } from '../../../../core/services/checkout.service';
 import { PaymentStore } from '../../../../core/services/payment.store';
@@ -8,7 +9,7 @@ import { CartStore } from '../../../../core/services/cart.store';
 @Component({
   selector: 'app-summary-step',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './summary-step.component.html',
   styleUrls: ['./summary-step.component.scss'],
 })
@@ -24,6 +25,8 @@ export class SummaryStepComponent {
   // Signals
   readonly isPlacing = signal(false);
   readonly orderError = signal('');
+  readonly promoCode = signal('');
+  readonly promoError = signal('');
 
   // Get data from service
   readonly cartItems = this.checkoutService.cartItems;
@@ -47,6 +50,8 @@ export class SummaryStepComponent {
     this.isPlacing.set(true);
 
     try {
+      this.promoError.set('');
+
       // ✅ Use PaymentStore.pay() which handles:
       // 1. Create order on backend
       // 2. Open Razorpay modal
@@ -56,6 +61,7 @@ export class SummaryStepComponent {
         this.address(),
         0, // walletAmount (can be added later)
         0, // loyaltyPoints (can be added later)
+        this.promoCode().trim(),
       );
 
       if (success) {

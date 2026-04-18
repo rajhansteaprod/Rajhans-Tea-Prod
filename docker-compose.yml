@@ -77,6 +77,9 @@ services:
       - SHIPROCKET_EMAIL=${SHIPROCKET_EMAIL:-}
       - SHIPROCKET_PASSWORD=${SHIPROCKET_PASSWORD:-}
       - SHIPROCKET_WEBHOOK_TOKEN=${SHIPROCKET_WEBHOOK_TOKEN:-}
+      - RATE_LIMIT_WINDOW_MS=300000
+      - RATE_LIMIT_MAX_REQUESTS=500
+      - AUTH_RATE_LIMIT_MAX_REQUESTS=50
     depends_on:
       mongo:
         condition: service_healthy

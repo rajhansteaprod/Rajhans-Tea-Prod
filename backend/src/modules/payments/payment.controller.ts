@@ -25,7 +25,7 @@ function getSessionId(req: Request): string {
 export const createOrder = async (req: Request, res: Response) => {
   const sessionId = getSessionId(req);
   const userId = req.user?.userId ?? null;
-  const { address, items, walletAmount, loyaltyPoints } = req.body;
+  const { address, items, walletAmount, loyaltyPoints, promoCode } = req.body;
 
   // Idempotency key: derived from sessionId + address hash (prevents double payment for same cart)
   const addressHash = crypto
@@ -44,6 +44,7 @@ export const createOrder = async (req: Request, res: Response) => {
     walletAmount || 0,
     loyaltyPoints || 0,
     items,
+    promoCode,
   );
   sendCreated(
     res,

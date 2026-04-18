@@ -54,6 +54,9 @@ export interface IPaymentDoc extends Document {
   walletDeductPaise: number;
   loyaltyPointsUsed: number;
   loyaltyDiscountPaise: number;
+  promoCode?: string;
+  promoCodeId?: Types.ObjectId;
+  promoDiscountPaise: number;
   refundedAmount: number;
   refunds: IRefund[];
   idempotencyKey: string;
@@ -115,6 +118,9 @@ const paymentSchema = new Schema<IPaymentDoc>(
     walletDeductPaise: { type: Number, default: 0 },
     loyaltyPointsUsed: { type: Number, default: 0 },
     loyaltyDiscountPaise: { type: Number, default: 0 },
+    promoCode: { type: String, default: null },
+    promoCodeId: { type: Schema.Types.ObjectId, ref: 'PromoCode', default: null },
+    promoDiscountPaise: { type: Number, default: 0 },
     refundedAmount: { type: Number, default: 0 },
     refunds: [refundSchema],
     idempotencyKey: { type: String, required: true },
