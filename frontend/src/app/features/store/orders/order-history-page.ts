@@ -3,25 +3,9 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { OrderStore } from '../../../core/services/order.store';
 
-type OrderFilter = 'all' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+import { OrderView } from '../../../core/services/order.store';
 
-interface Order {
-  _id: string;
-  orderNumber: string;
-  createdAt: string;
-  status: string;
-  items: { productId: string; name: string; qty: number; totalPrice: number }[];
-  shippingAddress: { city: string; state: string; pincode: string };
-  shiprocket: {
-    shipmentId: number | null;
-    awbCode: string | null;
-    courierName: string | null;
-    trackingUrl: string | null;
-    estimatedDelivery: string | null;
-  };
-  statusHistory: { status: string; timestamp: string; note: string | null }[];
-  total: number;
-}
+type OrderFilter = 'all' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
 @Component({
   selector: 'app-order-history-page',
@@ -33,7 +17,7 @@ interface Order {
 export class OrderHistoryPageComponent implements OnInit {
   readonly store = inject(OrderStore);
   readonly activeFilter = signal<OrderFilter>('all');
-  readonly selectedOrderForTracking = signal<Order | null>(null);
+  readonly selectedOrderForTracking = signal<OrderView | null>(null);
   readonly trackingLoading = signal(false);
   readonly trackingError = signal('');
 

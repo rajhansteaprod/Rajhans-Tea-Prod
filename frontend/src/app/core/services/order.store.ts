@@ -27,11 +27,13 @@ export interface OrderView {
   shippingAddress: { name: string; phone: string; street: string; city: string; state: string; pincode: string };
   shiprocket: {
     orderId: number | null;
+    shipmentId: number | null;
     awbCode: string | null;
     courierName: string | null;
     trackingUrl: string | null;
     label: string | null;
     estimatedDelivery: string | null;
+    pickupScheduledDate: string | null;
   };
   createdAt: string;
 }
