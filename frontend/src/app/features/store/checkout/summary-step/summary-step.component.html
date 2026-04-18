@@ -83,48 +83,10 @@
       </div>
     </div>
 
-    <!-- Payment Method -->
+    <!-- Payment Note -->
     <div class="summary-panel">
-      <h3 class="summary-heading">💳 Payment Method</h3>
-
-      <div class="summary-payment-options">
-        <label class="summary-payment-option">
-          <input
-            type="radio"
-            name="payment"
-            value="card"
-            [checked]="selectedPaymentMethod() === 'card'"
-            (change)="selectPaymentMethod('card')"
-          />
-          <span>Credit/Debit Card</span>
-        </label>
-
-        <label class="summary-payment-option">
-          <input
-            type="radio"
-            name="payment"
-            value="upi"
-            [checked]="selectedPaymentMethod() === 'upi'"
-            (change)="selectPaymentMethod('upi')"
-          />
-          <span>UPI</span>
-        </label>
-
-        <label class="summary-payment-option">
-          <input
-            type="radio"
-            name="payment"
-            value="razorpay"
-            [checked]="selectedPaymentMethod() === 'razorpay'"
-            (change)="selectPaymentMethod('razorpay')"
-          />
-          <span>Razorpay (Recommended)</span>
-        </label>
-      </div>
-
-      @if (selectedPaymentMethod() === 'razorpay') {
-        <p class="summary-payment-note">Secure payment by Razorpay</p>
-      }
+      <h3 class="summary-heading">💳 Payment</h3>
+      <p class="summary-payment-note">Secure payment via Razorpay</p>
     </div>
 
     <!-- Error Message -->
@@ -147,9 +109,9 @@
       >
         @if (isPlacing()) {
           <span class="summary-spinner"></span>
-          PLACING...
+          PROCESSING...
         } @else {
-          PLACE ORDER
+          PAY NOW
         }
       </button>
     </div>

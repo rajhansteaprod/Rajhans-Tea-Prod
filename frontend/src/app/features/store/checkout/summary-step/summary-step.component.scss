@@ -196,46 +196,13 @@
   font-weight: $font-weight-medium;
 }
 
-// Payment Options
-.summary-payment-options {
-  @include flex-column;
-  gap: $space-md;
-}
-
-.summary-payment-option {
-  display: flex;
-  align-items: center;
-  gap: $space-md;
-  cursor: pointer;
-  padding: $space-sm;
-  border-radius: 0;
-  transition: background 150ms ease;
-
-  &:hover {
-    background: #f9f9f9;
-  }
-
-  input {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: #000;
-    flex-shrink: 0;
-  }
-
-  span {
-    font-size: $font-size-sm;
-    color: #333;
-  }
-}
-
+// Payment Note
 .summary-payment-note {
-  font-size: $font-size-xs;
+  font-size: $font-size-sm;
   color: #666;
-  margin: $space-md 0 0;
-  padding: $space-sm $space-md;
-  background: #f9f9f9;
-  border-left: 3px solid #999;
+  margin: 0;
+  padding: 0;
+  text-align: center;
 }
 
 // Error Message

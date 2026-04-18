@@ -2,6 +2,7 @@ import { Component, inject, signal, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CheckoutService } from '../../../../core/services/checkout.service';
 import { PaymentStore } from '../../../../core/services/payment.store';
+import { RazorpayService } from '../../../../core/services/razorpay.service';
 
 @Component({
   selector: 'app-summary-step',
@@ -12,6 +13,7 @@ import { PaymentStore } from '../../../../core/services/payment.store';
 })
 export class SummaryStepComponent {
   private readonly checkoutService = inject(CheckoutService);
+  private readonly razorpayService = inject(RazorpayService);
   readonly payment = inject(PaymentStore);
 
   // Outputs
@@ -20,7 +22,6 @@ export class SummaryStepComponent {
 
   // Signals
   readonly isPlacing = signal(false);
-  readonly selectedPaymentMethod = signal<'card' | 'upi' | 'razorpay'>('razorpay');
   readonly orderError = signal('');
 
   // Get data from service
@@ -34,10 +35,6 @@ export class SummaryStepComponent {
     this.prevStep.emit();
   }
 
-  selectPaymentMethod(method: 'card' | 'upi' | 'razorpay') {
-    this.selectedPaymentMethod.set(method);
-  }
-
   placeOrder() {
     this.orderError.set('');
 
@@ -46,45 +43,31 @@ export class SummaryStepComponent {
       return;
     }
 
-    if (!this.selectedPaymentMethod()) {
-      this.orderError.set('Please select a payment method');
-      return;
-    }
-
     this.isPlacing.set(true);
-
-    if (this.selectedPaymentMethod() === 'razorpay') {
-      this.openRazorpay();
-    } else {
-      this.processOrder();
-    }
+    this.openRazorpay();
   }
 
-  private openRazorpay() {
-    const options = {
-      key: 'YOUR_RAZORPAY_KEY_ID',
-      amount: this.cartTotal() * 100,
-      currency: 'INR',
-      name: 'Rajhans Tea',
-      description: 'Order Payment',
-      order_id: 'order_' + Date.now(),
-      handler: () => {
-        this.processOrder();
-      },
-      onClose: () => {
-        this.isPlacing.set(false);
-        this.orderError.set('Payment cancelled. Please try again.');
-      },
-    };
-
-    if (window.Razorpay) {
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
+  private async openRazorpay() {
+    try {
+      await this.razorpayService.openCheckout({
+        orderId: 'order_' + Date.now(),
+        amountPaise: Math.round(this.cartTotal() * 100),
+        currency: 'INR',
+        keyId: 'rzp_live_dummykey123',
+        prefill: {
+          name: this.address().name,
+          contact: this.address().phone,
+        },
+      });
+      this.processOrder();
+    } catch (error: any) {
+      console.error('Razorpay error:', error);
+      this.isPlacing.set(false);
+      this.orderError.set(error.message || 'Payment failed. Please try again.');
     }
   }
 
   private processOrder() {
-    this.isPlacing.set(true);
     setTimeout(() => {
       this.placeOrderClick.emit();
     }, 500);
