@@ -91,9 +91,23 @@
         <div class="detail-row"><span>Total</span><span class="amount">₹{{ selectedOrder()!.total | number:'1.2-2' }}</span></div>
         <div class="detail-row"><span>Customer</span><span>{{ selectedOrder()!.shippingAddress.name }} · {{ selectedOrder()!.shippingAddress.phone }}</span></div>
         <div class="detail-row"><span>Address</span><span>{{ selectedOrder()!.shippingAddress.city }}, {{ selectedOrder()!.shippingAddress.state }}</span></div>
-        @if (selectedOrder()!.shiprocket.awbCode) {
-          <div class="detail-row"><span>AWB</span><span class="mono">{{ selectedOrder()!.shiprocket.awbCode }}</span></div>
-          <div class="detail-row"><span>Courier</span><span>{{ selectedOrder()!.shiprocket.courierName }}</span></div>
+        @if (selectedOrder()!.shiprocket.shipmentId) {
+          <h3>Shiprocket Shipment</h3>
+          @if (selectedOrder()!.shiprocket.awbCode) {
+            <div class="detail-row"><span>AWB Code</span><span class="mono">{{ selectedOrder()!.shiprocket.awbCode }}</span></div>
+          }
+          @if (selectedOrder()!.shiprocket.courierName) {
+            <div class="detail-row"><span>Courier</span><span>{{ selectedOrder()!.shiprocket.courierName }}</span></div>
+          }
+          @if (selectedOrder()!.shiprocket.trackingUrl) {
+            <div class="detail-row"><span>Tracking</span><span><a [href]="selectedOrder()!.shiprocket.trackingUrl" target="_blank">View →</a></span></div>
+          }
+          @if (selectedOrder()!.shiprocket.estimatedDelivery) {
+            <div class="detail-row"><span>Est. Delivery</span><span>{{ selectedOrder()!.shiprocket.estimatedDelivery | date:'dd MMM yyyy' }}</span></div>
+          }
+          @if (selectedOrder()!.shiprocket.label) {
+            <div class="detail-row"><span>Label</span><span><a [href]="selectedOrder()!.shiprocket.label" target="_blank">Download PDF →</a></span></div>
+          }
         }
         <h3>Items</h3>
         @for (item of selectedOrder()!.items; track item.name) {
@@ -147,7 +161,7 @@
     <div class="modal shipment-modal">
       <div class="modal-head">
         <div>
-          <h2>Process Shipment</h2>
+          <h2>Manage Shipment</h2>
           <p class="order-ref">Order {{ shipmentTarget()!.orderNumber }}</p>
         </div>
         <button (click)="shipmentTarget.set(null)">✕</button>
@@ -156,42 +170,84 @@
         <!-- Order Summary -->
         <div class="summary-section">
           <p><strong>Customer:</strong> {{ shipmentTarget()!.shippingAddress.name }} ({{ shipmentTarget()!.shippingAddress.phone }})</p>
+          <p><strong>Address:</strong> {{ shipmentTarget()!.shippingAddress.city }}, {{ shipmentTarget()!.shippingAddress.state }} - {{ shipmentTarget()!.shippingAddress.pincode }}</p>
           <p><strong>Items:</strong> {{ shipmentTarget()!.items.length }} item(s)</p>
           <p><strong>Total:</strong> ₹{{ shipmentTarget()!.total | number:'1.2-2' }}</p>
         </div>
 
+        <!-- Status Messages -->
+        @if (shiprocketError()) {
+          <div class="alert alert-error">{{ shiprocketError() }}</div>
+        }
+        @if (shiprocketSuccess()) {
+          <div class="alert alert-success">{{ shiprocketSuccess() }}</div>
+        }
+
         <div class="divider"></div>
 
-        <!-- Step 1: Shipping Method -->
+        <!-- Shiprocket Section -->
         <div class="form-section">
-          <h3>Step 1: Select Shipping Method</h3>
-          <div class="shipping-options">
-            <label class="radio-option">
-              <input type="radio" [(ngModel)]="shipmentMethod" value="standard" />
-              <span>Standard Delivery (3-5 days) - ₹0</span>
-            </label>
-            <label class="radio-option">
-              <input type="radio" [(ngModel)]="shipmentMethod" value="express" />
-              <span>Express Delivery (1-2 days) - ₹50</span>
-            </label>
-            <label class="radio-option">
-              <input type="radio" [(ngModel)]="shipmentMethod" value="overnight" />
-              <span>Overnight Delivery - ₹200</span>
-            </label>
-          </div>
+          <h3>Shiprocket Integration</h3>
+
+          @if (shipmentTarget()!.shiprocket.shipmentId) {
+            <!-- Existing Shipment Actions -->
+            <div class="shipment-info">
+              @if (shipmentTarget()!.shiprocket.awbCode) {
+                <p><strong>AWB:</strong> <span class="mono">{{ shipmentTarget()!.shiprocket.awbCode }}</span></p>
+              }
+              @if (shipmentTarget()!.shiprocket.courierName) {
+                <p><strong>Courier:</strong> {{ shipmentTarget()!.shiprocket.courierName }}</p>
+              }
+              @if (shipmentTarget()!.shiprocket.estimatedDelivery) {
+                <p><strong>Est. Delivery:</strong> {{ shipmentTarget()!.shiprocket.estimatedDelivery | date:'dd MMM yyyy' }}</p>
+              }
+            </div>
+
+            <div class="action-buttons">
+              <button class="btn-sm" [disabled]="shiprocketLoading()" (click)="trackShiprocket()">📍 Track</button>
+              <button class="btn-sm" [disabled]="shiprocketLoading()" (click)="downloadLabel()">📄 Label</button>
+              <button class="btn-sm" [disabled]="shiprocketLoading()" (click)="schedulePickup()">🚚 Pickup</button>
+              <button class="btn-sm danger" [disabled]="shiprocketLoading()" (click)="cancelShiprocket()">✕ Cancel</button>
+            </div>
+          } @else {
+            <!-- Create New Shipment -->
+            <div class="form-group">
+              <label>Pickup Location *</label>
+              <select [(ngModel)]="pickupLocationId">
+                <option value="">Select pickup location...</option>
+                <option value="warehouse-1">Main Warehouse</option>
+                <option value="warehouse-2">Secondary Warehouse</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Preferred Courier (optional)</label>
+              <select [(ngModel)]="courierId">
+                <option [value]="null">Auto-assign</option>
+                <option value="1">Delhivery</option>
+                <option value="2">FedEx</option>
+                <option value="3">DHL</option>
+              </select>
+            </div>
+
+            <button class="btn-primary full-width" [disabled]="!pickupLocationId || shiprocketLoading()" (click)="createShiprocketShipment()">
+              {{ shiprocketLoading() ? 'Creating...' : 'Create Shiprocket Shipment' }}
+            </button>
+          }
         </div>
 
         <div class="divider"></div>
 
-        <!-- Step 2: Tracking Details -->
+        <!-- Manual Tracking Section -->
         <div class="form-section">
-          <h3>Step 2: Enter Tracking Details</h3>
+          <h3>Manual Tracking (Optional)</h3>
+          <p class="section-hint">Use this if you want to track manually instead of Shiprocket</p>
+
           <div class="form-group">
-            <label>Tracking Number *</label>
+            <label>Tracking Number</label>
             <input type="text" [(ngModel)]="trackingNumber" placeholder="e.g., SHIP123456789" />
           </div>
           <div class="form-group">
-            <label>Courier *</label>
+            <label>Courier</label>
             <select [(ngModel)]="courierName">
               <option value="">Select courier...</option>
               <option value="Delhivery">Delhivery</option>
@@ -202,25 +258,21 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Estimated Delivery Date *</label>
+            <label>Estimated Delivery Date</label>
             <input type="date" [(ngModel)]="estimatedDelivery" />
           </div>
-        </div>
 
-        <div class="divider"></div>
-
-        <!-- Step 3: Notification -->
-        <div class="form-section">
           <label class="checkbox-option">
             <input type="checkbox" [(ngModel)]="notifyCustomer" />
             <span>Send tracking notification to customer</span>
-            <small>(Customer gets SMS + Email with tracking link)</small>
           </label>
         </div>
 
         <div class="modal-actions">
-          <button class="btn-secondary" (click)="shipmentTarget.set(null)">Cancel</button>
-          <button class="btn-primary" [disabled]="!trackingNumber || !courierName" (click)="processShipment()">Process & Notify</button>
+          <button class="btn-secondary" (click)="shipmentTarget.set(null)">Done</button>
+          @if (trackingNumber && courierName) {
+            <button class="btn-primary" (click)="processShipment()">Save & Notify</button>
+          }
         </div>
       </div>
     </div>

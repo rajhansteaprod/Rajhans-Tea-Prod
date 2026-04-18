@@ -12,8 +12,17 @@ interface OrderItem {
   total: number;
   status: string;
   statusHistory: { status: string; timestamp: string; note: string | null }[];
-  shippingAddress: { name: string; phone: string; city: string; state: string };
-  shiprocket: { awbCode: string | null; courierName: string | null; trackingUrl: string | null };
+  shippingAddress: { name: string; phone: string; city: string; state: string; pincode: string };
+  shiprocket: {
+    orderId: number | null;
+    shipmentId: number | null;
+    awbCode: string | null;
+    courierName: string | null;
+    trackingUrl: string | null;
+    label: string | null;
+    estimatedDelivery: string | null;
+    pickupScheduledDate: string | null;
+  };
   createdAt: string;
 }
 
@@ -44,6 +53,9 @@ export class AdminOrderListComponent implements OnInit {
   readonly selectedOrder = signal<OrderItem | null>(null);
   readonly cancelTarget = signal<OrderItem | null>(null);
   readonly shipmentTarget = signal<OrderItem | null>(null);
+  readonly shiprocketLoading = signal(false);
+  readonly shiprocketSuccess = signal('');
+  readonly shiprocketError = signal('');
 
   searchQuery = '';
   statusFilter = '';
@@ -55,6 +67,8 @@ export class AdminOrderListComponent implements OnInit {
   courierName = '';
   estimatedDelivery = '';
   notifyCustomer = true;
+  pickupLocationId = '';
+  courierId: number | undefined;
   private searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
   statCards = [
@@ -122,6 +136,117 @@ export class AdminOrderListComponent implements OnInit {
     this.courierName = '';
     this.estimatedDelivery = this.getTomorrowDate();
     this.notifyCustomer = true;
+    this.pickupLocationId = '';
+    this.shiprocketSuccess.set('');
+    this.shiprocketError.set('');
+  }
+
+  createShiprocketShipment(): void {
+    const order = this.shipmentTarget();
+    if (!order || !this.pickupLocationId) {
+      this.shiprocketError.set('Please select a pickup location');
+      return;
+    }
+
+    this.shiprocketLoading.set(true);
+    this.shiprocketError.set('');
+    this.http.post<any>(`${this.api}/admin/shipments/create`, {
+      orderId: order._id,
+      pickupLocationId: this.pickupLocationId,
+      courierId: this.courierId,
+    }).subscribe({
+      next: (res) => {
+        this.shiprocketSuccess.set('Shipment created successfully! AWB: ' + res.data.awbCode);
+        this.shiprocketLoading.set(false);
+        setTimeout(() => {
+          this.shipmentTarget.set(null);
+          this.loadOrders();
+        }, 1500);
+      },
+      error: (err) => {
+        this.shiprocketError.set(err.error?.message || 'Failed to create shipment');
+        this.shiprocketLoading.set(false);
+      },
+    });
+  }
+
+  trackShiprocket(): void {
+    const order = this.shipmentTarget();
+    if (!order) return;
+
+    this.shiprocketLoading.set(true);
+    this.shiprocketError.set('');
+    this.http.get<any>(`${this.api}/admin/shipments/${order._id}/track`).subscribe({
+      next: (res) => {
+        this.shiprocketSuccess.set(`Status: ${res.data.status}\nDelivery: ${res.data.estimatedDelivery || 'N/A'}`);
+        this.shiprocketLoading.set(false);
+        setTimeout(() => this.shiprocketSuccess.set(''), 3000);
+      },
+      error: (err) => {
+        this.shiprocketError.set(err.error?.message || 'Failed to track shipment');
+        this.shiprocketLoading.set(false);
+      },
+    });
+  }
+
+  downloadLabel(): void {
+    const order = this.shipmentTarget();
+    if (!order) return;
+
+    this.shiprocketLoading.set(true);
+    this.http.get<any>(`${this.api}/admin/shipments/${order._id}/label`).subscribe({
+      next: (res) => {
+        if (res.data.labelUrl) window.open(res.data.labelUrl, '_blank');
+        this.shiprocketSuccess.set('Label downloaded successfully');
+        this.shiprocketLoading.set(false);
+        setTimeout(() => this.shiprocketSuccess.set(''), 2000);
+      },
+      error: (err) => {
+        this.shiprocketError.set(err.error?.message || 'Failed to download label');
+        this.shiprocketLoading.set(false);
+      },
+    });
+  }
+
+  schedulePickup(): void {
+    const order = this.shipmentTarget();
+    if (!order) return;
+
+    this.shiprocketLoading.set(true);
+    this.http.post<any>(`${this.api}/admin/shipments/${order._id}/pickup`, {}).subscribe({
+      next: (res) => {
+        this.shiprocketSuccess.set('Pickup scheduled for: ' + res.data.pickupScheduledDate);
+        this.shiprocketLoading.set(false);
+        setTimeout(() => this.shiprocketSuccess.set(''), 3000);
+      },
+      error: (err) => {
+        this.shiprocketError.set(err.error?.message || 'Failed to schedule pickup');
+        this.shiprocketLoading.set(false);
+      },
+    });
+  }
+
+  cancelShiprocket(): void {
+    const order = this.shipmentTarget();
+    if (!order) return;
+
+    if (!confirm('Are you sure you want to cancel this shipment?')) return;
+
+    this.shiprocketLoading.set(true);
+    this.http.post<any>(`${this.api}/admin/shipments/${order._id}/cancel`, {}).subscribe({
+      next: () => {
+        this.shiprocketSuccess.set('Shipment cancelled successfully');
+        this.shiprocketLoading.set(false);
+        setTimeout(() => {
+          this.shipmentTarget.set(null);
+          this.loadOrders();
+        }, 1500);
+      },
+      error: (err) => {
+        this.shiprocketError.set(err.error?.message || 'Failed to cancel shipment');
+        this.shiprocketLoading.set(false);
+      },
+    });
   }
 
   processShipment(): void {
