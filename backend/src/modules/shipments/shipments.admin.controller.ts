@@ -28,7 +28,7 @@ export const createShipment = async (req: Request, res: Response) => {
  * GET /admin/shipments/:orderId/track
  */
 export const trackShipment = async (req: Request, res: Response) => {
-  const { orderId } = req.params;
+  const orderId = (req.params.orderId as string) || '';
 
   const tracking = await shiprocketService.trackShipment(orderId);
   sendSuccess(res, tracking);
@@ -39,7 +39,7 @@ export const trackShipment = async (req: Request, res: Response) => {
  * GET /admin/shipments/:orderId/label
  */
 export const generateLabel = async (req: Request, res: Response) => {
-  const { orderId } = req.params;
+  const orderId = (req.params.orderId as string) || '';
 
   const labelUrl = await shiprocketService.generateLabel(orderId);
   sendSuccess(res, { labelUrl });
@@ -50,7 +50,7 @@ export const generateLabel = async (req: Request, res: Response) => {
  * POST /admin/shipments/:orderId/pickup
  */
 export const schedulePickup = async (req: Request, res: Response) => {
-  const { orderId } = req.params;
+  const orderId = (req.params.orderId as string) || '';
 
   const result = await shiprocketService.schedulePickup(orderId);
   sendSuccess(res, result);
@@ -61,7 +61,7 @@ export const schedulePickup = async (req: Request, res: Response) => {
  * POST /admin/shipments/:orderId/cancel
  */
 export const cancelShipment = async (req: Request, res: Response) => {
-  const { orderId } = req.params;
+  const orderId = (req.params.orderId as string) || '';
 
   await shiprocketService.cancelShipment(orderId);
   sendSuccess(res, { message: 'Shipment cancelled successfully' });
@@ -92,7 +92,7 @@ export const getShippingRates = async (req: Request, res: Response) => {
  * GET /admin/shipments/validate-pincode/:pincode
  */
 export const validatePincode = async (req: Request, res: Response) => {
-  const { pincode } = req.params;
+  const pincode = (req.params.pincode as string) || '';
 
   const isValid = await shiprocketService.validatePincode(pincode);
   sendSuccess(res, { valid: isValid, pincode });
