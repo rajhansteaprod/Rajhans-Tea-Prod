@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { CheckoutService } from '../../../../core/services/checkout.service';
 import { PaymentStore } from '../../../../core/services/payment.store';
 import { RazorpayService } from '../../../../core/services/razorpay.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-summary-step',
@@ -53,7 +54,7 @@ export class SummaryStepComponent {
         orderId: 'order_' + Date.now(),
         amountPaise: Math.round(this.cartTotal() * 100),
         currency: 'INR',
-        keyId: 'rzp_live_dummykey123',
+        keyId: environment.razorpayKeyId,
         prefill: {
           name: this.address().name,
           contact: this.address().phone,

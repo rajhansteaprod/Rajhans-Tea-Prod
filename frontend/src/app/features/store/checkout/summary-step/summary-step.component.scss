@@ -43,15 +43,7 @@
   }
 }
 
-.summary-sticky {
-  position: sticky;
-  top: 120px;
-
-  @include respond-to(md) {
-    position: static;
-    top: auto;
-  }
-}
+ 
 
 .summary-heading {
   font-family: $font-family-display;
