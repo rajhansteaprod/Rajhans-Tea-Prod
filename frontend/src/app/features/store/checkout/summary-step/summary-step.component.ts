@@ -55,11 +55,16 @@ export class SummaryStepComponent {
   private async openRazorpay() {
     try {
       // Step 1: Create order on backend
+      const address = this.address();
+      const phone = address.phone.replace(/\D/g, '').slice(-10); // Get last 10 digits only
+
       const orderResponse = await this.http
         .post<any>(`${environment.apiUrl}/payments/orders`, {
-          address: this.address(),
+          address: {
+            ...address,
+            phone,
+          },
           walletAmount: 0,
-          loyaltyPoints: 0,
         }, {
           headers: {
             'X-Session-ID': this.cartStore.sessionId,
