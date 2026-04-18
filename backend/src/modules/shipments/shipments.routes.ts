@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import * as controller from './shipments.controller';
+import * as adminCtrl from './shipments.admin.controller';
+import { authenticate } from '../../middleware/auth.middleware';
 
 const router = Router();
+
+// ─── PUBLIC ROUTES ──────────────────────────────────────────────────────────
 
 /**
  * POST /api/v1/shipments/estimate-delivery
@@ -14,5 +18,49 @@ router.post('/estimate-delivery', controller.estimateDelivery);
  * Validate if a pincode is serviceable
  */
 router.post('/validate-pincode', controller.validatePincode);
+
+// ─── ADMIN ROUTES ───────────────────────────────────────────────────────────
+
+/**
+ * Create shipment from order
+ * POST /api/v1/admin/shipments/create
+ */
+router.post('/admin/create', authenticate, adminCtrl.createShipment);
+
+/**
+ * Get shipment tracking
+ * GET /api/v1/admin/shipments/:orderId/track
+ */
+router.get('/admin/:orderId/track', authenticate, adminCtrl.trackShipment);
+
+/**
+ * Generate AWB label
+ * GET /api/v1/admin/shipments/:orderId/label
+ */
+router.get('/admin/:orderId/label', authenticate, adminCtrl.generateLabel);
+
+/**
+ * Schedule pickup
+ * POST /api/v1/admin/shipments/:orderId/pickup
+ */
+router.post('/admin/:orderId/pickup', authenticate, adminCtrl.schedulePickup);
+
+/**
+ * Cancel shipment
+ * POST /api/v1/admin/shipments/:orderId/cancel
+ */
+router.post('/admin/:orderId/cancel', authenticate, adminCtrl.cancelShipment);
+
+/**
+ * Get shipping rates
+ * GET /api/v1/admin/shipments/rates?pickup=400001&delivery=560001&weight=0.5
+ */
+router.get('/admin/rates', authenticate, adminCtrl.getShippingRates);
+
+/**
+ * Validate pincode serviceability
+ * GET /api/v1/admin/shipments/validate/:pincode
+ */
+router.get('/admin/validate/:pincode', authenticate, adminCtrl.validatePincode);
 
 export default router;
