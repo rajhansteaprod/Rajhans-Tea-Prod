@@ -82,13 +82,25 @@ export class PaymentService {
 
     // Get checkout summary (runs pricing engine)
     // Pass items if provided (from temporary cart), else fetch from session
+    console.log('🛒 DEBUG: Creating order', {
+      sessionId,
+      userId,
+      providedItems: items?.length ?? 0,
+      itemsArray: items,
+    });
+
     const summary = await this.checkoutService.getSummary(sessionId, items);
+    console.log('📦 DEBUG: Checkout summary', {
+      summaryItems: summary.items.length,
+      total: summary.total,
+    });
+
     if (summary.items.length === 0) {
       throw new BadRequestError('Cart is empty');
     }
 
-    // Reserve stock
-    const stockResult = await this.checkoutService.reserveStock(sessionId);
+    // Reserve stock (pass items so it uses provided items from frontend)
+    const stockResult = await this.checkoutService.reserveStock(sessionId, items);
     if (stockResult.issues.length > 0) {
       throw new BadRequestError('Some items are out of stock');
     }
@@ -388,8 +400,20 @@ export class PaymentService {
       if (rpOrderId) {
         const payment = await this.paymentRepo.findByRazorpayOrderId(rpOrderId);
         if (payment && payment.status === 'created') {
-          await this.paymentRepo.updateStatus(payment._id.toString(), 'failed');
+          // ✅ Revert loyalty points if they were deducted during order creation
+          if (payment.loyaltyPointsUsed > 0 && payment.userId) {
+            await this.loyaltyService.revertRedemption(
+              payment.userId.toString(),
+              payment.loyaltyPointsUsed,
+              payment._id.toString(),
+            );
+          }
+
+          // Release stock reservation
           await this.releaseStockForPayment(payment.sessionId);
+
+          // Mark payment as failed
+          await this.paymentRepo.updateStatus(payment._id.toString(), 'failed');
         }
       }
     } else if (eventType === 'refund.created') {

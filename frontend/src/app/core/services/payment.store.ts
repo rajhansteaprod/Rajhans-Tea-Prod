@@ -142,12 +142,40 @@ export class PaymentStore {
     this._paymentSuccess.set(false);
 
     try {
+      // ✅ Generate idempotency key to prevent duplicate orders
+      // If user refreshes or network fails, same key returns same order
+      const idempotencyKey = this.generateIdempotencyKey(address);
+
+      // ✅ Get items from cart (prioritize temporary cart for "Buy Now", fallback to session cart)
+      const tempCart = this.cart.getTemporaryCart();
+      const sessionCart = this.cart.cartItems();
+      const cartItems = tempCart.length > 0 ? tempCart : sessionCart;
+
+      if (!cartItems || cartItems.length === 0) {
+        this._paymentError.set('Cart is empty. Please add items before checkout.');
+        this._paymentLoading.set(false);
+        return false;
+      }
+
+      // Convert cart items to order format (productId, variantId, qty)
+      const items = cartItems.map(item => ({
+        productId: item.productId,
+        variantId: item.variantId,
+        qty: item.qty,
+      }));
+
+      // ✅ Format phone number to 10 digits (remove all non-digits, take last 10)
+      const formattedAddress = {
+        ...address,
+        phone: address.phone.replace(/\D/g, '').slice(-10),
+      };
+
       // Step 1: Create order (with optional wallet deduction)
       const orderRes = await this.http
         .post<ApiResponse<CreateOrderResponse & { paidViaWallet?: boolean }>>(
           `${this.api}/payments/orders`,
-          { address, walletAmount, loyaltyPoints },
-          { headers: this.sessionHeaders() },
+          { address: formattedAddress, items, walletAmount, loyaltyPoints },  // ✅ Now includes items
+          { headers: this.sessionHeaders().set('X-Idempotency-Key', idempotencyKey) },
         )
         .toPromise();
 
@@ -276,5 +304,29 @@ export class PaymentStore {
 
   private sessionHeaders(): HttpHeaders {
     return new HttpHeaders({ 'X-Session-ID': this.cart.sessionId });
+  }
+
+  /**
+   * Generate idempotency key based on address
+   * Same address = same key = backend returns existing order (prevents duplicates)
+   */
+  private generateIdempotencyKey(address: AddressForm): string {
+    const addressHash = this.hashObject(address);
+    return `${this.cart.sessionId}-${addressHash}`;
+  }
+
+  /**
+   * Simple hash function for address object
+   * Used to detect if user is placing order for same address
+   */
+  private hashObject(obj: any): string {
+    const str = JSON.stringify(obj);
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(16);
   }
 }

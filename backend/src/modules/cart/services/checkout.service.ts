@@ -122,17 +122,40 @@ export class CheckoutService {
   // Checks availability, creates reservations (15-min TTL), returns issues if any
   // ---------------------------------------------------------------------------
 
-  async reserveStock(sessionId: string): Promise<{ issues: StockIssue[] }> {
-    const cart = await this.cartRepo.findBySession(sessionId);
+  async reserveStock(
+    sessionId: string,
+    providedItems?: Array<{ productId: string; variantId?: string; qty: number }>,
+  ): Promise<{ issues: StockIssue[] }> {
+    let items: any[] = providedItems || [];
 
-    if (!cart || cart.items.length === 0) {
+    // Use provided items (from frontend) or fetch from session cart
+    if (items.length === 0) {
+      const sessionCart = await this.cartRepo.findBySession(sessionId);
+      items = sessionCart?.items ?? [];
+    }
+
+    if (items.length === 0) {
       throw new BadRequestError('Cart is empty');
     }
 
     const issues: StockIssue[] = [];
+    const Product = require('../../catalog/models/product.model').Product;
 
-    for (const item of cart.items) {
-      const product = item.productId as unknown as IProductDoc;
+    for (const item of items) {
+      // Handle both database documents and plain objects from request
+      let product: IProductDoc;
+
+      if (typeof item.productId === 'string') {
+        // From frontend: plain productId string
+        product = await Product.findById(item.productId).lean();
+      } else {
+        // From database: already populated IProductDoc
+        product = item.productId as unknown as IProductDoc;
+      }
+
+      if (!product) {
+        throw new Error(`Product not found`);
+      }
 
       // Only check stock if tracking is enabled
       if (product.trackInventory) {

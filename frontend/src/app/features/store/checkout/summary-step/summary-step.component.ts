@@ -1,11 +1,9 @@
 import { Component, inject, signal, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { CheckoutService } from '../../../../core/services/checkout.service';
 import { PaymentStore } from '../../../../core/services/payment.store';
-import { RazorpayService } from '../../../../core/services/razorpay.service';
 import { CartStore } from '../../../../core/services/cart.store';
-import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-summary-step',
@@ -16,10 +14,8 @@ import { environment } from '../../../../../environments/environment';
 })
 export class SummaryStepComponent {
   private readonly checkoutService = inject(CheckoutService);
-  private readonly razorpayService = inject(RazorpayService);
-  private readonly http = inject(HttpClient);
-  private readonly cartStore = inject(CartStore);
-  readonly payment = inject(PaymentStore);
+  private readonly payment = inject(PaymentStore);
+  private readonly router = inject(Router);
 
   // Outputs
   readonly prevStep = output<void>();
@@ -40,7 +36,7 @@ export class SummaryStepComponent {
     this.prevStep.emit();
   }
 
-  placeOrder() {
+  async placeOrder() {
     this.orderError.set('');
 
     if (!this.address().name) {
@@ -49,64 +45,36 @@ export class SummaryStepComponent {
     }
 
     this.isPlacing.set(true);
-    this.openRazorpay();
-  }
 
-  private async openRazorpay() {
     try {
-      // Step 1: Create order on backend
-      const address = this.address();
-      const phone = address.phone.replace(/\D/g, '').slice(-10); // Get last 10 digits only
+      // ✅ Use PaymentStore.pay() which handles:
+      // 1. Create order on backend
+      // 2. Open Razorpay modal
+      // 3. Verify payment signature (CRITICAL!)
+      // 4. Update database
+      const success = await this.payment.pay(
+        this.address(),
+        0, // walletAmount (can be added later)
+        0, // loyaltyPoints (can be added later)
+      );
 
-      // Convert cart items to API format
-      const items = this.cartItems().map(item => ({
-        productId: item.productId,
-        variantId: item.variantId,
-        qty: item.qty,
-      }));
+      if (success) {
+        // ✅ Payment verified and captured by backend
+        this.placeOrderClick.emit();
 
-      const orderResponse = await this.http
-        .post<any>(`${environment.apiUrl}/payments/orders`, {
-          address: {
-            ...address,
-            phone,
-          },
-          items,
-          walletAmount: 0,
-        }, {
-          headers: {
-            'X-Session-ID': this.cartStore.sessionId,
-          },
-        })
-        .toPromise();
-
-      const orderId = orderResponse?.data?.id;
-      if (!orderId) {
-        throw new Error('Failed to create order');
+        // Navigate to orders page after short delay
+        setTimeout(() => {
+          this.router.navigate(['/orders']);
+        }, 500);
+      } else {
+        // ❌ Payment failed or cancelled
+        this.orderError.set(this.payment.paymentError() || 'Payment failed. Please try again.');
+        this.isPlacing.set(false);
       }
-
-      // Step 2: Open Razorpay with real order ID
-      await this.razorpayService.openCheckout({
-        orderId,
-        amountPaise: Math.round(this.cartTotal() * 100),
-        currency: 'INR',
-        keyId: environment.razorpayKeyId,
-        prefill: {
-          name: this.address().name,
-          contact: this.address().phone,
-        },
-      });
-      this.processOrder();
     } catch (error: any) {
-      console.error('Razorpay error:', error);
+      console.error('Payment error:', error);
+      this.orderError.set(error.message || 'An error occurred. Please try again.');
       this.isPlacing.set(false);
-      this.orderError.set(error.message || 'Payment failed. Please try again.');
     }
-  }
-
-  private processOrder() {
-    setTimeout(() => {
-      this.placeOrderClick.emit();
-    }, 500);
   }
 }
