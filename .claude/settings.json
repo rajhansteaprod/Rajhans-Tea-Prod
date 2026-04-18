@@ -69,7 +69,14 @@
       "Bash(timeout 20 bash -c 'for i in {1..20}; do curl -s http://localhost:3100/api/v1/hero-slides 2>/dev/null && echo \"Backend is ready!\" && break; echo \"Attempt $i - waiting...\"; sleep 1; done')",
       "Bash(curl -s 'http://localhost:3100/api/v1/catalog/products?page=1&limit=1')",
       "Bash(find frontend/src/app/features -name \"*.html\" -type f -exec grep -l \"loading\\(\\)\" {} \\\\;)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(timeout 120 bash -c 'until docker ps | grep -q \"rajhans-tea-backend\"; do sleep 2; done')",
+      "Bash(awk '{print $1}')",
+      "Bash(docker-compose logs *)",
+      "Bash(findstr :4000)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\91626\\.claude\\projects\\c--Users-91626-Desktop-DEVELOPMENT-APPLICATIONS-Rajhans-Tea\\memory"
     ]
   }
 }

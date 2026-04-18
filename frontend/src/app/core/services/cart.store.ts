@@ -1,10 +1,22 @@
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { pairwise, filter, switchMap, startWith } from 'rxjs';
+import {
+  pairwise,
+  filter,
+  switchMap,
+  startWith,
+  Observable,
+  tap,
+  finalize,
+  catchError,
+  of,
+  map,
+} from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import { PlatformService } from './platform.service';
+import { Product, ProductVariant } from './catalog.service';
 
 // ─── API types (mirror backend) ───────────────────────────────────────────────
 
@@ -16,10 +28,13 @@ export interface CartItem {
   slug: string;
   image: string;
   basePrice: number;
+  discountPercentage?: number;
   qty: number;
   lineTotal: number;
   shortDescription?: string;
   description?: string;
+  price?: number;
+  quantity?: number;
 }
 
 export interface CartView {
@@ -106,6 +121,9 @@ export class CartStore {
   private readonly _wishlistLoading = signal(false);
   private readonly _merging = signal(false);
 
+  // Temporary cart for buy-now flow (doesn't affect session cart)
+  private readonly _temporaryCart = signal<CartItem[]>([]);
+
   readonly cartItems = this._cartItems.asReadonly();
   readonly cartLoading = this._cartLoading.asReadonly();
   readonly sidebarOpen = this._sidebarOpen.asReadonly();
@@ -113,6 +131,7 @@ export class CartStore {
   readonly wishlistItems = this._wishlistItems.asReadonly();
   readonly wishlistLoading = this._wishlistLoading.asReadonly();
   readonly merging = this._merging.asReadonly();
+  readonly temporaryCart = this._temporaryCart.asReadonly();
 
   readonly cartCount = computed(() => this._cartItems().reduce((s, i) => s + i.qty, 0));
   readonly cartSubtotal = computed(() => this._cartItems().reduce((s, i) => s + i.lineTotal, 0));
@@ -121,7 +140,8 @@ export class CartStore {
   // ─── Constructor ───────────────────────────────────────────────────────────
 
   constructor() {
-    this.loadCart();
+    this.loadCart().subscribe();
+    this.loadTemporaryCart();
     this.loadWishlist();
 
     // Auto-merge when user logs in (false → true transition)
@@ -172,18 +192,24 @@ export class CartStore {
   }
 
   // ─── Cart Actions ──────────────────────────────────────────────────────────
-
-  loadCart(): void {
+  loadCart(): Observable<CartView> {
     this._cartLoading.set(true);
-    this.http
+    return this.http
       .get<ApiResponse<CartView>>(`${this.api}/cart`, { headers: this.headers() })
-      .subscribe({
-        next: (res) => {
-          this.applyCart(res.data);
+      .pipe(
+        map((res) => res.data),
+        tap((data) => this.applyCart(data)),
+        finalize(() => this._cartLoading.set(false)),
+        catchError(() => {
           this._cartLoading.set(false);
-        },
-        error: () => this._cartLoading.set(false),
-      });
+          return of({
+            items: [],
+            sessionId: this.sessionId,
+            itemCount: 0,
+            subtotal: 0,
+          } as CartView);
+        }),
+      );
   }
 
   addItem(productId: string, qty = 1, variantId?: string, openSidebar = true): void {
@@ -192,11 +218,7 @@ export class CartStore {
     if (variantId) body['variantId'] = variantId;
 
     this.http
-      .post<ApiResponse<CartView>>(
-        `${this.api}/cart/items`,
-        body,
-        { headers: this.headers() },
-      )
+      .post<ApiResponse<CartView>>(`${this.api}/cart/items`, body, { headers: this.headers() })
       .subscribe({
         next: (res) => {
           this.applyCart(res.data);
@@ -216,11 +238,9 @@ export class CartStore {
     if (variantId) body['variantId'] = variantId;
 
     this.http
-      .put<ApiResponse<CartView>>(
-        `${this.api}/cart/items/${productId}`,
-        body,
-        { headers: this.headers() },
-      )
+      .put<
+        ApiResponse<CartView>
+      >(`${this.api}/cart/items/${productId}`, body, { headers: this.headers() })
       .subscribe({ next: (res) => this.applyCart(res.data) });
   }
 
@@ -229,10 +249,9 @@ export class CartStore {
     if (variantId) body['variantId'] = variantId;
 
     this.http
-      .delete<ApiResponse<CartView>>(
-        `${this.api}/cart/items/${productId}`,
-        { body, headers: this.headers() },
-      )
+      .delete<
+        ApiResponse<CartView>
+      >(`${this.api}/cart/items/${productId}`, { body, headers: this.headers() })
       .subscribe({ next: (res) => this.applyCart(res.data) });
   }
 
@@ -244,52 +263,73 @@ export class CartStore {
 
   // ─── Buy Now (Temporary Cart) ──────────────────────────────────────────────
 
-  /**
-   * Buy Now Flow:
-   * 1. Save current cart to localStorage
-   * 2. Clear the cart
-   * 3. Add the buy-now item
-   * 4. Navigate to checkout
-   * 5. On successful order, permanent cart is restored after checkout
-   */
-  buyNowItem(productId: string, qty = 1, variantId?: string): void {
-    // Save current cart items to localStorage before clearing
-    const currentItems = this._cartItems();
-    this.platform.localStorage.setItem('_savedCart', JSON.stringify(currentItems));
+  buyNowItem(product: Product, qty = 1, variant?: ProductVariant): void {
+    const basePrice = variant?.price ?? product.basePrice;
+    const image = variant?.images?.[0] ?? product.images?.[0] ?? '';
+    const variantName = variant?.name;
+    const discountPercentage = variant?.discountPercentage ?? product.discountPercentage;
 
-    // Clear the current cart
-    this.clearCart();
+    const buyNowItem: CartItem = {
+      productId: product._id,
+      variantId: variant?._id,
+      variantName,
+      name: product.name,
+      slug: product.slug,
+      image,
+      basePrice,
+      discountPercentage,
+      qty,
+      lineTotal: basePrice * qty,
+    };
+    this.setTemporaryCart(buyNowItem);
+  }
 
-    // Add the buy-now item
-    setTimeout(() => {
-      this.addItem(productId, qty, variantId, false);
-    }, 300);
+  setTemporaryCart(item: CartItem): void {
+    this._temporaryCart.set([item]);
+    this.platform.localStorage.setItem('tempCart', JSON.stringify([item]));
   }
 
   /**
-   * Restore the saved cart after checkout
-   * (Call this after successful order placement)
+   * Get temporary cart items
    */
-  restoreSavedCart(): void {
-    const saved = this.platform.localStorage.getItem('_savedCart');
-    if (saved) {
-      try {
-        const items = JSON.parse(saved);
-        // Reload cart from backend (this will restore the saved items)
-        this.loadCart();
-        this.platform.localStorage.removeItem('_savedCart');
-      } catch {
-        // If parsing fails, just load fresh cart
-        this.loadCart();
+  getTemporaryCart(): CartItem[] {
+    return this._temporaryCart();
+  }
+
+  /**
+   * Load temporary cart from localStorage
+   */
+  private loadTemporaryCart(): void {
+    try {
+      const stored = this.platform.localStorage.getItem('tempCart');
+      if (stored) {
+        const items = JSON.parse(stored) as CartItem[];
+        this._temporaryCart.set(items);
       }
+    } catch (error) {
+      console.error('Failed to load temporary cart:', error);
     }
+  }
+
+  /**
+   * Clear temporary cart (call after successful order)
+   */
+  clearTemporaryCart(): void {
+    this._temporaryCart.set([]);
+    this.platform.localStorage.removeItem('tempCart');
   }
 
   // ─── Sidebar ───────────────────────────────────────────────────────────────
 
-  openSidebar(): void { this._sidebarOpen.set(true); }
-  closeSidebar(): void { this._sidebarOpen.set(false); }
-  toggleSidebar(): void { this._sidebarOpen.update((v) => !v); }
+  openSidebar(): void {
+    this._sidebarOpen.set(true);
+  }
+  closeSidebar(): void {
+    this._sidebarOpen.set(false);
+  }
+  toggleSidebar(): void {
+    this._sidebarOpen.update((v) => !v);
+  }
 
   // ─── Wishlist Actions ──────────────────────────────────────────────────────
 
@@ -312,11 +352,9 @@ export class CartStore {
 
   toggleWishlist(productId: string): void {
     this.http
-      .post<ApiResponse<WishlistView>>(
-        `${this.api}/wishlist/${productId}`,
-        {},
-        { headers: this.headers() },
-      )
+      .post<
+        ApiResponse<WishlistView>
+      >(`${this.api}/wishlist/${productId}`, {}, { headers: this.headers() })
       .subscribe({ next: (res) => this.applyWishlist(res.data) });
   }
 

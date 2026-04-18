@@ -1,11 +1,12 @@
 import { Component, inject, OnInit, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import { CartStore } from '../../core/services/cart.store';
-import { CheckoutService } from '../../core/services/checkout.service';
-import { CartStepComponent } from './steps/cart-step.component';
-import { AddressStepComponent } from './steps/address-step.component';
-import { SummaryStepComponent } from './steps/summary-step.component';
+import { switchMap } from 'rxjs';
+import { CartStore } from '../../../core/services/cart.store';
+import { CheckoutService } from '../../../core/services/checkout.service';
+import { CartStepComponent } from './cart-step/cart-step.component';
+import { AddressStepComponent } from './address-step/address-step.component';
+import { SummaryStepComponent } from './summary-step/summary-step.component';
 
 type Step = 'cart' | 'address' | 'summary';
 
@@ -31,7 +32,7 @@ export class CheckoutPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly cartStore = inject(CartStore);
-  private readonly checkoutService = inject(CheckoutService);
+  readonly checkoutService = inject(CheckoutService);
 
   // Step configuration
   readonly steps: StepConfig[] = [
@@ -48,42 +49,35 @@ export class CheckoutPageComponent implements OnInit {
   readonly isAddressDone = computed(() => !!this.checkoutService.address().name);
 
   ngOnInit() {
-    // Initialize checkout with cart data
-    this.initializeCheckout();
+    // Wait for cart to load, then initialize checkout
+    this.cartStore.loadCart()
+      .pipe(
+        switchMap(() => this.route.queryParamMap)
+      )
+      .subscribe((params) => {
+        // After cart loads, check if we have items
+        const tempCart = this.cartStore.getTemporaryCart();
+        const sessionCart = this.cartStore.cartItems();
 
-    // Listen to query param changes
-    this.route.queryParamMap.subscribe((params) => {
-      const step = (params.get('step') as Step) || 'cart';
+        const checkoutItems = tempCart.length > 0 ? tempCart : sessionCart;
+        console.log('✅ Cart loaded. Items:', checkoutItems.length);
 
-      // Validate step
-      if (['cart', 'address', 'summary'].includes(step)) {
-        this.currentStep.set(step);
-      } else {
-        this.currentStep.set('cart');
-      }
-    });
-  }
-
-  private initializeCheckout() {
-    // Check if this is a buy-now scenario
-    this.route.queryParamMap.pipe().subscribe((params) => {
-      const buyNowProduct = params.get('buyNow');
-
-      if (buyNowProduct) {
-        // Buy-now: will be set by the component that navigated here
-        // For now, mark as buy-now and empty cart
-        this.checkoutService.initializeCheckout([], true);
-      } else {
-        // Regular checkout: load from cart store
-        const cartItems = this.cartStore.cartItems();
-        if (cartItems.length === 0) {
-          // No cart items, redirect to products
+        if (checkoutItems.length === 0) {
+          console.log('❌ No items found, redirecting to /products');
           this.router.navigate(['/products']);
-        } else {
-          this.checkoutService.initializeCheckout(cartItems, false);
+          return;
         }
-      }
-    });
+
+        this.checkoutService.initializeCheckout(checkoutItems);
+
+        // Set step from query param
+        const step = (params.get('step') as Step) || 'cart';
+        if (['cart', 'address', 'summary'].includes(step)) {
+          this.currentStep.set(step);
+        } else {
+          this.currentStep.set('cart');
+        }
+      });
   }
 
   // Navigation handlers from child components

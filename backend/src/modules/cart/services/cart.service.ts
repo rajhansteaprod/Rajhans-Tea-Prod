@@ -17,6 +17,8 @@ export interface CartItemView {
   basePrice: number;
   qty: number;
   lineTotal: number; // basePrice/variantPrice * qty (before pricing engine — for fast display)
+  shortDescription?: string;
+  description?: string;
 }
 
 export interface CartView {
@@ -72,6 +74,8 @@ export class CartService {
         basePrice: price,
         qty: item.qty,
         lineTotal,
+        shortDescription: product.shortDescription,
+        description: product.description,
       };
     });
 
@@ -108,13 +112,20 @@ export class CartService {
     return this.getCart(sessionId);
   }
 
-  async updateItem(sessionId: string, productId: string, qty: number): Promise<CartView> {
+  async updateItem(sessionId: string, productId: string, qty: number, variantId?: string): Promise<CartView> {
     if (qty < 1) throw new BadRequestError('Quantity must be at least 1');
 
     const product = await this.productRepo.findById(productId);
     if (!product) throw new NotFoundError('Product not found');
 
-    await this.cartRepo.upsertItem(sessionId, productId, qty);
+    // If variantId provided, validate it exists
+    if (variantId) {
+      const variant = await this.variantRepo.findById(variantId);
+      if (!variant) throw new NotFoundError('Variant not found');
+      if (variant.productId.toString() !== productId) throw new BadRequestError('Variant does not belong to this product');
+    }
+
+    await this.cartRepo.upsertItem(sessionId, productId, qty, variantId);
     return this.getCart(sessionId);
   }
 
@@ -122,8 +133,8 @@ export class CartService {
   // REMOVE ITEM
   // ---------------------------------------------------------------------------
 
-  async removeItem(sessionId: string, productId: string): Promise<CartView> {
-    await this.cartRepo.removeItem(sessionId, productId);
+  async removeItem(sessionId: string, productId: string, variantId?: string): Promise<CartView> {
+    await this.cartRepo.removeItem(sessionId, productId, variantId);
     return this.getCart(sessionId);
   }
 
@@ -163,25 +174,31 @@ export class CartService {
       return this.getCart(guestSessionId);
     }
 
-    // Both exist — merge by max qty per productId
-    const merged = new Map<string, { productId: Types.ObjectId; qty: number; addedAt: Date }>();
+    // Both exist — merge by max qty per {productId, variantId} pair
+    const merged = new Map<
+      string,
+      { productId: Types.ObjectId; variantId?: Types.ObjectId; qty: number; addedAt: Date }
+    >();
 
     for (const item of guestCart!.items) {
-      merged.set(item.productId.toString(), {
+      const key = `${item.productId.toString()}-${item.variantId?.toString() || 'none'}`;
+      merged.set(key, {
         productId: item.productId,
+        variantId: item.variantId,
         qty: item.qty,
         addedAt: item.addedAt,
       });
     }
 
     for (const item of userCart!.items) {
-      const key = item.productId.toString();
+      const key = `${item.productId.toString()}-${item.variantId?.toString() || 'none'}`;
       const existing = merged.get(key);
       if (existing) {
         existing.qty = Math.max(existing.qty, item.qty);
       } else {
         merged.set(key, {
           productId: item.productId,
+          variantId: item.variantId,
           qty: item.qty,
           addedAt: item.addedAt,
         });

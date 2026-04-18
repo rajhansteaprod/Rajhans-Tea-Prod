@@ -10,7 +10,7 @@
     "build:ssr": "npm run build && npm run build:server",
     "build:server": "tsc -p tsconfig.server.json",
     "serve:ssr": "node dist/frontend/server/server.js",
-    "dev:ssr": "nodemon --poll 1000"
+    "dev:ssr": "nodemon"
   },
   "prettier": {
     "printWidth": 100,
@@ -38,9 +38,9 @@
     "@types/three": "^0.183.1",
     "compression": "^1.8.1",
     "express": "^5.2.1",
-    "http-proxy-middleware": "^2.0.6",
     "firebase": "^12.10.0",
     "gsap": "^3.14.2",
+    "http-proxy-middleware": "^2.0.6",
     "ng-zorro-antd": "^21.1.1",
     "rxjs": "~7.8.0",
     "socket.io-client": "^4.8.3",

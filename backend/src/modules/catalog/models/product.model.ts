@@ -10,6 +10,7 @@ export interface IProductDoc extends Document {
   category: Types.ObjectId;
   collections: Types.ObjectId[];
   basePrice: number;
+  discountPercentage: number; // Discount percentage applied to basePrice
   images: string[];
   reflectedImage: string; // Image shown on hover in featured products
   attributes: Map<string, string>;
@@ -32,6 +33,7 @@ const productSchema = new Schema<IProductDoc>(
     category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
     collections: [{ type: Schema.Types.ObjectId, ref: 'Collection' }],
     basePrice: { type: Number, required: true, min: 0 },
+    discountPercentage: { type: Number, required: true, min: 0, max: 100, default: 0 },
     images: [{ type: String }],
     reflectedImage: { type: String, required: true },
     attributes: { type: Map, of: String, default: {} },

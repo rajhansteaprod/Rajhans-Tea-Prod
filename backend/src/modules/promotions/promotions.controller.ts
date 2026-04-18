@@ -50,6 +50,52 @@ export const validateCoupon = async (req: Request, res: Response) => {
   sendSuccess(res, result);
 };
 
+/**
+ * Simple coupon validation for checkout page
+ * POST /api/v1/coupons/validate
+ * Request: { code: string, cartSubtotal: number }
+ * Response: { discount: number }
+ */
+export const validateCouponSimple = async (req: Request, res: Response) => {
+  try {
+    const { code, cartSubtotal } = req.body as { code: string; cartSubtotal: number };
+
+    if (!code || !code.trim()) {
+      throw new BadRequestError('Coupon code is required');
+    }
+
+    if (typeof cartSubtotal !== 'number' || cartSubtotal < 0) {
+      throw new BadRequestError('Valid cart subtotal is required');
+    }
+
+    // Validate coupon using promotion service
+    // For now, create a minimal summary object
+    const minimalSummary = {
+      sessionId: 'guest-' + Date.now(),
+      items: [],
+      subtotal: cartSubtotal,
+      totalDiscount: 0,
+      totalTax: 0,
+      total: cartSubtotal,
+      itemCount: 0,
+    };
+
+    const result = await promotionService.validateCoupon(
+      code,
+      minimalSummary as any,
+      null, // userId (guest checkout)
+    );
+
+    // Return simplified response with just discount amount
+    sendSuccess(res, {
+      discount: result.discountAmount || 0,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Invalid coupon code';
+    sendSuccess(res, { discount: 0 }, message); // Return 0 discount on error
+  }
+};
+
 // ─── Authenticated ───────────────────────────────────────────────────────────
 
 export const getLoyaltyAccount = async (req: Request, res: Response) => {

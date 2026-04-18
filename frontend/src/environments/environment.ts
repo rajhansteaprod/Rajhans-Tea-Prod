@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:3100/api/v1',
+  apiUrl: 'http://localhost:3001/api/v1',
   firebase: {
     apiKey: 'AIzaSyCoIDaxjf0WeEf2XQJuYfl_ffArI-ZNxpE',
     authDomain: 'sarara-b9eac.firebaseapp.com',

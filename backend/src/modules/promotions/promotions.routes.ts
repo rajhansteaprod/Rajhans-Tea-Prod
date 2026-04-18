@@ -22,6 +22,9 @@ const router = Router();
 router.get('/promotions/campaigns/active', ctrl.getActiveCampaigns);
 router.post('/promotions/coupons/validate', validate(validateCouponSchema), ctrl.validateCoupon);
 
+// Simple coupon validation for checkout (no session required)
+router.post('/coupons/validate', ctrl.validateCouponSimple);
+
 // ===========================================================================
 // AUTHENTICATED
 // ===========================================================================

@@ -277,78 +277,7 @@
   margin: 0;
 }
 
-// ═══ Cart Header ═══
-.checkout__cart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: $space-lg;
-  padding: $space-md 0;
-  margin-bottom: $space-lg;
-  border-bottom: 2px solid  hsl(0 0% 95% / 1);
-}
-
-.checkout__cart-header-left {
-  display: flex;
-  align-items: center;
-  gap: $space-md;
-  flex: 1;
-}
-
-.checkout__select-all-checkbox {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-
-  input {
-    cursor: pointer;
-    width: 18px;
-    height: 18px;
-  }
-}
-
-.checkout__items-count {
-  font-family: $font-family-nav;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: $color-text-primary;
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: $letter-spacing-wide;
-}
-
-.checkout__cart-header-right {
-  display: flex;
-  gap: $space-md;
-  align-items: center;
-}
-
-.checkout__btn-remove-selected,
-.checkout__btn-move-wishlist {
-  padding: $space-xs $space-md;
-  background: transparent;
-  border: 1px solid $color-text-secondary;
-  color: $color-text-secondary;
-  font-family: $font-family-nav;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-medium;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all $transition-fast;
-  white-space: nowrap;
-  border-radius: 0;
-
-  &:hover:not(:disabled) {
-    border-color: $color-text-primary;
-    color: $color-text-primary;
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-}
+// ...existing code...
 
 // ═══ Products Section ═══
 .checkout__products-section {
@@ -1495,4 +1424,48 @@
   &:hover{
     background:color.mix($color-text-primary, black, 90%);
   }
+}
+
+// ═══ Sidebar (Right Column) ═══
+.checkout__sidebar {
+  position: sticky;
+  top: 120px;
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border-light;
+  border-radius: 0;
+  padding: 0;
+
+  @include respond-to(md) {
+    position: static;
+    top: auto;
+  }
+}
+
+.checkout__sidebar-content {
+  @include flex-column;
+  gap: $space-lg;
+  padding: $space-xl;
+
+  @include respond-to(sm) {
+    padding: $space-lg;
+  }
+}
+
+.checkout__sidebar-title {
+  font-family: $font-family-display;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+}
+
+.checkout__sidebar-placeholder {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin: 0;
+  padding: $space-xl 0;
+  text-align: center;
+  font-style: italic;
 }

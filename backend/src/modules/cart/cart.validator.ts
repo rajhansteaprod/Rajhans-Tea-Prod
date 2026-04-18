@@ -14,11 +14,15 @@ export const updateItemSchema = z.object({
   params: z.object({ productId: objectId }),
   body: z.object({
     qty: z.number({ coerce: true }).int().min(1).max(10),
+    variantId: objectId.optional(),
   }),
 });
 
 export const removeItemSchema = z.object({
   params: z.object({ productId: objectId }),
+  body: z.object({
+    variantId: objectId.optional(),
+  }).optional(),
 });
 
 export const mergeCartSchema = z.object({

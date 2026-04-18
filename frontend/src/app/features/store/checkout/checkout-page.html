@@ -16,7 +16,7 @@
   </div>
 
   <div class="checkout__layout">
-    <!-- Main Panel -->
+    <!-- Main Panel (Left Column) -->
     <div class="checkout__main">
       <!-- STEP 1: CART -->
       @if (currentStep() === 'cart') {
@@ -33,5 +33,7 @@
         <app-summary-step (prevStep)="onSummaryPrev()" (placeOrderClick)="onPlaceOrder()"></app-summary-step>
       }
     </div>
+
+   
   </div>
 </section>

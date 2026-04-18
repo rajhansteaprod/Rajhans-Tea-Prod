@@ -30,7 +30,7 @@ export class ProductDetailComponent implements OnInit {
   readonly quantity = signal(1);
   readonly loading = signal(true);
   readonly relatedProducts = signal<Product[]>([]);
-  readonly selectedVariant = signal<ProductVariant | null>(null);
+  readonly selectedVariant = signal<ProductVariant | undefined>(undefined);
   readonly zoomActive = signal(false);
   readonly zoomPos = signal('0% 0%');
   readonly hoveredProductId = signal<string | null>(null);
@@ -137,9 +137,8 @@ export class ProductDetailComponent implements OnInit {
 
   buyNow(): void {
     if (this.product()) {
-      // Save current cart, clear it, add this item, then checkout
-      this.cartStore.buyNowItem(this.product()!._id, this.quantity(), this.selectedVariant()?._id);
-      // Navigate to checkout after a brief delay to allow cart to be cleared and item added
+      this.cartStore.buyNowItem(this.product()!, this.quantity(), this.selectedVariant());
+      // Navigate to checkout; CheckoutService detects temporary cart and uses it
       setTimeout(() => {
         this.router.navigate(['/checkout']);
       }, 400);

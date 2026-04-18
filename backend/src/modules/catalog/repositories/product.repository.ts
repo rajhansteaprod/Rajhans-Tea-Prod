@@ -14,6 +14,7 @@ interface ProductListOptions {
   isFeatured?: boolean;
   priceMin?: number;
   priceMax?: number;
+  tags?: string[];
 }
 
 export class ProductRepository extends BaseRepository<IProductDoc> {
@@ -82,6 +83,11 @@ export class ProductRepository extends BaseRepository<IProductDoc> {
       filter.basePrice = {};
       if (options.priceMin !== undefined) (filter.basePrice as Record<string, number>).$gte = options.priceMin;
       if (options.priceMax !== undefined) (filter.basePrice as Record<string, number>).$lte = options.priceMax;
+    }
+
+    if (options.tags && options.tags.length > 0) {
+      // Filter products that have any of the selected tags
+      filter.tags = { $in: options.tags.map((t) => t.toLowerCase().trim()) };
     }
 
     const [products, total] = await Promise.all([

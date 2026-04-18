@@ -1,0 +1,163 @@
+@import "../../../../core/design-tokens/tokens.scss";
+
+// ═══ Layout Container ═══
+.checkout__bag-container {
+  display: flex;
+  gap: $space-xl;
+  align-items: flex-start;
+}
+
+// LEFT + RIGHT columns
+.checkout__bag-left {
+  flex: 2;
+}
+
+.checkout__bag-right {
+  flex: 1;
+  border: 1px solid hsl(0 0% 90%);
+  padding: $space-lg;
+  height: fit-content;
+}
+
+// ═══ Cart Header ═══
+.checkout__cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $space-md 0;
+  margin-bottom: $space-lg;
+  border-bottom: 2px solid hsl(0 0% 95%);
+}
+
+// FIXED class name
+.checkout__items-label {
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+}
+
+// ═══ Product List ═══
+.checkout__products-list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-lg;
+}
+
+// Product Card
+.checkout__product-card {
+  display: flex;
+  gap: $space-md;
+  border-bottom: 1px solid hsl(0 0% 92%);
+  padding-bottom: $space-md;
+}
+
+// Image
+.checkout__product-card-image {
+  width: 80px;
+  height: 100px;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+// Content
+.checkout__product-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+}
+
+// Qty + Price row
+.checkout__product-card-qty-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: $space-sm;
+}
+
+// Qty group
+.checkout__qty-group {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+
+  button {
+    width: 28px;
+    height: 28px;
+    border: 1px solid hsl(0 0% 80%);
+    background: transparent;
+    cursor: pointer;
+  }
+}
+
+// Pricing
+.checkout__product-card-pricing {
+  text-align: right;
+}
+
+.checkout__price-current {
+  font-weight: bold;
+}
+
+.checkout__price-strikethrough {
+  text-decoration: line-through;
+  color: $color-text-secondary;
+  margin-left: $space-xs;
+}
+
+.checkout__price-discount {
+  color: green;
+  margin-left: $space-xs;
+}
+
+// ═══ Price Section ═══
+.checkout__price-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: $space-sm;
+}
+
+.checkout__price-total {
+  font-weight: bold;
+  font-size: $font-size-md;
+}
+
+.checkout__promo-section {
+  display: flex;
+  gap: $space-xs;
+  margin: $space-md 0;
+
+  input {
+    flex: 1;
+    padding: $space-xs;
+    border: 1px solid hsl(0 0% 80%);
+  }
+
+  button {
+    padding: $space-xs $space-md;
+    cursor: pointer;
+  }
+}
+
+// Button
+.checkout__btn-next {
+  width: 100%;
+  margin-top: $space-md;
+  padding: $space-sm;
+  background: black;
+  color: white;
+  border: none;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

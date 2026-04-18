@@ -27,6 +27,7 @@ export class ProductVariantService {
     name: string;
     sku?: string;
     price: number;
+    discountPercentage: number;
     cost?: number;
     stock: number;
     trackInventory?: boolean;
@@ -50,6 +51,7 @@ export class ProductVariantService {
       name: data.name.trim(),
       sku: data.sku?.toLowerCase(),
       price: data.price,
+      discountPercentage: data.discountPercentage,
       cost: data.cost,
       stock: data.stock ?? 0,
       trackInventory: data.trackInventory ?? true,
@@ -70,6 +72,7 @@ export class ProductVariantService {
     name?: string;
     sku?: string;
     price?: number;
+    discountPercentage?: number;
     cost?: number;
     stock?: number;
     trackInventory?: boolean;
@@ -84,6 +87,7 @@ export class ProductVariantService {
     if (data.name !== undefined) update.name = data.name.trim();
     if (data.sku !== undefined) update.sku = data.sku?.toLowerCase();
     if (data.price !== undefined) update.price = data.price;
+    if (data.discountPercentage !== undefined) update.discountPercentage = data.discountPercentage;
     if (data.cost !== undefined) update.cost = data.cost;
     if (data.stock !== undefined) update.stock = data.stock;
     if (data.trackInventory !== undefined) update.trackInventory = data.trackInventory;

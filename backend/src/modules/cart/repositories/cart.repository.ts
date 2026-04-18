@@ -4,14 +4,14 @@ import { Cart, ICartDoc } from '../models/cart.model';
 export class CartRepository {
   async findBySession(sessionId: string): Promise<ICartDoc | null> {
     return Cart.findOne({ sessionId })
-      .populate('items.productId', 'name slug images basePrice category collections status')
+      .populate('items.productId', 'name slug images basePrice category collections status shortDescription description')
       .populate('items.variantId', 'name price')
       .exec();
   }
 
   async findByUserId(userId: string): Promise<ICartDoc | null> {
     return Cart.findOne({ userId: new Types.ObjectId(userId) })
-      .populate('items.productId', 'name slug images basePrice category collections status')
+      .populate('items.productId', 'name slug images basePrice category collections status shortDescription description')
       .populate('items.variantId', 'name price')
       .exec();
   }
@@ -51,12 +51,19 @@ export class CartRepository {
     return cart.save();
   }
 
-  async removeItem(sessionId: string, productId: string): Promise<ICartDoc | null> {
-    return Cart.findOneAndUpdate(
-      { sessionId },
-      { $pull: { items: { productId: new Types.ObjectId(productId) } } },
-      { new: true },
-    ).exec();
+  async removeItem(sessionId: string, productId: string, variantId?: string): Promise<ICartDoc | null> {
+    const pid = new Types.ObjectId(productId);
+    const vid = variantId ? new Types.ObjectId(variantId) : undefined;
+
+    // Match by productId + variantId pair
+    const pullFilter: any = { productId: pid };
+    if (vid) {
+      pullFilter.variantId = vid;
+    } else {
+      pullFilter.variantId = { $exists: false };
+    }
+
+    return Cart.findOneAndUpdate({ sessionId }, { $pull: { items: pullFilter } }, { new: true }).exec();
   }
 
   async clearItems(sessionId: string): Promise<void> {
@@ -77,7 +84,7 @@ export class CartRepository {
 
   async saveItems(
     sessionId: string,
-    items: { productId: Types.ObjectId; qty: number; addedAt: Date }[],
+    items: { productId: Types.ObjectId; variantId?: Types.ObjectId; qty: number; addedAt: Date }[],
   ): Promise<void> {
     await Cart.findOneAndUpdate({ sessionId }, { $set: { items } }, { upsert: true }).exec();
   }

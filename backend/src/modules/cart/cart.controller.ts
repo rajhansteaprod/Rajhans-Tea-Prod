@@ -41,15 +41,16 @@ export const addItem = async (req: Request, res: Response) => {
 export const updateItem = async (req: Request, res: Response) => {
   const sessionId = getSessionId(req);
   const productId = req.params['productId'] as string;
-  const { qty } = req.body as { qty: number };
-  const data = await cartService.updateItem(sessionId, productId, qty);
+  const { qty, variantId } = req.body as { qty: number; variantId?: string };
+  const data = await cartService.updateItem(sessionId, productId, qty, variantId);
   sendSuccess(res, data, 'Cart updated');
 };
 
 export const removeItem = async (req: Request, res: Response) => {
   const sessionId = getSessionId(req);
   const productId = req.params['productId'] as string;
-  const data = await cartService.removeItem(sessionId, productId);
+  const { variantId } = req.body as { variantId?: string };
+  const data = await cartService.removeItem(sessionId, productId, variantId);
   sendSuccess(res, data, 'Item removed from cart');
 };
 

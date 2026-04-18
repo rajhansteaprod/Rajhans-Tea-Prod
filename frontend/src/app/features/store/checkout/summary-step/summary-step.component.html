@@ -1,0 +1,157 @@
+<div class="summary-layout">
+  <!-- LEFT COLUMN: Order Items & Price Summary -->
+  <div class="summary-left">
+    <!-- Order Items Section -->
+    <div class="summary-panel">
+      <h3 class="summary-heading">Order Items ({{ cartItems().length }} items)</h3>
+
+      <div class="summary-items">
+        @for (item of cartItems(); track item.productId) {
+          <div class="summary-item">
+            <div class="summary-item-image">
+              @if (item.image) {
+                <img [src]="item.image" [alt]="item.name" />
+              } @else {
+                <div class="summary-item-placeholder"></div>
+              }
+            </div>
+
+            <div class="summary-item-content">
+              <p class="summary-item-name">{{ item.name }}</p>
+              @if (item.variantName) {
+                <p class="summary-item-variant">{{ item.variantName }}</p>
+              }
+              <p class="summary-item-price">
+                Qty: {{ item.qty }} × ₹{{ item.basePrice | number: '1.0-0' }} = ₹{{ item.lineTotal | number: '1.0-0' }}
+              </p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Price Summary Section -->
+    <div class="summary-panel">
+      <h3 class="summary-heading">Price Summary</h3>
+
+      <div class="summary-prices">
+        <div class="summary-price-row">
+          <span>Subtotal</span>
+          <span>₹{{ cartSubtotal() | number: '1.0-0' }}</span>
+        </div>
+
+        @if (cartDiscount() > 0) {
+          <div class="summary-price-row summary-price-discount">
+            <span>Discount</span>
+            <span>-₹{{ cartDiscount() | number: '1.0-0' }}</span>
+          </div>
+        }
+
+        <div class="summary-price-row">
+          <span>Shipping</span>
+          <span>₹0</span>
+        </div>
+
+        <div class="summary-price-row">
+          <span>Tax (GST 18%)</span>
+          <span>₹{{ (cartTotal() * 0.18) | number: '1.0-0' }}</span>
+        </div>
+
+        <div class="summary-price-divider"></div>
+
+        <div class="summary-price-row summary-price-total">
+          <span>TOTAL</span>
+          <span>₹{{ cartTotal() | number: '1.0-0' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: Address & Payment -->
+  <div class="summary-right">
+    <!-- Delivery Address (Sticky) -->
+    <div class="summary-panel summary-sticky">
+      <h3 class="summary-heading">📍 Delivery Address</h3>
+
+      <div class="summary-address">
+        <p class="summary-address-name">{{ address().name }}</p>
+        <p class="summary-address-line">{{ address().street }}</p>
+        <p class="summary-address-line">
+          {{ address().city }}, {{ address().state }} - {{ address().pincode }}
+        </p>
+        <p class="summary-address-phone">{{ address().phone }}</p>
+      </div>
+    </div>
+
+    <!-- Payment Method -->
+    <div class="summary-panel">
+      <h3 class="summary-heading">💳 Payment Method</h3>
+
+      <div class="summary-payment-options">
+        <label class="summary-payment-option">
+          <input
+            type="radio"
+            name="payment"
+            value="card"
+            [checked]="selectedPaymentMethod() === 'card'"
+            (change)="selectPaymentMethod('card')"
+          />
+          <span>Credit/Debit Card</span>
+        </label>
+
+        <label class="summary-payment-option">
+          <input
+            type="radio"
+            name="payment"
+            value="upi"
+            [checked]="selectedPaymentMethod() === 'upi'"
+            (change)="selectPaymentMethod('upi')"
+          />
+          <span>UPI</span>
+        </label>
+
+        <label class="summary-payment-option">
+          <input
+            type="radio"
+            name="payment"
+            value="razorpay"
+            [checked]="selectedPaymentMethod() === 'razorpay'"
+            (change)="selectPaymentMethod('razorpay')"
+          />
+          <span>Razorpay (Recommended)</span>
+        </label>
+      </div>
+
+      @if (selectedPaymentMethod() === 'razorpay') {
+        <p class="summary-payment-note">Secure payment by Razorpay</p>
+      }
+    </div>
+
+    <!-- Error Message -->
+    @if (orderError()) {
+      <div class="summary-error">
+        <p>{{ orderError() }}</p>
+      </div>
+    }
+
+    <!-- CTA Buttons -->
+    <div class="summary-actions">
+      <button type="button" class="summary-btn summary-btn-back" (click)="goBack()">
+        BACK
+      </button>
+      <button
+        type="button"
+        class="summary-btn summary-btn-place"
+        (click)="placeOrder()"
+        [disabled]="isPlacing()"
+      >
+        @if (isPlacing()) {
+          <span class="summary-spinner"></span>
+          PLACING...
+        } @else {
+          PLACE ORDER
+        }
+      </button>
+    </div>
+  </div>
+</div>

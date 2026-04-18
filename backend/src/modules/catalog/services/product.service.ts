@@ -20,6 +20,7 @@ interface ProductListQuery {
   isFeatured?: boolean;
   priceMin?: number;
   priceMax?: number;
+  tags?: string[];
 }
 
 export class ProductService {
@@ -52,6 +53,7 @@ export class ProductService {
       isFeatured: query.isFeatured,
       priceMin: query.priceMin,
       priceMax: query.priceMax,
+      tags: query.tags,
     });
 
     return {
@@ -72,6 +74,7 @@ export class ProductService {
       isFeatured: query.isFeatured,
       priceMin: query.priceMin,
       priceMax: query.priceMax,
+      tags: query.tags,
     });
 
     return {
@@ -102,6 +105,7 @@ export class ProductService {
     categoryId: string;
     collectionIds?: string[];
     basePrice: number;
+    discountPercentage: number;
     images?: string[];
     reflectedImage: string;
     attributes?: Record<string, string>;
@@ -136,6 +140,7 @@ export class ProductService {
       category: data.categoryId as never,
       collections: (data.collectionIds ?? []) as never,
       basePrice: data.basePrice,
+      discountPercentage: data.discountPercentage,
       images: data.images ?? [],
       reflectedImage: data.reflectedImage,
       attributes: attributesMap as never,
@@ -160,6 +165,7 @@ export class ProductService {
       categoryId?: string;
       collectionIds?: string[];
       basePrice?: number;
+      discountPercentage?: number;
       images?: string[];
       reflectedImage?: string;
       attributes?: Record<string, string>;
@@ -201,6 +207,7 @@ export class ProductService {
     if (data.categoryId !== undefined) update.category = data.categoryId;
     if (data.collectionIds !== undefined) update.collections = data.collectionIds;
     if (data.basePrice !== undefined) update.basePrice = data.basePrice;
+    if (data.discountPercentage !== undefined) update.discountPercentage = data.discountPercentage;
     if (data.images !== undefined) update.images = data.images;
     if (data.reflectedImage !== undefined) update.reflectedImage = data.reflectedImage;
     if (data.attributes !== undefined) {

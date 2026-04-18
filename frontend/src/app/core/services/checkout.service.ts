@@ -13,7 +13,6 @@ export interface CheckoutAddress {
 export interface CheckoutState {
   cartItems: CartItem[];
   address: CheckoutAddress;
-  isBuyNow: boolean;
 }
 
 const emptyAddress = (): CheckoutAddress => ({
@@ -32,12 +31,10 @@ export class CheckoutService {
   // State signals
   private cartItemsSignal = signal<CartItem[]>([]);
   private addressSignal = signal<CheckoutAddress>(emptyAddress());
-  private isBuyNowSignal = signal(false);
 
   // Public readonly accessors
   readonly cartItems = this.cartItemsSignal.asReadonly();
   readonly address = this.addressSignal.asReadonly();
-  readonly isBuyNow = this.isBuyNowSignal.asReadonly();
 
   // Computed values
   readonly cartSubtotal = computed(() =>
@@ -49,9 +46,8 @@ export class CheckoutService {
   readonly cartTotal = computed(() => this.cartSubtotal() - this.cartDiscount());
 
   // Initialize checkout with cart items
-  initializeCheckout(items: CartItem[], isBuyNow: boolean = false) {
+  initializeCheckout(items: CartItem[]) {
     this.cartItemsSignal.set([...items]);
-    this.isBuyNowSignal.set(isBuyNow);
   }
 
   // Update cart items
@@ -73,7 +69,7 @@ export class CheckoutService {
   resetCheckout() {
     this.cartItemsSignal.set([]);
     this.addressSignal.set(emptyAddress());
-    this.isBuyNowSignal.set(false);
+    
   }
 
   // Get full state (for debugging/persistence)
@@ -81,7 +77,6 @@ export class CheckoutService {
     return {
       cartItems: this.cartItems(),
       address: this.address(),
-      isBuyNow: this.isBuyNow(),
     };
   }
 }
