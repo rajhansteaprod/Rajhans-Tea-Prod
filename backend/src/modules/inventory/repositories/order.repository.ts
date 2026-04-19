@@ -14,7 +14,7 @@ export class OrderRepository {
   }
 
   async findById(id: string): Promise<IOrderDoc | null> {
-    return Order.findById(id).populate('userId', 'phone firstName lastName').exec();
+    return Order.findById(id).populate('userId', 'email phone firstName lastName').exec();
   }
 
   async findByOrderNumber(orderNumber: string): Promise<IOrderDoc | null> {

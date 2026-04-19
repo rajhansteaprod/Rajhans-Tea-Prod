@@ -45,8 +45,12 @@ export class ReadyToShipComponent implements OnInit {
   readonly shipmentError = signal('');
   readonly shipmentSuccess = signal('');
   readonly showShipmentModal = signal(false);
+  readonly showSingleShipmentModal = signal(false);
   readonly pickupLocationId = signal('');
   readonly courierId = signal<number | undefined>(undefined);
+  readonly singleOrderId = signal<string | null>(null);
+  readonly singlePickupLocationId = signal('');
+  readonly singleCourierId = signal<number | undefined>(undefined);
 
   searchQuery = '';
   currentPage = 1;
@@ -177,6 +181,61 @@ export class ReadyToShipComponent implements OnInit {
         },
         error: (err) => {
           this.shipmentError.set(err.error?.message || 'Failed to create shipments');
+          this.shipmentLoading.set(false);
+        },
+      });
+  }
+
+  openSingleShipmentModal(orderId: string): void {
+    this.singleOrderId.set(orderId);
+    this.shipmentError.set('');
+    this.shipmentSuccess.set('');
+    this.singlePickupLocationId.set('');
+    this.singleCourierId.set(undefined);
+    this.showSingleShipmentModal.set(true);
+  }
+
+  closeSingleShipmentModal(): void {
+    this.showSingleShipmentModal.set(false);
+    this.singleOrderId.set(null);
+    this.singlePickupLocationId.set('');
+    this.singleCourierId.set(undefined);
+    this.shipmentError.set('');
+    this.shipmentSuccess.set('');
+  }
+
+  shipSingleOrder(): void {
+    if (!this.singlePickupLocationId()) {
+      this.shipmentError.set('Please select a pickup location');
+      return;
+    }
+
+    const orderId = this.singleOrderId();
+    if (!orderId) {
+      this.shipmentError.set('Order not found');
+      return;
+    }
+
+    this.shipmentLoading.set(true);
+    this.shipmentError.set('');
+
+    this.http
+      .post<any>(`${this.api}/admin/shipments/create`, {
+        orderId,
+        pickupLocationId: this.singlePickupLocationId(),
+        courierId: this.singleCourierId() || undefined,
+      })
+      .subscribe({
+        next: (res) => {
+          this.shipmentSuccess.set(`✓ Shipment created! AWB: ${res.data.awbCode}`);
+          this.shipmentLoading.set(false);
+          setTimeout(() => {
+            this.closeSingleShipmentModal();
+            this.loadOrders(this.currentPage);
+          }, 1500);
+        },
+        error: (err) => {
+          this.shipmentError.set(err.error?.message || 'Failed to create shipment');
           this.shipmentLoading.set(false);
         },
       });

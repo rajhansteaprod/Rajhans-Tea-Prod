@@ -73,6 +73,7 @@ export class ShiprocketProvider implements ShippingProvider {
 
   async createOrder(order: IOrderDoc, pickupLocation: string): Promise<ShipmentResult> {
     const addr = order.shippingAddress;
+    const user = order.userId as any;
     const data = await this.request('POST', '/orders/create', {
       order_id: order.orderNumber,
       order_date: new Date(order.createdAt).toISOString().replace('T', ' ').slice(0, 19),
@@ -84,6 +85,7 @@ export class ShiprocketProvider implements ShippingProvider {
       billing_pincode: addr.pincode,
       billing_state: addr.state,
       billing_country: 'India',
+      billing_email: user?.email || 'noreply@rajhans-tea.com',
       billing_phone: addr.phone,
       shipping_is_billing: true,
       order_items: order.items.map((item) => ({
@@ -93,7 +95,7 @@ export class ShiprocketProvider implements ShippingProvider {
         selling_price: item.unitPrice.toString(),
       })),
       payment_method: 'Prepaid',
-      sub_total: order.total,
+      sub_total: order.subtotal,
       length: 20,
       breadth: 15,
       height: 10,

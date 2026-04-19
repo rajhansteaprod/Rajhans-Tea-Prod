@@ -97,3 +97,40 @@ export const validatePincode = async (req: Request, res: Response) => {
   const isValid = await shiprocketService.validatePincode(pincode);
   sendSuccess(res, { valid: isValid, pincode });
 };
+
+/**
+ * Create bulk shipments for multiple orders
+ * POST /admin/shipments/bulk
+ */
+export const createBulkShipments = async (req: Request, res: Response) => {
+  const { orderIds, pickupLocationId, courierId } = req.body;
+
+  if (!Array.isArray(orderIds) || orderIds.length === 0 || !pickupLocationId) {
+    throw new BadRequestError('orderIds (array), pickupLocationId are required');
+  }
+
+  const results = {
+    successCount: 0,
+    failedCount: 0,
+    failed: [] as { orderId: string; error: string }[],
+  };
+
+  for (const orderId of orderIds) {
+    try {
+      await shiprocketService.createShipment({
+        orderId,
+        pickupLocationId,
+        courierId,
+      });
+      results.successCount++;
+    } catch (error: any) {
+      results.failedCount++;
+      results.failed.push({
+        orderId,
+        error: error.message || 'Unknown error',
+      });
+    }
+  }
+
+  sendSuccess(res, results, 'Bulk shipment creation completed');
+};

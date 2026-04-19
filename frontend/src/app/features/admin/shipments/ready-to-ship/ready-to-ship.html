@@ -88,14 +88,24 @@
               <td class="amount">₹{{ order.total | number: '1.2-2' }}</td>
               <td class="date">{{ order.createdAt | date: 'dd MMM, h:mm a' }}</td>
               <td>
-                <button
-                  class="btn-sm"
-                  (click)="toggleOrderSelection(order._id)"
-                  [class.active]="isOrderSelected(order._id)"
-                  title="Select for bulk ship"
-                >
-                  ✓
-                </button>
+                <div class="action-buttons">
+                  <button
+                    class="btn-sm"
+                    (click)="openSingleShipmentModal(order._id)"
+                    title="Ship Now"
+                    [disabled]="shipmentLoading()"
+                  >
+                    📦
+                  </button>
+                  <button
+                    class="btn-sm"
+                    (click)="toggleOrderSelection(order._id)"
+                    [class.active]="isOrderSelected(order._id)"
+                    title="Select for bulk ship"
+                  >
+                    ✓
+                  </button>
+                </div>
               </td>
             </tr>
           }
@@ -163,6 +173,59 @@
             (click)="shipSelectedOrders()"
           >
             {{ shipmentLoading() ? 'Processing...' : 'Create Shipments' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Single Shipment Modal -->
+  @if (showSingleShipmentModal()) {
+    <div class="backdrop" (click)="closeSingleShipmentModal()"></div>
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Ship Order Now</h2>
+        <button (click)="closeSingleShipmentModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (shipmentError()) {
+          <div class="alert alert-error">{{ shipmentError() }}</div>
+        }
+        @if (shipmentSuccess()) {
+          <div class="alert alert-success">{{ shipmentSuccess() }}</div>
+        }
+
+        <div class="form-section">
+          <h3>Shiprocket Integration</h3>
+
+          <div class="form-group">
+            <label>Pickup Location *</label>
+            <select [(ngModel)]="singlePickupLocationId">
+              <option value="">Select pickup location...</option>
+              <option value="warehouse-1">Main Warehouse</option>
+              <option value="warehouse-2">Secondary Warehouse</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Preferred Courier (optional)</label>
+            <select [(ngModel)]="singleCourierId">
+              <option [value]="undefined">Auto-assign</option>
+              <option [value]="1">Delhivery</option>
+              <option [value]="2">FedEx</option>
+              <option [value]="3">DHL</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="closeSingleShipmentModal()">Cancel</button>
+          <button
+            class="btn-primary"
+            [disabled]="!singlePickupLocationId() || shipmentLoading()"
+            (click)="shipSingleOrder()"
+          >
+            {{ shipmentLoading() ? 'Creating...' : 'Create Shipment' }}
           </button>
         </div>
       </div>
