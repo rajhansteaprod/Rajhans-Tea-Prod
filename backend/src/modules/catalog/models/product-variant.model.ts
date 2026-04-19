@@ -5,8 +5,7 @@ export interface IProductVariantDoc extends Document {
   name: string;           // e.g. "50g", "100g", "250ml"
   sku?: string;           // SKU code (optional)
   price: number;
-  discountPercentage: number; // Discount percentage applied to price
-  discountedPrice?: number; // Price after discount applied
+  discountedPrice?: number; // Price after discount applied (if different from price)
   cost?: number;          // Cost price (admin only)
   stock: number;
   trackInventory: boolean;
@@ -24,7 +23,6 @@ const productVariantSchema = new Schema<IProductVariantDoc>(
     name: { type: String, required: true, trim: true },
     sku: { type: String, lowercase: true, sparse: true, unique: true },
     price: { type: Number, required: true, min: 0 },
-    discountPercentage: { type: Number, required: true, min: 0, max: 100, default: 0 },
     discountedPrice: { type: Number, min: 0 },
     cost: { type: Number, min: 0 },
     stock: { type: Number, default: 0, min: 0 },
