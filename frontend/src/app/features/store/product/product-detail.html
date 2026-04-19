@@ -147,21 +147,10 @@
             <!-- Price Display Row -->
             <div class="pd__price-display">
               <span class="pd__price-mrp">MRP</span>
-              <span class="pd__price-original">₹{{ product()?.basePrice | number:'1.0-0' }}</span>
+              @if (selectedVariant()?.discountedPrice || product()?.discountedPrice) {
+                <span class="pd__price-original">₹{{ (selectedVariant()?.price ?? product()?.basePrice) | number:'1.0-0' }}</span>
+              }
               <span class="pd__price-current">₹{{ effectivePrice() | number:'1.0-0' }}</span>
-              <span class="pd__price-badge">{{ product()?.discountPercentage }}% Off</span>
-              <button
-                class="pd__price-info"
-                type="button"
-                [title]="'Lorem ipsum as of now'"
-                aria-label="Discount information"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-              </button>
             </div>
 
             <p class="pd__price-note">(incl. of all taxes)</p>

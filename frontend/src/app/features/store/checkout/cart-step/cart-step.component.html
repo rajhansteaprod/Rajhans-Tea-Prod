@@ -85,12 +85,8 @@
                     <div class="checkout__product-card-pricing">
                       <span class="checkout__product-pricing">
                         <span class="checkout__price-current"
-                          >₹{{ item.basePrice * (1 - (item.discountPercentage ?? 0) / 100) | number: '1.0-0' }}</span
-                        >
-                        <span class="checkout__price-strikethrough"
                           >₹{{ item.basePrice | number: '1.0-0' }}</span
                         >
-                        <span class="checkout__price-discount">{{ item.discountPercentage ?? 0 }}% OFF</span>
                       </span>
                     </div>
                   </div>
