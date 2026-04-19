@@ -48,6 +48,11 @@ export const ADMIN_ROUTES: Routes = [
           import('./orders/order-list').then((m) => m.AdminOrderListComponent),
       },
       {
+        path: 'shipments/ready-to-ship',
+        loadComponent: () =>
+          import('./shipments/ready-to-ship/ready-to-ship').then((m) => m.ReadyToShipComponent),
+      },
+      {
         path: 'inventory',
         loadComponent: () =>
           import('./inventory/inventory-dashboard').then((m) => m.InventoryDashboardComponent),

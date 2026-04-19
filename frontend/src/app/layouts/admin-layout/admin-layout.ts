@@ -46,6 +46,7 @@ export class AdminLayoutComponent {
       collapsed: false,
       items: [
         { label: 'Orders', icon: '<svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2"/></svg>', route: '/admin/orders' },
+        { label: 'Shipments', icon: '<svg viewBox="0 0 24 24"><path d="M3 9h18M3 9v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9M3 9l3-6h12l3 6M12 13v4M9 16h6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>', route: '/admin/shipments/ready-to-ship' },
         { label: 'Inventory', icon: '<svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" stroke-width="2" fill="none"/></svg>', route: '/admin/inventory' },
         { label: 'Warehouses', icon: '<svg viewBox="0 0 24 24"><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 0v1a3 3 0 0 0 6 0V7m0 0v1a3 3 0 0 0 6 0V7M3 7l1-4h16l1 4M5 21V10.7M19 21V10.7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>', route: '/admin/warehouses' },
       ],

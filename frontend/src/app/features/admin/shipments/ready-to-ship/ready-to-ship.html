@@ -1,0 +1,171 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Ready to Ship</h1>
+      <p class="page-subtitle">Manage orders ready for shipment</p>
+    </div>
+  </div>
+
+  <!-- Filters & Search -->
+  <div class="filters-bar">
+    <input
+      class="search-input"
+      placeholder="Search order #, name, phone..."
+      [(ngModel)]="searchQuery"
+      (ngModelChange)="onSearch()"
+    />
+  </div>
+
+  <!-- Status Messages -->
+  @if (shipmentError()) {
+    <div class="alert alert-error">{{ shipmentError() }}</div>
+  }
+  @if (shipmentSuccess()) {
+    <div class="alert alert-success">{{ shipmentSuccess() }}</div>
+  }
+
+  <!-- Bulk Actions -->
+  @if (getSelectedCount() > 0) {
+    <div class="bulk-actions">
+      <span class="selection-info">{{ getSelectedCount() }} order(s) selected</span>
+      <button class="btn-primary" (click)="openShipmentModal()" [disabled]="shipmentLoading()">
+        📦 Ship Selected
+      </button>
+      <button class="btn-secondary" (click)="clearSelection()">Clear</button>
+    </div>
+  }
+
+  <!-- Table -->
+  @if (loading()) {
+    <div class="loading">Loading orders...</div>
+  } @else if (orders().length === 0) {
+    <div class="empty">No orders ready to ship</div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="checkbox-col">
+              <input
+                type="checkbox"
+                [checked]="isAllSelected()"
+                (change)="toggleSelectAll()"
+              />
+            </th>
+            <th>Order ID</th>
+            <th>Items</th>
+            <th>Address</th>
+            <th>Payment</th>
+            <th>Total</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of orders(); track order._id) {
+            <tr [class.selected]="isOrderSelected(order._id)">
+              <td class="checkbox-col">
+                <input
+                  type="checkbox"
+                  [checked]="isOrderSelected(order._id)"
+                  (change)="toggleOrderSelection(order._id)"
+                />
+              </td>
+              <td class="mono">{{ order.orderNumber }}</td>
+              <td>
+                <span class="item-count">{{ order.items.length }} item(s)</span>
+                <br />
+                <span class="item-names">{{ order.items.map((i) => i.name).join(', ') }}</span>
+              </td>
+              <td>
+                <span class="address">{{ order.shippingAddress.city }}, {{ order.shippingAddress.state }}</span>
+                <br />
+                <span class="pincode">{{ order.shippingAddress.pincode }}</span>
+              </td>
+              <td>
+                <span class="payment-type">{{ order.paymentType }}</span>
+              </td>
+              <td class="amount">₹{{ order.total | number: '1.2-2' }}</td>
+              <td class="date">{{ order.createdAt | date: 'dd MMM, h:mm a' }}</td>
+              <td>
+                <button
+                  class="btn-sm"
+                  (click)="toggleOrderSelection(order._id)"
+                  [class.active]="isOrderSelected(order._id)"
+                  title="Select for bulk ship"
+                >
+                  ✓
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (meta()) {
+      <div class="pagination">
+        <button
+          [disabled]="meta()!.page <= 1"
+          (click)="loadOrders(meta()!.page - 1)"
+        >
+          ← Prev
+        </button>
+        <span>Page {{ meta()!.page }} of {{ meta()!.totalPages }}</span>
+        <button
+          [disabled]="meta()!.page >= meta()!.totalPages"
+          (click)="loadOrders(meta()!.page + 1)"
+        >
+          Next →
+        </button>
+      </div>
+    }
+  }
+
+  <!-- Shipment Modal -->
+  @if (showShipmentModal()) {
+    <div class="backdrop" (click)="closeShipmentModal()"></div>
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Ship {{ getSelectedCount() }} Order(s)</h2>
+        <button (click)="closeShipmentModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-section">
+          <h3>Shiprocket Integration</h3>
+
+          <div class="form-group">
+            <label>Pickup Location *</label>
+            <select [(ngModel)]="pickupLocationId">
+              <option value="">Select pickup location...</option>
+              <option value="warehouse-1">Main Warehouse</option>
+              <option value="warehouse-2">Secondary Warehouse</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Preferred Courier (optional)</label>
+            <select [(ngModel)]="courierId">
+              <option [value]="undefined">Auto-assign</option>
+              <option [value]="1">Delhivery</option>
+              <option [value]="2">FedEx</option>
+              <option [value]="3">DHL</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="closeShipmentModal()">Cancel</button>
+          <button
+            class="btn-primary"
+            [disabled]="!pickupLocationId() || shipmentLoading()"
+            (click)="shipSelectedOrders()"
+          >
+            {{ shipmentLoading() ? 'Processing...' : 'Create Shipments' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
