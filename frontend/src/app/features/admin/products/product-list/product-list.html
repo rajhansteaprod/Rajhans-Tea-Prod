@@ -201,9 +201,9 @@
                 (ngModelChange)="form.update(f=>({...f,basePrice:$event}))" placeholder="0" />
             </div>
             <div class="form-field">
-              <label class="form-label">Discount % (0-100) *</label>
-              <input class="form-input" type="number" min="0" max="100" [ngModel]="form().discountPercentage"
-                (ngModelChange)="form.update(f=>({...f,discountPercentage:$event}))" placeholder="0" />
+              <label class="form-label">Discounted Price (₹)</label>
+              <input class="form-input" type="number" min="0" [ngModel]="form().discountedPrice"
+                (ngModelChange)="form.update(f=>({...f,discountedPrice:$event}))" placeholder="Optional" />
             </div>
             <div class="form-field">
               <label class="form-label">Stock Quantity</label>
@@ -461,9 +461,9 @@
                     (ngModelChange)="variantForm.update(f=>({...f,price:$event}))" placeholder="0" />
                 </div>
                 <div class="form-field">
-                  <label class="form-label">Discount % (0-100) *</label>
-                  <input class="form-input" type="number" min="0" max="100" [ngModel]="variantForm().discountPercentage"
-                    (ngModelChange)="variantForm.update(f=>({...f,discountPercentage:$event}))" placeholder="0" />
+                  <label class="form-label">Discounted Price (₹)</label>
+                  <input class="form-input" type="number" min="0" [ngModel]="variantForm().discountedPrice"
+                    (ngModelChange)="variantForm.update(f=>({...f,discountedPrice:$event}))" placeholder="Optional" />
                 </div>
                 <div class="form-field">
                   <label class="form-label">Stock</label>
