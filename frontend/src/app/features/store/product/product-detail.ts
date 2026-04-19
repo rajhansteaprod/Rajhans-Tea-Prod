@@ -41,15 +41,11 @@ export class ProductDetailComponent implements OnInit {
     const product = this.product();
 
     if (variant) {
-      const basePrice = variant.price;
-      const discount = variant.discountPercentage ?? 0;
-      return basePrice - (basePrice * discount / 100);
+      return variant.discountedPrice ?? variant.price;
     }
 
     if (product) {
-      const basePrice = product.basePrice;
-      const discount = product.discountPercentage ?? 0;
-      return basePrice - (basePrice * discount / 100);
+      return product.discountedPrice ?? product.basePrice;
     }
 
     return 0;
