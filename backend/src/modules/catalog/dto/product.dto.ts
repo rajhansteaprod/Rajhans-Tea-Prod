@@ -10,7 +10,7 @@ export interface ProductVariantView {
   _id: string;
   name: string;
   price: number;
-  discountPercentage: number;
+  discountedPrice?: number;
   stock?: number;
   isActive?: boolean;
 }
@@ -27,7 +27,7 @@ export interface ProductAdminView {
   category: { _id: string; name: string; slug: string };
   collections: { _id: string; name: string; slug: string }[];
   basePrice: number;
-  discountPercentage: number;
+  discountedPrice?: number;
   images: string[];
   reflectedImage?: string;
   attributes: Record<string, string>;
@@ -54,7 +54,7 @@ export interface ProductPublicView {
   category: { _id: string; name: string; slug: string };
   collections: { _id: string; name: string; slug: string }[];
   basePrice: number;
-  discountPercentage: number;
+  discountedPrice?: number;
   images: string[];
   reflectedImage?: string;
   attributes: Record<string, string>;
@@ -107,7 +107,7 @@ export class ProductDTO {
       _id: v._id.toString(),
       name: v.name,
       price: v.price,
-      discountPercentage: v.discountPercentage,
+      discountedPrice: v.discountedPrice,
       stock: v.stock,
       isActive: v.isActive,
     }));
@@ -124,7 +124,7 @@ export class ProductDTO {
       category: extractCategory(product),
       collections: extractCollections(product),
       basePrice: product.basePrice,
-      discountPercentage: product.discountPercentage,
+      discountedPrice: product.discountedPrice,
       images: product.images ?? [],
       reflectedImage: product.reflectedImage,
       attributes: attributesToRecord(product.attributes),
@@ -151,7 +151,7 @@ export class ProductDTO {
       category: extractCategory(product),
       collections: extractCollections(product),
       basePrice: product.basePrice,
-      discountPercentage: product.discountPercentage,
+      discountedPrice: product.discountedPrice,
       images: product.images ?? [],
       reflectedImage: product.reflectedImage,
       attributes: attributesToRecord(product.attributes),
