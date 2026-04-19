@@ -58,7 +58,7 @@ export class ReadyToShipComponent implements OnInit {
   loadOrders(page = 1): void {
     this.loading.set(true);
     this.currentPage = page;
-    let url = `${this.api}/admin/orders?status=READY_TO_SHIP&page=${page}&limit=15`;
+    let url = `${this.api}/admin/orders?status=confirmed&page=${page}&limit=15`;
     if (this.searchQuery) url += `&search=${encodeURIComponent(this.searchQuery)}`;
 
     this.http.get<{ data: ShipmentOrder[]; meta: ShipmentMeta }>(url).subscribe({
