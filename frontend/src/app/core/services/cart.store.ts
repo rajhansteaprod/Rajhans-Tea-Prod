@@ -28,7 +28,6 @@ export interface CartItem {
   slug: string;
   image: string;
   basePrice: number;
-  discountPercentage?: number;
   qty: number;
   lineTotal: number;
   shortDescription?: string;
@@ -267,7 +266,6 @@ export class CartStore {
     const basePrice = variant?.price ?? product.basePrice;
     const image = variant?.images?.[0] ?? product.images?.[0] ?? '';
     const variantName = variant?.name;
-    const discountPercentage = variant?.discountPercentage ?? product.discountPercentage;
 
     const buyNowItem: CartItem = {
       productId: product._id,
@@ -277,7 +275,6 @@ export class CartStore {
       slug: product.slug,
       image,
       basePrice,
-      discountPercentage,
       qty,
       lineTotal: basePrice * qty,
     };
