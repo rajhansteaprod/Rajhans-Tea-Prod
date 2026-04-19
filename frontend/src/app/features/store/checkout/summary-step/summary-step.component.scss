@@ -293,8 +293,8 @@
   padding: $space-md;
   border: 1px solid #ddd;
   border-radius: 2px;
-  font-size: $font-size-base;
-  font-family: $font-family-base;
+  font-size: $font-size-md;
+  font-family: $font-family;
   transition: border-color 0.2s;
 
   &:focus {
