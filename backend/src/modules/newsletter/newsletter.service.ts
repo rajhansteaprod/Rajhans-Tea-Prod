@@ -1,4 +1,4 @@
-import { Newsletter } from '../../models/newsletter.model';
+import { Newsletter } from './newsletter.model';
 import { logger } from '../../utils/logger';
 
 export class NewsletterService {
