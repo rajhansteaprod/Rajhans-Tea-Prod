@@ -16,4 +16,24 @@ router.post(
   (req, res, next) => shipmentsController.createShipment(req, res, next)
 );
 
+router.post(
+  '/assign-courier',
+  (req, res, next) => shipmentsController.assignCourier(req, res, next)
+);
+
+router.post(
+  '/schedule-pickup',
+  (req, res, next) => shipmentsController.schedulePickup(req, res, next)
+);
+
+router.get(
+  '/track/:shipmentId',
+  (req, res, next) => shipmentsController.trackShipment(req, res, next)
+);
+
+router.delete(
+  '/:shipmentId',
+  (req, res, next) => shipmentsController.cancelShipment(req, res, next)
+);
+
 export default router;

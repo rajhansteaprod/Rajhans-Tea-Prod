@@ -2,7 +2,19 @@ import axios, { AxiosInstance } from 'axios';
 import { config } from '../../../config/index';
 import { IShippingBase } from '../interfaces/shipping-base';
 import { ITokenRepository } from '../interfaces/token-repository';
-import { AuthenticateResponse, CreateShipmentRequest, CreateShipmentResponse } from '../interfaces/types';
+import {
+  AuthenticateResponse,
+  CreateShipmentRequest,
+  CreateShipmentResponse,
+  AssignCourierRequest,
+  AssignCourierResponse,
+  SchedulePickupRequest,
+  SchedulePickupResponse,
+  TrackShipmentRequest,
+  TrackingData,
+  CancelShipmentRequest,
+  CancelShipmentResponse,
+} from '../interfaces/types';
 import { logger } from '../../../utils/logger';
 import { camelToSnakeCase } from '../../../utils/transformer';
 
@@ -60,6 +72,92 @@ export class ShiprocketService implements IShippingBase {
         responseData: errorData,
       }, 'Shiprocket create shipment error');
       throw new Error(`Failed to create shipment: ${errorMessage}`);
+    }
+  }
+
+  async assignCourier(request: AssignCourierRequest, token: string): Promise<AssignCourierResponse> {
+    try {
+      const response = await this.axiosInstance.post('/courier/assign/awb', {
+        shipment_id: request.shipmentId,
+        courier_id: request.courierId,
+        status: request.status,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      const errorData = error.response?.data;
+      const errorMessage = errorData?.message || error.message || 'Unknown error';
+      logger.error({
+        message: errorMessage,
+        status: error.response?.status,
+        responseData: errorData,
+      }, 'Shiprocket assign courier error');
+      throw new Error(`Failed to assign courier: ${errorMessage}`);
+    }
+  }
+
+  async schedulePickup(request: SchedulePickupRequest, token: string): Promise<SchedulePickupResponse> {
+    try {
+      const response = await this.axiosInstance.post('/shipments/pickup/schedule', {
+        shipment_id: request.shipmentId,
+        pickup_date: request.pickupDate,
+        pickup_time_slot: request.pickupSlot,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      const errorData = error.response?.data;
+      const errorMessage = errorData?.message || error.message || 'Unknown error';
+      logger.error({
+        message: errorMessage,
+        status: error.response?.status,
+        responseData: errorData,
+      }, 'Shiprocket schedule pickup error');
+      throw new Error(`Failed to schedule pickup: ${errorMessage}`);
+    }
+  }
+
+  async trackShipment(request: TrackShipmentRequest, token: string): Promise<TrackingData> {
+    try {
+      const response = await this.axiosInstance.get(`/shipments/track/shipment/${request.shipmentId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      const errorData = error.response?.data;
+      const errorMessage = errorData?.message || error.message || 'Unknown error';
+      logger.error({
+        message: errorMessage,
+        status: error.response?.status,
+        responseData: errorData,
+      }, 'Shiprocket track shipment error');
+      throw new Error(`Failed to track shipment: ${errorMessage}`);
+    }
+  }
+
+  async cancelShipment(request: CancelShipmentRequest, token: string): Promise<CancelShipmentResponse> {
+    try {
+      const response = await this.axiosInstance.post('/shipments/cancel', {
+        shipment_id: request.shipmentId,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      const errorData = error.response?.data;
+      const errorMessage = errorData?.message || error.message || 'Unknown error';
+      logger.error({
+        message: errorMessage,
+        status: error.response?.status,
+        responseData: errorData,
+      }, 'Shiprocket cancel shipment error');
+      throw new Error(`Failed to cancel shipment: ${errorMessage}`);
     }
   }
 
