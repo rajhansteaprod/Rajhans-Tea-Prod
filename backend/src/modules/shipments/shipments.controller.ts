@@ -1,74 +1,30 @@
-import { Request, Response } from 'express';
-import { ShiprocketService, EstimateDeliveryRequest } from './shipments.service';
-import { sendSuccess } from '../../utils/api-response';
-import { BadRequestError } from '../../utils/api-error';
+import { Request, Response, NextFunction } from 'express';
+import { ShipmentsService } from './shipments.service';
+import { ShipmentServiceFactory } from './factories/shipment-service.factory';
 
-const shiprocketService = new ShiprocketService();
+export class ShipmentsController {
+  private shizmentsService: ShipmentsService;
 
-/**
- * Estimate delivery time for a given pincode
- * POST /api/v1/shipments/estimate-delivery
- *
- * Request body:
- * {
- *   pincode: string (6 digits),
- *   cartItems: Array of { productId, name, qty, basePrice }
- * }
- *
- * Response:
- * {
- *   success: boolean,
- *   data: { estimatedDays: number, serviceType?: string, remark?: string }
- * }
- */
-export const estimateDelivery = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { pincode, cartItems } = req.body as EstimateDeliveryRequest;
-
-    if (!pincode || pincode.length !== 6 || !/^\d+$/.test(pincode)) {
-      throw new BadRequestError('Invalid pincode. Please provide a 6-digit pincode.');
-    }
-
-    if (!cartItems || cartItems.length === 0) {
-      throw new BadRequestError('Cart items are required to estimate delivery.');
-    }
-
-    const estimate = await shiprocketService.estimateDelivery({ pincode, cartItems });
-    sendSuccess(res, estimate, 'Delivery time estimated');
-  } catch (error) {
-    const message = error instanceof BadRequestError ? error.message : 'Failed to estimate delivery time';
-    res.status(400).json({
-      success: false,
-      message,
-      data: null,
-    });
+  constructor(shipmentsService?: ShipmentsService) {
+    this.shizmentsService = shipmentsService || ShipmentServiceFactory.createService();
   }
-};
 
-/**
- * Validate if pincode is serviceable
- * POST /api/v1/shipments/validate-pincode
- */
-export const validatePincode = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { pincode } = req.body as { pincode: string };
-
-    if (!pincode || pincode.length !== 6) {
-      throw new BadRequestError('Invalid pincode format');
+  async authenticate(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await this.shizmentsService.authenticate();
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
     }
-
-    const isValid = await shiprocketService.validatePincode(pincode);
-    if (!isValid) {
-      throw new BadRequestError('Pincode is not serviceable');
-    }
-
-    sendSuccess(res, { valid: true }, 'Pincode is serviceable');
-  } catch (error) {
-    const message = error instanceof BadRequestError ? error.message : 'Failed to validate pincode';
-    res.status(400).json({
-      success: false,
-      message,
-      data: null,
-    });
   }
-};
+
+  async createShipment(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { shipmentData } = req.body;
+      const result = await this.shizmentsService.createShipment(shipmentData);
+      res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+}
