@@ -11,6 +11,7 @@ import { registerGlobalErrorHandlers } from './core/graceful-error-handler';
 import { validateEnvironment } from './core/env-validator';
 import { scheduleCartCleanup } from './modules/cart/jobs/cleanup.job';
 import { scheduleWebhookRetry } from './modules/payments/jobs/webhook-retry.job';
+import { scheduleTrackingSync, stopTrackingSync } from './modules/inventory/jobs/tracking-sync.job';
 
 const startServer = async () => {
   validateEnvironment();
@@ -19,6 +20,7 @@ const startServer = async () => {
   registerWorkers();
   scheduleCartCleanup();
   scheduleWebhookRetry();
+  scheduleTrackingSync();
   registerEventHandlers();
 
   const httpServer = http.createServer(app);
@@ -35,6 +37,7 @@ const startServer = async () => {
 
     server.close(async () => {
       logger.info('HTTP server closed');
+      stopTrackingSync();
       await closeWorkers();
       await disconnectBullMQ();
       await disconnectMongoDB();

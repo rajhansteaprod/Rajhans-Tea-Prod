@@ -47,6 +47,11 @@ adminRouter.use(authorize('admin'));
 adminRouter.get('/orders', ctrl.adminListOrders);
 adminRouter.get('/orders/stats', ctrl.adminGetOrderStats);
 adminRouter.get('/orders/:orderId', validate(orderIdSchema), ctrl.adminGetOrderDetail);
+adminRouter.get(
+  '/orders/:orderId/tracking',
+  validate(orderIdSchema),
+  ctrl.adminGetOrderTracking,
+);
 adminRouter.patch(
   '/orders/:orderId/status',
   validate(updateOrderStatusSchema),

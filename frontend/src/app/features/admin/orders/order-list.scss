@@ -421,6 +421,34 @@
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
+.btn-success {
+  background: #4CAF50;
+  color: $color-text-inverse;
+  border-color: #4CAF50;
+  font-weight: $font-weight-semibold;
+  padding: $space-sm $space-lg;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: $font-size-sm;
+  font-family: $font-family;
+  transition: background $transition-fast;
+
+  &:hover:not(:disabled) { background: #45a049; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.modal-body {
+  .info {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    margin: $space-md 0;
+    padding: $space-md;
+    background: $color-bg-secondary;
+    border-left: 3px solid $color-primary;
+  }
+}
+
 // === Shipment Button ===
 .btn-ship {
   padding: $space-xs $space-md;

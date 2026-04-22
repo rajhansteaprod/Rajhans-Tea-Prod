@@ -1,0 +1,162 @@
+<div class="order-detail-container">
+  <!-- Loading state -->
+  <div *ngIf="loading()" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading order details...</p>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error()" class="error-state">
+    <p class="error-message">{{ error() }}</p>
+    <a routerLink="/orders" class="btn-secondary">Back to Orders</a>
+  </div>
+
+  <!-- Order details -->
+  <div *ngIf="!loading() && order()" class="order-content">
+    <!-- Header -->
+    <div class="order-header">
+      <div class="header-left">
+        <a routerLink="/orders" class="back-link">← Back to Orders</a>
+        <h1>Order #{{ order()!.orderNumber }}</h1>
+        <p class="order-date">Placed on {{ formatDate(order()!.createdAt) }}</p>
+      </div>
+      <div class="header-right">
+        <div class="status-badge" [style.background-color]="getStatusColor(order()!.status)">
+          <span class="status-icon">{{ getStatusIcon(order()!.status) }}</span>
+          <span class="status-text">{{ formatStatus(order()!.status) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delivery status card -->
+    <div class="delivery-status-card">
+      <div class="status-main">
+        <h2>{{ getDeliveryStatus() }}</h2>
+        <p *ngIf="order()!.shiprocket?.estimatedDelivery" class="estimated-delivery">
+          Estimated: {{ formatDateOnly(order()!.shiprocket.estimatedDelivery) }}
+          ({{ getDaysRemaining(order()!.shiprocket.estimatedDelivery) }})
+        </p>
+      </div>
+      <div class="tracking-info" *ngIf="order()!.shiprocket?.awbCode">
+        <div class="info-item">
+          <label>AWB Code</label>
+          <span>{{ order()!.shiprocket.awbCode }}</span>
+        </div>
+        <div class="info-item">
+          <label>Courier</label>
+          <span>{{ order()!.shiprocket.courierName || 'N/A' }}</span>
+        </div>
+        <button
+          *ngIf="order()!.shiprocket?.trackingUrl"
+          class="btn-primary"
+          (click)="openExternalTracking()"
+        >
+          Track on Shiprocket →
+        </button>
+      </div>
+    </div>
+
+    <!-- Tracking timeline -->
+    <div *ngIf="order()!.shiprocket?.shipmentId" class="tracking-timeline">
+      <h3>Tracking History</h3>
+      <div *ngIf="trackingLoading()" class="tracking-loading">
+        <div class="spinner-small"></div>
+        <p>Loading tracking updates...</p>
+      </div>
+      <div
+        *ngIf="!trackingLoading() && trackingUpdates().length > 0"
+        class="timeline"
+      >
+        <div *ngFor="let update of trackingUpdates(); let i = index" class="timeline-item">
+          <div class="timeline-marker"></div>
+          <div class="timeline-content">
+            <div class="timeline-status">{{ update.status }}</div>
+            <div class="timeline-location" *ngIf="update.location">
+              📍 {{ update.location }}
+            </div>
+            <div class="timeline-date">{{ formatDate(update.date) }}</div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="!trackingLoading() && trackingUpdates().length === 0" class="no-tracking">
+        <p>No tracking updates available yet. Please check back later.</p>
+      </div>
+    </div>
+
+    <!-- Status history -->
+    <div class="status-history">
+      <h3>Order Timeline</h3>
+      <div class="history-list">
+        <div *ngFor="let entry of order()!.statusHistory; let i = index" class="history-item">
+          <div class="history-marker" [style.background-color]="getStatusColor(entry.status)">
+            {{ getStatusIcon(entry.status) }}
+          </div>
+          <div class="history-details">
+            <div class="history-status">{{ formatStatus(entry.status) }}</div>
+            <div class="history-note" *ngIf="entry.note">{{ entry.note }}</div>
+            <div class="history-time">{{ formatDate(entry.timestamp) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order items -->
+    <div class="order-items">
+      <h3>Order Items</h3>
+      <div class="items-table">
+        <div class="items-header">
+          <div class="col-name">Product</div>
+          <div class="col-qty">Qty</div>
+          <div class="col-price">Price</div>
+          <div class="col-total">Total</div>
+        </div>
+        <div *ngFor="let item of order()!.items" class="items-row">
+          <div class="col-name">{{ item.name }}</div>
+          <div class="col-qty">{{ item.qty }}</div>
+          <div class="col-price">₹{{ item.unitPrice }}</div>
+          <div class="col-total">₹{{ item.totalPrice }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order summary -->
+    <div class="order-summary">
+      <div class="summary-row">
+        <span>Subtotal</span>
+        <span>₹{{ order()!.total - (order()!.totalTax || 0) }}</span>
+      </div>
+      <div class="summary-row" *ngIf="order()!.totalTax">
+        <span>Tax</span>
+        <span>₹{{ order()!.totalTax }}</span>
+      </div>
+      <div class="summary-row total">
+        <span>Total Amount</span>
+        <span>₹{{ order()!.total }}</span>
+      </div>
+    </div>
+
+    <!-- Shipping address -->
+    <div class="shipping-address">
+      <h3>Shipping Address</h3>
+      <div class="address-content">
+        <p class="address-name">{{ order()!.shippingAddress.name }}</p>
+        <p>{{ order()!.shippingAddress.street }}</p>
+        <p>{{ order()!.shippingAddress.city }}, {{ order()!.shippingAddress.state }}</p>
+        <p>{{ order()!.shippingAddress.pincode }}</p>
+        <p class="address-phone">📱 {{ order()!.shippingAddress.phone }}</p>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="action-buttons">
+      <a routerLink="/orders" class="btn-secondary">Back to Orders</a>
+      <button
+        *ngIf="order()!.shiprocket?.trackingUrl"
+        class="btn-primary"
+        (click)="openExternalTracking()"
+      >
+        Track Live on Shiprocket
+      </button>
+    </div>
+  </div>
+</div>

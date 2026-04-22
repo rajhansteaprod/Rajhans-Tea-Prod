@@ -137,6 +137,12 @@ export const adminGetOrderStats = async (_req: Request, res: Response) => {
   sendSuccess(res, stats);
 };
 
+export const adminGetOrderTracking = async (req: Request, res: Response) => {
+  const orderId = req.params['orderId'] as string;
+  const tracking = await orderService.getTracking(orderId);
+  sendSuccess(res, tracking);
+};
+
 export const adminUpdateOrderStatus = async (req: Request, res: Response) => {
   const orderId = req.params['orderId'] as string;
   const { status, note } = req.body as { status: OrderStatus; note?: string };

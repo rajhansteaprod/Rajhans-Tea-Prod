@@ -57,6 +57,9 @@
                 <div class="actions">
                   <button class="btn-sm" (click)="selectedOrder.set(o)" title="Details">👁</button>
                   @if (o.status === 'confirmed' || o.status === 'processing') {
+                    @if (!o.shiprocket.shipmentId) {
+                      <button class="btn-sm ship" (click)="openShip(o)" title="Ship Order">📦</button>
+                    }
                     <button class="btn-sm cancel" (click)="openCancel(o)" title="Cancel">✕</button>
                   }
                 </div>
@@ -144,6 +147,24 @@
         <div class="modal-actions">
           <button (click)="cancelTarget.set(null)">Back</button>
           <button class="btn-danger" [disabled]="!cancelReason" (click)="confirmCancel()">Cancel Order</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Ship Modal -->
+  @if (shipTarget()) {
+    <div class="backdrop" (click)="cancelShip()"></div>
+    <div class="modal small">
+      <div class="modal-head"><h2>Ship Order</h2><button (click)="cancelShip()">✕</button></div>
+      <div class="modal-body">
+        <p>Ship <strong>{{ shipTarget()!.orderNumber }}</strong> via Shiprocket?</p>
+        <p class="info">This will create a shipment, generate AWB, schedule pickup, and send to Shiprocket.</p>
+        <div class="modal-actions">
+          <button (click)="cancelShip()" [disabled]="shippingInProgress()">Cancel</button>
+          <button class="btn-success" [disabled]="shippingInProgress()" (click)="confirmShip()">
+            @if (shippingInProgress()) { 🔄 Shipping... } @else { ✓ Ship Order }
+          </button>
         </div>
       </div>
     </div>

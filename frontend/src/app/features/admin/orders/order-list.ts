@@ -52,6 +52,8 @@ export class AdminOrderListComponent implements OnInit {
   readonly meta = signal<{ page: number; totalPages: number } | null>(null);
   readonly selectedOrder = signal<OrderItem | null>(null);
   readonly cancelTarget = signal<OrderItem | null>(null);
+  readonly shipTarget = signal<OrderItem | null>(null);
+  readonly shippingInProgress = signal(false);
 
   searchQuery = '';
   statusFilter = '';
@@ -125,5 +127,31 @@ export class AdminOrderListComponent implements OnInit {
     this.http.post(`${this.api}/admin/orders/${this.cancelTarget()!._id}/cancel`, { reason: this.cancelReason }).subscribe({
       next: () => { this.cancelTarget.set(null); this.loadOrders(); this.loadStats(); },
     });
+  }
+
+  openShip(o: OrderItem): void {
+    this.shipTarget.set(o);
+  }
+
+  confirmShip(): void {
+    const order = this.shipTarget();
+    if (!order) return;
+    this.shippingInProgress.set(true);
+    this.http.post(`${this.api}/admin/orders/${order._id}/ship`, {}).subscribe({
+      next: () => {
+        this.shipTarget.set(null);
+        this.shippingInProgress.set(false);
+        this.loadOrders();
+        this.loadStats();
+      },
+      error: () => {
+        this.shippingInProgress.set(false);
+      },
+    });
+  }
+
+  cancelShip(): void {
+    this.shipTarget.set(null);
+    this.shippingInProgress.set(false);
   }
 }

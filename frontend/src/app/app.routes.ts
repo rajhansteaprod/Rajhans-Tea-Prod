@@ -65,6 +65,11 @@ export const routes: Routes = [
               import('./features/store/orders/order-history-page').then((m) => m.OrderHistoryPageComponent),
           },
           {
+            path: 'orders/:id',
+            loadComponent: () =>
+              import('./features/store/orders/order-detail-page').then((m) => m.OrderDetailPageComponent),
+          },
+          {
             path: 'addresses',
             loadComponent: () =>
               import('./features/dashboard/addresses/addresses').then((m) => m.AddressesComponent),

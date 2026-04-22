@@ -79,6 +79,13 @@
               }
             </div>
             <div class="orders__footer-right">
+              <a [routerLink]="['/dashboard/orders', order._id]" class="orders__btn-view">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                View Details
+              </a>
               @if (order.shiprocket.shipmentId) {
                 <button class="orders__btn-track" (click)="openTracking(order)">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
