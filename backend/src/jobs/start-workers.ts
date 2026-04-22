@@ -11,6 +11,10 @@ import {
   closePaymentWorker,
 } from '../modules/payments/jobs/workers/payment.worker';
 import {
+  startWebhookWorker,
+  closeWebhookWorker,
+} from '../modules/payments/jobs/workers/webhook.worker';
+import {
   startFulfillmentWorker,
   closeFulfillmentWorker,
 } from '../modules/inventory/jobs/workers/fulfillment.worker';
@@ -28,6 +32,7 @@ export const registerWorkers = (): void => {
   startPaymentWorker();
   startInvoiceWorker();
   startWalletWorker();
+  startWebhookWorker();
   startFulfillmentWorker();
   startPromotionsWorker();
   startReviewsWorker();
@@ -38,6 +43,7 @@ export const closeWorkers = async (): Promise<void> => {
   await closePaymentWorker();
   await closeInvoiceWorker();
   await closeWalletWorker();
+  await closeWebhookWorker();
   await closeFulfillmentWorker();
   await closePromotionsWorker();
   await closeReviewsWorker();

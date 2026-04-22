@@ -8,6 +8,7 @@ import { CartService } from '../../cart/services/cart.service';
 import { getInvoiceQueue, InvoiceJobs } from '../jobs/queues/invoice.queue';
 import { getPaymentQueue, PaymentJobs } from '../jobs/queues/payment.queue';
 import { getWalletQueue, WalletJobs } from '../jobs/queues/wallet.queue';
+import { getWebhookQueue, WebhookJobs } from '../jobs/queues/webhook.queue';
 import {
   getFulfillmentQueue,
   FulfillmentJobs,
@@ -445,9 +446,8 @@ export class PaymentService {
     }
 
     // 3. Mark webhook as processing (create or update)
-    let webhookEventId: string;
     try {
-      const createdEvent = await this.webhookEventRepo.create({
+      await this.webhookEventRepo.create({
         razorpayEventId,
         eventType,
         payload: event.payload || {},
@@ -455,7 +455,6 @@ export class PaymentService {
         retryCount: 0,
         maxRetries: 5,
       });
-      webhookEventId = createdEvent._id.toString();
     } catch (error: any) {
       // Race condition: another request already created this webhook event
       // Check if it's a duplicate key error (code 11000)
@@ -466,8 +465,45 @@ export class PaymentService {
       throw error;
     }
 
+    // 4. Enqueue webhook for async processing (return 200 immediately)
+    await getWebhookQueue().add(
+      WebhookJobs.PROCESS,
+      {
+        rawBody,
+        signature,
+        razorpayEventId,
+      },
+      {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 5000 },
+      },
+    );
+
+    console.log(`📡 Webhook ${razorpayEventId} enqueued for processing`);
+  }
+
+  // ---------------------------------------------------------------------------
+  // WEBHOOK PROCESSING (called by webhook worker)
+  // ---------------------------------------------------------------------------
+
+  async processWebhookPayload(
+    rawBody: string,
+    _signature: string,
+    razorpayEventId: string,
+  ): Promise<void> {
+    const event = JSON.parse(rawBody);
+    const eventType = event.event as string;
+
+    // Get the webhook event record
+    const webhookEvent = await this.webhookEventRepo.findByRazorpayEventId(razorpayEventId);
+    if (!webhookEvent) {
+      throw new Error(`WebhookEvent not found for ${razorpayEventId}`);
+    }
+
+    const webhookEventId = webhookEvent._id.toString();
+
     try {
-      // 4. Process the webhook event
+      // Process the webhook event
       if (eventType === 'payment.captured') {
         const rpPaymentId = event.payload?.payment?.entity?.id;
         const rpOrderId = event.payload?.payment?.entity?.order_id;
@@ -534,11 +570,11 @@ export class PaymentService {
         }
       }
 
-      // 5. Mark webhook as successfully processed
+      // Mark webhook as successfully processed
       await this.webhookEventRepo.markAsProcessed(webhookEventId);
       console.log(`✅ Webhook ${razorpayEventId} processed successfully`);
     } catch (error) {
-      // 5. Mark webhook as failed with error details
+      // Mark webhook as failed with error details
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       await this.webhookEventRepo.updateRetryInfo(webhookEventId, {
         status: 'failed',
