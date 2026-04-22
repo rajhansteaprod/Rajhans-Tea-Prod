@@ -83,7 +83,7 @@ export class PaymentService {
       idempotencyKey = `${idempotencyKey}-${Date.now()}`;
     }
 
-    // Get checkout summary (runs pricing engine)
+    // OPTION A: Freeze prices (no recomputation)
     // Pass items if provided (from temporary cart), else fetch from session
     console.log('🛒 DEBUG: Creating order', {
       sessionId,
@@ -92,13 +92,14 @@ export class PaymentService {
       itemsArray: items,
     });
 
-    const summary = await this.checkoutService.getSummary(sessionId, items);
-    console.log('📦 DEBUG: Checkout summary', {
-      summaryItems: summary.items.length,
-      total: summary.total,
+    const frozenPricing = await this.checkoutService.freezePrice(sessionId, items);
+    console.log('❄️ DEBUG: Price frozen', {
+      snapshotId: frozenPricing.snapshotId,
+      total: frozenPricing.total,
+      expiresAt: frozenPricing.expiresAt,
     });
 
-    if (summary.items.length === 0) {
+    if (frozenPricing.items.length === 0) {
       throw new BadRequestError('Cart is empty');
     }
 
@@ -107,6 +108,17 @@ export class PaymentService {
     if (stockResult.issues.length > 0) {
       throw new BadRequestError('Some items are out of stock');
     }
+
+    // Create a summary-like object from frozen pricing for compatibility
+    const summary = {
+      sessionId,
+      items: frozenPricing.items,
+      subtotal: frozenPricing.items.reduce((s, i) => s + i.pricing.priceAfterDiscount * i.qty, 0),
+      totalDiscount: frozenPricing.items.reduce((s, i) => s + i.pricing.discountAmount * i.qty, 0),
+      totalTax: frozenPricing.items.reduce((s, i) => s + i.pricing.taxAmount * i.qty, 0),
+      total: frozenPricing.total,
+      itemCount: frozenPricing.items.reduce((s, i) => s + i.qty, 0),
+    };
 
     // Validate and calculate promo discount (if applicable)
     let promoCodeId: any = null;
@@ -201,6 +213,7 @@ export class PaymentService {
         },
         shippingAddress: address,
         idempotencyKey,
+        priceSnapshotId: frozenPricing.snapshotId as never, // Store reference to frozen price
       });
 
       await this.cartService.clearCart(sessionId);
@@ -261,6 +274,7 @@ export class PaymentService {
       promoCodeId,
       promoDiscountPaise,
       idempotencyKey,
+      priceSnapshotId: frozenPricing.snapshotId as never, // Store reference to frozen price
     });
 
     // Schedule timeout job — if not verified in 30 min, mark failed & release stock
@@ -331,6 +345,12 @@ export class PaymentService {
       razorpayPaymentId,
       razorpaySignature,
     });
+
+    // 3b. Mark price snapshot as used (Option A: frozen pricing)
+    if (payment.priceSnapshotId) {
+      const snapshotRepo = new (require('../../cart/repositories/price-snapshot.repository').PriceSnapshotRepository)();
+      await snapshotRepo.markAsUsed(payment.priceSnapshotId.toString(), payment._id.toString());
+    }
 
     // 4. Debit wallet NOW (Razorpay confirmed — safe to deduct)
     if (payment.walletDeductPaise > 0 && payment.userId) {

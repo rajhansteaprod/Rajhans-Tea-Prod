@@ -14,8 +14,7 @@ import settingsRoutes from '../../../modules/settings/settings.routes';
 import cmsRoutes from '../../../modules/cms/cms.routes';
 import searchRoutes from '../../../modules/search/search.routes';
 import newsletterRoutes from '../../../modules/newsletter/newsletter.routes';
-import shipmentsRoutes from '../../../modules/shipments/shipments.routes';
-
+import shipmentRoutes from '../../../modules/shipments/shipments.routes';
 const router = Router();
 
 router.use(healthRoutes);
@@ -33,6 +32,5 @@ router.use(settingsRoutes);
 router.use(cmsRoutes);
 router.use(searchRoutes);
 router.use(newsletterRoutes);
-router.use(shipmentsRoutes);
-
+router.use(shipmentRoutes);
 export default router;

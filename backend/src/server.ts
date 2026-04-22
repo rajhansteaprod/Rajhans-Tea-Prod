@@ -24,6 +24,7 @@ const startServer = async () => {
 
   const server = httpServer.listen(config.port, () => {
     logger.info(`Server running on port ${config.port} in ${config.env} mode`);
+    console.log(`Server running on port ${config.port} in ${config.env} mode`);
   });
 
   // Graceful shutdown

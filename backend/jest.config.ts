@@ -46,7 +46,7 @@ const config: Config = {
       displayName: 'unit',
       preset: 'ts-jest',
       testEnvironment: 'node',
-      testMatch: ['<rootDir>/tests/unit/**/*.test.ts'],
+      testMatch: ['<rootDir>/tests/unit/**/*.test.ts', '<rootDir>/src/**/__tests__/**/*.spec.ts'],
       moduleNameMapper: {
         '^@config/(.*)$': '<rootDir>/src/config/$1',
         '^@api/(.*)$': '<rootDir>/src/api/$1',

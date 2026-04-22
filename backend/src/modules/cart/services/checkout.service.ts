@@ -1,5 +1,6 @@
 import { CartRepository } from '../repositories/cart.repository';
 import { StockReservationRepository } from '../repositories/stock-reservation.repository';
+import { PriceSnapshotRepository } from '../repositories/price-snapshot.repository';
 import { PricingService, PriceBreakdown } from '../../pricing/services/pricing.service';
 import { BadRequestError } from '../../../utils/api-error';
 import { IProductDoc } from '../../catalog/models/product.model';
@@ -38,6 +39,7 @@ export class CheckoutService {
   private cartRepo = new CartRepository();
   private reservationRepo = new StockReservationRepository();
   private pricingService = new PricingService();
+  private snapshotRepo = new PriceSnapshotRepository();
 
   // ---------------------------------------------------------------------------
   // CHECKOUT SUMMARY
@@ -220,5 +222,62 @@ export class CheckoutService {
 
   async releaseReservation(sessionId: string): Promise<void> {
     await this.reservationRepo.releaseBySession(sessionId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // FREEZE PRICE (Option A: Frozen pricing without coupon)
+  // Persists the computed price breakdown with 15-min TTL
+  // Invalidates any previous active snapshot for the same session
+  // ---------------------------------------------------------------------------
+
+  async freezePrice(
+    sessionId: string,
+    providedItems?: any[],
+  ): Promise<{
+    snapshotId: string;
+    total: number;
+    items: CheckoutLineItem[];
+    expiresAt: Date;
+  }> {
+    // 1. Get current checkout summary (reuses existing pricing logic)
+    const summary = await this.getSummary(sessionId, providedItems);
+
+    if (summary.items.length === 0) {
+      throw new BadRequestError('Cart is empty');
+    }
+
+    // 2. Invalidate previous ACTIVE snapshots for this session
+    await this.snapshotRepo.invalidatePreviousActive(sessionId);
+
+    // 3. Create new snapshot with 15-min TTL
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    const snapshot = await this.snapshotRepo.create({
+      sessionId,
+      items: summary.items.map((item) => ({
+        productId: item.productId,
+        name: item.name,
+        qty: item.qty,
+        unitPrice: item.pricing.unitPrice,
+        totalPrice: item.pricing.totalPrice,
+        appliedRule: item.pricing.appliedRule,
+        discountPercent: item.pricing.discountPercent,
+        discountAmount: item.pricing.discountAmount,
+        taxRate: item.pricing.taxRate,
+      })),
+      subtotal: summary.subtotal,
+      totalDiscount: summary.totalDiscount,
+      totalTax: summary.totalTax,
+      total: summary.total,
+      status: 'active',
+      expiresAt,
+      usedByPaymentId: null,
+    });
+
+    return {
+      snapshotId: snapshot._id.toString(),
+      total: snapshot.total,
+      items: summary.items,
+      expiresAt: snapshot.expiresAt,
+    };
   }
 }

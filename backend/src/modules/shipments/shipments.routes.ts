@@ -7,32 +7,32 @@ const router = Router();
 const shipmentsController = new ShipmentsController(ShipmentServiceFactory.createService());
 
 router.post(
-  '/refresh-token',
+  '/shipments/refresh-token',
   (req, res, next) => shipmentsController.authenticate(req, res, next)
 );
 
 router.post(
-  '/create',
+  '/shipments/create',
   (req, res, next) => shipmentsController.createShipment(req, res, next)
 );
 
 router.post(
-  '/assign-courier',
+  '/shipments/assign-courier',
   (req, res, next) => shipmentsController.assignCourier(req, res, next)
 );
 
 router.post(
-  '/schedule-pickup',
+  '/shipments/schedule-pickup',
   (req, res, next) => shipmentsController.schedulePickup(req, res, next)
 );
 
 router.get(
-  '/track/:shipmentId',
+  '/shipments/track/:shipmentId',
   (req, res, next) => shipmentsController.trackShipment(req, res, next)
 );
 
 router.delete(
-  '/:shipmentId',
+  '/shipments/:shipmentId',
   (req, res, next) => shipmentsController.cancelShipment(req, res, next)
 );
 

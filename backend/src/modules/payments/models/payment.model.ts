@@ -61,6 +61,7 @@ export interface IPaymentDoc extends Document {
   refunds: IRefund[];
   idempotencyKey: string;
   invoiceId: Types.ObjectId | null;
+  priceSnapshotId: Types.ObjectId | null; // Frozen price snapshot (Option A)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -125,6 +126,7 @@ const paymentSchema = new Schema<IPaymentDoc>(
     refunds: [refundSchema],
     idempotencyKey: { type: String, required: true },
     invoiceId: { type: Schema.Types.ObjectId, ref: 'Invoice', default: null },
+    priceSnapshotId: { type: Schema.Types.ObjectId, ref: 'PriceSnapshot', default: null },
   },
   { timestamps: true },
 );
@@ -134,5 +136,6 @@ paymentSchema.index({ razorpayPaymentId: 1 }, { sparse: true });
 paymentSchema.index({ idempotencyKey: 1 }, { unique: true });
 paymentSchema.index({ sessionId: 1, status: 1 });
 paymentSchema.index({ userId: 1, createdAt: -1 });
+paymentSchema.index({ priceSnapshotId: 1 });
 
 export const Payment = mongoose.model<IPaymentDoc>('Payment', paymentSchema);
