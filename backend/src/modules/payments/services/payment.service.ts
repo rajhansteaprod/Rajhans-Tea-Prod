@@ -574,15 +574,100 @@ export class PaymentService {
       await this.webhookEventRepo.markAsProcessed(webhookEventId);
       console.log(`✅ Webhook ${razorpayEventId} processed successfully`);
     } catch (error) {
-      // Mark webhook as failed with error details
+      // Handle webhook processing failure with retry scheduling
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      await this.webhookEventRepo.updateRetryInfo(webhookEventId, {
-        status: 'failed',
-        processingError: errorMessage,
-      });
-      console.error(`❌ Webhook ${razorpayEventId} failed:`, errorMessage);
+      const currentEvent = await this.webhookEventRepo.findByRazorpayEventId(razorpayEventId);
+
+      if (!currentEvent) {
+        throw new Error(`WebhookEvent not found for retry: ${razorpayEventId}`);
+      }
+
+      const newRetryCount = currentEvent.retryCount + 1;
+      const maxRetries = currentEvent.maxRetries || 5;
+
+      // Check if max retries exceeded
+      if (newRetryCount > maxRetries) {
+        // Mark as dead lettered (will be handled in US-09)
+        await this.webhookEventRepo.markAsDeadLettered(webhookEventId, errorMessage);
+        console.error(
+          `💀 Webhook ${razorpayEventId} dead lettered after ${maxRetries} retries:`,
+          errorMessage,
+        );
+        throw error;
+      }
+
+      // Calculate exponential backoff with jitter
+      // Formula: delay = baseDelay * (2 ^ retryCount) + random jitter
+      const baseDelayMs = 5000; // 5 seconds
+      const exponentialDelay = baseDelayMs * Math.pow(2, newRetryCount - 1);
+      const jitterMs = Math.random() * exponentialDelay * 0.1; // 10% jitter
+      const totalDelayMs = exponentialDelay + jitterMs;
+
+      // Schedule next retry
+      const nextRetryAt = new Date(Date.now() + totalDelayMs);
+
+      await this.webhookEventRepo.scheduleRetry(webhookEventId, nextRetryAt, errorMessage);
+
+      console.error(
+        `⏰ Webhook ${razorpayEventId} scheduled for retry ${newRetryCount}/${maxRetries}`,
+        `in ${Math.round(totalDelayMs / 1000)}s:`,
+        errorMessage,
+      );
+
       throw error;
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // WEBHOOK RETRY PROCESSING (scheduled job)
+  // ---------------------------------------------------------------------------
+
+  async processFailedWebhooksForRetry(): Promise<{ requeued: number; failed: number }> {
+    // Find all failed webhooks that are ready for retry
+    const failedWebhooks = await this.webhookEventRepo.findFailedForRetry();
+
+    let requeued = 0;
+    let failed = 0;
+
+    for (const webhook of failedWebhooks) {
+      try {
+        // Re-enqueue to webhook queue for processing
+        await getWebhookQueue().add(
+          WebhookJobs.PROCESS,
+          {
+            rawBody: JSON.stringify(webhook.payload),
+            signature: '', // Signature already verified in handleWebhook
+            razorpayEventId: webhook.razorpayEventId,
+          },
+          {
+            attempts: 3,
+            backoff: { type: 'exponential', delay: 5000 },
+          },
+        );
+
+        // Mark as processing again
+        await this.webhookEventRepo.updateRetryInfo(webhook._id.toString(), {
+          status: 'processing',
+        });
+
+        requeued++;
+        console.log(
+          `♻️  Webhook ${webhook.razorpayEventId} re-enqueued (retry ${webhook.retryCount + 1})`,
+        );
+      } catch (error) {
+        failed++;
+        console.error(
+          `❌ Failed to re-enqueue webhook ${webhook.razorpayEventId}:`,
+          (error as Error).message,
+        );
+      }
+    }
+
+    console.log(
+      `📊 Webhook retry processing: ${requeued} requeued, ${failed} failed to requeue`,
+    );
+
+    return { requeued, failed };
   }
 
   // ---------------------------------------------------------------------------

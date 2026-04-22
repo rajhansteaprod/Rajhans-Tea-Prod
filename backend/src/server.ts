@@ -10,6 +10,7 @@ import { registerEventHandlers } from './core/event-handlers';
 import { registerGlobalErrorHandlers } from './core/graceful-error-handler';
 import { validateEnvironment } from './core/env-validator';
 import { scheduleCartCleanup } from './modules/cart/jobs/cleanup.job';
+import { scheduleWebhookRetry } from './modules/payments/jobs/webhook-retry.job';
 
 const startServer = async () => {
   validateEnvironment();
@@ -17,6 +18,7 @@ const startServer = async () => {
   await initializeLoaders();
   registerWorkers();
   scheduleCartCleanup();
+  scheduleWebhookRetry();
   registerEventHandlers();
 
   const httpServer = http.createServer(app);
