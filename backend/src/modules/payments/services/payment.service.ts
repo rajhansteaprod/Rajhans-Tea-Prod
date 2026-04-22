@@ -723,6 +723,90 @@ export class PaymentService {
   }
 
   // ---------------------------------------------------------------------------
+  // DEAD LETTER QUEUE MANAGEMENT (admin APIs)
+  // ---------------------------------------------------------------------------
+
+  async getWebhookStats() {
+    return this.webhookEventRepo.getStats();
+  }
+
+  async listDeadLetteredWebhooks(query: { page?: number; limit?: number }) {
+    const page = query.page || 1;
+    const limit = query.limit || 50;
+    const skip = (page - 1) * limit;
+
+    const webhooks = await (require('../models/webhook-event.model').WebhookEvent)
+      .find({ status: 'dead_lettered' })
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const total = await (require('../models/webhook-event.model').WebhookEvent).countDocuments({
+      status: 'dead_lettered',
+    });
+
+    return {
+      webhooks,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getWebhookDetail(webhookId: string) {
+    return this.webhookEventRepo.findById(webhookId);
+  }
+
+  async retryDeadLetteredWebhook(webhookId: string) {
+    const webhook = await this.webhookEventRepo.findById(webhookId);
+
+    if (!webhook) {
+      throw new NotFoundError('Webhook not found');
+    }
+
+    if (webhook.status !== 'dead_lettered') {
+      throw new BadRequestError(
+        `Cannot retry webhook with status "${webhook.status}". Only dead_lettered webhooks can be retried.`,
+      );
+    }
+
+    // Reset retry count and status, re-enqueue
+    await this.webhookEventRepo.updateRetryInfo(webhookId, {
+      status: 'processing',
+      retryCount: 0,
+      processingError: null,
+      nextRetryAt: null,
+    });
+
+    // Re-enqueue to webhook queue
+    await getWebhookQueue().add(
+      WebhookJobs.PROCESS,
+      {
+        rawBody: JSON.stringify(webhook.payload),
+        signature: '',
+        razorpayEventId: webhook.razorpayEventId,
+      },
+      {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 5000 },
+      },
+    );
+
+    console.log(`🔄 Dead lettered webhook ${webhook.razorpayEventId} manually re-enqueued for processing`);
+
+    return {
+      webhookId,
+      razorpayEventId: webhook.razorpayEventId,
+      status: 'processing',
+      message: 'Webhook re-enqueued for processing with reset retry count',
+    };
+  }
+
+  // ---------------------------------------------------------------------------
   // ADMIN
   // ---------------------------------------------------------------------------
 

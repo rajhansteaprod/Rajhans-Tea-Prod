@@ -197,3 +197,34 @@ export const adminListInvoices = async (req: Request, res: Response) => {
   });
   sendPaginated(res, result.invoices, result.meta, 'Invoices');
 };
+
+// ---------------------------------------------------------------------------
+// ADMIN — Webhook Management (Dead Letter Queue)
+// ---------------------------------------------------------------------------
+
+export const adminGetWebhookStats = async (_req: Request, res: Response) => {
+  const stats = await paymentService.getWebhookStats();
+  sendSuccess(res, stats, 'Webhook statistics');
+};
+
+export const adminListDeadLetteredWebhooks = async (req: Request, res: Response) => {
+  const { page, limit } = req.query as { page?: string; limit?: string };
+  const result = await paymentService.listDeadLetteredWebhooks({
+    page: page ? parseInt(page, 10) : 1,
+    limit: limit ? parseInt(limit, 10) : 50,
+  });
+  sendPaginated(res, result.webhooks, result.meta, 'Dead lettered webhooks');
+};
+
+export const adminGetWebhookDetail = async (req: Request, res: Response) => {
+  const webhookId = req.params['id'] as string;
+  const webhook = await paymentService.getWebhookDetail(webhookId);
+  if (!webhook) throw new NotFoundError('Webhook not found');
+  sendSuccess(res, webhook, 'Webhook details');
+};
+
+export const adminRetryDeadLetteredWebhook = async (req: Request, res: Response) => {
+  const webhookId = req.params['id'] as string;
+  const result = await paymentService.retryDeadLetteredWebhook(webhookId);
+  sendSuccess(res, result, 'Webhook re-enqueued for processing');
+};

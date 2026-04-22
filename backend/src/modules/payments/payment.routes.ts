@@ -71,6 +71,12 @@ adminRouter.get('/payments/:id', ctrl.adminGetPaymentDetail);
 adminRouter.get('/wallets/:userId', ctrl.adminGetUserWallet);
 adminRouter.get('/invoices', ctrl.adminListInvoices);
 
+// Webhook management — dead letter queue
+adminRouter.get('/webhooks/stats', ctrl.adminGetWebhookStats);
+adminRouter.get('/webhooks/dead-lettered', ctrl.adminListDeadLetteredWebhooks);
+adminRouter.get('/webhooks/:id', ctrl.adminGetWebhookDetail);
+adminRouter.post('/webhooks/:id/retry', ctrl.adminRetryDeadLetteredWebhook);
+
 router.use('/admin', adminRouter);
 
 export default router;
