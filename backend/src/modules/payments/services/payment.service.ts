@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { config } from '../../../config';
 import { getRazorpayClient } from '../../../loaders/razorpay.loader';
 import { PaymentRepository } from '../repositories/payment.repository';
+import { WebhookEventRepository } from '../repositories/webhook-event.repository';
 import { CheckoutService } from '../../cart/services/checkout.service';
 import { CartService } from '../../cart/services/cart.service';
 import { getInvoiceQueue, InvoiceJobs } from '../jobs/queues/invoice.queue';
@@ -39,6 +40,7 @@ export interface VerifyPaymentResult {
 
 export class PaymentService {
   private paymentRepo = new PaymentRepository();
+  private webhookEventRepo = new WebhookEventRepository();
   private promoService = new PromoCodeService();
   private checkoutService = new CheckoutService();
   private cartService = new CartService();
@@ -411,7 +413,7 @@ export class PaymentService {
   // ---------------------------------------------------------------------------
 
   async handleWebhook(rawBody: string, signature: string): Promise<void> {
-    // Verify webhook signature
+    // 1. Verify webhook signature
     const expectedSignature = crypto
       .createHmac('sha256', config.razorpay.webhookSecret)
       .update(rawBody)
@@ -424,72 +426,126 @@ export class PaymentService {
     }
 
     const event = JSON.parse(rawBody);
+    const razorpayEventId = event.id as string; // Unique event ID from Razorpay
     const eventType = event.event as string;
 
-    if (eventType === 'payment.captured') {
-      const rpPaymentId = event.payload?.payment?.entity?.id;
-      const rpOrderId = event.payload?.payment?.entity?.order_id;
-      if (rpOrderId) {
-        const payment = await this.paymentRepo.findByRazorpayOrderId(rpOrderId);
-        if (payment && payment.status === 'created') {
-          await this.paymentRepo.updateStatus(payment._id.toString(), 'captured', {
-            razorpayPaymentId: rpPaymentId,
-          });
-          await this.cartService.clearCart(payment.sessionId);
-          await getInvoiceQueue().add(
-            InvoiceJobs.GENERATE,
-            { paymentId: payment._id.toString() },
-            { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
-          );
-        }
+    // 2. Idempotency guard — check if this webhook has already been processed
+    const existingEvent = await this.webhookEventRepo.findByRazorpayEventId(razorpayEventId);
+    if (existingEvent) {
+      // Already processed or currently processing — return immediately (idempotent)
+      if (existingEvent.status === 'processed' || existingEvent.status === 'processing') {
+        console.log(`📡 Webhook ${razorpayEventId} already ${existingEvent.status}, skipping`);
+        return;
       }
-    } else if (eventType === 'payment.failed') {
-      const rpOrderId = event.payload?.payment?.entity?.order_id;
-      if (rpOrderId) {
-        const payment = await this.paymentRepo.findByRazorpayOrderId(rpOrderId);
-        if (payment && payment.status === 'created') {
-          // ✅ Revert loyalty points if they were deducted during order creation
-          if (payment.loyaltyPointsUsed > 0 && payment.userId) {
-            await this.loyaltyService.revertRedemption(
-              payment.userId.toString(),
-              payment.loyaltyPointsUsed,
-              payment._id.toString(),
+      // If dead_lettered or failed, also skip to avoid repeated failures
+      if (existingEvent.status === 'dead_lettered') {
+        console.log(`📡 Webhook ${razorpayEventId} is dead lettered, skipping`);
+        return;
+      }
+    }
+
+    // 3. Mark webhook as processing (create or update)
+    let webhookEventId: string;
+    try {
+      const createdEvent = await this.webhookEventRepo.create({
+        razorpayEventId,
+        eventType,
+        payload: event.payload || {},
+        status: 'processing',
+        retryCount: 0,
+        maxRetries: 5,
+      });
+      webhookEventId = createdEvent._id.toString();
+    } catch (error: any) {
+      // Race condition: another request already created this webhook event
+      // Check if it's a duplicate key error (code 11000)
+      if (error.code === 11000) {
+        console.log(`📡 Webhook ${razorpayEventId} already being processed by another request`);
+        return;
+      }
+      throw error;
+    }
+
+    try {
+      // 4. Process the webhook event
+      if (eventType === 'payment.captured') {
+        const rpPaymentId = event.payload?.payment?.entity?.id;
+        const rpOrderId = event.payload?.payment?.entity?.order_id;
+        if (rpOrderId) {
+          const payment = await this.paymentRepo.findByRazorpayOrderId(rpOrderId);
+          if (payment && payment.status === 'created') {
+            await this.paymentRepo.updateStatus(payment._id.toString(), 'captured', {
+              razorpayPaymentId: rpPaymentId,
+            });
+            await this.cartService.clearCart(payment.sessionId);
+            await getInvoiceQueue().add(
+              InvoiceJobs.GENERATE,
+              { paymentId: payment._id.toString() },
+              { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
             );
           }
-
-          // Release stock reservation
-          await this.releaseStockForPayment(payment.sessionId);
-
-          // Mark payment as failed
-          await this.paymentRepo.updateStatus(payment._id.toString(), 'failed');
         }
-      }
-    } else if (eventType === 'refund.created') {
-      const rpPaymentId = event.payload?.refund?.entity?.payment_id;
-      const refundId = event.payload?.refund?.entity?.id;
-      const amount = event.payload?.refund?.entity?.amount; // in paise
-      if (rpPaymentId) {
-        const payment = await this.paymentRepo.findByRazorpayPaymentId(rpPaymentId);
-        if (payment) {
-          await this.paymentRepo.addRefund(payment._id.toString(), {
-            razorpayRefundId: refundId,
-            amount,
-            reason: 'Razorpay webhook',
-          });
+      } else if (eventType === 'payment.failed') {
+        const rpOrderId = event.payload?.payment?.entity?.order_id;
+        if (rpOrderId) {
+          const payment = await this.paymentRepo.findByRazorpayOrderId(rpOrderId);
+          if (payment && payment.status === 'created') {
+            // ✅ Revert loyalty points if they were deducted during order creation
+            if (payment.loyaltyPointsUsed > 0 && payment.userId) {
+              await this.loyaltyService.revertRedemption(
+                payment.userId.toString(),
+                payment.loyaltyPointsUsed,
+                payment._id.toString(),
+              );
+            }
 
-          // Credit wallet if user has userId
-          if (payment.userId) {
-            await getWalletQueue().add(WalletJobs.CREDIT, {
-              userId: payment.userId.toString(),
-              amount: amount / 100, // paise to rupees
-              source: 'refund',
-              referenceId: payment._id.toString(),
-              description: `Refund for payment ${payment.razorpayPaymentId}`,
-              idempotencyKey: `refund-${refundId}`,
+            // Release stock reservation
+            await this.releaseStockForPayment(payment.sessionId);
+
+            // Mark payment as failed
+            await this.paymentRepo.updateStatus(payment._id.toString(), 'failed');
+          }
+        }
+      } else if (eventType === 'refund.created') {
+        const rpPaymentId = event.payload?.refund?.entity?.payment_id;
+        const refundId = event.payload?.refund?.entity?.id;
+        const amount = event.payload?.refund?.entity?.amount; // in paise
+        if (rpPaymentId) {
+          const payment = await this.paymentRepo.findByRazorpayPaymentId(rpPaymentId);
+          if (payment) {
+            await this.paymentRepo.addRefund(payment._id.toString(), {
+              razorpayRefundId: refundId,
+              amount,
+              reason: 'Razorpay webhook',
             });
+
+            // Credit wallet if user has userId
+            if (payment.userId) {
+              await getWalletQueue().add(WalletJobs.CREDIT, {
+                userId: payment.userId.toString(),
+                amount: amount / 100, // paise to rupees
+                source: 'refund',
+                referenceId: payment._id.toString(),
+                description: `Refund for payment ${payment.razorpayPaymentId}`,
+                idempotencyKey: `refund-${refundId}`,
+              });
+            }
           }
         }
       }
+
+      // 5. Mark webhook as successfully processed
+      await this.webhookEventRepo.markAsProcessed(webhookEventId);
+      console.log(`✅ Webhook ${razorpayEventId} processed successfully`);
+    } catch (error) {
+      // 5. Mark webhook as failed with error details
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      await this.webhookEventRepo.updateRetryInfo(webhookEventId, {
+        status: 'failed',
+        processingError: errorMessage,
+      });
+      console.error(`❌ Webhook ${razorpayEventId} failed:`, errorMessage);
+      throw error;
     }
   }
 
