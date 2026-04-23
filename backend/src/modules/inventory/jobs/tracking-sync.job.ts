@@ -8,7 +8,7 @@
  * Use: scheduleTrackingSync() in server startup
  */
 
-import cron from 'node-cron';
+import cron, { ScheduledTask } from 'node-cron';
 import { OrderService } from '../services/order.service';
 import { OrderRepository } from '../repositories/order.repository';
 import { logger } from '../../../utils/logger';
@@ -16,7 +16,7 @@ import { logger } from '../../../utils/logger';
 const orderService = new OrderService();
 const orderRepo = new OrderRepository();
 
-let job: cron.ScheduledTask | null = null;
+let job: ScheduledTask | null = null;
 
 export const scheduleTrackingSync = (): void => {
   // Run every 5 minutes

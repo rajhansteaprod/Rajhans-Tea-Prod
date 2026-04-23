@@ -93,25 +93,39 @@ export class OrderStore {
       });
   }
 
-  loadOrderDetail(orderId: string): void {
+  loadOrderDetail(orderId: string): Observable<OrderView> {
     this._loading.set(true);
-    this.http
-      .get<ApiResponse<OrderView>>(`${this.api}/orders/user/${orderId}`)
-      .subscribe({
-        next: (res) => {
-          this._currentOrder.set(res.data);
-          this._loading.set(false);
-        },
-        error: () => this._loading.set(false),
-      });
+    return new Observable((observer) => {
+      this.http
+        .get<ApiResponse<OrderView>>(`${this.api}/orders/user/${orderId}`)
+        .subscribe({
+          next: (res) => {
+            this._currentOrder.set(res.data);
+            this._loading.set(false);
+            observer.next(res.data);
+            observer.complete();
+          },
+          error: (err) => {
+            this._loading.set(false);
+            observer.error(err);
+          },
+        });
+    });
   }
 
-  loadTracking(orderId: string): void {
-    this.http
-      .get<ApiResponse<TrackingInfo>>(`${this.api}/orders/user/${orderId}/tracking`)
-      .subscribe({
-        next: (res) => this._tracking.set(res.data),
-      });
+  loadOrderTracking(orderId: string): Observable<TrackingInfo> {
+    return new Observable((observer) => {
+      this.http
+        .get<ApiResponse<TrackingInfo>>(`${this.api}/orders/user/${orderId}/tracking`)
+        .subscribe({
+          next: (res) => {
+            this._tracking.set(res.data);
+            observer.next(res.data);
+            observer.complete();
+          },
+          error: (err) => observer.error(err),
+        });
+    });
   }
 
   getShippingRates(pincode: string, weight = 0.5): Observable<ApiResponse<any[]>> {

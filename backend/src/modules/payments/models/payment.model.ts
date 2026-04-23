@@ -61,7 +61,15 @@ export interface IPaymentDoc extends Document {
   refunds: IRefund[];
   idempotencyKey: string;
   invoiceId: Types.ObjectId | null;
-  priceSnapshotId: Types.ObjectId | null; // Frozen price snapshot (Option A)
+  priceSnapshotId: Types.ObjectId | null;
+  // Pessimistic locking for concurrent verification
+  lockedAt: Date | null;
+  lockedUntil: Date | null;
+  verificationAttempts: number;
+  lastVerificationError: string | null;
+  // Compensation tracking
+  walletDebitAttempts: number;
+  walletDebitFailed: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -127,6 +135,14 @@ const paymentSchema = new Schema<IPaymentDoc>(
     idempotencyKey: { type: String, required: true },
     invoiceId: { type: Schema.Types.ObjectId, ref: 'Invoice', default: null },
     priceSnapshotId: { type: Schema.Types.ObjectId, ref: 'PriceSnapshot', default: null },
+    // Pessimistic locking (prevents concurrent verification)
+    lockedAt: { type: Date, default: null },
+    lockedUntil: { type: Date, default: null },
+    verificationAttempts: { type: Number, default: 0 },
+    lastVerificationError: { type: String, default: null },
+    // Compensation tracking
+    walletDebitAttempts: { type: Number, default: 0 },
+    walletDebitFailed: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

@@ -63,54 +63,56 @@ export class PaymentService {
     promoCode?: string,
   ): Promise<CreateOrderResult | { paymentId: string; paidViaWallet: true }> {
     let idempotencyKey = idempotencyKey_;
+    let frozenSnapshotId: string | null = null; // Track for cleanup on failure
 
-    // Idempotency — return existing if still valid (created + fresh < 25 min)
-    const existing = await this.paymentRepo.findByIdempotencyKey(idempotencyKey);
-    if (existing) {
-      const ageMs = Date.now() - new Date(existing.createdAt).getTime();
-      const isFresh = ageMs < 25 * 60 * 1000;
+    try {
+      // Idempotency — return existing if still valid (created + fresh < 25 min)
+      const existing = await this.paymentRepo.findByIdempotencyKey(idempotencyKey);
+      if (existing) {
+        const ageMs = Date.now() - new Date(existing.createdAt).getTime();
+        const isFresh = ageMs < 25 * 60 * 1000;
 
-      if (existing.status === 'created' && isFresh) {
-        return {
-          paymentId: existing._id.toString(),
-          razorpayOrderId: existing.razorpayOrderId,
-          amountPaise: existing.amountPaise,
-          currency: existing.currency,
-          keyId: config.razorpay.keyId,
-        };
+        if (existing.status === 'created' && isFresh) {
+          return {
+            paymentId: existing._id.toString(),
+            razorpayOrderId: existing.razorpayOrderId,
+            amountPaise: existing.amountPaise,
+            currency: existing.currency,
+            keyId: config.razorpay.keyId,
+          };
+        }
+
+        // Stale or failed — mark old and create fresh
+        await this.paymentRepo.updateStatus(existing._id.toString(), 'failed');
+        // Generate new unique idempotency key
+        idempotencyKey = `${idempotencyKey}-${Date.now()}`;
       }
 
-      // Stale or failed — delete old and create fresh
-      await this.paymentRepo.updateStatus(existing._id.toString(), 'failed');
-      // Generate new unique idempotency key
-      idempotencyKey = `${idempotencyKey}-${Date.now()}`;
-    }
+      // OPTION A: Freeze prices (no recomputation)
+      // Pass items if provided (from temporary cart), else fetch from session
+      console.log('🛒 DEBUG: Creating order', {
+        sessionId,
+        userId,
+        providedItems: items?.length ?? 0,
+      });
 
-    // OPTION A: Freeze prices (no recomputation)
-    // Pass items if provided (from temporary cart), else fetch from session
-    console.log('🛒 DEBUG: Creating order', {
-      sessionId,
-      userId,
-      providedItems: items?.length ?? 0,
-      itemsArray: items,
-    });
+      const frozenPricing = await this.checkoutService.freezePrice(sessionId, items);
+      frozenSnapshotId = frozenPricing.snapshotId; // Track for cleanup
+      console.log('❄️ DEBUG: Price frozen', {
+        snapshotId: frozenPricing.snapshotId,
+        total: frozenPricing.total,
+        expiresAt: frozenPricing.expiresAt,
+      });
 
-    const frozenPricing = await this.checkoutService.freezePrice(sessionId, items);
-    console.log('❄️ DEBUG: Price frozen', {
-      snapshotId: frozenPricing.snapshotId,
-      total: frozenPricing.total,
-      expiresAt: frozenPricing.expiresAt,
-    });
+      if (frozenPricing.items.length === 0) {
+        throw new BadRequestError('Cart is empty');
+      }
 
-    if (frozenPricing.items.length === 0) {
-      throw new BadRequestError('Cart is empty');
-    }
-
-    // Reserve stock (pass items so it uses provided items from frontend)
-    const stockResult = await this.checkoutService.reserveStock(sessionId, items);
-    if (stockResult.issues.length > 0) {
-      throw new BadRequestError('Some items are out of stock');
-    }
+      // Reserve stock (pass items so it uses provided items from frontend)
+      const stockResult = await this.checkoutService.reserveStock(sessionId, items);
+      if (stockResult.issues.length > 0) {
+        throw new BadRequestError('Some items are out of stock');
+      }
 
     // Create a summary-like object from frozen pricing for compatibility
     const summary = {
@@ -294,6 +296,16 @@ export class PaymentService {
       currency: 'INR',
       keyId: config.razorpay.keyId,
     };
+    } catch (err) {
+      // Cleanup: Release stock if reservation succeeded but order creation failed
+      console.error('Order creation failed:', err);
+      try {
+        await this.releaseStockForPayment(sessionId);
+      } catch (cleanupErr) {
+        console.error('Stock cleanup failed:', cleanupErr);
+      }
+      throw err; // Re-throw original error
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -318,95 +330,175 @@ export class PaymentService {
       };
     }
 
-    // 2. Verify signature
-    const expectedSignature = crypto
-      .createHmac('sha256', config.razorpay.keySecret)
-      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
-      .digest('hex');
-
-    const isValid = crypto.timingSafeEqual(
-      Buffer.from(expectedSignature),
-      Buffer.from(razorpaySignature),
-    );
-
-    if (!isValid) {
-      await this.paymentRepo.updateStatus(payment._id.toString(), 'failed');
-      await this.releaseStockForPayment(payment.sessionId);
-      // Revert loyalty points if they were deducted during order creation
-      if (payment.loyaltyPointsUsed > 0 && payment.userId) {
-        await this.loyaltyService.revertRedemption(
-          payment.userId.toString(),
-          payment.loyaltyPointsUsed,
-          payment._id.toString(),
-        );
-      }
-      throw new BadRequestError('Payment signature verification failed');
+    // CRITICAL: Prevent concurrent verification (webhook + client)
+    // Use pessimistic locking with 10-second lock window
+    const isLocked = payment.lockedUntil && new Date(payment.lockedUntil) > new Date();
+    if (isLocked) {
+      throw new BadRequestError('Payment verification in progress, please retry');
     }
 
-    // 3. Mark as captured
-    await this.paymentRepo.updateStatus(payment._id.toString(), 'captured', {
-      razorpayPaymentId,
-      razorpaySignature,
+    // Acquire lock
+    const lockUntil = new Date(Date.now() + 10000); // 10 second lock
+    await this.paymentRepo.updateFields(payment._id.toString(), {
+      lockedAt: new Date(),
+      lockedUntil: lockUntil,
+      verificationAttempts: (payment.verificationAttempts || 0) + 1,
     });
 
-    // 3b. Mark price snapshot as used (Option A: frozen pricing)
-    if (payment.priceSnapshotId) {
-      const snapshotRepo = new (require('../../cart/repositories/price-snapshot.repository').PriceSnapshotRepository)();
-      await snapshotRepo.markAsUsed(payment.priceSnapshotId.toString(), payment._id.toString());
-    }
+    try {
+      // 2. Verify signature
+      const expectedSignature = crypto
+        .createHmac('sha256', config.razorpay.keySecret)
+        .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+        .digest('hex');
 
-    // 4. Debit wallet NOW (Razorpay confirmed — safe to deduct)
-    if (payment.walletDeductPaise > 0 && payment.userId) {
-      await this.walletService.debit(
-        payment.userId.toString(),
-        payment.walletDeductPaise / 100,
-        'purchase',
-        payment._id.toString(),
-        `Order payment (wallet portion)`,
-        `wallet-debit-${payment.idempotencyKey}`,
+      const isValid = crypto.timingSafeEqual(
+        Buffer.from(expectedSignature),
+        Buffer.from(razorpaySignature),
       );
-    }
 
-    // 5. Clear cart (purchase complete)
-    await this.cartService.clearCart(payment.sessionId);
+      if (!isValid) {
+        // CRITICAL FIX: Query Razorpay before releasing stock
+        // Don't assume payment failed just because signature failed
+        const razorpay = getRazorpayClient();
+        let paymentCaptured = false;
+        try {
+          const rzpPayment = await razorpay.payments.fetch(razorpayPaymentId);
+          paymentCaptured = rzpPayment.status === 'captured';
+        } catch (err) {
+          // Can't reach Razorpay — be conservative, don't release stock
+          console.error('Failed to verify payment status with Razorpay:', err);
+          throw new BadRequestError(
+            'Cannot verify payment status. Please contact support.'
+          );
+        }
 
-    // 6. Enqueue invoice generation
-    await getInvoiceQueue().add(
-      InvoiceJobs.GENERATE,
-      { paymentId: payment._id.toString() },
-      { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
-    );
+        // Only release stock if Razorpay confirms it's NOT captured
+        if (!paymentCaptured) {
+          await this.paymentRepo.updateStatus(payment._id.toString(), 'failed');
+          await this.releaseStockForPayment(payment.sessionId);
+          // Revert loyalty points if they were deducted during order creation
+          if (payment.loyaltyPointsUsed > 0 && payment.userId) {
+            await this.loyaltyService.revertRedemption(
+              payment.userId.toString(),
+              payment.loyaltyPointsUsed,
+              payment._id.toString(),
+            );
+          }
+        } else {
+          // Razorpay shows captured but signature invalid — mark as suspicious
+          console.warn(
+            `Payment ${razorpayOrderId} shows captured on Razorpay but signature invalid`
+          );
+          await this.paymentRepo.updateFields(payment._id.toString(), {
+            lastVerificationError: 'Signature mismatch but Razorpay shows captured',
+          });
+          throw new BadRequestError('Signature verification failed - contact support');
+        }
 
-    // 7. Enqueue order creation (Inventory & Fulfillment)
-    await getFulfillmentQueue().add(
-      FulfillmentJobs.CREATE_ORDER,
-      { paymentId: payment._id.toString() },
-      { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
-    );
+        throw new BadRequestError('Payment signature verification failed');
+      }
 
-    // 8. Enqueue loyalty earn + referral completion (Promotions)
-    if (payment.userId) {
-      await getPromotionsQueue().add(
-        PromotionJobs.EARN_LOYALTY,
-        {
-          userId: payment.userId.toString(),
-          orderTotal: payment.amountPaise / 100,
-          paymentId: payment._id.toString(),
-        },
-        { attempts: 3, backoff: { type: 'exponential', delay: 3000 } },
+      // 3. Mark as captured
+      await this.paymentRepo.updateStatus(payment._id.toString(), 'captured', {
+        razorpayPaymentId,
+        razorpaySignature,
+      });
+
+      // 3b. Mark price snapshot as used (with error handling)
+      if (payment.priceSnapshotId) {
+        try {
+          const snapshotRepo = new (require('../../cart/repositories/price-snapshot.repository').PriceSnapshotRepository)();
+          await snapshotRepo.markAsUsed(payment.priceSnapshotId.toString(), payment._id.toString());
+        } catch (err) {
+          // Snapshot may have expired (15-min TTL) — log but don't fail
+          console.warn(
+            `Price snapshot ${payment.priceSnapshotId} may have expired for payment ${payment._id}`,
+            err
+          );
+        }
+      }
+
+      // 4. Debit wallet NOW (Razorpay confirmed — safe to deduct)
+      // CRITICAL FIX: Wrap in try-catch with compensation
+      if (payment.walletDeductPaise > 0 && payment.userId) {
+        try {
+          await this.walletService.debit(
+            payment.userId.toString(),
+            payment.walletDeductPaise / 100,
+            'purchase',
+            payment._id.toString(),
+            `Order payment (wallet portion)`,
+            `wallet-debit-${payment.idempotencyKey}`,
+          );
+          // Mark attempt
+          await this.paymentRepo.updateFields(payment._id.toString(), {
+            walletDebitAttempts: (payment.walletDebitAttempts || 0) + 1,
+          });
+        } catch (walletErr) {
+          console.error(`Wallet debit failed for payment ${payment._id}:`, walletErr);
+          // Mark as failed but don't stop payment processing
+          await this.paymentRepo.updateFields(payment._id.toString(), {
+            walletDebitFailed: true,
+            walletDebitAttempts: (payment.walletDebitAttempts || 0) + 1,
+            lastVerificationError: `Wallet debit failed: ${(walletErr as Error).message}`,
+          });
+          // Queue compensation job to retry wallet debit with exponential backoff
+          await getPaymentQueue().add(
+            PaymentJobs.COMPENSATE_WALLET_DEBIT,
+            { paymentId: payment._id.toString() },
+            { delay: 5000, attempts: 5, backoff: { type: 'exponential', delay: 5000 } },
+          );
+        }
+      }
+
+      // 5. Clear cart (purchase complete)
+      await this.cartService.clearCart(payment.sessionId);
+
+      // 6. Enqueue invoice generation
+      await getInvoiceQueue().add(
+        InvoiceJobs.GENERATE,
+        { paymentId: payment._id.toString() },
+        { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
       );
-      await getPromotionsQueue().add(
-        PromotionJobs.COMPLETE_REFERRAL,
-        { refereeUserId: payment.userId.toString(), paymentId: payment._id.toString() },
-        { attempts: 2, backoff: { type: 'exponential', delay: 5000 } },
-      );
-    }
 
-    return {
-      paymentId: payment._id.toString(),
-      status: 'captured',
-      amountPaise: payment.amountPaise,
-    };
+      // 7. Enqueue order creation (Inventory & Fulfillment)
+      await getFulfillmentQueue().add(
+        FulfillmentJobs.CREATE_ORDER,
+        { paymentId: payment._id.toString() },
+        { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
+      );
+
+      // 8. Enqueue loyalty earn + referral completion (Promotions)
+      if (payment.userId) {
+        await getPromotionsQueue().add(
+          PromotionJobs.EARN_LOYALTY,
+          {
+            userId: payment.userId.toString(),
+            orderTotal: payment.amountPaise / 100,
+            paymentId: payment._id.toString(),
+          },
+          { attempts: 3, backoff: { type: 'exponential', delay: 3000 } },
+        );
+        await getPromotionsQueue().add(
+          PromotionJobs.COMPLETE_REFERRAL,
+          { refereeUserId: payment.userId.toString(), paymentId: payment._id.toString() },
+          { attempts: 2, backoff: { type: 'exponential', delay: 5000 } },
+        );
+      }
+
+      return {
+        paymentId: payment._id.toString(),
+        status: 'captured',
+        amountPaise: payment.amountPaise,
+      };
+    } finally {
+      // Release lock
+      await this.paymentRepo.updateFields(payment._id.toString(), {
+        lockedAt: null,
+        lockedUntil: null,
+      });
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -822,6 +914,124 @@ export class PaymentService {
 
   async getPaymentById(paymentId: string) {
     return this.paymentRepo.findById(paymentId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // REFUND & COMPENSATION
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Initiate refund for a payment (can be full or partial)
+   * State transitions: captured → refunded | partially_refunded
+   */
+  async initiateRefund(paymentId: string, amount: number, reason: string): Promise<void> {
+    const payment = await this.paymentRepo.findById(paymentId);
+    if (!payment) throw new NotFoundError('Payment not found');
+
+    // State machine validation
+    this.validateStateTransition(payment.status, 'refunded');
+    if (amount > payment.amountPaise) {
+      throw new BadRequestError('Refund amount exceeds payment amount');
+    }
+
+    const razorpay = getRazorpayClient();
+    try {
+      const refund = await razorpay.refunds.create({
+        payment_id: payment.razorpayPaymentId,
+        amount: amount,
+        notes: { reason },
+      });
+
+      const isPartial = amount < payment.amountPaise;
+      const newStatus = isPartial ? 'partially_refunded' : 'refunded';
+
+      await this.paymentRepo.addRefund(paymentId, {
+        razorpayRefundId: refund.id,
+        amount,
+        reason,
+      });
+
+      await this.paymentRepo.updateStatus(paymentId, newStatus);
+
+      // If wallet was deducted, credit back the refunded amount
+      if (payment.walletDeductPaise > 0 && payment.userId && isPartial === false) {
+        await this.walletService.credit(
+          payment.userId.toString(),
+          payment.walletDeductPaise / 100,
+          'refund',
+          paymentId,
+          `Refund for order (wallet portion)`,
+          `wallet-credit-refund-${paymentId}`,
+        );
+      }
+    } catch (err) {
+      console.error(`Refund failed for payment ${paymentId}:`, err);
+      throw new BadRequestError(`Refund failed: ${(err as Error).message}`);
+    }
+  }
+
+  /**
+   * Compensation job: retry wallet debit if it failed during payment verification
+   */
+  async compensateWalletDebit(paymentId: string): Promise<void> {
+    const payment = await this.paymentRepo.findById(paymentId);
+    if (!payment || payment.status !== 'captured') {
+      return; // Payment not in captured state, skip
+    }
+
+    if (!payment.walletDebitFailed || payment.walletDeductPaise === 0) {
+      return; // No need to compensate
+    }
+
+    try {
+      await this.walletService.debit(
+        payment.userId!.toString(),
+        payment.walletDeductPaise / 100,
+        'purchase',
+        payment._id.toString(),
+        `Order payment (wallet portion) - Retry`,
+        `wallet-debit-retry-${payment.idempotencyKey}`,
+      );
+
+      await this.paymentRepo.updateFields(paymentId, {
+        walletDebitFailed: false,
+        walletDebitAttempts: 0,
+      });
+
+      console.log(`Wallet debit compensation successful for payment ${paymentId}`);
+    } catch (err) {
+      console.error(`Wallet debit compensation failed for payment ${paymentId}:`, err);
+      // Will retry via job queue exponential backoff
+      throw err;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // STATE MACHINE
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Validate payment state transitions
+   * created → captured (normal payment flow)
+   * created → failed (timeout/verification failure)
+   * captured → refunded | partially_refunded (refund flow)
+   */
+  private validateStateTransition(currentStatus: string, targetStatus: string): void {
+    const validTransitions: Record<string, string[]> = {
+      created: ['captured', 'failed', 'authorized'],
+      authorized: ['captured', 'failed'],
+      captured: ['refunded', 'partially_refunded'],
+      failed: [],
+      refunded: [],
+      partially_refunded: ['refunded'],
+    };
+
+    const allowed = validTransitions[currentStatus] || [];
+    if (!allowed.includes(targetStatus)) {
+      throw new BadRequestError(
+        `Invalid state transition: ${currentStatus} → ${targetStatus}`
+      );
+    }
   }
 
   // ---------------------------------------------------------------------------

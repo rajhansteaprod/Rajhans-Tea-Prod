@@ -4,6 +4,7 @@ import { getBullMQConnectionOpts } from '../../../../loaders/bullmq.loader';
 export const PaymentJobs = {
   VERIFY_TIMEOUT: 'payment:verify-timeout',
   WEBHOOK_PROCESS: 'payment:webhook-process',
+  COMPENSATE_WALLET_DEBIT: 'payment:compensate-wallet-debit',
 } as const;
 
 let paymentQueue: Queue | null = null;

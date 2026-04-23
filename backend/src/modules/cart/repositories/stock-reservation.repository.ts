@@ -1,7 +1,9 @@
 import { Types } from 'mongoose';
 import { StockReservation, IStockReservationDoc } from '../models/stock-reservation.model';
 
-const RESERVATION_TTL_MINUTES = 15;
+// Extended from 15 to 45 minutes to match price snapshot TTL
+// Allows users 45 minutes to complete payment while stock and prices are frozen
+const RESERVATION_TTL_MINUTES = 45;
 
 export class StockReservationRepository {
   async reserve(sessionId: string, productId: string, qty: number): Promise<IStockReservationDoc> {

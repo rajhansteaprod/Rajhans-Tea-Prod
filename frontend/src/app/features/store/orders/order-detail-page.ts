@@ -1,13 +1,16 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { OrderStore } from '../../../core/services/order.store';
+import { OrderStore, TrackingInfo } from '../../../core/services/order.store';
 
 export interface OrderDetailView {
   _id: string;
   orderNumber: string;
   status: string;
   total: number;
+  subtotal: number;
+  totalDiscount: number;
+  totalTax: number;
   createdAt: string;
   items: any[];
   shippingAddress: any;
@@ -81,7 +84,7 @@ export class OrderDetailPageComponent implements OnInit {
   private loadTracking(orderId: string): void {
     this.trackingLoading.set(true);
     this.store.loadOrderTracking(orderId).subscribe({
-      next: (tracking) => {
+      next: (tracking: TrackingInfo) => {
         if (tracking.tracking?.activities) {
           this.trackingUpdates.set(tracking.tracking.activities);
         }

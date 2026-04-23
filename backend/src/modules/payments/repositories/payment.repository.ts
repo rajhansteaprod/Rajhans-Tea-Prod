@@ -34,6 +34,10 @@ export class PaymentRepository {
     return Payment.findByIdAndUpdate(id, { $set: update }, { new: true }).exec();
   }
 
+  async updateFields(id: string, fields: Record<string, unknown>): Promise<IPaymentDoc | null> {
+    return Payment.findByIdAndUpdate(id, { $set: fields }, { new: true }).exec();
+  }
+
   async addRefund(
     id: string,
     refund: { razorpayRefundId: string; amount: number; reason: string },

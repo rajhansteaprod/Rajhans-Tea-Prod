@@ -249,8 +249,8 @@ export class CheckoutService {
     // 2. Invalidate previous ACTIVE snapshots for this session
     await this.snapshotRepo.invalidatePreviousActive(sessionId);
 
-    // 3. Create new snapshot with 15-min TTL
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    // 3. Create new snapshot with 45-min TTL (extended from 15 min for payment verification window)
+    const expiresAt = new Date(Date.now() + 45 * 60 * 1000); // 45 minutes
     const snapshot = await this.snapshotRepo.create({
       sessionId,
       items: summary.items.map((item) => ({
