@@ -52,6 +52,19 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/store/checkout/checkout-page').then((m) => m.CheckoutPageComponent),
       },
+      {
+        path: 'order-confirmation',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/store/order-confirmation/order-confirmation-page').then(
+            (m) => m.OrderConfirmationPageComponent,
+          ),
+      },
+      {
+        path: 'orders',
+        redirectTo: '/dashboard',
+        pathMatch: 'full',
+      },
       // Dashboard shell with sidebar + child routes
       {
         path: 'dashboard',

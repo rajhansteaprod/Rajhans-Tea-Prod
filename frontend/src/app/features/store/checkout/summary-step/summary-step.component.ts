@@ -16,6 +16,7 @@ import { CartStore } from '../../../../core/services/cart.store';
 export class SummaryStepComponent {
   private readonly checkoutService = inject(CheckoutService);
   private readonly payment = inject(PaymentStore);
+  private readonly cart = inject(CartStore);
   private readonly router = inject(Router);
 
   // Outputs
@@ -66,12 +67,16 @@ export class SummaryStepComponent {
 
       if (success) {
         // ✅ Payment verified and captured by backend
+        this.cart.clearTemporaryCart();
         this.placeOrderClick.emit();
 
-        // Navigate to orders page after short delay
+        // Navigate to order confirmation page after short delay
+        const paymentId = this.payment.lastPaymentId();
         setTimeout(() => {
-          this.router.navigate(['/orders']);
-        }, 500);
+          this.router.navigate(['/order-confirmation'], {
+            queryParams: paymentId ? { paymentId } : {},
+          });
+        }, 300);
       } else {
         // ❌ Payment failed or cancelled
         this.orderError.set(this.payment.paymentError() || 'Payment failed. Please try again.');

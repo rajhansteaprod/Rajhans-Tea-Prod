@@ -1,0 +1,60 @@
+<div class="confirmation">
+  <!-- Success Icon -->
+  <div class="confirmation__icon">
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="32" cy="32" r="31" stroke="currentColor" stroke-width="2" />
+      <path
+        d="M20 32l9 9 15-18"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  </div>
+
+  <!-- Headline -->
+  <div class="confirmation__headline">
+    <span class="confirmation__eyebrow">Payment Successful</span>
+    <h1 class="confirmation__title">Thank You For Your Order</h1>
+    <p class="confirmation__subtitle">
+      We've received your payment and your order is being prepared.
+    </p>
+  </div>
+
+  <!-- Payment Reference -->
+  @if (paymentId()) {
+    <div class="confirmation__reference">
+      <span class="confirmation__reference-label">Payment Reference</span>
+      <span class="confirmation__reference-value">{{ paymentId() }}</span>
+    </div>
+  }
+
+  <!-- Order Number (async — may take a moment to appear) -->
+  <div class="confirmation__order-block">
+    @if (orderLoading()) {
+      <div class="confirmation__order-loading">
+        <div class="confirmation__spinner"></div>
+        <span>Fetching your order number...</span>
+      </div>
+    } @else if (order()) {
+      <div class="confirmation__order-found">
+        <span class="confirmation__order-label">Order Number</span>
+        <span class="confirmation__order-number">{{ order()!.orderNumber }}</span>
+        <span class="confirmation__order-total"> Total: ₹{{ order()!.total | number: '1.0-0' }} </span>
+      </div>
+    } @else if (orderNotYetCreated()) {
+      <p class="confirmation__order-pending">
+        Your order is being processed. It will appear in
+        <a routerLink="/dashboard" class="confirmation__link">My Orders</a>
+        within a minute.
+      </p>
+    }
+  </div>
+
+  <!-- Actions -->
+  <div class="confirmation__actions">
+    <a routerLink="/dashboard" class="confirmation__btn confirmation__btn--primary"> View My Orders </a>
+    <a routerLink="/products" class="confirmation__btn confirmation__btn--secondary"> Continue Shopping </a>
+  </div>
+</div>

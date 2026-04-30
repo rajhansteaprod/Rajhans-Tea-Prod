@@ -1,0 +1,192 @@
+@use '../../../core/design-tokens/tokens' as *;
+@use '../../../core/design-tokens/mixins' as *;
+
+.confirmation {
+  max-width: 560px;
+  margin: $space-xxxl auto;
+  padding: 0 $space-lg;
+  @include flex-column;
+  align-items: center;
+  text-align: center;
+  gap: $space-xl;
+
+  @include respond-to(sm) {
+    margin: $space-xxl auto;
+    gap: $space-lg;
+  }
+}
+
+// Success Checkmark
+.confirmation__icon {
+  color: $color-primary-700;
+  width: 80px;
+  height: 80px;
+  @include flex-center;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// Headline Block
+.confirmation__eyebrow {
+  @include eyebrow-text;
+  display: block;
+  margin-bottom: $space-xs;
+  color: $color-primary-700;
+}
+
+.confirmation__title {
+  font-family: $font-family-display;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: $font-weight-medium;
+  color: $color-mono-dark;
+  margin: 0 0 $space-sm;
+  line-height: 1;
+}
+
+.confirmation__subtitle {
+  font-size: $font-size-sm;
+  color: $color-gray-600;
+  margin: 0;
+  line-height: $line-height-relaxed;
+}
+
+// Payment Reference
+.confirmation__reference {
+  @include flex-column;
+  gap: $space-xxs;
+  padding: $space-md $space-xl;
+  background: $color-gray-50;
+  border: 1px solid $color-gray-200;
+  width: 100%;
+}
+
+.confirmation__reference-label {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
+  color: $color-gray-500;
+}
+
+.confirmation__reference-value {
+  font-size: $font-size-sm;
+  font-family: monospace;
+  color: $color-mono-dark;
+  word-break: break-all;
+}
+
+// Order Number Block
+.confirmation__order-block {
+  width: 100%;
+  min-height: 60px;
+  @include flex-center;
+}
+
+.confirmation__order-loading {
+  @include flex-center;
+  gap: $space-sm;
+  color: $color-gray-500;
+  font-size: $font-size-sm;
+}
+
+.confirmation__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid $color-gray-200;
+  border-top-color: $color-primary-500;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.confirmation__order-found {
+  @include flex-column;
+  gap: $space-xxs;
+  padding: $space-md $space-xl;
+  background: rgba($color-primary-700, 0.05);
+  border: 1px solid rgba($color-primary-700, 0.2);
+  width: 100%;
+}
+
+.confirmation__order-label {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
+  color: $color-gray-500;
+}
+
+.confirmation__order-number {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+  color: $color-mono-dark;
+}
+
+.confirmation__order-total {
+  font-size: $font-size-sm;
+  color: $color-gray-600;
+}
+
+.confirmation__order-pending {
+  font-size: $font-size-sm;
+  color: $color-gray-600;
+  margin: 0;
+  line-height: $line-height-relaxed;
+}
+
+.confirmation__link {
+  color: $color-primary-700;
+  text-decoration: underline;
+  font-weight: $font-weight-medium;
+}
+
+// CTA Buttons
+.confirmation__actions {
+  @include flex-column;
+  gap: $space-sm;
+  width: 100%;
+  max-width: 320px;
+}
+
+.confirmation__btn {
+  display: block;
+  padding: $space-md $space-xl;
+  font-family: $font-family-nav;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  transition: all 150ms ease;
+  border: none;
+
+  &--primary {
+    background: $color-mono-dark;
+    color: $color-mono-light;
+
+    &:hover {
+      background: $color-gray-800;
+    }
+  }
+
+  &--secondary {
+    background: transparent;
+    color: $color-mono-dark;
+    border: 1px solid $color-gray-300;
+
+    &:hover {
+      background: $color-gray-50;
+      border-color: $color-gray-500;
+    }
+  }
+}

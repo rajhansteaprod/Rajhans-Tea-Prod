@@ -63,7 +63,6 @@ export class PaymentService {
     promoCode?: string,
   ): Promise<CreateOrderResult | { paymentId: string; paidViaWallet: true }> {
     let idempotencyKey = idempotencyKey_;
-    let frozenSnapshotId: string | null = null; // Track for cleanup on failure
 
     try {
       // Idempotency — return existing if still valid (created + fresh < 25 min)
@@ -97,7 +96,6 @@ export class PaymentService {
       });
 
       const frozenPricing = await this.checkoutService.freezePrice(sessionId, items);
-      frozenSnapshotId = frozenPricing.snapshotId; // Track for cleanup
       console.log('❄️ DEBUG: Price frozen', {
         snapshotId: frozenPricing.snapshotId,
         total: frozenPricing.total,
@@ -611,6 +609,13 @@ export class PaymentService {
               { paymentId: payment._id.toString() },
               { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
             );
+            // Enqueue order creation (safe because createFromPayment() is idempotent)
+            // This handles the case where the client never called verifyPayment
+            await getFulfillmentQueue().add(
+              FulfillmentJobs.CREATE_ORDER,
+              { paymentId: payment._id.toString() },
+              { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
+            );
           }
         }
       } else if (eventType === 'payment.failed') {
@@ -921,56 +926,6 @@ export class PaymentService {
   // ---------------------------------------------------------------------------
 
   /**
-   * Initiate refund for a payment (can be full or partial)
-   * State transitions: captured → refunded | partially_refunded
-   */
-  async initiateRefund(paymentId: string, amount: number, reason: string): Promise<void> {
-    const payment = await this.paymentRepo.findById(paymentId);
-    if (!payment) throw new NotFoundError('Payment not found');
-
-    // State machine validation
-    this.validateStateTransition(payment.status, 'refunded');
-    if (amount > payment.amountPaise) {
-      throw new BadRequestError('Refund amount exceeds payment amount');
-    }
-
-    const razorpay = getRazorpayClient();
-    try {
-      const refund = await razorpay.refunds.create({
-        payment_id: payment.razorpayPaymentId,
-        amount: amount,
-        notes: { reason },
-      });
-
-      const isPartial = amount < payment.amountPaise;
-      const newStatus = isPartial ? 'partially_refunded' : 'refunded';
-
-      await this.paymentRepo.addRefund(paymentId, {
-        razorpayRefundId: refund.id,
-        amount,
-        reason,
-      });
-
-      await this.paymentRepo.updateStatus(paymentId, newStatus);
-
-      // If wallet was deducted, credit back the refunded amount
-      if (payment.walletDeductPaise > 0 && payment.userId && isPartial === false) {
-        await this.walletService.credit(
-          payment.userId.toString(),
-          payment.walletDeductPaise / 100,
-          'refund',
-          paymentId,
-          `Refund for order (wallet portion)`,
-          `wallet-credit-refund-${paymentId}`,
-        );
-      }
-    } catch (err) {
-      console.error(`Refund failed for payment ${paymentId}:`, err);
-      throw new BadRequestError(`Refund failed: ${(err as Error).message}`);
-    }
-  }
-
-  /**
    * Compensation job: retry wallet debit if it failed during payment verification
    */
   async compensateWalletDebit(paymentId: string): Promise<void> {
@@ -1003,34 +958,6 @@ export class PaymentService {
       console.error(`Wallet debit compensation failed for payment ${paymentId}:`, err);
       // Will retry via job queue exponential backoff
       throw err;
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // STATE MACHINE
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Validate payment state transitions
-   * created → captured (normal payment flow)
-   * created → failed (timeout/verification failure)
-   * captured → refunded | partially_refunded (refund flow)
-   */
-  private validateStateTransition(currentStatus: string, targetStatus: string): void {
-    const validTransitions: Record<string, string[]> = {
-      created: ['captured', 'failed', 'authorized'],
-      authorized: ['captured', 'failed'],
-      captured: ['refunded', 'partially_refunded'],
-      failed: [],
-      refunded: [],
-      partially_refunded: ['refunded'],
-    };
-
-    const allowed = validTransitions[currentStatus] || [];
-    if (!allowed.includes(targetStatus)) {
-      throw new BadRequestError(
-        `Invalid state transition: ${currentStatus} → ${targetStatus}`
-      );
     }
   }
 

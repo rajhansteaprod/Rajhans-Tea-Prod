@@ -64,12 +64,11 @@ export class FeaturedProductsComponent implements OnInit {
   }
 
   buyNow(product: Product, event: Event): void {
-    
     event.preventDefault();
     event.stopPropagation();
-    
-    // Add product to temporary cart for checkout
-    this.cart.addItem(product._id, 1);
+
+    // Set product to temporary cart for checkout (consistent with product detail page)
+    this.cart.buyNowItem(product, 1);
     // Redirect to checkout
     this.router.navigate(['/checkout']);
   }
