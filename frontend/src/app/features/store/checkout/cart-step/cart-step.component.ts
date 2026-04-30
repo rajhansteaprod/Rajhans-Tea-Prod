@@ -12,7 +12,7 @@ import { CheckoutService } from '../../../../core/services/checkout.service';
   styleUrls: ['./cart-step.component.scss'],
 })
 export class CartStepComponent {
-  private readonly checkoutService = inject(CheckoutService);
+  readonly checkoutService = inject(CheckoutService);
 
   // Outputs
   readonly nextStep = output<void>();
