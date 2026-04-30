@@ -14,7 +14,7 @@ import { CartStore } from '../../../../core/services/cart.store';
   styleUrls: ['./summary-step.component.scss'],
 })
 export class SummaryStepComponent {
-  private readonly checkoutService = inject(CheckoutService);
+  readonly checkoutService = inject(CheckoutService);
   private readonly payment = inject(PaymentStore);
   private readonly cart = inject(CartStore);
   private readonly router = inject(Router);
@@ -48,6 +48,12 @@ export class SummaryStepComponent {
       return;
     }
 
+    // Guard: ensure pricing is loaded from backend before payment
+    if (!this.checkoutService.isPricingFromBackend()) {
+      this.orderError.set('Pricing is not loaded. Please go back to cart and try again.');
+      return;
+    }
+
     this.isPlacing.set(true);
 
     try {
@@ -68,6 +74,7 @@ export class SummaryStepComponent {
       if (success) {
         // ✅ Payment verified and captured by backend
         this.cart.clearTemporaryCart();
+        this.checkoutService.resetPricingCache(); // Reset cache for next checkout
         this.placeOrderClick.emit();
 
         // Navigate to order confirmation page after short delay

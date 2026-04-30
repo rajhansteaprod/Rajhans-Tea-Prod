@@ -28,6 +28,9 @@ export class CartStepComponent {
 
   // Computed
   readonly isEmpty = computed(() => this.cartItems().length === 0);
+  readonly canProceed = computed(
+    () => !this.isEmpty() && !this.checkoutService.summaryLoading()
+  );
 
   updateQty(productId: string, newQty: number, variantId?: string) {
     if (newQty < 1 || newQty > 10) return;
@@ -52,8 +55,14 @@ export class CartStepComponent {
     console.log('Promo code applied:', this.promoCode());
   }
 
-  goNext() {
+  async goNext() {
     if (this.isEmpty()) return;
+
+    // Ensure pricing is loaded before proceeding
+    if (!this.checkoutService.isPricingFromBackend()) {
+      await this.checkoutService.loadCheckoutSummary(false);
+    }
+
     this.nextStep.emit();
   }
 }

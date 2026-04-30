@@ -102,6 +102,24 @@
       <div class="checkout__bag-right">
         <span class="checkout__price-heading">PRICE DETAILS</span>
 
+        <!-- Pricing Sync Status -->
+        @if (checkoutService.summaryLoading()) {
+          <div class="checkout__pricing-status checkout__pricing-status--loading">
+            <span class="checkout__spinner-mini"></span>
+            <span class="checkout__status-text">Syncing prices...</span>
+          </div>
+        } @else if (checkoutService.summaryError()) {
+          <div class="checkout__pricing-status checkout__pricing-status--error">
+            <span class="checkout__status-icon">⚠️</span>
+            <span class="checkout__status-text">{{ checkoutService.summaryError() }}</span>
+          </div>
+        } @else if (checkoutService.isPricingFromBackend()) {
+          <div class="checkout__pricing-status checkout__pricing-status--success">
+            <span class="checkout__status-icon">✓</span>
+            <span class="checkout__status-text">Real-time pricing</span>
+          </div>
+        }
+
         <div class="checkout__price-row">
           <span>Total MRP</span>
           <span>₹{{ cartSubtotal() | number: '1.0-0' }}</span>
@@ -140,17 +158,22 @@
           </p>
         </div>
 
-        <button class="checkout__btn-next" (click)="goNext()" [disabled]="isEmpty()">
-          NEXT
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M5 12h14M12 5l7 7-7 7"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
+        <button class="checkout__btn-next" (click)="goNext()" [disabled]="!canProceed()">
+          @if (checkoutService.summaryLoading()) {
+            <span class="checkout__btn-spinner"></span>
+            LOADING...
+          } @else {
+            NEXT
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M5 12h14M12 5l7 7-7 7"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          }
         </button>
       </div>
     </div>

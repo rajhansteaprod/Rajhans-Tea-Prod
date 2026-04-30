@@ -32,7 +32,14 @@
 
     <!-- Price Summary Section -->
     <div class="summary-panel">
-      <h3 class="summary-heading">Price Summary</h3>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 class="summary-heading">Price Summary</h3>
+        @if (checkoutService.isPricingFromBackend()) {
+          <span style="font-size: 11px; color: #4caf50; font-weight: 600;">✓ LIVE</span>
+        } @else {
+          <span style="font-size: 11px; color: #ff9800; font-weight: 600;">~ ESTIMATED</span>
+        }
+      </div>
 
       <div class="summary-prices">
         <div class="summary-price-row">
@@ -53,8 +60,8 @@
         </div>
 
         <div class="summary-price-row">
-          <span>Tax (GST 18%)</span>
-          <span>₹{{ (cartTotal() * 0.18) | number: '1.0-0' }}</span>
+          <span>Tax</span>
+          <span>₹{{ (checkoutService.cartTax() || (cartTotal() * 0.18)) | number: '1.0-0' }}</span>
         </div>
 
         <div class="summary-price-divider"></div>
