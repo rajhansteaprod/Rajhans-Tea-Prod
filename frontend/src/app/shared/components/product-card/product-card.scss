@@ -138,6 +138,14 @@
   gap: $space-sm;
 }
 
+.product-card__price-original {
+  font-family: $font-family-heading;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: rgba($color-mono-dark, 0.5);
+  text-decoration: line-through;
+}
+
 .product-card__price-current {
   font-family: $font-family-heading;
   font-size: $font-size-lg;

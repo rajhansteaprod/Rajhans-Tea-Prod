@@ -65,7 +65,12 @@
 
     <!-- Price -->
     <div class="product-card__price">
-      <span class="product-card__price-current">₹{{ product.basePrice | number:'1.0-0' }}</span>
+      @if (product.discountedPrice && product.discountedPrice < product.basePrice) {
+        <span class="product-card__price-original">₹{{ product.basePrice | number:'1.0-0' }}</span>
+        <span class="product-card__price-current">₹{{ product.discountedPrice | number:'1.0-0' }}</span>
+      } @else {
+        <span class="product-card__price-current">₹{{ product.basePrice | number:'1.0-0' }}</span>
+      }
     </div>
 
     <!-- Action Buttons -->
