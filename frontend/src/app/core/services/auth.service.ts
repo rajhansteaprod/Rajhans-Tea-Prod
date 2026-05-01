@@ -107,7 +107,6 @@ export class AuthService {
       )
       .subscribe();
   }
-
   logout(): void {
     this.http.post(`${this.apiUrl}/logout`, {}, { withCredentials: true }).subscribe();
     this.clearAuth();
