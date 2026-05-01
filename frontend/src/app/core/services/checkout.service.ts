@@ -158,13 +158,7 @@ export class CheckoutService {
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
           const response = await this.http
-            .post<ApiResponse<CheckoutSummary>>(`${this.api}/checkout/summary`, {
-              items: items.map((item) => ({
-                productId: item.productId,
-                variantId: item.variantId,
-                qty: item.qty,
-              })),
-            })
+            .get<ApiResponse<CheckoutSummary>>(`${this.api}/checkout/summary`)
             .toPromise();
 
           if (response?.data) {

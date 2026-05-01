@@ -68,15 +68,23 @@ export class CheckoutPageComponent implements OnInit {
           return;
         }
 
-        this.checkoutService.initializeCheckout(checkoutItems);
+        // Sync items to backend session before initializing checkout
+        checkoutItems.forEach((item) => {
+          this.cartStore.addItem(item.productId, item.qty, item.variantId, false);
+        });
 
-        // Set step from query param
-        const step = (params.get('step') as Step) || 'cart';
-        if (['cart', 'address', 'summary'].includes(step)) {
-          this.currentStep.set(step);
-        } else {
-          this.currentStep.set('cart');
-        }
+        // Wait for sync, then initialize checkout
+        setTimeout(() => {
+          this.checkoutService.initializeCheckout(checkoutItems);
+
+          // Set step from query param
+          const step = (params.get('step') as Step) || 'cart';
+          if (['cart', 'address', 'summary'].includes(step)) {
+            this.currentStep.set(step);
+          } else {
+            this.currentStep.set('cart');
+          }
+        }, 500);
       });
   }
 
