@@ -12,8 +12,10 @@ export const getBullMQConnectionOpts = () => ({
   host: config.redis.host,
   port: config.redis.port,
   password: config.redis.password,
-  maxRetriesPerRequest: null as null, // required by BullMQ
+  maxRetriesPerRequest: null as null,
   enableReadyCheck: false,
+  enableOfflineQueue: false,
+  lazyConnect: false,
 });
 
 /**
@@ -26,6 +28,8 @@ export const connectBullMQ = (): IORedis => {
     password: config.redis.password,
     maxRetriesPerRequest: null,
     enableReadyCheck: false,
+    enableOfflineQueue: false,
+    lazyConnect: false,
   });
 
   bullmqConnection.on('connect', () => {

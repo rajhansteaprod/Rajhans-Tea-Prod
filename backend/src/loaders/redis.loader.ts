@@ -17,6 +17,9 @@ export const connectRedis = (): Redis => {
       }
       return Math.min(times * 200, 2000);
     },
+    lazyConnect: false,
+    enableOfflineQueue: false,
+    enableReadyCheck: false,
   });
 
   redisClient.on('connect', () => {
