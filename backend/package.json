@@ -16,7 +16,7 @@
     "lint:fix": "eslint src/ tests/ --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "typecheck": "tsc --noEmit",
-    "seed": "ts-node ../infrastructure/seeds/seed-runner.ts"
+    "seed": "ts-node src/seeds/index.ts"
   },
   "dependencies": {
     "@types/multer": "^2.1.0",

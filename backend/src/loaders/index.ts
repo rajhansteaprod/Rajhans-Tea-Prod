@@ -4,6 +4,7 @@ import { connectBullMQ } from './bullmq.loader';
 import { initMetrics } from './metrics.loader';
 import { initFirebase } from './firebase.loader';
 import { initRazorpay } from './razorpay.loader';
+import { runSeeds } from './seeds.loader';
 import { logger } from '../utils/logger';
 
 export const initializeLoaders = async (): Promise<void> => {
@@ -15,6 +16,7 @@ export const initializeLoaders = async (): Promise<void> => {
   initMetrics();
   initFirebase();
   initRazorpay();
+  await runSeeds();
 
   logger.info('All loaders initialized successfully');
 };
