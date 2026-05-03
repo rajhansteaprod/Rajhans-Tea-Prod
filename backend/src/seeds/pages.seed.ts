@@ -162,15 +162,19 @@ export const pagesSeedData = [
 
 export async function seedPages() {
   try {
+    console.log('🌱 seedPages() started...');
     const existingPages = await Page.countDocuments();
+    console.log(`📊 Found ${existingPages} existing pages`);
 
     if (existingPages > 0) {
       console.log('✓ Pages already seeded. Skipping...');
       return;
     }
 
+    console.log(`📝 Inserting ${pagesSeedData.length} pages...`);
     const result = await Page.insertMany(pagesSeedData);
     console.log(`✓ Successfully seeded ${result.length} pages`);
+    console.log('🎯 Pages seeded:', result.map((p) => p.slug));
   } catch (error) {
     console.error('✗ Error seeding pages:', error);
     throw error;
