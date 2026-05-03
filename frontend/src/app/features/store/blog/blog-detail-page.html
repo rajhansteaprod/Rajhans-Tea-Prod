@@ -1,0 +1,64 @@
+<div class="blog-detail-container">
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading">Loading blog...</div>
+  }
+
+  <!-- Not Found -->
+  @if (notFound()) {
+    <div class="not-found">
+      <h1>Blog Post Not Found</h1>
+      <p>Sorry, we couldn't find the blog post you're looking for.</p>
+      <a routerLink="/blog" class="btn-back">← Back to Blogs</a>
+    </div>
+  }
+
+  <!-- Blog Content -->
+  @if (blog() && !loading()) {
+    <article class="blog-post">
+      <!-- Hero Image -->
+      @if (blog()!.coverImage) {
+        <div class="blog-hero-image">
+          <img [src]="blog()!.coverImage" [alt]="blog()!.title" />
+        </div>
+      }
+
+      <!-- Header -->
+      <div class="blog-header">
+        <h1 class="blog-title">{{ blog()!.title }}</h1>
+        <p class="blog-excerpt">{{ blog()!.excerpt }}</p>
+
+        <!-- Meta Information -->
+        <div class="blog-meta">
+          <div class="meta-author">
+            <span class="label">By</span>
+            <span class="value">{{ blog()!.author.firstName }} {{ blog()!.author.lastName }}</span>
+          </div>
+          <div class="meta-date">
+            <span class="label">Published</span>
+            <span class="value">{{ formatDate(blog()!.publishedAt) }}</span>
+          </div>
+        </div>
+
+        <!-- Tags -->
+        @if (blog()!.tags.length > 0) {
+          <div class="blog-tags">
+            @for (tag of blog()!.tags; track tag) {
+              <a [routerLink]="['/blog']" [queryParams]="{ tag: tag }" class="tag">
+                #{{ tag }}
+              </a>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Content -->
+      <div class="blog-content" [innerHTML]="blog()!.content"></div>
+
+      <!-- Back Link -->
+      <div class="blog-footer">
+        <a routerLink="/blog" class="btn-back">← Back to Blogs</a>
+      </div>
+    </article>
+  }
+</div>

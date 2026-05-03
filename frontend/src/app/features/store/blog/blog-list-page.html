@@ -1,0 +1,132 @@
+<div class="blog-container">
+  <!-- Hero Section -->
+  <section class="blog-hero">
+    <h1 class="blog-hero__title">Blog</h1>
+    <p class="blog-hero__subtitle">Stories, tips, and insights from Rajhans Tea</p>
+  </section>
+
+  <!-- Main Content -->
+  <div class="blog-content">
+    <!-- Sidebar - Tags -->
+    <aside class="blog-sidebar">
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">Filter by Tag</h3>
+        <div class="tags-list">
+          @for (tag of availableTags(); track tag) {
+            <button
+              class="tag-button"
+              [class.active]="selectedTag() === tag"
+              (click)="filterByTag(tag)"
+            >
+              {{ tag }}
+            </button>
+          }
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main - Blog Grid -->
+    <main class="blog-main">
+      <!-- Loading State -->
+      @if (loading()) {
+        <div class="loading-spinner">
+          <p>Loading blogs...</p>
+        </div>
+      }
+
+      <!-- Error State -->
+      @if (error()) {
+        <div class="error-message">
+          {{ error() }}
+        </div>
+      }
+
+      <!-- Blogs Grid -->
+      @if (!loading() && blogs().length > 0) {
+        <div class="blogs-grid">
+          @for (blog of blogs(); track blog._id) {
+            <article class="blog-card">
+              <!-- Cover Image -->
+              @if (blog.coverImage) {
+                <div class="blog-card__image">
+                  <img [src]="blog.coverImage" [alt]="blog.title" />
+                </div>
+              }
+
+              <!-- Content -->
+              <div class="blog-card__content">
+                <!-- Tags -->
+                @if (blog.tags.length > 0) {
+                  <div class="blog-card__tags">
+                    @for (tag of blog.tags.slice(0, 2); track tag) {
+                      <span class="tag-badge">{{ tag }}</span>
+                    }
+                  </div>
+                }
+
+                <!-- Title -->
+                <h2 class="blog-card__title">
+                  <a [routerLink]="['/blog', blog.slug]">{{ blog.title }}</a>
+                </h2>
+
+                <!-- Excerpt -->
+                <p class="blog-card__excerpt">{{ blog.excerpt }}</p>
+
+                <!-- Meta -->
+                <div class="blog-card__meta">
+                  <span class="meta-author">{{ blog.author.firstName }} {{ blog.author.lastName }}</span>
+                  <span class="meta-date">{{ formatDate(blog.publishedAt) }}</span>
+                </div>
+
+                <!-- Read More Link -->
+                <a [routerLink]="['/blog', blog.slug]" class="blog-card__link">
+                  Read More →
+                </a>
+              </div>
+            </article>
+          }
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages() > 1) {
+          <nav class="pagination">
+            <button
+              class="pagination__btn"
+              [disabled]="currentPage() === 1"
+              (click)="goToPage(currentPage() - 1)"
+            >
+              ← Previous
+            </button>
+
+            <div class="pagination__numbers">
+              @for (page of [].constructor(totalPages()); let i = $index; track i) {
+                <button
+                  class="pagination__number"
+                  [class.active]="currentPage() === i + 1"
+                  (click)="goToPage(i + 1)"
+                >
+                  {{ i + 1 }}
+                </button>
+              }
+            </div>
+
+            <button
+              class="pagination__btn"
+              [disabled]="currentPage() === totalPages()"
+              (click)="goToPage(currentPage() + 1)"
+            >
+              Next →
+            </button>
+          </nav>
+        }
+      }
+
+      <!-- Empty State -->
+      @if (!loading() && blogs().length === 0 && !error()) {
+        <div class="empty-state">
+          <p>No blogs found. Check back soon!</p>
+        </div>
+      }
+    </main>
+  </div>
+</div>

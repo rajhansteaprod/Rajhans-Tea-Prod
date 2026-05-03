@@ -32,6 +32,16 @@ export const routes: Routes = [
           import('./features/store/collections/collections-page').then((m) => m.CollectionsPageComponent),
       },
       {
+        path: 'blog',
+        loadComponent: () =>
+          import('./features/store/blog/blog-list-page').then((m) => m.BlogListPageComponent),
+      },
+      {
+        path: 'blog/:slug',
+        loadComponent: () =>
+          import('./features/store/blog/blog-detail-page').then((m) => m.BlogDetailPageComponent),
+      },
+      {
         path: 'page/about-us',
         loadComponent: () =>
           import('./features/store/pages/about/about').then((m) => m.AboutComponent),

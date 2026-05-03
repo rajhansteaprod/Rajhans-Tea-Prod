@@ -1,0 +1,309 @@
+@use '../../../../core/design-tokens/tokens' as *;
+@use '../../../../core/design-tokens/mixins' as *;
+
+.blog-detail-container {
+  width: 100%;
+}
+
+// ═══════════════════════════════════════
+// BLOG HERO IMAGE
+// ═══════════════════════════════════════
+.blog-hero-image {
+  width: 100%;
+  height: 400px;
+  overflow: hidden;
+  background: $color-gray-200;
+
+  @include respond-to(md) {
+    height: 250px;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+// ═══════════════════════════════════════
+// BLOG POST
+// ═══════════════════════════════════════
+.blog-post {
+  @include section-padding;
+  padding-top: $space-section;
+  padding-bottom: $space-section;
+  max-width: 800px;
+  margin: 0 auto;
+
+  @include respond-to(md) {
+    padding-top: $space-xxl;
+    padding-bottom: $space-xxl;
+  }
+}
+
+// ─── Blog Header ──
+.blog-header {
+  margin-bottom: $space-section;
+  padding-bottom: $space-section;
+  border-bottom: 1px solid $color-gray-200;
+
+  @include respond-to(md) {
+    margin-bottom: $space-xxl;
+    padding-bottom: $space-xxl;
+  }
+}
+
+.blog-title {
+  margin: 0 0 $space-lg 0;
+  font-family: $font-family-heading;
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: $font-weight-bold;
+  color: $color-mono-dark;
+  line-height: $line-height-tight;
+  letter-spacing: $letter-spacing-tight;
+
+  @include respond-to(md) {
+    font-size: $font-size-xxxl;
+  }
+}
+
+.blog-excerpt {
+  margin: 0 0 $space-xxl 0;
+  font-family: $font-family-body;
+  font-size: $font-size-lg;
+  color: $color-gray-600;
+  line-height: $line-height-relaxed;
+
+  @include respond-to(md) {
+    font-size: $font-size-md;
+    margin-bottom: $space-xl;
+  }
+}
+
+// ─── Meta Information ──
+.blog-meta {
+  display: flex;
+  gap: $space-xxxl;
+  margin-bottom: $space-lg;
+  flex-wrap: wrap;
+
+  @include respond-to(md) {
+    gap: $space-xl;
+    margin-bottom: $space-md;
+  }
+}
+
+.meta-author,
+.meta-date {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+
+  .label {
+    color: $color-gray-500;
+    text-transform: uppercase;
+    letter-spacing: $letter-spacing-wide;
+  }
+
+  .value {
+    color: $color-mono-dark;
+    font-weight: $font-weight-medium;
+  }
+}
+
+// ─── Tags ──
+.blog-tags {
+  display: flex;
+  gap: $space-md;
+  flex-wrap: wrap;
+  margin-top: $space-lg;
+}
+
+.tag {
+  display: inline-block;
+  padding: $space-sm $space-md;
+  background: rgba($color-primary, 0.1);
+  color: $color-primary;
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  text-decoration: none;
+  border-radius: $border-radius-sm;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba($color-primary, 0.2);
+    transform: translateY(-2px);
+  }
+}
+
+// ─── Blog Content ──
+.blog-content {
+  font-family: $font-family-body;
+  font-size: $font-size-md;
+  color: $color-gray-700;
+  line-height: $line-height-relaxed;
+  margin-bottom: $space-section;
+
+  @include respond-to(md) {
+    font-size: $font-size-sm;
+    margin-bottom: $space-xxl;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: $space-xxl 0 $space-lg 0;
+    font-family: $font-family-heading;
+    font-weight: $font-weight-bold;
+    color: $color-mono-dark;
+    line-height: $line-height-tight;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  h2 {
+    font-size: $font-size-xxl;
+  }
+
+  h3 {
+    font-size: $font-size-xl;
+  }
+
+  p {
+    margin: 0 0 $space-md 0;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  ul,
+  ol {
+    margin: $space-md 0;
+    padding-left: $space-xl;
+  }
+
+  li {
+    margin-bottom: $space-sm;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    margin: $space-lg 0;
+    border-radius: $border-radius-md;
+  }
+
+  blockquote {
+    margin: $space-xl 0;
+    padding: $space-lg;
+    border-left: 4px solid $color-primary;
+    background: rgba($color-primary, 0.05);
+    font-style: italic;
+    color: $color-gray-600;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  code {
+    padding: 2px 6px;
+    background: $color-gray-200;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    color: #d73a49;
+  }
+
+  pre {
+    padding: $space-lg;
+    background: $color-gray-900;
+    border-radius: $border-radius-md;
+    overflow-x: auto;
+    margin: $space-lg 0;
+
+    code {
+      padding: 0;
+      background: transparent;
+      color: #f8f8f2;
+    }
+  }
+
+  a {
+    color: $color-primary;
+    text-decoration: none;
+    border-bottom: 1px dotted $color-primary;
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-bottom-style: solid;
+    }
+  }
+}
+
+// ─── Blog Footer ──
+.blog-footer {
+  padding-top: $space-section;
+  border-top: 1px solid $color-gray-200;
+
+  @include respond-to(md) {
+    padding-top: $space-xxl;
+  }
+}
+
+.btn-back {
+  display: inline-block;
+  padding: $space-sm $space-md;
+  color: $color-primary;
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  text-decoration: none;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateX(-4px);
+  }
+}
+
+// ═══════════════════════════════════════
+// LOADING & ERROR STATES
+// ═══════════════════════════════════════
+.loading {
+  @include section-padding;
+  padding-top: $space-section;
+  padding-bottom: $space-section;
+  text-align: center;
+  font-family: $font-family-body;
+  font-size: $font-size-md;
+  color: $color-gray-600;
+}
+
+.not-found {
+  @include section-padding;
+  padding-top: $space-section * 2;
+  padding-bottom: $space-section * 2;
+  text-align: center;
+
+  h1 {
+    margin: 0 0 $space-lg 0;
+    font-family: $font-family-heading;
+    font-size: $font-size-xxxl;
+    color: $color-mono-dark;
+  }
+
+  p {
+    margin: 0 0 $space-xl 0;
+    font-family: $font-family-body;
+    font-size: $font-size-md;
+    color: $color-gray-600;
+  }
+}
