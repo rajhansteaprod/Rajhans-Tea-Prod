@@ -9,14 +9,10 @@ export const runSeeds = async (): Promise<void> => {
   }
 
   try {
-    console.log('\n🔄 [runSeeds] Starting seed execution...');
-    logger.info('Running database seeds...');
+    logger.info('🔄 Starting seed execution');
     await seedPages();
-    logger.info('All seeds completed successfully');
-    console.log('✅ [runSeeds] Seeds execution completed\n');
+    logger.info('✅ All seeds completed successfully');
   } catch (error) {
-    console.error('\n❌ [runSeeds] Seeding failed - Details below:');
-    console.error(error);
     logger.error({ error }, 'Seeding failed (non-fatal, server continuing)');
   }
 };
