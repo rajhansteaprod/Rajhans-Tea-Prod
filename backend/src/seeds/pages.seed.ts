@@ -162,21 +162,29 @@ export const pagesSeedData = [
 
 export async function seedPages() {
   try {
-    console.log('🌱 seedPages() started...');
+    console.log('  🌱 seedPages() started');
+    console.log(`  📍 DB Connection State: ${Page.collection.conn.readyState === 1 ? 'Connected ✓' : 'Not Connected ✗'}`);
+
     const existingPages = await Page.countDocuments();
-    console.log(`📊 Found ${existingPages} existing pages`);
+    console.log(`  📊 Found ${existingPages} existing pages in database`);
 
     if (existingPages > 0) {
-      console.log('✓ Pages already seeded. Skipping...');
+      console.log('  ✓ Pages already seeded. Skipping insertion...');
       return;
     }
 
-    console.log(`📝 Inserting ${pagesSeedData.length} pages...`);
+    console.log(`  📝 Inserting ${pagesSeedData.length} pages into database...`);
     const result = await Page.insertMany(pagesSeedData);
-    console.log(`✓ Successfully seeded ${result.length} pages`);
-    console.log('🎯 Pages seeded:', result.map((p) => p.slug));
+    console.log(`  ✓ Successfully seeded ${result.length} pages`);
+    console.log(`  🎯 Slugs created: ${result.map((p) => p.slug).join(', ')}`);
   } catch (error) {
-    console.error('✗ Error seeding pages:', error);
+    console.error('  ✗ Error seeding pages:');
+    if (error instanceof Error) {
+      console.error(`     Message: ${error.message}`);
+      console.error(`     Stack: ${error.stack}`);
+    } else {
+      console.error(`     ${JSON.stringify(error)}`);
+    }
     throw error;
   }
 }
