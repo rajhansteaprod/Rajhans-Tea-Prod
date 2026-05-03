@@ -166,16 +166,24 @@ export async function seedPages() {
     logger.info('🌱 seedPages() started');
     logger.info(`📍 DB Connection State: ${Page.collection.conn.readyState === 1 ? 'Connected ✓' : 'Not Connected ✗'}`);
 
-    const existingPages = await Page.countDocuments();
-    logger.info(`📊 Found ${existingPages} existing pages in database`);
+    const existingCount = await Page.countDocuments();
+    logger.info(`📊 Found ${existingCount} existing pages in database`);
 
-    if (existingPages > 0) {
-      logger.info('✓ Pages already seeded. Skipping insertion...');
+    const missingPages: typeof pagesSeedData = [];
+    for (const pageData of pagesSeedData) {
+      const exists = await Page.findOne({ slug: pageData.slug }).exec();
+      if (!exists) {
+        missingPages.push(pageData);
+      }
+    }
+
+    if (missingPages.length === 0) {
+      logger.info('✓ All pages already seeded. Skipping insertion...');
       return;
     }
 
-    logger.info(`📝 Inserting ${pagesSeedData.length} pages into database...`);
-    const result = await Page.insertMany(pagesSeedData);
+    logger.info(`📝 Inserting ${missingPages.length} missing pages into database...`);
+    const result = await Page.insertMany(missingPages);
     logger.info(`✓ Successfully seeded ${result.length} pages`);
     logger.info(`🎯 Slugs created: ${result.map((p) => p.slug).join(', ')}`);
   } catch (error) {
