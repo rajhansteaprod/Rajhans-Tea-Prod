@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { seedPages } from './pages.seed';
+import { seedBlogs } from './blogs.seed';
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ async function runSeeds() {
 
     // Run all seed functions
     await seedPages();
+    await seedBlogs();
 
     console.log('✅ All seeds completed successfully!');
     process.exit(0);
