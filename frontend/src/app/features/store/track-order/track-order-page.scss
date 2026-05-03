@@ -1,0 +1,84 @@
+@use '../../../core/design-tokens/tokens' as *;
+@use '../../../core/design-tokens/mixins' as *;
+
+.track-order-container {
+  @include section-padding;
+  padding-top: $space-section;
+  padding-bottom: $space-section;
+  background: $color-bg-primary;
+  min-height: 70vh;
+}
+
+.track-order-wrapper {
+  max-width: $max-width-narrow;
+  margin: 0 auto;
+}
+
+// Header section
+.track-order-header {
+  text-align: center;
+  margin-bottom: $space-section;
+
+  @include respond-to(md) {
+    margin-bottom: $space-xxl;
+  }
+}
+
+.track-order-title {
+  margin: 0 0 $space-md 0;
+  font-family: $font-family-heading;
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: $font-weight-bold;
+  color: $color-mono-dark;
+  letter-spacing: $letter-spacing-tight;
+  line-height: $line-height-tight;
+
+  @include respond-to(md) {
+    font-size: $font-size-xxxl;
+  }
+}
+
+.track-order-subtitle {
+  margin: 0;
+  font-family: $font-family-body;
+  font-size: $font-size-lg;
+  color: $color-gray-600;
+  line-height: $line-height-relaxed;
+
+  @include respond-to(md) {
+    font-size: $font-size-md;
+  }
+}
+
+// Form section
+.tracking-form {
+  background: white;
+  padding: $space-xxl;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  margin-bottom: $space-section;
+
+  @include respond-to(md) {
+    padding: $space-xl;
+  }
+}
+
+// Loading and empty states
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: $space-xxxl $space-lg;
+}
+
+.empty-state {
+  background: white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+}
+
+.empty-state p {
+  margin: 0 0 $space-xl 0;
+  font-family: $font-family-body;
+  font-size: $font-size-md;
+  color: $color-gray-600;
+}

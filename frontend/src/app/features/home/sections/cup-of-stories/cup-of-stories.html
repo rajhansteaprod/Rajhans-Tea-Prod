@@ -1,0 +1,72 @@
+<section class="cup-of-stories">
+  <div class="cup-of-stories__container">
+    <!-- Header -->
+    <div class="cup-of-stories__header">
+      <h2 class="cup-of-stories__title">Cup of Stories</h2>
+      <p class="cup-of-stories__subtitle">
+        Brewing tales of tradition, taste, and tea culture
+      </p>
+    </div>
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="loading-skeleton">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="skeleton-card"></div>
+        }
+      </div>
+    }
+
+    <!-- Blog Cards Grid -->
+    @if (!loading() && blogs().length > 0) {
+      <div class="cup-of-stories__grid">
+        @for (blog of blogs(); track blog._id) {
+          <article class="blog-card">
+            <!-- Cover Image -->
+            @if (blog.coverImage) {
+              <div class="blog-card__image">
+                <img [src]="blog.coverImage" [alt]="blog.title" />
+              </div>
+            }
+
+            <!-- Content -->
+            <div class="blog-card__content">
+              <h3 class="blog-card__title">
+                <a [routerLink]="['/blog', blog.slug]">{{ blog.title }}</a>
+              </h3>
+
+              <p class="blog-card__excerpt">{{ blog.excerpt }}</p>
+
+              <div class="blog-card__footer">
+                <span class="blog-card__date">{{ formatDate(blog.publishedAt) }}</span>
+                <a [routerLink]="['/blog', blog.slug]" class="blog-card__link">
+                  Read More →
+                </a>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+
+      <!-- CTA Button -->
+      <div class="cup-of-stories__cta">
+        <a routerLink="/blog" class="btn btn--primary">
+          Explore All Stories
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M7 17L17 7M17 7H7M17 7v10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (!loading() && blogs().length === 0) {
+      <div class="empty-state">
+        <p>Check back soon for new stories</p>
+        <a routerLink="/blog" class="btn btn--primary">
+          Visit Blog
+        </a>
+      </div>
+    }
+  </div>
+</section>

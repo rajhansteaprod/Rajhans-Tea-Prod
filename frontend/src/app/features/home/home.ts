@@ -9,6 +9,7 @@ import { ComparisonSectionComponent } from './sections/comparison-section/compar
 import { BundleBuilderComponent } from './sections/bundle-builder/bundle-builder';
 import { StorytellingComponent } from './sections/storytelling/storytelling';
 import { TestimonialComponent } from './sections/testimonial/testimonial';
+import { CupOfStoriesComponent } from './sections/cup-of-stories/cup-of-stories';
 
 @Component({
   selector: 'app-home',
@@ -23,6 +24,7 @@ import { TestimonialComponent } from './sections/testimonial/testimonial';
     ComparisonSectionComponent,
     BundleBuilderComponent,
     StorytellingComponent,
+    CupOfStoriesComponent,
     TestimonialComponent,
   ],
   templateUrl: './home.html',

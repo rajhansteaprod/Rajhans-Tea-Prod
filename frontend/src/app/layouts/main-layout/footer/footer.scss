@@ -1,7 +1,12 @@
 @use '../../../core/design-tokens/tokens' as *;
 @use '../../../core/design-tokens/mixins' as *;
 
-:host { display: block; }
+:host {
+  display: block;
+  --social-icon-size: 40px;
+  --social-icon-inner: 30px;
+  --social-icon-padding: 7px;
+}
 
 // ═══════════════════════════════════════
 // FOOTER — Multi-Column Responsive Layout
@@ -92,30 +97,25 @@
 }
 
 // ── Social Links ──
-.footer-social {
+.footer-social-icons {
   display: flex;
   align-items: center;
-  gap: $space-lg;
+  gap: $space-md;
   margin-top: $space-sm;
 }
 
-.footer-social-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  color: rgba(252, 255, 247, 0.65);
+.footer-social-icon {
+  border: none;
   text-decoration: none;
-  transition: color 0.3s ease;
-
-  svg {
-    width: 100%;
-    height: 100%;
-  }
+  transition: all 0.3s ease;
 
   &:hover {
-    color: $color-text-inverse;
+    transform: translateY(-3px);
+    opacity: 0.85;
+  }
+
+  &:active {
+    transform: translateY(-1px);
   }
 }
 

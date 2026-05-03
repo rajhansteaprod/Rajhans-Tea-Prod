@@ -87,8 +87,8 @@ img {
 }
 
 ::selection {
-  background: rgba(252, 71, 71, 0.15);
-  color: $color-text-primary;
+  background: rgb(255, 255, 255);
+  color: rgb(0, 0, 0) !important;
 }
 
 // Ornamental divider element

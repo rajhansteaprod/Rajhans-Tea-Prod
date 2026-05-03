@@ -52,6 +52,11 @@
   letter-spacing: $letter-spacing-luxury;
   text-transform: uppercase;
   color: $color-primary;
+
+  @include respond-to(sm) {
+    color: $color-mono-light;
+    font-weight: $font-weight-bold;
+  }
 }
 
 .usp__heading {

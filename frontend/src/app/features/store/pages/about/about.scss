@@ -6,269 +6,105 @@
 }
 
 // ═══════════════════════════════════════
-// HERO — Full-width solid bg, mega bold condensed title
+// HERO — Full-width image
 // ═══════════════════════════════════════
 .about-hero {
-  @include section-padding;
-  padding-top: $space-section * 1.8;
-  padding-bottom: $space-section * 1.8;
-  text-align: center;
-  background: $color-primary;
-  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.about-hero__frame {
+  width: 100%;
+  aspect-ratio: 16 / 6;
+  overflow: hidden;
 
   @include respond-to(md) {
-    padding-top: $space-section * 1.2;
-    padding-bottom: $space-section * 1.2;
+    aspect-ratio: 4 / 3;
+  }
+
+  @include respond-to(sm) {
+    aspect-ratio: 1 / 1;
   }
 }
 
-.about-hero__inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: $max-width-content;
-  margin: 0 auto;
-}
-
-.about-hero__eyebrow {
-  @include eyebrow-text;
-  color: rgba($color-text-inverse, 0.6);
-  margin-bottom: $space-lg;
-}
-
-.about-hero__headline {
-  @include mega-headline(clamp($font-size-display, 10vw, $font-size-mega));
-  color: $color-text-inverse;
-  margin: 0 0 $space-xl;
-  text-align: center;
-}
-
-.about-hero__line {
+.about-hero__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   display: block;
 }
 
-.about-hero__sub {
-  font-family: $font-family-display;
-  font-size: $font-size-xl;
-  color: rgba($color-text-inverse, 0.8);
-  line-height: $line-height-relaxed;
-  max-width: 560px;
-  margin: 0;
-  font-style: italic;
-
-  @include respond-to(md) {
-    font-size: $font-size-lg;
-  }
-}
-
-.about-hero__divider {
-  display: none;
-}
-
 // ═══════════════════════════════════════
-// ORIGIN STORY — Split: circular image left, text right
+// ABOUT US — Three column layout
 // ═══════════════════════════════════════
-.origin {
-  @include content-container($max-width-content);
+.about-us {
+  @include content-container($max-width-wide);
   @include section-padding;
-  padding-top: $space-section * 1.5;
-  padding-bottom: $space-section * 1.5;
-  background: $color-bg-primary;
+  padding-top: $space-section;
+  padding-bottom: $space-section;
 
   @include respond-to(md) {
-    padding-top: $space-section;
-    padding-bottom: $space-section;
+    padding-top: $space-section*0.7;
+    padding-bottom: $space-section*0.7;
   }
 }
 
-.origin__grid {
-  @include editorial-grid(380px, 1fr);
-
-  @include respond-to(lg) {
-    grid-template-columns: 300px 1fr;
-  }
-}
-
-.origin__visual {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  @include respond-to(md) {
-    margin-bottom: $space-lg;
-  }
-}
-
-.origin__frame {
-  position: relative;
-  width: 280px;
-  height: 280px;
-  border-radius: 50%;
-  border: 4px solid $color-primary;
-  @include flex-center;
-  overflow: hidden;
-  background: $color-bg-warm;
-
-  @include respond-to(md) {
-    width: 200px;
-    height: 200px;
-  }
-}
-
-.origin__accent-block {
-  display: none;
-}
-
-.origin__year {
-  font-family: $font-family-heading;
-  font-size: $font-size-display;
-  font-weight: $font-weight-medium;
-  color: $color-primary;
-  text-transform: uppercase;
-  opacity: 0.2;
-}
-
-.origin__content {
-  display: flex;
-  flex-direction: column;
-  gap: $space-md;
-}
-
-.origin__label {
-  display: none;
-}
-
-.origin__headline {
-  @include mega-headline(clamp($font-size-xxl, 4vw, $font-size-display));
-  color: $color-bg-teal;
-  margin: 0;
-}
-
-.origin__text {
-  font-family: $font-family-display;
-  font-size: $font-size-lg;
-  color: $color-text-secondary;
-  line-height: $line-height-relaxed;
-  margin: 0;
-
-  @include respond-to(md) {
-    font-size: $font-size-md;
-  }
-
-  &--highlight {
-    color: $color-text-primary;
-    font-weight: $font-weight-medium;
-    border-left: 4px solid $color-primary;
-    padding-left: $space-md;
-    margin-top: $space-sm;
-  }
-}
-
-// ═══════════════════════════════════════
-// MISSION — Split reversed: text left, circular image right
-// ═══════════════════════════════════════
-.mission {
-  @include section-padding;
-  padding-top: $space-section * 1.5;
-  padding-bottom: $space-section * 1.5;
-  background: $color-bg-warm;
-
-  @include respond-to(md) {
-    padding-top: $space-section;
-    padding-bottom: $space-section;
-  }
-}
-
-.mission__grid {
-  max-width: $max-width-content;
-  margin: 0 auto;
+.about-us__grid {
   display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: $space-xxxl;
-  align-items: center;
-
-  @include respond-to(lg) {
-    grid-template-columns: 1fr 300px;
-  }
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: $space-xl;
 
   @include respond-to(md) {
     grid-template-columns: 1fr;
-    gap: $space-xl;
+    gap: $space-lg;
   }
 }
 
-.mission__inner {
-  display: none;
-}
-
-.mission__content {
-  display: flex;
-  flex-direction: column;
-  gap: $space-md;
-}
-
-.mission__headline {
-  @include mega-headline(clamp($font-size-xxl, 4vw, $font-size-display));
-  color: $color-bg-teal;
-  margin: 0;
-}
-
-.mission__visual {
+.about-us__heading-col {
   display: flex;
   align-items: center;
-  justify-content: center;
 
   @include respond-to(md) {
-    order: -1;
+    align-items: flex-start;
   }
 }
 
-.mission__frame {
-  width: 280px;
-  height: 280px;
-  border-radius: 50%;
-  border: 4px solid $color-bg-teal;
-  @include flex-center;
-  overflow: hidden;
-  background: $color-bg-secondary;
+.about-us__heading {
+  margin: 0;
+  font-family: $font-family-heading;
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: $font-weight-bold;
+  line-height: $line-height-tight;
+  color: $color-mono-dark;
+  letter-spacing: $letter-spacing-tight;
 
   @include respond-to(md) {
-    width: 200px;
-    height: 200px;
+    font-size: $font-size-xxl;
   }
 }
 
-.mission__quote-mark {
-  font-family: $font-family-display;
-  font-size: $font-size-mega;
-  color: $color-bg-teal;
-  opacity: 0.2;
-  line-height: 1;
+.about-us__content-col {
+  display: flex;
+  align-items: flex-start;
 }
 
-.mission__quote {
-  font-family: $font-family-display;
-  font-size: clamp($font-size-lg, 2.5vw, $font-size-xl);
-  font-weight: $font-weight-regular;
+.about-us__text {
+  margin: 0;
+  font-family: $font-family-body;
+  font-size: $font-size-md;
   line-height: $line-height-relaxed;
-  color: $color-text-secondary;
-  font-style: italic;
-  margin: 0;
-  border: none;
-  padding: 0;
-}
+  color: $color-gray-600;
 
-.mission__attr {
-  @include eyebrow-text;
-  margin: 0;
-  color: $color-primary;
+  @include respond-to(md) {
+    font-size: $font-size-sm;
+  }
 }
 
 // ═══════════════════════════════════════
-// VALUES
+// TIMELINE SECTION
 // ═══════════════════════════════════════
-.values {
-  @include content-container($max-width-content);
+.timeline {
   @include section-padding;
   padding-top: $space-section * 1.5;
   padding-bottom: $space-section * 1.5;
@@ -277,374 +113,218 @@
   @include respond-to(md) {
     padding-top: $space-section;
     padding-bottom: $space-section;
+  }
+}
+
+.timeline__container {
+  max-width: $max-width-wide;
+  margin: 0 auto;
+  position: relative;
+}
+
+.timeline__line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: $color-primary;
+  transform: translateX(-50%);
+  z-index: 0;
+
+  @include respond-to(md) {
+    left: 20px;
+  }
+}
+
+.timeline__item {
+  position: relative;
+  margin-bottom: $space-xxxl;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-xxxl;
+  align-items: center;
+  z-index: 1;
+
+  @include respond-to(md) {
+    grid-template-columns: 1fr;
+    gap: $space-lg;
+    margin-bottom: $space-xxl;
+  }
+
+  &--left {
+    @include respond-to(md) {
+      padding-left: 80px;
+
+      .timeline__dot {
+        left: 13px;
+      }
+    }
+  }
+
+  &--right {
+    @include respond-to(md) {
+      padding-left: 80px;
+
+      .timeline__dot {
+        left: 13px;
+      }
+    }
+  }
+}
+
+.timeline__year {
+  font-family: $font-family-heading;
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  text-align: right;
+  line-height: 1.2;
+
+  @include respond-to(md) {
+    font-size: $font-size-xxl;
+    text-align: left;
+  }
+}
+
+.timeline__item--right .timeline__year {
+  text-align: left;
+
+  @include respond-to(md) {
+    text-align: left;
+  }
+}
+
+.timeline__dot {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  background: $color-primary;
+  border: 3px solid $color-bg-primary;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+
+  @include respond-to(md) {
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+  }
+}
+
+.timeline__content {
+  @include respond-to(md) {
+    grid-column: 1;
+  }
+}
+
+.timeline__heading {
+  margin: 0 0 $space-md 0;
+  font-family: $font-family-heading;
+  font-size: clamp(22px, 2.5vw, 32px);
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  line-height: 1.2;
+  letter-spacing: $letter-spacing-tight;
+
+  @include respond-to(md) {
+    font-size: $font-size-xl;
+  }
+}
+
+.timeline__text {
+  margin: 0;
+  font-family: $font-family-body;
+  font-size: $font-size-md;
+  line-height: $line-height-relaxed;
+  color: $color-gray-600;
+
+  @include respond-to(md) {
+    font-size: $font-size-sm;
+  }
+}
+
+// ═══════════════════════════════════════
+// VALUES SECTION
+// ═══════════════════════════════════════
+.values {
+  @include section-padding;
+  padding-top: $space-section*0.5;
+  padding-bottom: $space-section*0.5;
+
+  @include respond-to(md) {
+    padding-top: $space-section*0.5;
+    padding-bottom: $space-section*0.5;
   }
 }
 
 .values__header {
+  max-width: $max-width-wide;
+  margin: 0 auto $space-section*0.5;
   text-align: center;
-  margin-bottom: $space-section;
 
   @include respond-to(md) {
-    margin-bottom: $space-xxl;
+    margin-bottom: $space-xxl*0.5;
   }
 }
 
-.values__eyebrow {
-  @include eyebrow-text;
-  display: inline-block;
-  color: $color-primary;
-  margin-bottom: $space-lg;
-}
-
-.values__headline {
-  @include mega-headline(clamp($font-size-xxxl, 4vw, $font-size-display));
+.values__heading {
   margin: 0;
-
-  em {
-    color: $color-primary;
-    font-style: normal;
-  }
-}
-
-.values__grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-
-  @include respond-to(lg) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @include respond-to(sm) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.values__card {
-  padding: $space-xxl;
-  border: 1px solid $color-border-light;
-  border-radius: 0;
-  transition: all $transition-normal;
-  background: $color-bg-primary;
-
-  &:hover {
-    background: $color-bg-warm;
-    transform: translateY(-4px);
-    box-shadow: $shadow-lg;
-  }
-}
-
-.values__icon {
-  width: 48px;
-  height: 48px;
-  @include flex-center;
-  background: $color-primary;
-  color: $color-text-inverse;
-  margin-bottom: $space-lg;
-  border-radius: 0;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-
-.values__title {
   font-family: $font-family-heading;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-medium;
-  color: $color-text-primary;
-  margin: 0 0 $space-xs;
-  letter-spacing: $letter-spacing-heading;
-}
-
-.values__desc {
-  font-family: $font-family-display;
-  font-size: $font-size-md;
-  color: $color-text-tertiary;
-  line-height: $line-height-relaxed;
-  margin: 0;
-}
-
-// ═══════════════════════════════════════
-// PROOF / CREDIBILITY
-// ═══════════════════════════════════════
-.proof {
-  @include section-padding;
-  background: $color-bg-teal;
-}
-
-.proof__grid {
-  @include content-container($max-width-content);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  @include respond-to(md) {
-    flex-direction: column;
-    gap: $space-xxl;
-  }
-}
-
-.proof__item {
-  text-align: center;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: $space-xxs;
-}
-
-.proof__number {
-  font-family: $font-family-heading;
-  font-size: $font-size-display;
-  font-weight: $font-weight-medium;
-  color: $color-text-inverse;
-  text-transform: uppercase;
-  line-height: 1;
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: $font-weight-bold;
+  color: $color-mono-dark;
+  letter-spacing: $letter-spacing-tight;
+  line-height: $line-height-tight;
 
   @include respond-to(md) {
     font-size: $font-size-xxxl;
   }
 }
 
-.proof__label {
-  font-family: $font-family-nav;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  text-transform: uppercase;
-  letter-spacing: $letter-spacing-wide;
-  color: rgba($color-text-inverse, 0.7);
-}
-
-.proof__detail {
-  font-family: $font-family-display;
-  font-size: $font-size-sm;
-  color: rgba($color-text-inverse, 0.5);
-  max-width: 160px;
-}
-
-.proof__divider {
-  width: 1px;
-  height: 60px;
-  background: rgba($color-text-inverse, 0.15);
-
-  @include respond-to(md) {
-    width: 40px;
-    height: 1px;
-  }
-}
-
-// ═══════════════════════════════════════
-// FAQ SECTION
-// ═══════════════════════════════════════
-.faq {
-  @include section-padding;
-  padding-top: $space-section * 1.5;
-  padding-bottom: $space-section * 1.5;
-  background: $color-bg-maroon;
-
-  @include respond-to(md) {
-    padding-top: $space-section;
-    padding-bottom: $space-section;
-  }
-}
-
-.faq__inner {
-  max-width: $max-width-narrow;
+.values__grid {
+  max-width: $max-width-wide;
   margin: 0 auto;
-}
-
-.faq__headline {
-  @include mega-headline(clamp($font-size-xxxl, 5vw, $font-size-hero));
-  color: $color-text-inverse;
-  text-align: center;
-  margin: 0 0 $space-xxl;
-}
-
-.faq__list {
-  display: flex;
-  flex-direction: column;
-}
-
-.faq__item {
-  border-top: 1px solid rgba($color-text-inverse, 0.15);
-
-  &:last-child {
-    border-bottom: 1px solid rgba($color-text-inverse, 0.15);
-  }
-
-  &[open] {
-    .faq__icon {
-      transform: rotate(45deg);
-    }
-  }
-}
-
-.faq__question {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: $space-lg 0;
-  cursor: pointer;
-  list-style: none;
-  font-family: $font-family-heading;
-  font-size: clamp($font-size-md, 2vw, $font-size-xl);
-  font-weight: $font-weight-medium;
-  text-transform: uppercase;
-  letter-spacing: $letter-spacing-wide;
-  color: $color-text-inverse;
-  transition: color $transition-fast;
-
-  &::-webkit-details-marker {
-    display: none;
-  }
-
-  &::marker {
-    display: none;
-    content: '';
-  }
-
-  &:hover {
-    color: $color-primary;
-  }
-}
-
-.faq__icon {
-  font-family: $font-family-heading;
-  font-size: $font-size-xl;
-  font-weight: $font-weight-medium;
-  color: $color-text-inverse;
-  transition: transform $transition-normal;
-  flex-shrink: 0;
-  margin-left: $space-lg;
-}
-
-.faq__answer {
-  padding: 0 0 $space-lg;
-
-  p {
-    font-family: $font-family-display;
-    font-size: $font-size-md;
-    color: rgba($color-text-inverse, 0.7);
-    line-height: $line-height-relaxed;
-    margin: 0;
-  }
-}
-
-// ═══════════════════════════════════════
-// FOUNDER NOTE
-// ═══════════════════════════════════════
-.founder {
-  @include content-container(700px);
-  @include section-padding;
-  padding-top: $space-section * 1.5;
-  padding-bottom: $space-section * 1.5;
-  background: $color-bg-primary;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-xl;
 
   @include respond-to(md) {
-    padding-top: $space-section;
-    padding-bottom: $space-section;
+    grid-template-columns: 1fr;
+    gap: $space-lg;
   }
 }
 
-.founder__inner {
-  position: relative;
-}
-
-.founder__content {
+.values__column {
   display: flex;
   flex-direction: column;
   gap: $space-md;
 }
 
-.founder__label {
-  font-family: $font-family-nav;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  text-transform: uppercase;
-  letter-spacing: $letter-spacing-wide;
-  color: $color-primary;
-}
-
-.founder__text {
-  font-family: $font-family-display;
-  font-size: $font-size-lg;
-  color: $color-text-secondary;
-  line-height: $line-height-relaxed;
+.values__subheading {
   margin: 0;
+  font-family: $font-family-heading;
+  font-size: clamp(18px, 2vw, 24px);
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  line-height: $line-height-tight;
+  letter-spacing: $letter-spacing-tight;
 
   @include respond-to(md) {
-    font-size: $font-size-md;
+    font-size: $font-size-lg;
   }
 }
 
-.founder__sign {
-  font-family: $font-family-display;
-  font-size: $font-size-lg;
-  font-style: italic;
-  color: $color-text-tertiary;
-  margin-top: $space-md;
-}
-
-// ═══════════════════════════════════════
-// SOFT CTA
-// ═══════════════════════════════════════
-.about-cta {
-  text-align: center;
-  @include section-padding;
-  padding-top: $space-section * 1.5;
-  padding-bottom: $space-section * 1.5;
-  background: $color-bg-amber;
+.values__description {
+  margin: 0;
+  font-family: $font-family-body;
+  font-size: $font-size-md;
+  line-height: $line-height-relaxed;
+  color: $color-gray-600;
 
   @include respond-to(md) {
-    padding-top: $space-section;
-    padding-bottom: $space-section;
-  }
-}
-
-.about-cta__headline {
-  @include mega-headline(clamp($font-size-xxxl, 5vw, $font-size-hero));
-  color: $color-text-primary;
-  margin: 0 0 $space-xxl;
-
-  span {
-    display: block;
-  }
-}
-
-.about-cta__headline--accent {
-  color: $color-text-inverse;
-}
-
-.about-cta__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: $space-sm;
-  padding: $space-md $space-xxl;
-  background: $color-bg-dark;
-  color: $color-text-inverse;
-  font-family: $font-family-nav;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
-  text-decoration: none;
-  border-radius: 0;
-  transition: all 0.4s $ease-expo-out;
-
-  &:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    color: $color-text-inverse;
-
-    svg {
-      transform: translateX($space-xxs);
-    }
-  }
-
-  &:active {
-    transform: translateY(-1px) scale(0.99);
-  }
-
-  svg {
-    transition: transform $transition-normal;
+    font-size: $font-size-sm;
   }
 }

@@ -1,10 +1,12 @@
-<section class="gifting">
-  <div
-    class="gifting__container"
-    (mouseenter)="isHovered = true"
-    (mouseleave)="isHovered = false"
-  >
-    <img src="/gift.png" alt="Gifting" class="gifting__image" />
+<section class="gifting" (mouseenter)="isHovered = true" (mouseleave)="isHovered = false">
+  <h2 class="gifting__heading">Perfect Gifts for Tea Lovers</h2>
+  <p class="gifting__subheading">Curated collections for every occasion</p>
+
+  <div class="gifting__container">
+    <picture>
+      <source media="(max-width: 640px)" srcset="/gift.mob.png" />
+      <img src="/gift.png" alt="Gifting" class="gifting__image" />
+    </picture>
 
     <!-- Overlay -->
     <div class="gifting__overlay" [class.gifting__overlay--active]="isHovered"></div>
@@ -20,4 +22,3 @@
     </button>
   </div>
 </section>
-1

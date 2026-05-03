@@ -129,7 +129,7 @@
   font-family: $font-family-body;
   font-size: $font-size-sm;
   text-decoration: none;
-  border-radius: $border-radius-sm;
+  border-radius: $radius-md;
   transition: all 0.3s ease;
 
   &:hover {
@@ -198,7 +198,7 @@
     max-width: 100%;
     height: auto;
     margin: $space-lg 0;
-    border-radius: $border-radius-md;
+    border-radius: $radius-md;
   }
 
   blockquote {
@@ -226,7 +226,7 @@
   pre {
     padding: $space-lg;
     background: $color-gray-900;
-    border-radius: $border-radius-md;
+    border-radius: $radius-md;
     overflow-x: auto;
     margin: $space-lg 0;
 

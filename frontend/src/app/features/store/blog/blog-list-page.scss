@@ -99,7 +99,7 @@
   padding: $space-sm $space-md;
   border: 1px solid $color-gray-300;
   background: white;
-  border-radius: $border-radius-sm;
+  border-radius: $radius-md;
   font-family: $font-family-body;
   font-size: $font-size-sm;
   color: $color-gray-700;
@@ -147,7 +147,7 @@
   flex-direction: column;
   background: white;
   border: 1px solid $color-gray-200;
-  border-radius: $border-radius-md;
+  border-radius: $radius-md;
   overflow: hidden;
   transition: all 0.3s ease;
 
@@ -197,7 +197,7 @@
   color: $color-primary;
   font-family: $font-family-body;
   font-size: $font-size-xs;
-  border-radius: $border-radius-sm;
+  border-radius: $radius-md;
   text-transform: lowercase;
   letter-spacing: $letter-spacing-wide;
 }
@@ -279,7 +279,7 @@
   padding: $space-sm $space-md;
   border: 1px solid $color-gray-300;
   background: white;
-  border-radius: $border-radius-sm;
+  border-radius: $radius-md;
   font-family: $font-family-body;
   font-size: $font-size-sm;
   color: $color-mono-dark;
@@ -309,7 +309,7 @@
   padding: 0;
   border: 1px solid $color-gray-300;
   background: white;
-  border-radius: $border-radius-sm;
+  border-radius: $radius-md;
   font-family: $font-family-body;
   font-size: $font-size-sm;
   cursor: pointer;
@@ -348,7 +348,7 @@
   padding: $space-xl;
   background: rgba(220, 38, 38, 0.1);
   border: 1px solid rgba(220, 38, 38, 0.3);
-  border-radius: $border-radius-md;
+  border-radius: $radius-md;
   font-family: $font-family-body;
   font-size: $font-size-md;
   color: #dc2626;

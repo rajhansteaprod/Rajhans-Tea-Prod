@@ -1,0 +1,155 @@
+<div class="track-order-container">
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1 class="hero__title">Track Your Order</h1>
+    <p class="hero__subtitle">Get real-time updates on your shipment</p>
+  </section>
+
+  <!-- Main Content -->
+  <div class="track-content">
+    <!-- Search Form -->
+    <div class="search-box">
+      <div class="search-tabs">
+        <button
+          class="tab"
+          [class.active]="searchBy() === 'orderId'"
+          (click)="switchSearchMethod(); searchBy.set('orderId')"
+        >
+          By Order ID
+        </button>
+        <button
+          class="tab"
+          [class.active]="searchBy() === 'email'"
+          (click)="switchSearchMethod(); searchBy.set('email')"
+        >
+          By Email
+        </button>
+      </div>
+
+      <div class="search-form">
+        @if (searchBy() === 'orderId') {
+          <input
+            type="text"
+            placeholder="Enter Order ID (e.g., ORD#12345)"
+            [(ngModel)]="orderId"
+            (keyup.enter)="trackOrder()"
+            class="input"
+          />
+        }
+
+        @if (searchBy() === 'email') {
+          <input
+            type="email"
+            placeholder="Enter Email Address"
+            [(ngModel)]="email"
+            (keyup.enter)="trackOrder()"
+            class="input"
+          />
+        }
+
+        <button
+          class="btn-search"
+          (click)="trackOrder()"
+          [disabled]="loading()"
+        >
+          {{ loading() ? 'Searching...' : 'Track Order' }}
+        </button>
+      </div>
+
+      @if (error()) {
+        <div class="error-message">{{ error() }}</div>
+      }
+    </div>
+
+    <!-- Tracking Results -->
+    @if (order() && !loading()) {
+      <div class="tracking-result">
+        <!-- Order Header -->
+        <div class="order-header">
+          <div>
+            <h2>{{ order()!.orderNumber }}</h2>
+            <p class="order-date">{{ formatDate(order()!.created_at) }}</p>
+          </div>
+          <div class="order-total">
+            <span class="label">Order Total</span>
+            <span class="amount">₹{{ order()!.total }}</span>
+          </div>
+        </div>
+
+        <!-- Status Badge -->
+        <div class="status-badge" [style.backgroundColor]="getStatusColor(order()!.shipping_status)">
+          {{ getStatusLabel(order()!.shipping_status) }}
+        </div>
+
+        <!-- Tracking Info -->
+        <div class="tracking-info">
+          <div class="info-item">
+            <span class="label">Tracking ID</span>
+            <span class="value">{{ order()!.tracking_id }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Courier</span>
+            <span class="value">{{ order()!.courier || 'Processing' }}</span>
+          </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="order-items">
+          <h3>Order Items</h3>
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of order()!.items; track item.name) {
+                <tr>
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>₹{{ item.price }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Timeline -->
+        @if (order()!.timeline && order()!.timeline.length > 0) {
+          <div class="timeline">
+            <h3>Delivery Timeline</h3>
+            <div class="timeline-events">
+              @for (event of order()!.timeline; let i = $index; track i) {
+                <div class="timeline-event" [class.completed]="i < order()!.timeline.length">
+                  <div class="timeline-marker"></div>
+                  <div class="timeline-content">
+                    <h4>{{ event.event }}</h4>
+                    <p class="timestamp">{{ formatDate(event.timestamp) }}</p>
+                    <p class="location">{{ event.location }}</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (searched() && !order() && !loading() && error()) {
+      <div class="empty-state">
+        <p>{{ error() }}</p>
+      </div>
+    }
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Searching for your order...</p>
+      </div>
+    }
+  </div>
+</div>
