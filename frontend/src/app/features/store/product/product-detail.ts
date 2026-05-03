@@ -5,12 +5,11 @@ import { Meta, Title } from '@angular/platform-browser';
 import { CatalogService, Product, ProductVariant } from '../../../core/services/catalog.service';
 import { CartStore } from '../../../core/services/cart.store';
 import { ReviewStore, RatingSummary } from '../../../core/services/review.store';
-import { ProductReviewsComponent } from './reviews/product-reviews';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, ProductReviewsComponent],
+  imports: [CommonModule],
   templateUrl: './product-detail.html',
   styleUrls: ['./product-detail.scss'],
 })

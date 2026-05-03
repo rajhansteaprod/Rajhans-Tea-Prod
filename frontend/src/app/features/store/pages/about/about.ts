@@ -6,7 +6,6 @@ import {
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { Title, Meta, DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -22,7 +21,7 @@ interface Value {
 @Component({
   selector: 'app-about',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './about.html',
   styleUrls: ['./about.scss'],
 })
