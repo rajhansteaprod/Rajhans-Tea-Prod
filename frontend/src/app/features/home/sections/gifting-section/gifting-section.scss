@@ -1,7 +1,9 @@
 @use '../../../../core/design-tokens/tokens' as *;
 @use '../../../../core/design-tokens/mixins' as *;
 
-:host { display: block; }
+:host {
+  display: block;
+}
 
 .gifting {
   position: relative;
@@ -54,6 +56,8 @@
   width: 100%;
   height: auto;
   display: block;
+  top: -2px;
+  position: relative;
 }
 
 .gifting__overlay {
@@ -79,7 +83,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 2;
-  
+
   padding: $space-md $space-xl;
   background: $color-mono-light;
   color: $color-mono-dark;
@@ -91,10 +95,12 @@
   letter-spacing: $letter-spacing-luxury;
   text-transform: uppercase;
   cursor: pointer;
-  
+
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.95);
-  transition: opacity $transition-normal, transform $transition-normal;
+  transition:
+    opacity $transition-normal,
+    transform $transition-normal;
   pointer-events: none;
 
   &--visible {
