@@ -76,7 +76,9 @@
       "Bash(findstr :4000)",
       "Bash(curl -v http://localhost:5000/api/v1/admin/shipments/create -H 'Content-Type: application/json' -H 'Authorization: Bearer test-token' -d '{\"orderId\":\"69e3e6f5f283ff277002ac70\",\"pickupLocationId\":\"warehouse-1\"}')",
       "Bash(curl -s -X POST http://localhost:3000/api/v1/admin/shipments/create -H 'Content-Type: application/json' -H 'Authorization: Bearer test-token' -d '{\"orderId\":\"69e3e6f5f283ff277002ac70\",\"pickupLocationId\":\"warehouse-1\"}')",
-      "Bash(curl -X POST http://localhost:3000/api/v1/admin/shipments/create -H 'Content-Type: application/json' -H 'Authorization: Bearer test-token' -d '{\"orderId\":\"69e3e6f5f283ff277002ac70\",\"pickupLocationId\":\"warehouse-1\"}')"
+      "Bash(curl -X POST http://localhost:3000/api/v1/admin/shipments/create -H 'Content-Type: application/json' -H 'Authorization: Bearer test-token' -d '{\"orderId\":\"69e3e6f5f283ff277002ac70\",\"pickupLocationId\":\"warehouse-1\"}')",
+      "PowerShell(Get-Process -Name \"node\" -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Force)"
     ],
     "additionalDirectories": [
       "c:\\Users\\91626\\.claude\\projects\\c--Users-91626-Desktop-DEVELOPMENT-APPLICATIONS-Rajhans-Tea\\memory",
