@@ -55,9 +55,7 @@ export class SummaryStepComponent {
     }
 
     this.isPlacing.set(true);
-    console.log('🛒 CartItems:', this.cartItems());
-    console.log('💰 Subtotal:', this.cartSubtotal(), 'Discount:', this.cartDiscount(), 'Tax:', this.cartTax(), 'Total:', this.cartTotal());
-
+    
     try {
       this.promoError.set('');
 

@@ -4,7 +4,7 @@ import { ProductRepository } from '../../catalog/repositories/product.repository
 import { ProductVariantRepository } from '../../catalog/repositories/product-variant.repository';
 import { BadRequestError, NotFoundError } from '../../../utils/api-error';
 import { IProductDoc } from '../../catalog/models/product.model';
-
+import {logger} from '../../../utils/logger';
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface CartItemView {
@@ -19,6 +19,7 @@ export interface CartItemView {
   lineTotal: number; // basePrice/variantPrice * qty (before pricing engine — for fast display)
   shortDescription?: string;
   description?: string;
+  discountedPrice?: number; // for display in cart sidebar
 }
 
 export interface CartView {
@@ -41,6 +42,7 @@ export class CartService {
 
   async getCart(sessionId: string): Promise<CartView> {
     const cart = await this.cartRepo.findBySession(sessionId);
+    
     if (!cart || cart.items.length === 0) {
       return { sessionId, items: [], itemCount: 0, subtotal: 0 };
     }
@@ -51,7 +53,7 @@ export class CartService {
       const image = product.images?.[0] ?? '';
 
       // Use variant price if variant is present, else use base price
-      let price = product.basePrice;
+      let price = product.discountedPrice ?? product.basePrice;
       let variantName: string | undefined;
       let variantId: string | undefined;
 
@@ -63,7 +65,7 @@ export class CartService {
       }
 
       const lineTotal = price * item.qty;
-
+      logger.info("Product returned from DB:"+ product);
       return {
         productId: product._id.toString(),
         variantId,
@@ -76,6 +78,7 @@ export class CartService {
         lineTotal,
         shortDescription: product.shortDescription,
         description: product.description,
+        discountedPrice: product.discountedPrice,
       };
     });
 

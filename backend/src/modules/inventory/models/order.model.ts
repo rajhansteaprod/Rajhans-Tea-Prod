@@ -21,6 +21,7 @@ export type OrderItemFulfillmentStatus =
 
 export interface IOrderItem {
   productId: string;
+  variantId?: string;
   name: string;
   qty: number;
   unitPrice: number;
@@ -79,6 +80,7 @@ export interface IOrderDoc extends Document {
 const orderItemSchema = new Schema<IOrderItem>(
   {
     productId: { type: String, required: true },
+    variantId: { type: String, default: null },
     name: { type: String, required: true },
     qty: { type: Number, required: true },
     unitPrice: { type: Number, required: true },

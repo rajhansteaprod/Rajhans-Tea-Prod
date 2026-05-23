@@ -249,8 +249,9 @@ export class OrderService {
 
   async getOrderForUser(orderId: string, userId: string) {
     const order = await this.orderRepo.findById(orderId);
+    console.log("CHECK HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"+order);
     if (!order) throw new NotFoundError('Order not found');
-    if (order.userId.toString() !== userId) throw new ForbiddenError('Access denied');
+    if (order.userId._id.toString() !== userId) throw new ForbiddenError('Access denied');
     return order;
   }
 

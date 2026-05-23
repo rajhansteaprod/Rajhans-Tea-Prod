@@ -283,7 +283,7 @@ export class CartStore {
       basePrice,
       discountedPrice: product.discountedPrice,
       qty,
-      lineTotal: basePrice * qty,
+      lineTotal: product!.discountedPrice? product!.discountedPrice * qty : basePrice * qty,
     };
     this.setTemporaryCart(buyNowItem);
   }

@@ -61,16 +61,15 @@
             <div class="item-details">
               <div class="item-top">
                 <p class="item-name">{{ item.name }}</p>
-                @if (item.variantName) {
-                  <p class="item-variant">{{ item.variantName }}</p>
-                }
+                 
                 <button class="remove-btn" (click)="cart.removeItem(item.productId, item.variantId)" title="Remove">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                     <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                   </svg>
                 </button>
               </div>
-              <p class="item-price">&#8377;{{ item.basePrice | number:'1.0-0' }}</p>
+              
+              <p class="item-price">&#8377;{{ item.discountedPrice | number:'1.0-0' }}</p>
               <div class="qty-row">
                 <div class="qty-controls">
                   <button class="qty-btn" (click)="cart.updateQty(item.productId, item.qty - 1, item.variantId)">

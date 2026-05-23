@@ -6,6 +6,7 @@ import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../../ut
 import { BadRequestError } from '../../utils/api-error';
 import { config } from '../../config';
 import { OrderStatus } from './models/order.model';
+import { logger } from '../../utils/logger';
 
 const orderService = new OrderService();
 const inventoryService = new InventoryService();
@@ -25,6 +26,7 @@ export const getUserOrders = async (req: Request, res: Response) => {
 };
 
 export const getOrderDetail = async (req: Request, res: Response) => {
+  logger.info("Getting order detail for orderId:" + req.params['orderId']);
   const userId = req.user!.userId;
   const orderId = req.params['orderId'] as string;
   const order = await orderService.getOrderForUser(orderId, userId);
