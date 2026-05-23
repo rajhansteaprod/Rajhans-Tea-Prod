@@ -23,20 +23,7 @@ export const getUserOrders = async (req: Request, res: Response) => {
     limit: limit ? parseInt(limit, 10) : undefined,
     status,
   });
-  // Ensure variantId is included in each item
-  const ordersWithVariant = result.orders.map(order => ({
-    ...order.toObject(),
-    items: order.items.map(item => ({
-      productId: item.productId,
-      variantId: item.variantId,
-      name: item.name,
-      qty: item.qty,
-      unitPrice: item.unitPrice,
-      totalPrice: item.totalPrice,
-      fulfillmentStatus: item.fulfillmentStatus,
-    })),
-  }));
-  sendPaginated(res, ordersWithVariant, result.meta, 'Orders');
+  sendPaginated(res, result.orders, result.meta, 'Orders');
 };
 
 export const getOrderDetail = async (req: Request, res: Response) => {
@@ -44,20 +31,7 @@ export const getOrderDetail = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const orderId = req.params['orderId'] as string;
   const order = await orderService.getOrderForUser(orderId, userId);
-  // Ensure variantId is included in each item
-  const orderWithVariant = {
-    ...order.toObject(),
-    items: order.items.map(item => ({
-      productId: item.productId,
-      variantId: item.variantId,
-      name: item.name,
-      qty: item.qty,
-      unitPrice: item.unitPrice,
-      totalPrice: item.totalPrice,
-      fulfillmentStatus: item.fulfillmentStatus,
-    })),
-  };
-  sendSuccess(res, orderWithVariant);
+  sendSuccess(res, order);
 };
 
 export const getOrderTracking = async (req: Request, res: Response) => {
@@ -218,38 +192,12 @@ export const adminListOrders = async (req: Request, res: Response) => {
     status,
     search,
   });
-  // Ensure variantId is included in each item
-  const ordersWithVariant = result.orders.map(order => ({
-    ...order.toObject(),
-    items: order.items.map(item => ({
-      productId: item.productId,
-      variantId: item.variantId,
-      name: item.name,
-      qty: item.qty,
-      unitPrice: item.unitPrice,
-      totalPrice: item.totalPrice,
-      fulfillmentStatus: item.fulfillmentStatus,
-    })),
-  }));
-  sendPaginated(res, ordersWithVariant, result.meta, 'Orders');
+  sendPaginated(res, result.orders, result.meta, 'Orders');
 };
 
 export const adminGetOrderDetail = async (req: Request, res: Response) => {
   const order = await orderService.adminGetOrder(req.params['orderId'] as string);
-  // Ensure variantId is included in each item
-  const orderWithVariant = {
-    ...order.toObject(),
-    items: order.items.map(item => ({
-      productId: item.productId,
-      variantId: item.variantId,
-      name: item.name,
-      qty: item.qty,
-      unitPrice: item.unitPrice,
-      totalPrice: item.totalPrice,
-      fulfillmentStatus: item.fulfillmentStatus,
-    })),
-  };
-  sendSuccess(res, orderWithVariant);
+  sendSuccess(res, order);
 };
 
 export const adminGetOrderStats = async (_req: Request, res: Response) => {
