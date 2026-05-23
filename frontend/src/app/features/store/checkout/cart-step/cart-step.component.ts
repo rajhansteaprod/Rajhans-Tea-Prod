@@ -37,10 +37,12 @@ export class CartStepComponent {
 
     const items = this.cartItems().map((item) =>
       item.productId === productId && item.variantId === variantId
-        ? { ...item, qty: newQty, lineTotal: item.basePrice * 0.9 * newQty }
+        ? { ...item, qty: newQty, lineTotal: item.basePrice * newQty }
         : item
     );
     this.checkoutService.setCartItems(items);
+    // Force refresh pricing after quantity change
+    this.checkoutService.loadCheckoutSummary(true);
   }
 
   removeItem(productId: string, variantId?: string) {

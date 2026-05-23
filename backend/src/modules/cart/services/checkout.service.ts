@@ -84,12 +84,12 @@ export class CheckoutService {
       }
 
       // Use variant price if variant selected, otherwise use base price
-      let finalPrice = product.basePrice;
+      let finalPrice = product.discountedPrice ?? product.price;
       if (variantId) {
         const ProductVariant = require('../../catalog/models/product-variant.model').ProductVariant;
         const variant = await ProductVariant.findById(variantId).lean();
         if (variant) {
-          finalPrice = variant.price;
+          finalPrice = variant.discountedPrice ?? variant.price;
         }
       }
 
