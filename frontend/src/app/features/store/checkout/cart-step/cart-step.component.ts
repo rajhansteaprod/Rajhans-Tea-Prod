@@ -40,9 +40,9 @@ export class CartStepComponent {
         ? { ...item, qty: newQty, lineTotal: item.basePrice * newQty }
         : item
     );
+
+    // Just update items - effect in CheckoutService will auto-refresh pricing
     this.checkoutService.setCartItems(items);
-    // Force refresh pricing after quantity change
-    this.checkoutService.loadCheckoutSummary(true);
   }
 
   removeItem(productId: string, variantId?: string) {

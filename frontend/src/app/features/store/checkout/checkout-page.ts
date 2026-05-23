@@ -49,43 +49,33 @@ export class CheckoutPageComponent implements OnInit {
   readonly isAddressDone = computed(() => !!this.checkoutService.address().name);
 
   ngOnInit() {
-    // Wait for cart to load, then initialize checkout
-    this.cartStore.loadCart()
-      .pipe(
-        switchMap(() => this.route.queryParamMap)
-      )
-      .subscribe((params) => {
-        // After cart loads, check if we have items
-        const tempCart = this.cartStore.getTemporaryCart();
-        const sessionCart = this.cartStore.cartItems();
+    // Load cart once and initialize checkout
+    this.cartStore.loadCart().subscribe(() => {
+      const tempCart = this.cartStore.getTemporaryCart();
+      const sessionCart = this.cartStore.cartItems();
 
-        const checkoutItems = tempCart.length > 0 ? tempCart : sessionCart;
-        console.log('✅ Cart loaded. Items:', checkoutItems.length);
+      const checkoutItems = tempCart.length > 0 ? tempCart : sessionCart;
+      console.log('✅ Cart loaded. Items:', checkoutItems.length);
 
-        if (checkoutItems.length === 0) {
-          console.log('❌ No items found, redirecting to /products');
-          this.router.navigate(['/products']);
-          return;
-        }
+      if (checkoutItems.length === 0) {
+        console.log('❌ No items found, redirecting to /products');
+        this.router.navigate(['/products']);
+        return;
+      }
 
-        // Sync items to backend session before initializing checkout
-        checkoutItems.forEach((item) => {
-          this.cartStore.addItem(item.productId, item.qty, item.variantId, false);
-        });
+      // Initialize checkout once
+      this.checkoutService.initializeCheckout(checkoutItems);
+    });
 
-        // Wait for sync, then initialize checkout
-        setTimeout(() => {
-          this.checkoutService.initializeCheckout(checkoutItems);
-
-          // Set step from query param
-          const step = (params.get('step') as Step) || 'cart';
-          if (['cart', 'address', 'summary'].includes(step)) {
-            this.currentStep.set(step);
-          } else {
-            this.currentStep.set('cart');
-          }
-        }, 500);
-      });
+    // Separately listen to route changes (doesn't re-initialize)
+    this.route.queryParamMap.subscribe((params) => {
+      const step = (params.get('step') as Step) || 'cart';
+      if (['cart', 'address', 'summary'].includes(step)) {
+        this.currentStep.set(step);
+      } else {
+        this.currentStep.set('cart');
+      }
+    });
   }
 
   // Navigation handlers from child components

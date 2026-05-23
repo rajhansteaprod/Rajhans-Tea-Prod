@@ -136,7 +136,7 @@ export class PaymentStore {
    * 2. Open Razorpay modal (frontend)
    * 3. Verify payment (backend)
    */
-  async pay(address: AddressForm, walletAmount = 0, loyaltyPoints = 0, promoCode = ''): Promise<boolean> {
+  async pay(address: AddressForm, walletAmount = 0, loyaltyPoints = 0, promoCode = '', checkoutItems?: any[]): Promise<boolean> {
     this._paymentLoading.set(true);
     this._paymentError.set(null);
     this._paymentSuccess.set(false);
@@ -146,10 +146,13 @@ export class PaymentStore {
       // If user refreshes or network fails, same key returns same order
       const idempotencyKey = this.generateIdempotencyKey(address);
 
-      // ✅ Get items from cart (prioritize temporary cart for "Buy Now", fallback to session cart)
-      const tempCart = this.cart.getTemporaryCart();
-      const sessionCart = this.cart.cartItems();
-      const cartItems = tempCart.length > 0 ? tempCart : sessionCart;
+      // ✅ Use checkout items (with updated quantities) or fallback to cart
+      let cartItems = checkoutItems;
+      if (!cartItems || cartItems.length === 0) {
+        const tempCart = this.cart.getTemporaryCart();
+        const sessionCart = this.cart.cartItems();
+        cartItems = tempCart.length > 0 ? tempCart : sessionCart;
+      }
 
       if (!cartItems || cartItems.length === 0) {
         this._paymentError.set('Cart is empty. Please add items before checkout.');

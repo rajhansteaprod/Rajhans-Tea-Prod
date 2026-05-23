@@ -114,7 +114,9 @@ private readonly platform = inject(PlatformService);
 
   // Update cart items
   setCartItems(items: CartItem[]) {
+    console.log('✅ setCartItems called with:', items);
     this.cartItemsSignal.set([...items]);
+    console.log('💾 Signal updated, current items:', this.cartItems());
   }
 
   // Save address (called when user clicks Next on address step)
