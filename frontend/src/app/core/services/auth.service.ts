@@ -54,12 +54,7 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router,
-  ) {
-    // On app startup, validate stored session with backend
-    if (this._user() && this._accessToken()) {
-      this.validateSession();
-    }
-  }
+  ) {}
 
   /** Send Firebase ID token to backend, get our JWT tokens back */
   verifyFirebaseToken(idToken: string): Observable<VerifyTokenResponse> {
