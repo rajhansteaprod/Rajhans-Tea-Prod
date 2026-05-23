@@ -27,6 +27,12 @@ router.get(
   validate(orderIdSchema),
   ctrl.getOrderTracking,
 );
+router.get(
+  '/orders/user/:orderId/shipment',
+  authenticate,
+  validate(orderIdSchema),
+  ctrl.getShipmentTracking,
+);
 router.get('/shipping/rates', validate(shippingRateSchema), ctrl.getShippingRates);
 
 // ===========================================================================

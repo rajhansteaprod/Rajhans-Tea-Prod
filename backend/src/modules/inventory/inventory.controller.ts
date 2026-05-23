@@ -86,8 +86,11 @@ export const handleShiprocketWebhook = async (req: Request, res: Response) => {
     const newStatus = statusMap[currentStatus.toUpperCase()];
     if (newStatus) {
       const { OrderRepository } = await import('./repositories/order.repository');
-      const repo = new OrderRepository();
-      const order = await repo.findByOrderNumber(orderNumber);
+      const { ShipmentRepository } = await import('./repositories/shipment.repository');
+      const orderRepo = new OrderRepository();
+      const shipmentRepo = new ShipmentRepository();
+
+      const order = await orderRepo.findByOrderNumber(orderNumber);
       if (order) {
         try {
           await orderService.updateStatus(
@@ -100,14 +103,39 @@ export const handleShiprocketWebhook = async (req: Request, res: Response) => {
           // Invalid transition — ignore (idempotent)
         }
 
-        // Update tracking info
+        // Update tracking info in Order
         if (payload.awb) {
-          await repo.updateShiprocketInfo(order._id.toString(), {
+          await orderRepo.updateShiprocketInfo(order._id.toString(), {
             awbCode: payload.awb,
             courierName: payload.courier_name,
             trackingUrl: payload.tracking_url || null,
             estimatedDelivery: payload.etd ? new Date(payload.etd) : null,
           });
+        }
+
+        // Add tracking event to Shipment document
+        try {
+          const shipment = await shipmentRepo.findByOrderId(order._id.toString());
+          if (shipment) {
+            // Map shipment status
+            const shipmentStatusMap: Record<string, any> = {
+              'PICKED UP': 'picked_up',
+              'IN TRANSIT': 'in_transit',
+              'OUT FOR DELIVERY': 'out_for_delivery',
+              DELIVERED: 'delivered',
+            };
+            const shipmentStatus = shipmentStatusMap[currentStatus.toUpperCase()];
+            if (shipmentStatus) {
+              await shipmentRepo.addEvent(shipment._id.toString(), {
+                status: shipmentStatus,
+                timestamp: new Date(),
+                location: payload.location || null,
+                note: `${currentStatus}${payload.remark ? ': ' + payload.remark : ''}`,
+              });
+            }
+          }
+        } catch (err) {
+          logger.error({ error: err, orderId: order._id }, 'Failed to add tracking event to shipment');
         }
       }
     }
@@ -252,4 +280,45 @@ export const adminUpdateWarehouse = async (req: Request, res: Response) => {
 export const adminDeleteWarehouse = async (req: Request, res: Response) => {
   await warehouseService.delete(req.params['id'] as string);
   sendNoContent(res);
+};
+
+// ─── Customer: Shipment Tracking ─────────────────────────────────────────────
+
+export const getShipmentTracking = async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+  const orderId = req.params['orderId'] as string;
+
+  // Verify ownership
+  const order = await orderService.getOrderForUser(orderId, userId);
+
+  // Get shipment with tracking events
+  const { ShipmentRepository } = await import('./repositories/shipment.repository');
+  const shipmentRepo = new ShipmentRepository();
+  const shipment = await shipmentRepo.findByOrderId(orderId);
+
+  if (!shipment) {
+    return sendSuccess(res, {
+      orderNumber: order.orderNumber,
+      status: order.status,
+      shipment: null,
+      message: 'Shipment not yet created for this order',
+    });
+  }
+
+  sendSuccess(res, {
+    orderNumber: order.orderNumber,
+    status: order.status,
+    shipment: {
+      _id: shipment._id,
+      awbCode: shipment.awbCode,
+      courierName: shipment.courierName,
+      trackingUrl: shipment.trackingUrl,
+      status: shipment.status,
+      pickupScheduledDate: shipment.pickupScheduledDate,
+      estimatedDeliveryDate: shipment.estimatedDeliveryDate,
+      events: shipment.events,
+      createdAt: shipment.createdAt,
+      updatedAt: shipment.updatedAt,
+    },
+  });
 };

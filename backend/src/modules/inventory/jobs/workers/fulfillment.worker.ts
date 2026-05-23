@@ -1,10 +1,12 @@
 import { Worker, Job } from 'bullmq';
 import { getBullMQConnectionOpts } from '../../../../loaders/bullmq.loader';
 import { OrderService } from '../../services/order.service';
+import { ShipmentService } from '../../services/shipment.service';
 import { OrderRepository } from '../../repositories/order.repository';
 import { logger } from '../../../../utils/logger';
 
 const orderService = new OrderService();
+const shipmentService = new ShipmentService();
 const orderRepo = new OrderRepository();
 
 let worker: Worker | null = null;
@@ -16,15 +18,32 @@ export const startFulfillmentWorker = (): void => {
       if (job.name === 'fulfillment:create-order') {
         const { paymentId } = job.data as { paymentId: string };
         logger.info({ paymentId, jobId: job.id }, 'Creating order from payment');
-        await orderService.createFromPayment(paymentId);
-        logger.info({ paymentId, jobId: job.id }, 'Order created');
+        const order = await orderService.createFromPayment(paymentId);
+        logger.info({ paymentId, jobId: job.id, orderId: order._id }, 'Order created');
+
+        // Auto-queue SHIP_ORDER job
+        const queue = (await import('../queues/fulfillment.queue')).getFulfillmentQueue();
+        await queue.add(
+          'fulfillment:ship-order',
+          { orderId: order._id.toString() },
+          { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
+        );
+        logger.info({ orderId: order._id.toString() }, 'SHIP_ORDER job queued automatically');
       }
 
       if (job.name === 'fulfillment:ship-order') {
         const { orderId } = job.data as { orderId: string };
         logger.info({ orderId, jobId: job.id }, 'Shipping order via provider');
         await orderService.shipOrder(orderId);
-        logger.info({ orderId, jobId: job.id }, 'Order shipped');
+        logger.info({ orderId, jobId: job.id }, 'Order shipped via Shiprocket');
+
+        // Create Shipment document for tracking
+        try {
+          await shipmentService.createFromOrder(orderId);
+          logger.info({ orderId, jobId: job.id }, 'Shipment tracking document created');
+        } catch (err) {
+          logger.error({ orderId, jobId: job.id, error: err }, 'Failed to create shipment tracking document');
+        }
       }
 
       if (job.name === 'fulfillment:sync-tracking') {
