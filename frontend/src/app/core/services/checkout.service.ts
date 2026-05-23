@@ -1,8 +1,8 @@
 import { Injectable, signal, computed, inject, effect } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient , HttpHeaders} from '@angular/common/http';
 import { CartItem } from './cart.store';
 import { environment } from '../../../environments/environment';
-
+import { PlatformService } from './platform.service';
 export interface CheckoutAddress {
   name: string;
   phone: string;
@@ -64,11 +64,13 @@ export class CheckoutService {
   readonly address = this.addressSignal.asReadonly();
   readonly summaryLoading = this.summaryLoadingSignal.asReadonly();
   readonly summaryError = this.summaryErrorSignal.asReadonly();
-
+private readonly platform = inject(PlatformService);
   // Computed values — prefer backend pricing if available, fallback to client calculation
   readonly cartSubtotal = computed(() => {
     const backendSummary = this.summaryDataSignal();
-    return backendSummary?.subtotal ?? this.cartItems().reduce((sum, item) => sum + item.lineTotal, 0);
+    return (
+      backendSummary?.subtotal ?? this.cartItems().reduce((sum, item) => sum + item.lineTotal, 0)
+    );
   });
 
   readonly cartDiscount = computed(() => {
@@ -83,7 +85,7 @@ export class CheckoutService {
 
   readonly cartTotal = computed(() => {
     const backendSummary = this.summaryDataSignal();
-    return backendSummary?.total ?? (this.cartSubtotal() - this.cartDiscount());
+    return backendSummary?.total ?? this.cartSubtotal() - this.cartDiscount();
   });
 
   readonly isPricingFromBackend = computed(() => !!this.summaryDataSignal());
@@ -158,7 +160,9 @@ export class CheckoutService {
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
           const response = await this.http
-            .get<ApiResponse<CheckoutSummary>>(`${this.api}/checkout/summary`)
+            .get<
+              ApiResponse<CheckoutSummary>
+            >(`${this.api}/checkout/summary`, { headers: this.headers() })
             .toPromise();
 
           if (response?.data) {
@@ -213,5 +217,8 @@ export class CheckoutService {
       cartItems: this.cartItems(),
       address: this.address(),
     };
+  }
+  private headers(): HttpHeaders {
+    return new HttpHeaders({ 'X-Session-ID': this.platform.localStorage.getItem('guestSessionId')??'' });
   }
 }

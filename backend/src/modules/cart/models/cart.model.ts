@@ -11,7 +11,7 @@ export interface ICartDoc extends Document {
   sessionId: string;
   userId: Types.ObjectId | null;
   items: ICartItem[];
-  status: 'temporary' | 'checkout_started' | 'completed' | 'abandoned';
+  status: 'temporary' | 'checkout_started' | 'completed' | 'abandoned' | 'user_cart';
   checkoutStartedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -32,7 +32,7 @@ const cartSchema = new Schema<ICartDoc>(
     sessionId: { type: String, required: true },
     userId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     items: [cartItemSchema],
-    status: { type: String, enum: ['temporary', 'checkout_started', 'completed', 'abandoned'], default: 'temporary' },
+    status: { type: String, enum: ['temporary', 'checkout_started', 'completed', 'abandoned','user_cart'], default: 'temporary' },
     checkoutStartedAt: { type: Date, required: false },
   },
   { timestamps: true },

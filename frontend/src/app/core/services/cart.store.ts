@@ -34,6 +34,7 @@ export interface CartItem {
   description?: string;
   price?: number;
   quantity?: number;
+  discountedPrice?: number;
 }
 
 export interface CartView {
@@ -197,7 +198,12 @@ export class CartStore {
       .get<ApiResponse<CartView>>(`${this.api}/cart`, { headers: this.headers() })
       .pipe(
         map((res) => res.data),
-        tap((data) => this.applyCart(data)),
+        tap((data) => {
+          this.applyCart(data);
+          if (data.sessionId) {
+          localStorage.setItem('X-Session-ID', data.sessionId);
+        }
+        }),
         finalize(() => this._cartLoading.set(false)),
         catchError(() => {
           this._cartLoading.set(false);
@@ -275,6 +281,7 @@ export class CartStore {
       slug: product.slug,
       image,
       basePrice,
+      discountedPrice: variant?.discountedPrice ?? product.discountedPrice,
       qty,
       lineTotal: basePrice * qty,
     };

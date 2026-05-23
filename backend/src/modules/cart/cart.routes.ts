@@ -40,8 +40,8 @@ router.post('/wishlist/merge', authenticate, validate(mergeWishlistSchema), cart
 // CHECKOUT — public (guest + logged-in, identified by X-Session-ID header)
 // ===========================================================================
 
-router.get('/checkout/summary', cart.getCheckoutSummary);
-router.post('/checkout/reserve', cart.reserveStock);
-router.delete('/checkout/reserve', cart.releaseReservation);
+router.get('/checkout/summary',authenticate, cart.getCheckoutSummary);
+router.post('/checkout/reserve',authenticate, cart.reserveStock);
+router.delete('/checkout/reserve',authenticate, cart.releaseReservation);
 
 export default router;
