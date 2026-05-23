@@ -101,7 +101,8 @@ export const mergeWishlist = async (req: Request, res: Response) => {
 
 export const getCheckoutSummary = async (req: Request, res: Response) => {
   const sessionId = getSessionId(req);
-  const data = await checkoutService.getSummary(sessionId);
+  const { items } = req.body as { items?: any[] };
+  const data = await checkoutService.getSummary(sessionId, items);
   sendSuccess(res, data);
 };
 

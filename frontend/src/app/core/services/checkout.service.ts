@@ -47,6 +47,7 @@ const emptyAddress = (): CheckoutAddress => ({
 export class CheckoutService {
   private readonly http = inject(HttpClient);
   private readonly api = environment.apiUrl;
+  private readonly cart = inject(CartStore);
 
   // State signals
   private cartItemsSignal = signal<CartItem[]>([]);
@@ -155,14 +156,21 @@ private readonly platform = inject(PlatformService);
     this.summaryErrorSignal.set(null);
 
     try {
+      // Detect if using temporary cart (buy-now flow)
+      const tempCart = this.cart.getTemporaryCart();
+      const isTemporaryCheckout = tempCart.length > 0 && JSON.stringify(tempCart) === JSON.stringify(items);
+
       // Retry logic: exponential backoff, max 3 attempts
       let lastError: any;
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
+          // Build request body
+          const body: Record<string, any> = isTemporaryCheckout ? { items } : {};
+
           const response = await this.http
-            .get<
+            .post<
               ApiResponse<CheckoutSummary>
-            >(`${this.api}/checkout/summary`, { headers: this.headers() })
+            >(`${this.api}/checkout/summary`, body, { headers: this.headers() })
             .toPromise();
 
           if (response?.data) {

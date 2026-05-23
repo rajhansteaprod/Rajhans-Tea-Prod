@@ -40,7 +40,7 @@ router.post('/wishlist/:productId', validate(toggleWishlistSchema), cart.toggleW
 // CHECKOUT — public (guest + logged-in, identified by X-Session-ID header)
 // ===========================================================================
 
-router.get('/checkout/summary',authenticate, cart.getCheckoutSummary);
+router.post('/checkout/summary', authenticate, cart.getCheckoutSummary);
 router.post('/checkout/reserve',authenticate, cart.reserveStock);
 router.delete('/checkout/reserve',authenticate, cart.releaseReservation);
 
