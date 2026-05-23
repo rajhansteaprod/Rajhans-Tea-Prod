@@ -131,6 +131,7 @@ export class ProductDetailComponent implements OnInit {
   }
 
   buyNow(): void {
+    alert("Clicked");
     if (this.product()) {
       this.cartStore.buyNowItem(this.product()!, this.quantity(), this.selectedVariant());
       // Navigate to checkout; CheckoutService detects temporary cart and uses it

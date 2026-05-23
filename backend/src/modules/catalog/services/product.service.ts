@@ -7,7 +7,7 @@ import { slugify, ensureUniqueSlug } from '../../../utils/slugify';
 import { BadRequestError, NotFoundError } from '../../../utils/api-error';
 import { parsePagination, buildPaginationMeta } from '../../../utils/pagination';
 import { ProductStatus } from '../models/product.model';
-
+import {logger} from '../../../utils/logger';
 interface ProductListQuery {
   page?: number;
   limit?: number;
@@ -66,7 +66,10 @@ export class ProductService {
     const { page, limit, skip, sortBy, sortOrder } = parsePagination(query);
 
     const { products, total } = await this.productRepo.findList({
-      skip, limit, sortBy, sortOrder,
+      skip,
+      limit,
+      sortBy,
+      sortOrder,
       search: query.search,
       categoryId: query.categoryId,
       collectionId: query.collectionId,
@@ -86,14 +89,18 @@ export class ProductService {
   async getBySlug(slug: string) {
     const product = await this.productRepo.findBySlug(slug);
     if (!product) throw new NotFoundError('Product not found');
-    const variants = product.hasVariants ? await this.variantRepo.findByProductId(product._id.toString()) : undefined;
+    const variants = product.hasVariants
+      ? await this.variantRepo.findByProductId(product._id.toString())
+      : undefined;
     return ProductDTO.toPublic(product, variants);
   }
 
   async getById(id: string) {
     const product = await this.productRepo.findByIdPopulated(id);
     if (!product) throw new NotFoundError('Product not found');
-    const variants = product.hasVariants ? await this.variantRepo.findByProductIdAll(product._id.toString()) : undefined;
+    const variants = product.hasVariants
+      ? await this.variantRepo.findByProductIdAll(product._id.toString())
+      : undefined;
     return ProductDTO.toAdmin(product, variants);
   }
 
@@ -222,6 +229,8 @@ export class ProductService {
     if (data.trackInventory !== undefined) update.trackInventory = data.trackInventory;
 
     await this.productRepo.updateById(id, update);
+    this.updateBasePricingByVariant(id); // in case price/discount changed and variants exist, update base price and discounted price accordinglyt
+    this.updateBasePricingByVariant(id);
     return this.getById(id);
   }
 
@@ -229,5 +238,19 @@ export class ProductService {
     const product = await this.productRepo.findById(id);
     if (!product) throw new NotFoundError('Product not found');
     await this.productRepo.deleteById(id);
+  }
+  async updateBasePricingByVariant(productId: string) {
+    const variants = await this.variantRepo.findByProductId(productId);
+    if (variants.length === 0) {
+      return;
+    }
+
+    const basePrice = Math.min(...variants.map((v) => v.price));
+    await this.productRepo.updateById(productId, { basePrice });
+    const discountedPrice = variants.some((v) => v.discountedPrice && v.discountedPrice < v.price)
+      ? Math.min(...variants.map((v) => v.discountedPrice ?? v.price))
+      : undefined;
+    const product=await this.productRepo.updateById(productId, { discountedPrice });
+    logger.info(`Updating base pricing  for product ${productId} new basePrice: ${product!.basePrice}, discountedPrice: ${product!.discountedPrice} from ${basePrice} and ${discountedPrice} of variants`);
   }
 }

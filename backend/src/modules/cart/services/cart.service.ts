@@ -163,7 +163,9 @@ export class CartService {
     if (!guestCart && userCart) {
       // User has an old cart from a previous session — reassign its sessionId so it's accessible
       await this.cartRepo.saveItems(guestSessionId, userCart.items);
-      await this.cartRepo.deleteBySession(userCart.sessionId);
+      if (userCart.sessionId !== guestSessionId) {
+  await this.cartRepo.deleteBySession(userCart.sessionId);
+}
       await this.cartRepo.assignUser(guestSessionId, userId);
       return this.getCart(guestSessionId);
     }
@@ -209,8 +211,10 @@ export class CartService {
     await this.cartRepo.saveItems(guestSessionId, mergedItems);
     await this.cartRepo.assignUser(guestSessionId, userId);
     // Delete old user cart (different sessionId)
-    await this.cartRepo.deleteBySession(userCart!.sessionId);
-
+    
+if (userCart!.sessionId !== guestSessionId) {
+  await this.cartRepo.deleteBySession(userCart!.sessionId);
+}
     return this.getCart(guestSessionId);
   }
 }

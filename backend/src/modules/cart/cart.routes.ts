@@ -31,10 +31,10 @@ router.post('/cart/merge', authenticate, validate(mergeCartSchema), cart.mergeCa
 // ===========================================================================
 
 router.get('/wishlist', cart.getWishlist);
-router.post('/wishlist/:productId', validate(toggleWishlistSchema), cart.toggleWishlist);
 
 // Merge requires authentication
 router.post('/wishlist/merge', authenticate, validate(mergeWishlistSchema), cart.mergeWishlist);
+router.post('/wishlist/:productId', validate(toggleWishlistSchema), cart.toggleWishlist);
 
 // ===========================================================================
 // CHECKOUT — public (guest + logged-in, identified by X-Session-ID header)

@@ -22,7 +22,8 @@ export class ProductCardComponent {
   @Output() addToCartClick = new EventEmitter<Event>();
   @Output() buyNowClick = new EventEmitter<Event>();
   @Output() cardClick = new EventEmitter<void>();
-
+  ngOnInit(): void {
+  }
   onHover(isHovering: boolean): void {
     this.imageHover.emit(isHovering);
   }

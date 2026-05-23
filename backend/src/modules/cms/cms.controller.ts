@@ -91,6 +91,7 @@ export const adminDeleteBlog = async (req: Request, res: Response) => {
 // ─── Public: Hero Slides ────────────────────────────────────────────────────
 
 export const getActiveHeroSlides = async (_req: Request, res: Response) => {
+ 
   const slides = await heroSlideService.getActiveSlides();
   sendSuccess(res, slides, 'Hero slides');
 };

@@ -3,7 +3,6 @@ import { WishlistRepository } from '../repositories/wishlist.repository';
 import { ProductRepository } from '../../catalog/repositories/product.repository';
 import { NotFoundError } from '../../../utils/api-error';
 import { IProductDoc } from '../../catalog/models/product.model';
-
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface WishlistItemView {
@@ -85,7 +84,6 @@ export class WishlistService {
   async mergeOnLogin(guestSessionId: string, userId: string): Promise<WishlistView> {
     const guestWishlist = await this.wishlistRepo.findRawBySession(guestSessionId);
     const userWishlist = await this.wishlistRepo.findRawByUserId(userId);
-
     if (!guestWishlist && !userWishlist) {
       return { sessionId: guestSessionId, items: [], productIds: [] };
     }

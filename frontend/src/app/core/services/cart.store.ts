@@ -281,7 +281,7 @@ export class CartStore {
       slug: product.slug,
       image,
       basePrice,
-      discountedPrice: variant?.discountedPrice ?? product.discountedPrice,
+      discountedPrice: product.discountedPrice,
       qty,
       lineTotal: basePrice * qty,
     };
