@@ -1,30 +1,22 @@
 import pino from 'pino';
 import path from 'path';
-import { config } from '../config';
 
 const logsDir = path.join(process.cwd(), 'logs');
 
-export const logger = pino({
-  level: config.log.level,
+export const shipmentLogger = pino({
+  level: 'debug',
   timestamp: pino.stdTimeFunctions.isoTime,
   transport: {
     targets: [
-      ...(config.env === 'development' ? [{
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'SYS:standard',
-          ignore: 'pid,hostname',
-        },
-      }] : []),
       {
         target: 'pino-pretty',
         options: {
-          destination: path.join(logsDir, 'app.log'),
+          destination: path.join(logsDir, 'shipment.log'),
           mkdir: true,
           translateTime: 'SYS:standard',
           ignore: 'pid,hostname',
           singleLine: false,
+          colorize: false,
         },
       },
     ],

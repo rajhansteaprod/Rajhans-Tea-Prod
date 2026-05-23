@@ -6,7 +6,8 @@ import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../../ut
 import { BadRequestError } from '../../utils/api-error';
 import { config } from '../../config';
 import { OrderStatus } from './models/order.model';
-import { logger } from '../../utils/logger';
+import {logger} from '../../utils/logger';
+import { shipmentLogger } from '../../utils/shipment-logger';
 
 const orderService = new OrderService();
 const inventoryService = new InventoryService();
@@ -22,7 +23,20 @@ export const getUserOrders = async (req: Request, res: Response) => {
     limit: limit ? parseInt(limit, 10) : undefined,
     status,
   });
-  sendPaginated(res, result.orders, result.meta, 'Orders');
+  // Ensure variantId is included in each item
+  const ordersWithVariant = result.orders.map(order => ({
+    ...order.toObject(),
+    items: order.items.map(item => ({
+      productId: item.productId,
+      variantId: item.variantId,
+      name: item.name,
+      qty: item.qty,
+      unitPrice: item.unitPrice,
+      totalPrice: item.totalPrice,
+      fulfillmentStatus: item.fulfillmentStatus,
+    })),
+  }));
+  sendPaginated(res, ordersWithVariant, result.meta, 'Orders');
 };
 
 export const getOrderDetail = async (req: Request, res: Response) => {
@@ -30,7 +44,20 @@ export const getOrderDetail = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const orderId = req.params['orderId'] as string;
   const order = await orderService.getOrderForUser(orderId, userId);
-  sendSuccess(res, order);
+  // Ensure variantId is included in each item
+  const orderWithVariant = {
+    ...order.toObject(),
+    items: order.items.map(item => ({
+      productId: item.productId,
+      variantId: item.variantId,
+      name: item.name,
+      qty: item.qty,
+      unitPrice: item.unitPrice,
+      totalPrice: item.totalPrice,
+      fulfillmentStatus: item.fulfillmentStatus,
+    })),
+  };
+  sendSuccess(res, orderWithVariant);
 };
 
 export const getOrderTracking = async (req: Request, res: Response) => {
@@ -62,17 +89,23 @@ export const getShippingRates = async (req: Request, res: Response) => {
 // ─── Shiprocket Webhook ──────────────────────────────────────────────────────
 
 export const handleShiprocketWebhook = async (req: Request, res: Response) => {
+  shipmentLogger.info('🔔 Shiprocket webhook received');
+
   const token = req.headers['x-api-key'] as string;
   if (
     config.shipping.shiprocket.webhookToken &&
     token !== config.shipping.shiprocket.webhookToken
   ) {
+    shipmentLogger.error({ token }, '❌ Invalid webhook token');
     throw new BadRequestError('Invalid webhook token');
   }
+  shipmentLogger.debug('✓ Webhook token verified');
 
   const payload = req.body;
   const orderNumber = payload.order_id as string;
   const currentStatus = payload.current_status as string;
+
+  shipmentLogger.debug({ orderNumber, currentStatus, awb: payload.awb }, '📦 Webhook payload');
 
   if (orderNumber && currentStatus) {
     // Map Shiprocket status to our status
@@ -92,55 +125,86 @@ export const handleShiprocketWebhook = async (req: Request, res: Response) => {
 
       const order = await orderRepo.findByOrderNumber(orderNumber);
       if (order) {
+        shipmentLogger.debug({ orderId: order._id, orderNumber }, '✓ Order found');
+
         try {
+          shipmentLogger.debug({ orderId: order._id, newStatus }, '📝 Updating order status');
           await orderService.updateStatus(
             order._id.toString(),
             newStatus,
             `Shiprocket: ${currentStatus}`,
             null,
           );
-        } catch {
-          // Invalid transition — ignore (idempotent)
+          shipmentLogger.info({ orderId: order._id, status: newStatus }, '✅ Order status updated');
+        } catch (err) {
+          shipmentLogger.warn({ orderId: order._id, error: err }, '⚠ Status update failed (invalid transition)');
         }
 
-        // Update tracking info in Order
+        // Update tracking info
         if (payload.awb) {
+          shipmentLogger.debug({ orderId: order._id, awb: payload.awb }, '📍 Updating tracking info');
           await orderRepo.updateShiprocketInfo(order._id.toString(), {
             awbCode: payload.awb,
             courierName: payload.courier_name,
             trackingUrl: payload.tracking_url || null,
             estimatedDelivery: payload.etd ? new Date(payload.etd) : null,
           });
+          shipmentLogger.info({ orderId: order._id, awb: payload.awb }, '✅ Tracking info updated');
         }
 
         // Add tracking event to Shipment document
         try {
           const shipment = await shipmentRepo.findByOrderId(order._id.toString());
           if (shipment) {
-            // Map shipment status
+            shipmentLogger.debug({ shipmentId: shipment._id, orderNumber }, '📋 Found shipment document');
+
             const shipmentStatusMap: Record<string, any> = {
               'PICKED UP': 'picked_up',
               'IN TRANSIT': 'in_transit',
               'OUT FOR DELIVERY': 'out_for_delivery',
-              DELIVERED: 'delivered',
+              'DELIVERED': 'delivered',
             };
             const shipmentStatus = shipmentStatusMap[currentStatus.toUpperCase()];
             if (shipmentStatus) {
+              shipmentLogger.debug({
+                shipmentId: shipment._id,
+                newStatus: shipmentStatus,
+                location: payload.location,
+              }, '➕ Adding tracking event');
+
               await shipmentRepo.addEvent(shipment._id.toString(), {
                 status: shipmentStatus,
                 timestamp: new Date(),
                 location: payload.location || null,
                 note: `${currentStatus}${payload.remark ? ': ' + payload.remark : ''}`,
               });
+
+              shipmentLogger.info({
+                shipmentId: shipment._id,
+                status: shipmentStatus,
+                location: payload.location,
+              }, '✅ Tracking event added to shipment');
             }
+          } else {
+            shipmentLogger.warn({ orderId: order._id }, '⚠ No shipment document found');
           }
         } catch (err) {
-          logger.error({ error: err, orderId: order._id }, 'Failed to add tracking event to shipment');
+          shipmentLogger.error({
+            orderId: order._id,
+            error: err instanceof Error ? err.message : String(err),
+          }, '❌ Failed to add tracking event');
         }
+      } else {
+        shipmentLogger.warn({ orderNumber }, '⚠ Order not found');
       }
+    } else {
+      shipmentLogger.warn({ currentStatus }, '⚠ Unknown status mapping');
     }
+  } else {
+    shipmentLogger.warn({ payload }, '⚠ Missing orderNumber or currentStatus in payload');
   }
 
+  shipmentLogger.info({ orderNumber }, '✅ Webhook processed successfully');
   res.status(200).json({ status: 'ok' });
 };
 
@@ -154,12 +218,38 @@ export const adminListOrders = async (req: Request, res: Response) => {
     status,
     search,
   });
-  sendPaginated(res, result.orders, result.meta, 'Orders');
+  // Ensure variantId is included in each item
+  const ordersWithVariant = result.orders.map(order => ({
+    ...order.toObject(),
+    items: order.items.map(item => ({
+      productId: item.productId,
+      variantId: item.variantId,
+      name: item.name,
+      qty: item.qty,
+      unitPrice: item.unitPrice,
+      totalPrice: item.totalPrice,
+      fulfillmentStatus: item.fulfillmentStatus,
+    })),
+  }));
+  sendPaginated(res, ordersWithVariant, result.meta, 'Orders');
 };
 
 export const adminGetOrderDetail = async (req: Request, res: Response) => {
   const order = await orderService.adminGetOrder(req.params['orderId'] as string);
-  sendSuccess(res, order);
+  // Ensure variantId is included in each item
+  const orderWithVariant = {
+    ...order.toObject(),
+    items: order.items.map(item => ({
+      productId: item.productId,
+      variantId: item.variantId,
+      name: item.name,
+      qty: item.qty,
+      unitPrice: item.unitPrice,
+      totalPrice: item.totalPrice,
+      fulfillmentStatus: item.fulfillmentStatus,
+    })),
+  };
+  sendSuccess(res, orderWithVariant);
 };
 
 export const adminGetOrderStats = async (_req: Request, res: Response) => {
@@ -288,15 +378,21 @@ export const getShipmentTracking = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const orderId = req.params['orderId'] as string;
 
+  shipmentLogger.info({ userId, orderId }, '▶ Fetching shipment tracking for customer');
+
   // Verify ownership
   const order = await orderService.getOrderForUser(orderId, userId);
+  shipmentLogger.debug({ orderId, orderNumber: order.orderNumber }, '✓ Order ownership verified');
 
   // Get shipment with tracking events
   const { ShipmentRepository } = await import('./repositories/shipment.repository');
   const shipmentRepo = new ShipmentRepository();
+
+  shipmentLogger.debug({ orderId }, '🔍 Searching for shipment document');
   const shipment = await shipmentRepo.findByOrderId(orderId);
 
   if (!shipment) {
+    shipmentLogger.info({ orderId }, '⚠ Shipment document not found');
     return sendSuccess(res, {
       orderNumber: order.orderNumber,
       status: order.status,
@@ -305,7 +401,14 @@ export const getShipmentTracking = async (req: Request, res: Response) => {
     });
   }
 
-  sendSuccess(res, {
+  shipmentLogger.debug({
+    shipmentId: shipment._id,
+    orderId,
+    awbCode: shipment.awbCode,
+    eventsCount: shipment.events.length,
+  }, '✓ Shipment document found');
+
+  const response = {
     orderNumber: order.orderNumber,
     status: order.status,
     shipment: {
@@ -320,5 +423,12 @@ export const getShipmentTracking = async (req: Request, res: Response) => {
       createdAt: shipment.createdAt,
       updatedAt: shipment.updatedAt,
     },
-  });
+  };
+
+  shipmentLogger.info({
+    shipmentId: shipment._id,
+    eventsCount: shipment.events.length,
+  }, '✅ Shipment tracking returned to customer');
+
+  sendSuccess(res, response);
 };

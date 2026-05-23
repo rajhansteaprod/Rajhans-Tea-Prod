@@ -1,10 +1,14 @@
 import { Shipment, IShipmentDoc, ShipmentStatus, IShipmentEvent } from '../models/shipment.model';
 import { NotFoundError } from '../../../utils/api-error';
+import { shipmentLogger } from '../../../utils/shipment-logger';
 
 export class ShipmentRepository {
   async create(data: Partial<IShipmentDoc>): Promise<IShipmentDoc> {
+    shipmentLogger.debug({ orderId: data.orderId, awbCode: data.awbCode }, '💾 Creating shipment in DB');
     const shipment = new Shipment(data);
-    return shipment.save();
+    const saved = await shipment.save();
+    shipmentLogger.info({ shipmentId: saved._id, awbCode: saved.awbCode }, '✅ Shipment created in DB');
+    return saved;
   }
 
   async findById(shipmentId: string): Promise<IShipmentDoc | null> {
@@ -24,6 +28,8 @@ export class ShipmentRepository {
   }
 
   async updateStatus(shipmentId: string, status: ShipmentStatus): Promise<IShipmentDoc> {
+    shipmentLogger.debug({ shipmentId, newStatus: status }, '🔄 Updating shipment status');
+
     const shipment = await Shipment.findByIdAndUpdate(
       shipmentId,
       {
@@ -32,7 +38,13 @@ export class ShipmentRepository {
       },
       { new: true }
     );
-    if (!shipment) throw new NotFoundError('Shipment not found');
+
+    if (!shipment) {
+      shipmentLogger.error({ shipmentId }, '❌ Shipment not found when updating status');
+      throw new NotFoundError('Shipment not found');
+    }
+
+    shipmentLogger.info({ shipmentId, status }, '✅ Shipment status updated');
     return shipment;
   }
 
@@ -47,6 +59,13 @@ export class ShipmentRepository {
   }
 
   async addEvent(shipmentId: string, event: IShipmentEvent): Promise<IShipmentDoc> {
+    shipmentLogger.debug({
+      shipmentId,
+      eventStatus: event.status,
+      location: event.location,
+      note: event.note,
+    }, '📌 Adding tracking event to shipment');
+
     const shipment = await Shipment.findByIdAndUpdate(
       shipmentId,
       {
@@ -55,7 +74,18 @@ export class ShipmentRepository {
       },
       { new: true }
     );
-    if (!shipment) throw new NotFoundError('Shipment not found');
+
+    if (!shipment) {
+      shipmentLogger.error({ shipmentId }, '❌ Shipment not found when adding event');
+      throw new NotFoundError('Shipment not found');
+    }
+
+    shipmentLogger.info({
+      shipmentId,
+      eventStatus: event.status,
+      totalEvents: shipment.events.length,
+    }, '✅ Tracking event added successfully');
+
     return shipment;
   }
 

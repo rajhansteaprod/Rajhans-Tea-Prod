@@ -4,6 +4,7 @@ import { OrderService } from '../../services/order.service';
 import { ShipmentService } from '../../services/shipment.service';
 import { OrderRepository } from '../../repositories/order.repository';
 import { logger } from '../../../../utils/logger';
+import { shipmentLogger } from '../../../../utils/shipment-logger';
 
 const orderService = new OrderService();
 const shipmentService = new ShipmentService();
@@ -33,16 +34,25 @@ export const startFulfillmentWorker = (): void => {
 
       if (job.name === 'fulfillment:ship-order') {
         const { orderId } = job.data as { orderId: string };
-        logger.info({ orderId, jobId: job.id }, 'Shipping order via provider');
-        await orderService.shipOrder(orderId);
-        logger.info({ orderId, jobId: job.id }, 'Order shipped via Shiprocket');
+        shipmentLogger.info({ orderId, jobId: job.id }, '▶ Processing SHIP_ORDER job');
 
-        // Create Shipment document for tracking
         try {
+          shipmentLogger.debug({ orderId }, '📤 Calling orderService.shipOrder()');
+          await orderService.shipOrder(orderId);
+          shipmentLogger.info({ orderId }, '✅ Order shipped successfully via Shiprocket');
+
+          // Create Shipment document for tracking
+          shipmentLogger.debug({ orderId }, '📋 Creating shipment tracking document');
           await shipmentService.createFromOrder(orderId);
-          logger.info({ orderId, jobId: job.id }, 'Shipment tracking document created');
+          shipmentLogger.info({ orderId }, '✅ Shipment tracking document created');
         } catch (err) {
-          logger.error({ orderId, jobId: job.id, error: err }, 'Failed to create shipment tracking document');
+          shipmentLogger.error({
+            orderId,
+            jobId: job.id,
+            error: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined,
+          }, '❌ SHIP_ORDER job failed');
+          throw err;
         }
       }
 

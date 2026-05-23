@@ -4,7 +4,7 @@ import { WarehouseRepository } from '../repositories/warehouse.repository';
 import { Shipment, IShipmentDoc, ShipmentStatus } from '../models/shipment.model';
 import { IOrderDoc } from '../models/order.model';
 import { NotFoundError } from '../../../utils/api-error';
-import { logger } from '../../../utils/logger';
+import { shipmentLogger } from '../../../utils/shipment-logger';
 
 export class ShipmentService {
   private shipmentRepo: ShipmentRepository;
@@ -18,21 +18,36 @@ export class ShipmentService {
   }
 
   async createFromOrder(orderId: string): Promise<IShipmentDoc> {
-    logger.info(`Creating shipment document from order: ${orderId}`);
+    shipmentLogger.info({ orderId }, '▶ Starting shipment creation from order');
 
     const order = await this.orderRepo.findById(orderId);
-    if (!order) throw new NotFoundError('Order not found');
+    if (!order) {
+      shipmentLogger.error({ orderId }, '❌ Order not found');
+      throw new NotFoundError('Order not found');
+    }
+    shipmentLogger.debug({ orderId, orderNumber: order.orderNumber }, '✓ Order found');
 
     // Check if shipment already exists
     const existing = await this.shipmentRepo.findByOrderId(orderId);
     if (existing) {
-      logger.info(`Shipment already exists for order: ${orderId}`);
+      shipmentLogger.warn({ orderId, shipmentId: existing._id }, '⚠ Shipment already exists, returning existing');
       return existing;
     }
 
     try {
       const warehouse = await this.warehouseRepo.findById(order.warehouseId.toString());
-      if (!warehouse) throw new NotFoundError('Warehouse not found');
+      if (!warehouse) {
+        shipmentLogger.error({ orderId }, '❌ Warehouse not found');
+        throw new NotFoundError('Warehouse not found');
+      }
+      shipmentLogger.debug({ orderId, warehouseId: warehouse._id }, '✓ Warehouse found');
+
+      shipmentLogger.debug({
+        orderId,
+        shiprocketOrderId: order.shiprocket.orderId,
+        shiprocketShipmentId: order.shiprocket.shipmentId,
+        awbCode: order.shiprocket.awbCode,
+      }, '📦 Creating shipment with order shiprocket data');
 
       // Create Shipment document from Order shiprocket data
       const shipment = await this.shipmentRepo.create({
@@ -65,10 +80,21 @@ export class ShipmentService {
         ],
       });
 
-      logger.info({ shipmentId: shipment._id, orderId }, 'Shipment document created');
+      shipmentLogger.info({
+        shipmentId: shipment._id,
+        orderId,
+        awbCode: shipment.awbCode,
+        courierName: shipment.courierName,
+        pickupDate: shipment.pickupScheduledDate,
+      }, '✅ Shipment document created successfully');
+
       return shipment;
     } catch (error) {
-      logger.error({ error, orderId }, 'Failed to create shipment document');
+      shipmentLogger.error({
+        orderId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      }, '❌ Failed to create shipment document');
       throw error;
     }
   }
