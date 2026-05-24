@@ -61,6 +61,7 @@ export const config = {
       password: process.env.SHIPROCKET_PASSWORD || '',
       baseUrl: process.env.SHIPROCKET_BASE_URL || 'https://apiv2.shiprocket.in/v1/external',
       webhookToken: process.env.SHIPROCKET_WEBHOOK_TOKEN || '',
+      channelId: parseInt(process.env.SHIPROCKET_CHANNEL_ID || '1', 10),
     },
   },
   log: {

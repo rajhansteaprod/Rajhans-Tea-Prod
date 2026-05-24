@@ -34,7 +34,7 @@ export interface ShippingProvider {
   readonly name: string;
 
   createOrder(order: IOrderDoc, pickupLocation: string): Promise<ShipmentResult>;
-  generateAWB(shipmentId: number, courierId?: number): Promise<AWBResult>;
+  generateAWB(shipmentId?: number, courierId?: number, orderId?: number): Promise<AWBResult>;
   trackShipment(shipmentId: number): Promise<TrackingResult>;
   cancelOrder(providerOrderId: number): Promise<void>;
   getShippingRates(

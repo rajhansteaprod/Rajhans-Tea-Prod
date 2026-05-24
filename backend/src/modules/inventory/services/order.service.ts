@@ -102,9 +102,12 @@ export class OrderService {
 
     const warehouse = await this.warehouseRepo.findById(order.warehouseId.toString());
     if (!warehouse) throw new BadRequestError('Warehouse not found');
+    if (!warehouse.shiprocketPickupLocationId) {
+      throw new BadRequestError('Warehouse not configured with Shiprocket pickup location');
+    }
 
     const provider = getShippingProvider();
-    const pickupLocation = warehouse.name;
+    const pickupLocation = warehouse.shiprocketPickupLocationId;
 
     // Create shipping order
     const shipment = await provider.createOrder(order, pickupLocation);
@@ -113,8 +116,8 @@ export class OrderService {
       shipmentId: shipment.shipmentId,
     });
 
-    // Generate AWB
-    const awb = await provider.generateAWB(shipment.shipmentId);
+    // Generate AWB (use shipmentId if available, fallback to orderId for adhoc orders)
+    const awb = await provider.generateAWB(shipment.shipmentId, undefined, shipment.providerOrderId);
     await this.orderRepo.updateShiprocketInfo(orderId, {
       awbCode: awb.awbCode,
       courierName: awb.courierName,

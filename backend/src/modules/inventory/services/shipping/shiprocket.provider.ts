@@ -1,5 +1,6 @@
 import { config } from '../../../../config';
 import { logger } from '../../../../utils/logger';
+import { shipmentLogger } from '../../../../utils/shipment-logger';
 import { IOrderDoc } from '../../models/order.model';
 import { ShiprocketToken } from '../../../shipments/models/shiprocket-token.model';
 import {
@@ -86,6 +87,12 @@ export class ShiprocketProvider implements ShippingProvider {
 
     const data = (await res.json().catch(() => ({}))) as Record<string, any>;
     if (!res.ok) {
+      shipmentLogger.error({
+        status: res.status,
+        path,
+        response: data,
+        token: token ? '***cached***' : 'none',
+      }, '❌ Shiprocket API error');
       logger.error({ status: res.status, path, body: data }, 'Shiprocket API error');
       throw new Error(data.message || `Shiprocket API error: ${res.status}`);
     }
@@ -97,12 +104,22 @@ export class ShiprocketProvider implements ShippingProvider {
   async createOrder(order: IOrderDoc, pickupLocation: string): Promise<ShipmentResult> {
     const addr = order.shippingAddress;
     const user = order.userId as any;
-    const data = await this.request('POST', '/orders/create', {
+
+    // Sanitize names: only allow alphabets and spaces
+    const sanitizeName = (name: string) => name.replace(/[^a-zA-Z\s]/g, '').trim();
+    const nameParts = addr.name.split(' ').filter(Boolean);
+    const firstName = sanitizeName(nameParts[0] || '');
+    const lastName = sanitizeName(nameParts.slice(1).join(' ') || '');
+
+    const data = await this.request('POST', '/orders/create/adhoc', {
+
+      // channel id not required for adhoc orders
+      // channel_id: config.shipping.shiprocket.channelId,
       order_id: order.orderNumber,
       order_date: new Date(order.createdAt).toISOString().replace('T', ' ').slice(0, 19),
       pickup_location: pickupLocation,
-      billing_customer_name: addr.name.split(' ')[0],
-      billing_last_name: addr.name.split(' ').slice(1).join(' ') || '',
+      billing_customer_name: firstName || 'Customer',
+      billing_last_name: lastName || '-',
       billing_address: addr.street,
       billing_city: addr.city,
       billing_pincode: addr.pincode,
@@ -131,8 +148,10 @@ export class ShiprocketProvider implements ShippingProvider {
     };
   }
 
-  async generateAWB(shipmentId: number, courierId?: number): Promise<AWBResult> {
-    const body: Record<string, unknown> = { shipment_id: shipmentId };
+  async generateAWB(shipmentId?: number, courierId?: number, orderId?: number): Promise<AWBResult> {
+    const body: Record<string, unknown> = {};
+    if (shipmentId) body.shipment_id = shipmentId;
+    if (orderId) body.order_id = orderId;
     if (courierId) body.courier_id = courierId;
 
     const data = await this.request('POST', '/courier/assign/awb', body);
