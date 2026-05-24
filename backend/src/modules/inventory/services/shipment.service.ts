@@ -1,8 +1,7 @@
 import { ShipmentRepository } from '../repositories/shipment.repository';
 import { OrderRepository } from '../repositories/order.repository';
 import { WarehouseRepository } from '../repositories/warehouse.repository';
-import { Shipment, IShipmentDoc, ShipmentStatus } from '../models/shipment.model';
-import { IOrderDoc } from '../models/order.model';
+import { IShipmentDoc, ShipmentStatus } from '../models/shipment.model';
 import { NotFoundError } from '../../../utils/api-error';
 import { shipmentLogger } from '../../../utils/shipment-logger';
 
@@ -110,7 +109,7 @@ export class ShipmentService {
       });
     }
 
-    logger.info({ shipmentId, status, note }, 'Shipment status updated');
+    shipmentLogger.info({ shipmentId, status, note }, 'Shipment status updated');
     return shipment;
   }
 
@@ -142,22 +141,4 @@ export class ShipmentService {
     return this.shipmentRepo.findByStatus(status);
   }
 
-  async cancelShipment(shipmentId: string): Promise<void> {
-    const shipment = await this.shipmentRepo.findById(shipmentId);
-    if (!shipment) throw new NotFoundError('Shipment not found');
-
-    if (shipment.shiprocketOrderId) {
-      const provider = getShippingProvider();
-      try {
-        await provider.cancelOrder(shipment.shiprocketOrderId);
-        logger.info({ shipmentId, shiprocketOrderId: shipment.shiprocketOrderId }, 'Shiprocket order cancelled');
-      } catch (error) {
-        logger.error({ error, shipmentId }, 'Failed to cancel Shiprocket order');
-        throw error;
-      }
-    }
-
-    await this.shipmentRepo.updateStatus(shipmentId, 'failed');
-    logger.info({ shipmentId }, 'Shipment cancelled');
-  }
 }

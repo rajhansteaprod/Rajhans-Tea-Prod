@@ -378,5 +378,5 @@ export const getShipmentTracking = async (req: Request, res: Response) => {
     eventsCount: shipment.events.length,
   }, '✅ Shipment tracking returned to customer');
 
-  sendSuccess(res, response);
+  return sendSuccess(res, response);
 };

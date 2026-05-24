@@ -107,4 +107,4 @@ shipmentSchema.index({ status: 1 });
 shipmentSchema.index({ createdAt: -1 });
 shipmentSchema.index({ 'shiprocketShipmentId': 1 }, { sparse: true });
 
-export const Shipment = mongoose.model<IShipmentDoc>('Shipment', shipmentSchema);
+export const Shipment = mongoose.models.Shipment || mongoose.model<IShipmentDoc>('Shipment', shipmentSchema);
