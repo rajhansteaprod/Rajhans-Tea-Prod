@@ -18,6 +18,7 @@ export interface ShippingProvider {
 
   createOrder(order: IOrderDoc, pickupLocation: string): Promise<ShipmentResult>;
   trackShipment(shipmentId: number): Promise<any>;
+  trackByOrderId(orderId: string): Promise<any>;
   cancelOrder(providerOrderId: number): Promise<void>;
   getShippingRates(
     pickupPincode: string,

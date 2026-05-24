@@ -89,7 +89,7 @@ export class CartRepository {
     await Cart.findOneAndUpdate({ sessionId }, { $set: { items } }, { upsert: true }).exec();
   }
 
-  async updateStatus(sessionId: string, status: 'temporary' | 'checkout_started' | 'completed' | 'abandoned'): Promise<void> {
+  async updateStatus(sessionId: string, status: 'temporary' | 'checkout_started' | 'completed' | 'abandoned' | 'user_cart'): Promise<void> {
     const updateData: any = { status };
     if (status === 'checkout_started') {
       updateData.checkoutStartedAt = new Date();
@@ -99,5 +99,26 @@ export class CartRepository {
 
   async markAsCompleted(sessionId: string): Promise<void> {
     await Cart.findOneAndUpdate({ sessionId }, { $set: { status: 'completed' } }).exec();
+  }
+
+  // Query by userId + status
+  async findByUserIdAndStatus(userId: string, status: 'temporary' | 'user_cart'): Promise<ICartDoc | null> {
+    return Cart.findOne({ userId: new Types.ObjectId(userId), status })
+      .populate('items.productId', 'name slug images basePrice category collections status shortDescription description discountedPrice')
+      .populate('items.variantId', 'name price')
+      .exec();
+  }
+
+  // Delete temporary carts after successful payment
+  async deleteTemporaryCart(userId: string): Promise<void> {
+    await Cart.deleteOne({ userId: new Types.ObjectId(userId), status: 'temporary' }).exec();
+  }
+
+  // Update status by userId + old status (for buy-now: temporary → completed)
+  async updateStatusByUserIdAndStatus(userId: string, oldStatus: string, newStatus: 'temporary' | 'user_cart' | 'completed'): Promise<void> {
+    await Cart.findOneAndUpdate(
+      { userId: new Types.ObjectId(userId), status: oldStatus },
+      { $set: { status: newStatus } }
+    ).exec();
   }
 }

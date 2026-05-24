@@ -195,7 +195,15 @@ export class PaymentStore {
         this._lastPaymentId.set(order.paymentId);
         this._paymentSuccess.set(true);
         this._paymentLoading.set(false);
-        this.cart.loadCart();
+
+        // Clear cart based on type
+        if (this.cart.cartType() === 'temporary') {
+          this.cart.clearTemporaryCart();
+        } else {
+          // Backend cleared it, sync frontend
+          this.cart.clearCart();
+        }
+
         return true;
       }
 
@@ -234,8 +242,15 @@ export class PaymentStore {
       this._paymentSuccess.set(true);
       this._paymentLoading.set(false);
 
-      // Clear cart (backend already cleared it, sync frontend)
-      this.cart.loadCart();
+      // Clear cart based on type
+      // If buy-now (temporary cart), only clear temporary cart
+      // If regular checkout, clear user/guest cart locally (backend already cleared it)
+      if (this.cart.cartType() === 'temporary') {
+        this.cart.clearTemporaryCart();
+      } else {
+        // Regular checkout - backend cleared it, sync frontend
+        this.cart.clearCart();
+      }
 
       return true;
     } catch (err: any) {

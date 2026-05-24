@@ -42,17 +42,30 @@ export class CartService {
 
   async getCart(sessionId: string): Promise<CartView> {
     const cart = await this.cartRepo.findBySession(sessionId);
-    
+
     if (!cart || cart.items.length === 0) {
       return { sessionId, items: [], itemCount: 0, subtotal: 0 };
     }
 
-    const items: CartItemView[] = cart.items.map((item) => {
-      // productId is populated
+    return this.formatCartView(cart, sessionId);
+  }
+
+  async getCartByUserId(userId: string): Promise<CartView> {
+    // Logged-in users should see their 'user_cart' (not temporary)
+    const cart = await this.cartRepo.findByUserIdAndStatus(userId, 'user_cart');
+
+    if (!cart || cart.items.length === 0) {
+      return { sessionId: userId, items: [], itemCount: 0, subtotal: 0 };
+    }
+
+    return this.formatCartView(cart, userId);
+  }
+
+  private formatCartView(cart: any, identifier: string): CartView {
+    const items: CartItemView[] = cart.items.map((item: any) => {
       const product = item.productId as unknown as IProductDoc;
       const image = product.images?.[0] ?? '';
 
-      // Use variant price if variant is present, else use base price
       let price = product.discountedPrice ?? product.basePrice;
       let variantName: string | undefined;
       let variantId: string | undefined;
@@ -65,7 +78,7 @@ export class CartService {
       }
 
       const lineTotal = price * item.qty;
-      logger.info("Product returned from DB:"+ product);
+      logger.info("Product returned from DB:" + product);
       return {
         productId: product._id.toString(),
         variantId,
@@ -85,7 +98,7 @@ export class CartService {
     const subtotal = items.reduce((sum, i) => sum + i.lineTotal, 0);
 
     return {
-      sessionId,
+      sessionId: identifier,
       items,
       itemCount: items.reduce((sum, i) => sum + i.qty, 0),
       subtotal,
@@ -93,7 +106,7 @@ export class CartService {
   }
 
   // ---------------------------------------------------------------------------
-  // ADD / UPDATE ITEM
+  // ADD / UPDATE ITEM (Guest via sessionId)
   // ---------------------------------------------------------------------------
 
   async addItem(sessionId: string, productId: string, qty: number, variantId?: string): Promise<CartView> {
@@ -142,11 +155,114 @@ export class CartService {
   }
 
   // ---------------------------------------------------------------------------
-  // CLEAR CART
+  // ADD / UPDATE ITEM (Logged-in User via userId)
+  // ---------------------------------------------------------------------------
+
+  async addItemForUser(userId: string, productId: string, qty: number, variantId?: string): Promise<CartView> {
+    if (qty < 1) throw new BadRequestError('Quantity must be at least 1');
+
+    const product = await this.productRepo.findById(productId);
+    if (!product) throw new NotFoundError('Product not found');
+    if (product.status !== 'active') throw new BadRequestError('Product is not available');
+
+    if (variantId) {
+      const variant = await this.variantRepo.findById(variantId);
+      if (!variant) throw new NotFoundError('Variant not found');
+      if (variant.productId.toString() !== productId) throw new BadRequestError('Variant does not belong to this product');
+      if (!variant.isActive) throw new BadRequestError('Variant is not available');
+    }
+
+    // Get or create user's cart (status: user_cart)
+    const Cart = require('../models/cart.model').Cart;
+    const Types = require('mongoose').Types;
+
+    let cart = await this.cartRepo.findByUserIdAndStatus(userId, 'user_cart');
+    if (!cart) {
+      cart = await Cart.create({
+        userId: new Types.ObjectId(userId),
+        sessionId: `user_${userId}`,
+        status: 'user_cart',
+        items: [],
+      });
+    }
+
+    // Upsert item
+    const pid = new Types.ObjectId(productId);
+    const vid = variantId ? new Types.ObjectId(variantId) : undefined;
+
+    const idx = (cart!.items as any[]).findIndex((item: any) =>
+      item.productId.toString() === productId &&
+      (item.variantId?.toString() === variantId || (!item.variantId && !variantId))
+    );
+    if (idx >= 0) {
+      cart!.items[idx].qty = qty;
+    } else {
+      cart!.items.push({ productId: pid, variantId: vid, qty, addedAt: new Date() });
+    }
+
+    await cart!.save();
+    return this.getCartByUserId(userId);
+  }
+
+  async updateItemForUser(userId: string, productId: string, qty: number, variantId?: string): Promise<CartView> {
+    if (qty < 1) throw new BadRequestError('Quantity must be at least 1');
+
+    const product = await this.productRepo.findById(productId);
+    if (!product) throw new NotFoundError('Product not found');
+
+    if (variantId) {
+      const variant = await this.variantRepo.findById(variantId);
+      if (!variant) throw new NotFoundError('Variant not found');
+      if (variant.productId.toString() !== productId) throw new BadRequestError('Variant does not belong to this product');
+    }
+
+    return this.addItemForUser(userId, productId, qty, variantId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // REMOVE ITEM (Logged-in User via userId)
+  // ---------------------------------------------------------------------------
+
+  async removeItemForUser(userId: string, productId: string, variantId?: string): Promise<CartView> {
+    const Cart = require('../models/cart.model').Cart;
+    const Types = require('mongoose').Types;
+    const pid = new Types.ObjectId(productId);
+    const vid = variantId ? new Types.ObjectId(variantId) : undefined;
+
+    const pullFilter: any = { productId: pid };
+    if (vid) {
+      pullFilter.variantId = vid;
+    } else {
+      pullFilter.variantId = { $exists: false };
+    }
+
+    await Cart.findOneAndUpdate(
+      { userId: new Types.ObjectId(userId), status: 'user_cart' },
+      { $pull: { items: pullFilter } }
+    ).exec();
+
+    return this.getCartByUserId(userId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // CLEAR CART (Guest via sessionId)
   // ---------------------------------------------------------------------------
 
   async clearCart(sessionId: string): Promise<void> {
     await this.cartRepo.clearItems(sessionId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // CLEAR CART (Logged-in User via userId)
+  // ---------------------------------------------------------------------------
+
+  async clearCartForUser(userId: string): Promise<void> {
+    const Cart = require('../models/cart.model').Cart;
+    const Types = require('mongoose').Types;
+    await Cart.findOneAndUpdate(
+      { userId: new Types.ObjectId(userId), status: 'user_cart' },
+      { $set: { items: [] } }
+    ).exec();
   }
 
   // ---------------------------------------------------------------------------
@@ -164,19 +280,21 @@ export class CartService {
     }
 
     if (!guestCart && userCart) {
-      // User has an old cart from a previous session — reassign its sessionId so it's accessible
+      // User has an old cart from a previous session — reassign its sessionId and mark as user_cart
       await this.cartRepo.saveItems(guestSessionId, userCart.items);
       if (userCart.sessionId !== guestSessionId) {
   await this.cartRepo.deleteBySession(userCart.sessionId);
 }
       await this.cartRepo.assignUser(guestSessionId, userId);
-      return this.getCart(guestSessionId);
+      await this.cartRepo.updateStatus(guestSessionId, 'user_cart');
+      return this.getCartByUserId(userId);
     }
 
     if (guestCart && !userCart) {
-      // Only guest cart exists — just attach userId
+      // Only guest cart exists — attach userId and mark as user_cart
       await this.cartRepo.assignUser(guestSessionId, userId);
-      return this.getCart(guestSessionId);
+      await this.cartRepo.updateStatus(guestSessionId, 'user_cart');
+      return this.getCartByUserId(userId);
     }
 
     // Both exist — merge by max qty per {productId, variantId} pair
@@ -213,11 +331,12 @@ export class CartService {
     const mergedItems = Array.from(merged.values());
     await this.cartRepo.saveItems(guestSessionId, mergedItems);
     await this.cartRepo.assignUser(guestSessionId, userId);
+    await this.cartRepo.updateStatus(guestSessionId, 'user_cart');
     // Delete old user cart (different sessionId)
-    
+
 if (userCart!.sessionId !== guestSessionId) {
   await this.cartRepo.deleteBySession(userCart!.sessionId);
 }
-    return this.getCart(guestSessionId);
+    return this.getCartByUserId(userId);
   }
 }

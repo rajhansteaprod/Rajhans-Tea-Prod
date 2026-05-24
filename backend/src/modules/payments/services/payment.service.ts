@@ -219,7 +219,11 @@ export class PaymentService {
         priceSnapshotId: frozenPricing.snapshotId as never, // Store reference to frozen price
       });
 
-      await this.cartService.clearCart(sessionId);
+      if (userId) {
+        await this.cartService.clearCartForUser(userId);
+      } else {
+        await this.cartService.clearCart(sessionId);
+      }
       await getInvoiceQueue().add(
         InvoiceJobs.GENERATE,
         { paymentId: payment._id.toString() },
@@ -450,8 +454,12 @@ export class PaymentService {
         }
       }
 
-      // 5. Clear cart (purchase complete)
-      await this.cartService.clearCart(payment.sessionId);
+      // 5. Clear cart (purchase complete) - handle both guest and user carts
+      if (payment.userId) {
+        await this.cartService.clearCartForUser(payment.userId.toString());
+      } else {
+        await this.cartService.clearCart(payment.sessionId);
+      }
 
       // 6. Enqueue invoice generation
       await getInvoiceQueue().add(
@@ -603,7 +611,11 @@ export class PaymentService {
             await this.paymentRepo.updateStatus(payment._id.toString(), 'captured', {
               razorpayPaymentId: rpPaymentId,
             });
-            await this.cartService.clearCart(payment.sessionId);
+            if (payment.userId) {
+              await this.cartService.clearCartForUser(payment.userId.toString());
+            } else {
+              await this.cartService.clearCart(payment.sessionId);
+            }
             await getInvoiceQueue().add(
               InvoiceJobs.GENERATE,
               { paymentId: payment._id.toString() },

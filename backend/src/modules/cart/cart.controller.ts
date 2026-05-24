@@ -10,15 +10,21 @@ const wishlistService = new WishlistService();
 const checkoutService = new CheckoutService();
 
 // ---------------------------------------------------------------------------
-// Helper — extract & validate X-Session-ID header
+// Helper — extract session identifier (userId if logged in, else sessionId)
 // ---------------------------------------------------------------------------
 
-function getSessionId(req: Request): string {
+function getSessionIdentifier(req: Request): { type: 'userId' | 'sessionId'; value: string } {
+  // If user is authenticated, use userId
+  if (req.user?.userId) {
+    return { type: 'userId', value: req.user.userId };
+  }
+
+  // Otherwise use X-Session-ID header for guest
   const sid = req.headers['x-session-id'];
   if (!sid || typeof sid !== 'string' || sid.trim() === '') {
-    throw new BadRequestError('X-Session-ID header is required');
+    throw new BadRequestError('X-Session-ID header is required for guests');
   }
-  return sid.trim();
+  return { type: 'sessionId', value: sid.trim() };
 }
 
 // ---------------------------------------------------------------------------
@@ -26,37 +32,47 @@ function getSessionId(req: Request): string {
 // ---------------------------------------------------------------------------
 
 export const getCart = async (req: Request, res: Response) => {
-  const sessionId = getSessionId(req);
-  const data = await cartService.getCart(sessionId);
+  const identifier = getSessionIdentifier(req);
+  const data = identifier.type === 'userId'
+    ? await cartService.getCartByUserId(identifier.value)
+    : await cartService.getCart(identifier.value);
   sendSuccess(res, data);
 };
 
 export const addItem = async (req: Request, res: Response) => {
-  const sessionId = getSessionId(req);
+  const identifier = getSessionIdentifier(req);
   const { productId, variantId, qty } = req.body as { productId: string; variantId?: string; qty: number };
-  const data = await cartService.addItem(sessionId, productId, qty, variantId);
+  const data = identifier.type === 'userId'
+    ? await cartService.addItemForUser(identifier.value, productId, qty, variantId)
+    : await cartService.addItem(identifier.value, productId, qty, variantId);
   sendSuccess(res, data, 'Item added to cart');
 };
 
 export const updateItem = async (req: Request, res: Response) => {
-  const sessionId = getSessionId(req);
+  const identifier = getSessionIdentifier(req);
   const productId = req.params['productId'] as string;
   const { qty, variantId } = req.body as { qty: number; variantId?: string };
-  const data = await cartService.updateItem(sessionId, productId, qty, variantId);
+  const data = identifier.type === 'userId'
+    ? await cartService.updateItemForUser(identifier.value, productId, qty, variantId)
+    : await cartService.updateItem(identifier.value, productId, qty, variantId);
   sendSuccess(res, data, 'Cart updated');
 };
 
 export const removeItem = async (req: Request, res: Response) => {
-  const sessionId = getSessionId(req);
+  const identifier = getSessionIdentifier(req);
   const productId = req.params['productId'] as string;
   const { variantId } = req.body as { variantId?: string };
-  const data = await cartService.removeItem(sessionId, productId, variantId);
+  const data = identifier.type === 'userId'
+    ? await cartService.removeItemForUser(identifier.value, productId, variantId)
+    : await cartService.removeItem(identifier.value, productId, variantId);
   sendSuccess(res, data, 'Item removed from cart');
 };
 
 export const clearCart = async (req: Request, res: Response) => {
-  const sessionId = getSessionId(req);
-  await cartService.clearCart(sessionId);
+  const identifier = getSessionIdentifier(req);
+  identifier.type === 'userId'
+    ? await cartService.clearCartForUser(identifier.value)
+    : await cartService.clearCart(identifier.value);
   sendNoContent(res);
 };
 
@@ -72,13 +88,15 @@ export const mergeCart = async (req: Request, res: Response) => {
 // ---------------------------------------------------------------------------
 
 export const getWishlist = async (req: Request, res: Response) => {
-  const sessionId = getSessionId(req);
+  const identifier = getSessionIdentifier(req);
+  const sessionId = identifier.value; // Use value for both userId and sessionId
   const data = await wishlistService.getWishlist(sessionId);
   sendSuccess(res, data);
 };
 
 export const toggleWishlist = async (req: Request, res: Response) => {
-  const sessionId = getSessionId(req);
+  const identifier = getSessionIdentifier(req);
+  const sessionId = identifier.value;
   const productId = req.params['productId'] as string;
   const result = await wishlistService.toggle(sessionId, productId);
   sendSuccess(
@@ -100,14 +118,16 @@ export const mergeWishlist = async (req: Request, res: Response) => {
 // ---------------------------------------------------------------------------
 
 export const getCheckoutSummary = async (req: Request, res: Response) => {
-  const sessionId = getSessionId(req);
+  const identifier = getSessionIdentifier(req);
+  const sessionId = identifier.value;
   const { items } = req.body as { items?: any[] };
   const data = await checkoutService.getSummary(sessionId, items);
   sendSuccess(res, data);
 };
 
 export const reserveStock = async (req: Request, res: Response) => {
-  const sessionId = getSessionId(req);
+  const identifier = getSessionIdentifier(req);
+  const sessionId = identifier.value;
   const result = await checkoutService.reserveStock(sessionId);
   if (result.issues.length > 0) {
     res.status(409).json({
@@ -122,7 +142,8 @@ export const reserveStock = async (req: Request, res: Response) => {
 };
 
 export const releaseReservation = async (req: Request, res: Response) => {
-  const sessionId = getSessionId(req);
+  const identifier = getSessionIdentifier(req);
+  const sessionId = identifier.value;
   await checkoutService.releaseReservation(sessionId);
   sendNoContent(res);
 };

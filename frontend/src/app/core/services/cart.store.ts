@@ -24,6 +24,7 @@ export interface CartItem {
   productId: string;
   variantId?: string;
   variantName?: string;
+  variantPrice?: number;
   name: string;
   slug: string;
   image: string;
@@ -107,8 +108,16 @@ export class CartStore {
   private readonly platform = inject(PlatformService);
   private readonly api = environment.apiUrl;
 
-  // Stable session ID — generated once, lives in localStorage
-  readonly sessionId: string = this.getOrCreateSessionId();
+  // ─── Session Management ────────────────────────────────────────────────────
+  // For guests: guestSessionId (from localStorage)
+  // For logged-in: userId (from auth service)
+  // This is sent as X-Session-ID header to backend
+  private readonly _sessionId = signal<string>(this.getOrCreateSessionId());
+
+  // Expose sessionId as a getter that returns current signal value
+  get sessionId(): string {
+    return this._sessionId();
+  }
 
   // ─── Signals ───────────────────────────────────────────────────────────────
 
@@ -123,6 +132,7 @@ export class CartStore {
 
   // Temporary cart for buy-now flow (doesn't affect session cart)
   private readonly _temporaryCart = signal<CartItem[]>([]);
+  private readonly _cartType = signal<'guest' | 'user' | 'temporary'>('guest');
 
   readonly cartItems = this._cartItems.asReadonly();
   readonly cartLoading = this._cartLoading.asReadonly();
@@ -132,6 +142,7 @@ export class CartStore {
   readonly wishlistLoading = this._wishlistLoading.asReadonly();
   readonly merging = this._merging.asReadonly();
   readonly temporaryCart = this._temporaryCart.asReadonly();
+  readonly cartType = this._cartType.asReadonly();
 
   readonly cartCount = computed(() => this._cartItems().reduce((s, i) => s + i.qty, 0));
   readonly cartSubtotal = computed(() => this._cartItems().reduce((s, i) => s + i.lineTotal, 0));
@@ -144,32 +155,42 @@ export class CartStore {
     this.loadTemporaryCart();
     this.loadWishlist();
 
-    // Auto-merge when user logs in (false → true transition)
-    // startWith(false) ensures pairwise always has a baseline even if signal starts as true
+    // AUTO-UPDATE sessionId when user logs in (guestSessionId → userId)
+    // AND merge guest cart into user cart
     toObservable(this.auth.isLoggedIn)
       .pipe(
         startWith(false),
         pairwise(),
-        filter(([prev, curr]) => !prev && curr),
-        switchMap(() => {
-          this._merging.set(true);
-          return this.http.post<ApiResponse<CartView>>(
-            `${this.api}/cart/merge`,
-            { guestSessionId: this.sessionId },
-            { headers: this.headers() },
-          );
-        }),
+        filter(([prev, curr]) => !prev && curr), // false → true (login)
       )
-      .subscribe({
-        next: (res) => {
-          this.applyCart(res.data);
-          this._merging.set(false);
-          this.loadWishlist(); // also refresh wishlist after merge
-        },
-        error: () => {
-          this._merging.set(false);
-          this.loadCart();
-        },
+      .subscribe(() => {
+        const user = this.auth.user();
+        if (user) {
+          const guestSessionId = this._sessionId();
+          // ✅ Keep using guestSessionId for merge request
+          this._merging.set(true);
+
+          // Merge guest cart into user cart (before switching sessionId!)
+          this.http.post<ApiResponse<CartView>>(
+            `${this.api}/cart/merge`,
+            { guestSessionId },
+            { headers: this.headers() },
+          ).subscribe({
+            next: (res) => {
+              this.applyCart(res.data);
+              // ✅ Only after merge succeeds, switch to userId
+              this._sessionId.set(user._id);
+              this._cartType.set('user');
+              this._merging.set(false);
+              this.loadWishlist();
+            },
+            error: () => {
+              this._merging.set(false);
+              // Keep using guestSessionId, try merge again
+              this.loadCart();
+            },
+          });
+        }
       });
 
     toObservable(this.auth.isLoggedIn)
@@ -178,9 +199,11 @@ export class CartStore {
         pairwise(),
         filter(([prev, curr]) => !prev && curr),
         switchMap(() => {
+          // ✅ Capture guestSessionId BEFORE any sessionId changes
+          const guestSessionId = this._sessionId();
           return this.http.post<ApiResponse<WishlistView>>(
             `${this.api}/wishlist/merge`,
-            { guestSessionId: this.sessionId },
+            { guestSessionId },
             { headers: this.headers() },
           );
         }),
@@ -200,9 +223,10 @@ export class CartStore {
         map((res) => res.data),
         tap((data) => {
           this.applyCart(data);
-          if (data.sessionId) {
-          localStorage.setItem('X-Session-ID', data.sessionId);
-        }
+          // Only update localStorage sessionId for guests, not for logged-in users
+          if (data.sessionId && !this.auth.isLoggedIn()) {
+            this.platform.localStorage.setItem('guestSessionId', data.sessionId);
+          }
         }),
         finalize(() => this._cartLoading.set(false)),
         catchError(() => {
@@ -285,6 +309,9 @@ export class CartStore {
       qty,
       lineTotal: product!.discountedPrice? product!.discountedPrice * qty : basePrice * qty,
     };
+
+    // Mark this as temporary cart for buy-now
+    this._cartType.set('temporary');
     this.setTemporaryCart(buyNowItem);
   }
 

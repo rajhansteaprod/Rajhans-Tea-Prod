@@ -37,7 +37,7 @@ export interface IStatusHistoryEntry {
 }
 
 export interface IShiprocketInfo {
-  orderId: number | null;
+  orderId: string | null;
   shipmentId: number | null;
   awbCode: string | null;
   courierName: string | null;
@@ -141,7 +141,7 @@ const orderSchema = new Schema<IOrderDoc>(
     },
     warehouseId: { type: Schema.Types.ObjectId, ref: 'Warehouse', required: true },
     shiprocket: {
-      orderId: { type: Number, default: null },
+      orderId: { type: String, default: null },
       shipmentId: { type: Number, default: null },
       awbCode: { type: String, default: null },
       courierName: { type: String, default: null },

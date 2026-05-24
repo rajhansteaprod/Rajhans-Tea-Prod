@@ -4,7 +4,7 @@ import { PriceSnapshotRepository } from '../repositories/price-snapshot.reposito
 import { PricingService, PriceBreakdown } from '../../pricing/services/pricing.service';
 import { BadRequestError } from '../../../utils/api-error';
 import { IProductDoc } from '../../catalog/models/product.model';
-
+import {logger} from '../../../utils/logger';
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface CheckoutLineItem {
@@ -91,6 +91,7 @@ export class CheckoutService {
         if (variant) {
           finalPrice = variant.discountedPrice ?? variant.price;
         }
+        logger.info("Variant price override"+ JSON.stringify({ productId, variantId, finalPrice }));
       }
 
       const categoryId = product.category?.toString();

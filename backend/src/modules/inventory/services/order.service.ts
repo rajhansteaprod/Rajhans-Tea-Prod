@@ -113,7 +113,7 @@ export class OrderService {
     // Create shipping order in Shiprocket
     const shipment = await provider.createOrder(order, pickupLocation);
     await this.orderRepo.updateShiprocketInfo(orderId, {
-      orderId: shipment.providerOrderId,
+      orderId: String(shipment.providerOrderId),
       shipmentId: shipment.shipmentId,
     });
 
@@ -191,7 +191,7 @@ export class OrderService {
     if (order.shiprocket.orderId) {
       try {
         const provider = getShippingProvider();
-        await provider.cancelOrder(order.shiprocket.orderId);
+        await provider.cancelOrder(parseInt(order.shiprocket.orderId, 10));
       } catch {
         // Log but don't block cancellation
       }
@@ -206,43 +206,54 @@ export class OrderService {
     const order = await this.orderRepo.findById(orderId);
     if (!order) throw new NotFoundError('Order not found');
 
-    const result: {
-      orderNumber: string;
-      status: string;
-      statusHistory: typeof order.statusHistory;
-      shiprocket: typeof order.shiprocket;
-      tracking: any;
-    } = {
-      orderNumber: order.orderNumber,
-      status: order.status,
-      statusHistory: order.statusHistory,
-      shiprocket: order.shiprocket,
-      tracking: null,
-    };
+    let statusHistory = [...order.statusHistory];
 
-    if (order.shiprocket.shipmentId) {
-      try {
-        const provider = getShippingProvider();
-        result.tracking = await provider.trackShipment(order.shiprocket.shipmentId);
-        if (result.tracking?.trackingUrl) {
-          await this.orderRepo.updateShiprocketInfo(orderId, {
-            trackingUrl: result.tracking.trackingUrl,
-          });
-        }
-        shipmentLogger.debug({
-          orderId,
-          shipmentId: order.shiprocket.shipmentId,
-        }, '✅ Tracking fetched from Shiprocket API');
-      } catch (error) {
+    try {
+      const provider = getShippingProvider();
+      if (!order.shiprocket.orderId) {
         shipmentLogger.warn({
           orderId,
-          shipmentId: order.shiprocket.shipmentId,
-          error: error instanceof Error ? error.message : String(error),
-        }, '⚠️ Failed to fetch tracking from Shiprocket');
+        }, '⚠️ Shiprocket orderId not found - order not created in Shiprocket yet');
+        return {
+          orderNumber: order.orderNumber,
+          status: order.status,
+          statusHistory,
+        };
       }
+
+      const tracking = await provider.trackByOrderId("order.shiprocket.orderId");
+
+      if (tracking && tracking.currentStatus && tracking.currentStatus !== 'unknown') {
+        // Add latest tracking as new status history entry if status changed
+        const latestStatusEntry = statusHistory[statusHistory.length - 1];
+        if (latestStatusEntry?.status !== tracking.currentStatus) {
+          statusHistory.push({
+            status: tracking.currentStatus,
+            timestamp: new Date(),
+            note: `Shiprocket: ${tracking.currentStatus}`,
+            updatedBy: null,
+          });
+        }
+
+        shipmentLogger.debug({
+          orderId,
+          orderNumber: order.orderNumber,
+          trackingStatus: tracking.currentStatus,
+        }, '✅ Tracking fetched and merged into history');
+      }
+    } catch (error) {
+      shipmentLogger.warn({
+        orderId,
+        orderNumber: order.orderNumber,
+        error: error instanceof Error ? error.message : String(error),
+      }, '⚠️ Failed to fetch tracking');
     }
 
-    return result;
+    return {
+      orderNumber: order.orderNumber,
+      status: order.status,
+      statusHistory,
+    };
   }
 
   // ─── Queries ──────────────────────────────────────────────────────────────

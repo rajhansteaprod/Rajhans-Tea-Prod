@@ -193,6 +193,52 @@ export class ShiprocketProvider implements ShippingProvider {
     };
   }
 
+  async trackByOrderId(orderId: string): Promise<any> {
+    const channelId = config.shipping.shiprocket.channelId;
+    const path = `/courier/track?order_id=${orderId}&channel_id=${channelId}`;
+    let data: any = {};
+
+    try {
+      data = await this.request('GET', path);
+    } catch (error) {
+      shipmentLogger.error({
+        orderId,
+        path,
+        error: error instanceof Error ? error.message : String(error),
+      }, '❌ Failed to fetch tracking from Shiprocket');
+      throw error;
+    }
+
+    if (!data || !data.data || data.data.length === 0) {
+      shipmentLogger.warn({
+        orderId,
+        fullResponse: JSON.stringify(data),
+        responseKeys: Object.keys(data),
+        dataField: data?.data,
+      }, '⚠️ No tracking data found - CHECK RESPONSE STRUCTURE');
+      return null;
+    }
+
+    const tracking = data.data[0]; // First shipment for this order
+
+    shipmentLogger.debug({
+      orderId,
+      status: tracking?.shipment_status,
+      awb: tracking?.awb,
+    }, '✅ Tracking data retrieved');
+
+    return {
+      currentStatus: tracking?.shipment_status || null,
+      trackingUrl: tracking?.track_url || null,
+      estimatedDelivery: tracking?.etd ? new Date(tracking.etd) : null,
+      activities: (tracking?.shipment_track_activities || []).map((a: any) => ({
+        date: a.date,
+        status: a.activity,
+        location: a.location || '',
+      })),
+    };
+  }
+
   async cancelOrder(providerOrderId: number): Promise<void> {
     await this.request('POST', '/orders/cancel', { ids: [providerOrderId] });
   }

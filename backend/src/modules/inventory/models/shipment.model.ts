@@ -20,7 +20,7 @@ export interface IShipmentDoc extends Document {
   sessionId: string;
 
   // Shiprocket
-  shiprocketOrderId: number | null;
+  shiprocketOrderId: string | null;
   shiprocketShipmentId: number | null;
   awbCode: string | null;
   courierName: string | null;
