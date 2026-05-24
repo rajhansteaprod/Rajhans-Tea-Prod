@@ -36,9 +36,4 @@ router.delete(
   (req, res, next) => shipmentsController.cancelShipment(req, res, next)
 );
 
-router.post(
-  '/webhooks/shiprocket',
-  (req, res, next) => shipmentsController.handleShiprocketWebhook(req, res, next)
-);
-
 export default router;
