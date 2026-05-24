@@ -229,8 +229,16 @@ export class OrderService {
             trackingUrl: result.tracking.trackingUrl,
           });
         }
-      } catch {
-        // Tracking unavailable
+        shipmentLogger.debug({
+          orderId,
+          shipmentId: order.shiprocket.shipmentId,
+        }, '✅ Tracking fetched from Shiprocket API');
+      } catch (error) {
+        shipmentLogger.warn({
+          orderId,
+          shipmentId: order.shiprocket.shipmentId,
+          error: error instanceof Error ? error.message : String(error),
+        }, '⚠️ Failed to fetch tracking from Shiprocket');
       }
     }
 
