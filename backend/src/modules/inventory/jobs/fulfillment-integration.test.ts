@@ -13,13 +13,11 @@
 
 import mongoose from 'mongoose';
 import { Payment } from '../../payments/models/payment.model';
-import { Order } from '../models/order.model';
 import { OrderService } from '../services/order.service';
 import { OrderRepository } from '../repositories/order.repository';
 import { WarehouseService } from '../services/warehouse.service';
 import { Warehouse } from '../models/warehouse.model';
 import { config } from '../../../config';
-import { logger } from '../../../utils/logger';
 
 const orderService = new OrderService();
 const orderRepo = new OrderRepository();
@@ -115,7 +113,7 @@ async function test1_OrderCreationFromPayment() {
   console.log(`   Items: ${order.items.length}`);
   console.log(`   Total: ₹${order.total}`);
   console.log(`   User ID: ${order.userId}`);
-  console.log(`   Payment ID: ${order.paymentId}`)\n;
+  console.log(`   Payment ID: ${order.paymentId}`);
 
   if (
     order.status === 'confirmed' &&
@@ -179,7 +177,7 @@ async function test3_OrderStatusStateMachine() {
 
   for (const transition of validTransitions) {
     try {
-      const updated = await orderService.updateStatus(
+      await orderService.updateStatus(
         order._id.toString(),
         transition.to as any,
         transition.note,

@@ -78,7 +78,8 @@
       "Bash(curl -s -X POST http://localhost:3000/api/v1/admin/shipments/create -H 'Content-Type: application/json' -H 'Authorization: Bearer test-token' -d '{\"orderId\":\"69e3e6f5f283ff277002ac70\",\"pickupLocationId\":\"warehouse-1\"}')",
       "Bash(curl -X POST http://localhost:3000/api/v1/admin/shipments/create -H 'Content-Type: application/json' -H 'Authorization: Bearer test-token' -d '{\"orderId\":\"69e3e6f5f283ff277002ac70\",\"pickupLocationId\":\"warehouse-1\"}')",
       "PowerShell(Get-Process -Name \"node\" -ErrorAction SilentlyContinue)",
-      "PowerShell(Stop-Process -Force)"
+      "PowerShell(Stop-Process -Force)",
+      "PowerShell(Get-Process node -ErrorAction SilentlyContinue)"
     ],
     "additionalDirectories": [
       "c:\\Users\\91626\\.claude\\projects\\c--Users-91626-Desktop-DEVELOPMENT-APPLICATIONS-Rajhans-Tea\\memory",

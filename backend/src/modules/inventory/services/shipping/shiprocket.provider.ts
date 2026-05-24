@@ -1,6 +1,7 @@
 import { config } from '../../../../config';
 import { logger } from '../../../../utils/logger';
 import { IOrderDoc } from '../../models/order.model';
+import { ShiprocketToken } from '../../../shipments/models/shiprocket-token.model';
 import {
   ShippingProvider,
   ShipmentResult,
@@ -17,13 +18,27 @@ export class ShiprocketProvider implements ShippingProvider {
   private tokenExpiry: Date | null = null;
   private readonly baseUrl = config.shipping.shiprocket.baseUrl;
 
-  // ─── Auth (token cached, refreshed when expired) ──────────────────────────
+  // ─── Auth (token cached in DB, refreshed when expired) ──────────────────────────
 
   private async getToken(): Promise<string> {
+    // Check in-memory cache first
     if (this.token && this.tokenExpiry && this.tokenExpiry > new Date()) {
       return this.token;
     }
 
+    // Check database for valid token
+    const dbToken = await ShiprocketToken.findOne({
+      expiresAt: { $gt: new Date() },
+    }).sort({ expiresAt: -1 });
+
+    if (dbToken) {
+      this.token = dbToken.token;
+      this.tokenExpiry = dbToken.expiresAt;
+      logger.debug('Shiprocket token loaded from database');
+      return this.token;
+    }
+
+    // Token expired or not found — re-authenticate
     const res = await fetch(`${this.baseUrl}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -43,6 +58,14 @@ export class ShiprocketProvider implements ShippingProvider {
     this.token = data.token;
     // Shiprocket tokens last 10 days — refresh after 9
     this.tokenExpiry = new Date(Date.now() + 9 * 24 * 60 * 60 * 1000);
+
+    // Save token to database
+    await ShiprocketToken.create({
+      token: this.token!,
+      expiresAt: this.tokenExpiry!,
+    });
+    logger.info('Shiprocket token saved to database');
+
     return this.token!;
   }
 
