@@ -6,10 +6,7 @@ import { ShiprocketToken } from '../../../shipments/models/shiprocket-token.mode
 import {
   ShippingProvider,
   ShipmentResult,
-  AWBResult,
-  TrackingResult,
   ShippingRate,
-  PickupResult,
 } from './shipping.interface';
 
 export class ShiprocketProvider implements ShippingProvider {
@@ -85,17 +82,48 @@ export class ShiprocketProvider implements ShippingProvider {
       body: body ? JSON.stringify(body) : undefined,
     });
 
-    const data = (await res.json().catch(() => ({}))) as Record<string, any>;
+    let data: Record<string, any> = {};
+    try {
+      data = (await res.json()) as Record<string, any>;
+    } catch {
+      data = {};
+    }
+
+    // Check HTTP status
     if (!res.ok) {
       shipmentLogger.error({
         status: res.status,
         path,
-        response: data,
+        requestBody: body,
+        fullResponse: data,
+        responseKeys: Object.keys(data),
+        errors: data.errors,
+        message: data.message,
+        statusCode: data.status_code,
+        allKeys: Object.keys(data).map(k => `${k}: ${JSON.stringify(data[k])}`),
         token: token ? '***cached***' : 'none',
-      }, '❌ Shiprocket API error');
+      }, '❌ Shiprocket API error (HTTP) - DETAILED');
       logger.error({ status: res.status, path, body: data }, 'Shiprocket API error');
       throw new Error(data.message || `Shiprocket API error: ${res.status}`);
     }
+
+    // Check Shiprocket's business logic status code
+    // Success codes: 1 (orders), 200 (other endpoints)
+    // Error codes: 350+ (wallet, validation, etc)
+    const successCodes = [1, 200];
+    if (data.status_code && !successCodes.includes(data.status_code)) {
+      shipmentLogger.error({
+        status: res.status,
+        shiprocketStatusCode: data.status_code,
+        path,
+        requestBody: body,
+        fullResponse: data,
+        message: data.message,
+        awbError: data.response?.data?.awb_assign_error,
+      }, '❌ Shiprocket business error');
+      throw new Error(data.message || `Shiprocket error: ${data.status_code}`);
+    }
+
     return data;
   }
 
@@ -148,23 +176,8 @@ export class ShiprocketProvider implements ShippingProvider {
     };
   }
 
-  async generateAWB(shipmentId?: number, courierId?: number, orderId?: number): Promise<AWBResult> {
-    const body: Record<string, unknown> = {};
-    if (shipmentId) body.shipment_id = shipmentId;
-    if (orderId) body.order_id = orderId;
-    if (courierId) body.courier_id = courierId;
 
-    const data = await this.request('POST', '/courier/assign/awb', body);
-    const awbData = data.response?.data;
-
-    return {
-      awbCode: awbData?.awb_code || '',
-      courierName: awbData?.courier_name || '',
-      courierId: awbData?.courier_company_id || 0,
-    };
-  }
-
-  async trackShipment(shipmentId: number): Promise<TrackingResult> {
+  async trackShipment(shipmentId: number): Promise<any> {
     const data = await this.request('GET', `/courier/track/shipment/${shipmentId}`);
     const tracking = data.tracking_data;
 
@@ -204,19 +217,4 @@ export class ShiprocketProvider implements ShippingProvider {
     }));
   }
 
-  async generateLabel(shipmentId: number): Promise<string> {
-    const data = await this.request('POST', '/courier/generate/label', {
-      shipment_id: [shipmentId],
-    });
-    return data.label_url || '';
-  }
-
-  async schedulePickup(shipmentId: number): Promise<PickupResult> {
-    const data = await this.request('POST', '/courier/generate/pickup', {
-      shipment_id: [shipmentId],
-    });
-    return {
-      pickupScheduledDate: data.response?.pickup_scheduled_date || '',
-    };
-  }
 }

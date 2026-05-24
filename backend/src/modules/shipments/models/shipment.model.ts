@@ -9,6 +9,13 @@ export interface IShipment extends Document {
   awbCode: string | null;
   courierCompanyId: number | null;
   courierName: string | null;
+  estimatedDelivery: Date | null;
+  trackingActivities: Array<{
+    date: string;
+    status: string;
+    activity: string;
+    location: string;
+  }>;
   onboardingCompletedNow: number;
   createdAt: Date;
   updatedAt: Date;
@@ -50,6 +57,18 @@ const ShipmentSchema = new Schema<IShipment>(
       type: String,
       default: null,
     },
+    estimatedDelivery: {
+      type: Date,
+      default: null,
+    },
+    trackingActivities: [
+      {
+        date: String,
+        status: String,
+        activity: String,
+        location: String,
+      },
+    ],
     onboardingCompletedNow: {
       type: Number,
       default: 0,

@@ -4,6 +4,7 @@ import { InventoryService } from './inventory.service';
 import { getShippingProvider } from './shipping/shipping.factory';
 import { Payment } from '../../payments/models/payment.model';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../../../utils/api-error';
+import { shipmentLogger } from '../../../utils/shipment-logger';
 import { OrderStatus, IOrderDoc } from '../models/order.model';
 import { Types } from 'mongoose';
 
@@ -109,33 +110,21 @@ export class OrderService {
     const provider = getShippingProvider();
     const pickupLocation = warehouse.shiprocketPickupLocationId;
 
-    // Create shipping order
+    // Create shipping order in Shiprocket
     const shipment = await provider.createOrder(order, pickupLocation);
     await this.orderRepo.updateShiprocketInfo(orderId, {
       orderId: shipment.providerOrderId,
       shipmentId: shipment.shipmentId,
     });
 
-    // Generate AWB (use shipmentId if available, fallback to orderId for adhoc orders)
-    const awb = await provider.generateAWB(shipment.shipmentId, undefined, shipment.providerOrderId);
-    await this.orderRepo.updateShiprocketInfo(orderId, {
-      awbCode: awb.awbCode,
-      courierName: awb.courierName,
-      courierId: awb.courierId,
-    });
+    shipmentLogger.info({
+      orderId,
+      shiprocketOrderId: shipment.providerOrderId,
+      shiprocketShipmentId: shipment.shipmentId,
+    }, '✅ Order created in Shiprocket. AWB, label, pickup to be done via GUI');
 
-    // Generate label
-    const label = await provider.generateLabel(shipment.shipmentId);
-    await this.orderRepo.updateShiprocketInfo(orderId, { label });
-
-    // Schedule pickup
-    const pickup = await provider.schedulePickup(shipment.shipmentId);
-    await this.orderRepo.updateShiprocketInfo(orderId, {
-      pickupScheduledDate: new Date(pickup.pickupScheduledDate),
-    });
-
-    // Update status to processing
-    return this.updateStatus(orderId, 'processing', 'Shipped via ' + provider.name, null);
+    // Update status to processing (order is now in Shiprocket pipeline)
+    return this.updateStatus(orderId, 'processing', 'Order created in Shiprocket', null);
   }
 
   // ─── Update order status ──────────────────────────────────────────────────
