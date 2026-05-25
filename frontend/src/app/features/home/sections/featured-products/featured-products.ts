@@ -53,23 +53,17 @@ export class FeaturedProductsComponent implements OnInit {
     return 0;
   }
 
-  addToCart(product: Product, event: Event): void {
-    
-    
-    
-    event.preventDefault();
-    event.stopPropagation();
-    
-    this.cart.addItem(product._id, 1);
+  addToCart(product: Product, payload: { event: Event; variantId?: string }): void {
+    payload.event.preventDefault();
+    payload.event.stopPropagation();
+    this.cart.addItem(product._id, 1, payload.variantId);
   }
 
-  buyNow(product: Product, event: Event): void {
-    event.preventDefault();
-    event.stopPropagation();
-
-    // Set product to temporary cart for checkout (consistent with product detail page)
-    this.cart.buyNowItem(product, 1);
-    // Redirect to checkout
+  buyNow(product: Product, payload: { event: Event; variantId?: string }): void {
+    payload.event.preventDefault();
+    payload.event.stopPropagation();
+    const variant = payload.variantId ? product.variants?.find(v => v._id === payload.variantId) : undefined;
+    this.cart.buyNowItem(product, 1, variant);
     this.router.navigate(['/checkout']);
   }
 

@@ -70,6 +70,21 @@
               </div>
               
               <p class="item-price">&#8377;{{ item.discountedPrice | number:'1.0-0' }}</p>
+
+              @if (getVariantsForProduct(item.productId).length > 0) {
+                <div class="item-variants">
+                  @for (variant of getVariantsForProduct(item.productId); track variant._id) {
+                    <button
+                      class="variant-btn"
+                      [class.variant-btn--active]="item.variantId === variant._id"
+                      (click)="changeVariant(item.productId, item.variantId, variant._id)"
+                    >
+                      {{ variant.name }}
+                    </button>
+                  }
+                </div>
+              }
+
               <div class="qty-row">
                 <div class="qty-controls">
                   <button class="qty-btn" (click)="cart.updateQty(item.productId, item.qty - 1, item.variantId)">

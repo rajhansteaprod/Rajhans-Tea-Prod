@@ -97,6 +97,47 @@
   }
 }
 
+// Variant Selector
+.checkout__variant-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-xs;
+  margin: $space-sm 0;
+}
+
+.checkout__variant-btn {
+  flex: 1;
+  min-width: 80px;
+  padding: $space-xs $space-sm;
+  font-family: $font-family-body;
+  font-size: $font-size-xs;
+  color: $color-mono-dark;
+  background: hsl(0 0% 96%);
+  border: 1px solid hsl(0 0% 80%);
+  border-radius: 0;
+  cursor: pointer;
+  transition: all $transition-fast;
+  text-align: center;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: $color-mono-dark;
+    background: hsl(0 0% 92%);
+  }
+
+  &--active {
+    background: $color-mono-dark;
+    color: $color-mono-light;
+    border-color: $color-mono-dark;
+  }
+}
+
+.checkout__variant-display {
+  font-size: $font-size-sm;
+  color: rgba($color-mono-dark, 0.7);
+  font-style: italic;
+}
+
 // Pricing
 .checkout__product-card-pricing {
   text-align: right;

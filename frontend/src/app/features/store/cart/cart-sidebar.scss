@@ -256,6 +256,38 @@
   margin: 0;
 }
 
+.item-variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-xs;
+  margin: $space-xs 0;
+}
+
+.variant-btn {
+  flex: 0 1 auto;
+  padding: $space-xxs $space-xs;
+  font-family: $font-family-nav;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-light;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all $transition-fast;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: $color-text-secondary;
+    background: $color-bg-primary;
+  }
+
+  &--active {
+    background: $color-text-primary;
+    color: $color-text-inverse;
+    border-color: $color-text-primary;
+  }
+}
+
 .qty-row {
   @include flex-between;
   margin-top: $space-xs;

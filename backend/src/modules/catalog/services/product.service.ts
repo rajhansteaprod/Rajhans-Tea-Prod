@@ -80,8 +80,19 @@ export class ProductService {
       tags: query.tags,
     });
 
+    // Fetch variants for products that have them
+    const productsWithVariants = await Promise.all(
+      products.map(async (p) => {
+        if (p.hasVariants) {
+          const variants = await this.variantRepo.findByProductId(p._id.toString());
+          return ProductDTO.toPublic(p, variants);
+        }
+        return ProductDTO.toPublic(p);
+      })
+    );
+
     return {
-      products: products.map((p) => ProductDTO.toPublic(p)),
+      products: productsWithVariants,
       meta: buildPaginationMeta(page, limit, total),
     };
   }

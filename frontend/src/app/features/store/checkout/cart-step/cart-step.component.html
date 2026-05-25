@@ -60,6 +60,20 @@
                     <span class="checkout__variant-display">{{ item.variantName }}</span>
                   }
 
+                  @if (getVariantsForProduct(item.productId).length > 0) {
+                    <div class="checkout__variant-selector">
+                      @for (variant of getVariantsForProduct(item.productId); track variant._id) {
+                        <button
+                          class="checkout__variant-btn"
+                          [class.checkout__variant-btn--active]="item.variantId === variant._id"
+                          (click)="changeVariant(item.productId, item.variantId, variant._id)"
+                        >
+                          {{ variant.name }}
+                        </button>
+                      }
+                    </div>
+                  }
+
                   <div class="checkout__product-card-qty-price">
                     <div class="checkout__qty-wrapper">
                       <span class="checkout__qty-label">Qty:</span>

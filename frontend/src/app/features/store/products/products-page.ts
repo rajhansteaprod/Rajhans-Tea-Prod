@@ -172,10 +172,10 @@ export class ProductsPageComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  addToCart(event: Event, productId: string): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.cartStore.addItem(productId, 1);
+  addToCart(payload: { event: Event; variantId?: string }, productId: string): void {
+    payload.event.preventDefault();
+    payload.event.stopPropagation();
+    this.cartStore.addItem(productId, 1, payload.variantId);
   }
 
   toggleWishlist(event: Event, productId: string): void {
@@ -197,22 +197,21 @@ export class ProductsPageComponent implements OnInit {
   }
 
   getRating(): number {
-    return 5; // Default rating - can be updated based on product data
+    return 5;
   }
 
   getReviewCount(): number {
-    return 0; // Default review count - can be updated based on product data
+    return 0;
   }
 
   goToProduct(product: Product): void {
-    // Navigate to product detail page
     window.location.href = `/product/${product.slug}`;
   }
 
-  buyNow(product: Product, event: Event): void {
-    event.stopPropagation();
-    this.addToCart(event, product._id);
-    // Could also navigate to checkout, but for now just add to cart
-    window.location.href = `/product/${product.slug}`;
+  buyNow(product: Product, payload: { event: Event; variantId?: string }): void {
+    payload.event.stopPropagation();
+    const variant = payload.variantId ? product.variants?.find(v => v._id === payload.variantId) : undefined;
+    this.cartStore.buyNowItem(product, 1, variant);
+    window.location.href = `/checkout`;
   }
 }

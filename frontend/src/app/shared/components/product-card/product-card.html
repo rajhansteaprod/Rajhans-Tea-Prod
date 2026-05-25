@@ -43,6 +43,21 @@
     <h3 class="product-card__name">{{ product.name }}</h3>
     <p class="product-card__description">{{ product.description || product.category.name }}</p>
 
+    <!-- Variant Selector -->
+    @if (product.variants && product.variants.length > 0) {
+      <div class="product-card__variant-selector">
+        @for (variant of product.variants; track variant._id) {
+          <button
+            class="product-card__variant-btn"
+            [class.product-card__variant-btn--active]="selectedVariantId() === variant._id"
+            (click)="onVariantChange(variant._id)"
+          >
+            {{ variant.name }}
+          </button>
+        }
+      </div>
+    }
+
     <!-- Rating -->
     <div class="product-card__rating">
       <div class="product-card__stars">
@@ -65,11 +80,11 @@
 
     <!-- Price -->
     <div class="product-card__price">
-      @if (product.discountedPrice && product.discountedPrice < product.basePrice) {
-        <span class="product-card__price-original">₹{{ product.basePrice | number:'1.0-0' }}</span>
-        <span class="product-card__price-current">₹{{ product.discountedPrice | number:'1.0-0' }}</span>
+      @if (getOriginalPrice()) {
+        <span class="product-card__price-original">₹{{ getOriginalPrice() | number:'1.0-0' }}</span>
+        <span class="product-card__price-current">₹{{ getDisplayPrice() | number:'1.0-0' }}</span>
       } @else {
-        <span class="product-card__price-current">₹{{ product.basePrice | number:'1.0-0' }}</span>
+        <span class="product-card__price-current">₹{{ getDisplayPrice() | number:'1.0-0' }}</span>
       }
     </div>
 
