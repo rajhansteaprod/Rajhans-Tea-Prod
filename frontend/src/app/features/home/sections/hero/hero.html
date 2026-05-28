@@ -2,6 +2,8 @@
   <section class="hero"
     (pointerdown)="onPointerDown($event)"
     (pointerup)="onPointerUp($event)">
+
+    <!-- HERO IMAGE FRAME -->
     <div class="hero__frame">
       <!-- Background: responsive desktop/mobile image -->
       <div class="hero__bg">
@@ -25,26 +27,51 @@
               {{ slides()[activeSlide()].ctaText }}
             </a>
           </div>
-
-          <!-- Dot pagination -->
-          @if (slides().length > 1) {
-            <div class="hero__dots">
-              @for (slide of slides(); track slide._id; let i = $index) {
-                <button
-                  class="hero__dot"
-                  [class.hero__dot--active]="i === activeSlide()"
-                  (click)="goToSlide(i)"
-                  [attr.aria-label]="'Slide ' + (i + 1)"
-                >
-                  @if (i === activeSlide()) {
-                    <span class="hero__dot-progress"></span>
-                  }
-                </button>
-              }
-            </div>
-          }
         </div>
       </div>
+
+      <!-- LEFT ARROW BUTTON (Left-Middle) -->
+      @if (slides().length > 1) {
+        <button
+          class="hero__nav-btn hero__nav-btn--left"
+          (click)="prevSlide()"
+          aria-label="Previous slide"
+          type="button"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M15 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      }
+
+      <!-- RIGHT ARROW BUTTON (Right-Middle) -->
+      @if (slides().length > 1) {
+        <button
+          class="hero__nav-btn hero__nav-btn--right"
+          (click)="nextSlide()"
+          aria-label="Next slide"
+          type="button"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      }
+
+      <!-- PAGINATION DOTS (Bottom-Middle, Simple Gray/Dark) -->
+      @if (slides().length > 1) {
+        <div class="hero__dots">
+          @for (slide of slides(); track slide._id; let i = $index) {
+            <button
+              class="hero__dot"
+              [class.hero__dot--active]="i === activeSlide()"
+              (click)="goToSlide(i)"
+              [attr.aria-label]="'Slide ' + (i + 1)"
+              type="button"
+            ></button>
+          }
+        </div>
+      }
     </div>
   </section>
 }

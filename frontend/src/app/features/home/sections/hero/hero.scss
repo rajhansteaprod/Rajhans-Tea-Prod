@@ -8,6 +8,13 @@
 .hero {
   position: relative;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.hero__frame {
+  position: relative;
+  width: 100%;
   height: calc(100vh - #{$header-height});
   overflow: hidden;
   cursor: grab;
@@ -18,11 +25,6 @@
   }
 
   &:active { cursor: grabbing; }
-}
-
-.hero__frame {
-  position: absolute;
-  inset: 0;
 }
 
 // ── Background ──
@@ -74,15 +76,12 @@ picture {
 // ── Text alignment variants (admin-controlled) ──
 .hero__overlay--center .hero__content { text-align: center; }
 .hero__overlay--center .hero__actions { justify-content: center; }
-.hero__overlay--center .hero__dots { justify-content: center; }
 
 .hero__overlay--left .hero__content { text-align: left; }
 .hero__overlay--left .hero__actions { justify-content: flex-start; }
-.hero__overlay--left .hero__dots { justify-content: flex-start; }
 
 .hero__overlay--right .hero__content { text-align: right; }
 .hero__overlay--right .hero__actions { justify-content: flex-end; }
-.hero__overlay--right .hero__dots { justify-content: flex-end; }
 
 // Mobile: always center regardless of admin setting
 @include respond-to(md) {
@@ -91,9 +90,6 @@ picture {
 
   .hero__overlay--left .hero__actions,
   .hero__overlay--right .hero__actions { justify-content: center; }
-
-  .hero__overlay--left .hero__dots,
-  .hero__overlay--right .hero__dots { justify-content: center; }
 }
 
 // ── Typography ──
@@ -170,53 +166,165 @@ picture {
   }
 }
 
-// ── Dot pagination ──
-.hero__dots {
+// ── LEFT & RIGHT ARROW BUTTONS (on image, middle position) ──
+.hero__nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  color: $color-mono-light;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 5;
+
+  svg {
+    width: 24px;
+    height: 24px;
+    transition: all 0.3s ease;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+
+    svg {
+      transform: scale(1.15);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-mono-light;
+    outline-offset: 4px;
+  }
+
+  &:active {
+    transform: translateY(-50%) scale(0.95);
+  }
+
+  &--left {
+    left: $space-xxl;
+
+    @include respond-to(md) {
+      left: $space-lg;
+      width: 44px;
+      height: 44px;
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    @include respond-to(sm) {
+      left: $space-md;
+      width: 40px;
+      height: 40px;
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+
+  &--right {
+    right: $space-xxl;
+
+    @include respond-to(md) {
+      right: $space-lg;
+      width: 44px;
+      height: 44px;
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    @include respond-to(sm) {
+      right: $space-md;
+      width: 40px;
+      height: 40px;
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+}
+
+// ── Dot pagination (Bottom-Middle, Inside Frame) ──
+.hero__dots {
+  position: absolute;
+  bottom: $space-lg;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: $space-sm;
-  margin-top: $space-xl;
+  z-index: 4;
 
   @include respond-to(md) {
-    justify-content: center;
+    bottom: $space-md;
+    gap: 6px;
+  }
+
+  @include respond-to(sm) {
+    bottom: $space-sm;
+    gap: 4px;
   }
 }
 
 .hero__dot {
-  position: relative;
   width: 10px;
   height: 10px;
   border-radius: $radius-full;
-  border: 1.5px solid rgba($color-text-inverse, 0.5);
-  background: transparent;
+  background: rgba($color-mono-dark, 0.3);
+  border: none;
   cursor: pointer;
   padding: 0;
   transition: all 0.3s ease;
-  overflow: hidden;
 
   &:hover {
-    border-color: $color-text-inverse;
+    background: rgba($color-mono-dark, 0.6);
+    transform: scale(1.15);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-mono-light;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  @include respond-to(md) {
+    width: 8px;
+    height: 8px;
+  }
+
+  @include respond-to(sm) {
+    width: 7px;
+    height: 7px;
   }
 }
 
 .hero__dot--active {
-  background: transparent;
-  border-color: $color-text-inverse;
-  width: 28px;
-  border-radius: 5px;
-}
+  background: $color-mono-dark;
+  transform: scale(1);
 
-.hero__dot-progress {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 0;
-  background: $color-text-inverse;
-  border-radius: inherit;
-  animation: dot-fill 5s linear forwards;
-}
-
-@keyframes dot-fill {
-  from { width: 0; }
-  to   { width: 100%; }
+  &:hover {
+    transform: scale(1.15);
+  }
 }
