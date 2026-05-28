@@ -27,6 +27,10 @@ export class CartStepComponent {
 
   // Local state
   readonly promoCode = signal('');
+  readonly promoError = signal('');
+  readonly promoSuccess = signal('');
+  readonly isValidatingPromo = signal(false);
+  readonly isPromoApplied = signal(false);
   private readonly productCache = signal<Map<string, Product>>(new Map());
 
   // Computed
@@ -116,18 +120,64 @@ export class CartStepComponent {
   }
 
   applyPromo() {
-    // TODO: Implement promo code logic
-    console.log('Promo code applied:', this.promoCode());
+    const code = this.promoCode().trim().toUpperCase();
+    if (!code) {
+      this.promoError.set('Please enter a promo code');
+      this.promoSuccess.set('');
+      return;
+    }
+
+    this.isValidatingPromo.set(true);
+    this.promoError.set('');
+    this.promoSuccess.set('');
+
+    // Call summary API with promo code - it will validate and recalculate
+    this.checkoutService.loadCheckoutSummary(true, code).then((summary) => {
+      this.isValidatingPromo.set(false);
+      if (summary?.promoError) {
+        // Promo validation failed - show error
+        this.promoError.set(summary.promoError);
+        this.promoSuccess.set('');
+        this.isPromoApplied.set(false);
+      } else if (summary) {
+        // Promo applied successfully
+        this.promoSuccess.set('✓ Promo code applied successfully');
+        this.promoError.set('');
+        this.isPromoApplied.set(true);
+      } else {
+        this.promoError.set('Failed to apply promo code');
+        this.promoSuccess.set('');
+        this.isPromoApplied.set(false);
+      }
+    }).catch((error) => {
+      this.isValidatingPromo.set(false);
+      this.promoError.set(error?.error?.message || 'Invalid promo code');
+      this.promoSuccess.set('');
+      this.isPromoApplied.set(false);
+    });
+  }
+
+  removePromo() {
+    this.promoCode.set('');
+    this.isPromoApplied.set(false);
+    this.promoError.set('');
+    this.promoSuccess.set('');
+    this.isValidatingPromo.set(true);
+
+    // Reload summary without promo code
+    this.checkoutService.loadCheckoutSummary(true, '').then(() => {
+      this.isValidatingPromo.set(false);
+    }).catch((error) => {
+      this.isValidatingPromo.set(false);
+      console.error('Failed to remove promo code:', error);
+    });
   }
 
   async goNext() {
     if (this.isEmpty()) return;
 
-    // Ensure pricing is loaded before proceeding
-    if (!this.checkoutService.isPricingFromBackend()) {
-      await this.checkoutService.loadCheckoutSummary(false);
-    }
-
+    // Load summary with promo code before proceeding
+    await this.checkoutService.loadCheckoutSummary(true, this.promoCode());
     this.nextStep.emit();
   }
 }

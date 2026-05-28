@@ -153,9 +153,25 @@
             placeholder="Enter promo code"
             [(ngModel)]="promoCode"
             name="promoCode"
+            [disabled]="isValidatingPromo() || isPromoApplied()"
           />
-          <button class="checkout__promo-btn" (click)="applyPromo()">APPLY</button>
+          @if (isPromoApplied()) {
+            <button class="checkout__promo-btn checkout__promo-btn--remove" (click)="removePromo()" [disabled]="isValidatingPromo()">
+              {{ isValidatingPromo() ? 'REMOVING...' : 'REMOVE' }}
+            </button>
+          } @else {
+            <button class="checkout__promo-btn" (click)="applyPromo()" [disabled]="isValidatingPromo()">
+              {{ isValidatingPromo() ? 'CHECKING...' : 'APPLY' }}
+            </button>
+          }
         </div>
+
+        @if (promoSuccess()) {
+          <div class="checkout__promo-success">{{ promoSuccess() }}</div>
+        }
+        @if (promoError()) {
+          <div class="checkout__promo-error">{{ promoError() }}</div>
+        }
 
         <div class="checkout__price-divider"></div>
 

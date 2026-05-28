@@ -25,6 +25,7 @@ export interface CheckoutSummary {
   totalTax: number;
   total: number;
   itemCount: number;
+  promoError?: string;
 }
 
 interface ApiResponse<T> {
@@ -131,7 +132,7 @@ private readonly platform = inject(PlatformService);
 
   // Load pricing summary from backend with robust error handling and retry
   // forceRefresh: skip cache even if fresh data exists
-  async loadCheckoutSummary(forceRefresh = false): Promise<CheckoutSummary | null> {
+  async loadCheckoutSummary(forceRefresh = false, promoCode = ''): Promise<CheckoutSummary | null> {
     const items = this.cartItems();
     if (items.length === 0) {
       this.summaryDataSignal.set(null);
@@ -163,6 +164,9 @@ private readonly platform = inject(PlatformService);
         try {
           // Always send current items in body (temporary cart or updated quantities)
           const body: Record<string, any> = { items };
+          if (promoCode) {
+            body['promoCode'] = promoCode.trim().toUpperCase();
+          }
 
           const response = await this.http
             .post<

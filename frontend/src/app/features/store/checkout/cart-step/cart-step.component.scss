@@ -132,6 +132,21 @@
   }
 }
 
+// Promo Messages
+.checkout__promo-success {
+  color: #00a86b;
+  font-size: $font-size-sm;
+  margin: $space-xs 0;
+  font-weight: $font-weight-medium;
+}
+
+.checkout__promo-error {
+  color: #d32f2f;
+  font-size: $font-size-sm;
+  margin: $space-xs 0;
+}
+
+
 .checkout__variant-display {
   font-size: $font-size-sm;
   color: rgba($color-mono-dark, 0.7);
@@ -179,11 +194,38 @@
     flex: 1;
     padding: $space-xs;
     border: 1px solid hsl(0 0% 80%);
+
+    &:disabled {
+      background: hsl(0 0% 96%);
+      cursor: not-allowed;
+    }
   }
 
   button {
     padding: $space-xs $space-md;
     cursor: pointer;
+    background: $color-mono-dark;
+    color: white;
+    border: none;
+    font-weight: $font-weight-semibold;
+    transition: all $transition-fast;
+
+    &:hover:not(:disabled) {
+      filter: brightness(1.15);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.checkout__promo-btn--remove {
+  background: #d32f2f !important;
+
+  &:hover:not(:disabled) {
+    background: #b71c1c !important;
   }
 }
 

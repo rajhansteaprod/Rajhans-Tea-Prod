@@ -1,6 +1,7 @@
 import { PricingRepository } from '../repositories/pricing.repository';
 import { IPriceRuleDoc } from '../models/price-rule.model';
 import { NotFoundError } from '../../../utils/api-error';
+import { PromoCodeService } from '../../promo/services/promo.service';
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 
@@ -10,6 +11,7 @@ export interface PriceInput {
   categoryId?: string;
   collectionIds?: string[];
   qty?: number; // defaults to 1
+  promoCode?: string; // optional promo code to apply
 }
 
 export interface PriceBreakdown {
@@ -32,76 +34,159 @@ export interface PriceBreakdown {
 
 export class PricingService {
   private repo = new PricingRepository();
+  private promoCodeService = new PromoCodeService();
 
   /**
-   * Core pricing calculation — fully decoupled from Product model.
-   * Takes raw inputs (productId, basePrice, categoryId, collectionIds, qty)
-   * and returns a complete price breakdown.
+   * Core pricing calculation — clean orchestration layer.
+   * Steps:
+   * 1. Calculate base price (rules)
+   * 2. Apply promo code discount
+   * 3. Apply offers (future)
+   * 4. Apply tax
+   * 5. Return complete breakdown
    */
   async calculate(input: PriceInput): Promise<PriceBreakdown> {
     const qty = Math.max(1, input.qty ?? 1);
 
-    // 1. Fetch all applicable active rules ordered by priority
+    // Step 1: Calculate base price from rules
+    const basePriceResult = await this.calculateBasePrice(input, qty);
+
+    // Step 2: Apply promo code if provided
+    const promoResult = input.promoCode
+      ? await this.validateAndApplyPromoCode(input.promoCode, basePriceResult)
+      : null;
+
+    // Step 3: Apply offers (future enhancement)
+    // const offersResult = await this.applyOffers(basePriceResult, promoResult);
+
+    // Step 4: Apply tax
+    const finalResult = await this.applyTax(input.categoryId, basePriceResult, promoResult, qty);
+
+    return finalResult;
+  }
+
+  /**
+   * Calculate base price using product rules (quantity tiers, percentage discounts, fixed prices).
+   */
+  private async calculateBasePrice(
+    input: PriceInput,
+    qty: number,
+  ): Promise<{
+    basePrice: number;
+    appliedRule: string | null;
+    discountPercent: number;
+    discountAmount: number;
+    priceAfterDiscount: number;
+    finalBasePrice: number | null;
+  }> {
     const rules = await this.repo.findActiveRulesForProduct({
       productId: input.productId,
       categoryId: input.categoryId,
       collectionIds: input.collectionIds,
     });
 
-    // 2. Pick the winning rule (highest priority first)
-    const { discountPercent, appliedRule, finalBasePrice } = this.resolveRule(
-      rules,
-      input.basePrice,
-      qty,
-    );
+    const { discountPercent, appliedRule, finalBasePrice } = this.resolveRule(rules, input.basePrice, qty);
 
-    // 3. Compute discount
     const discountAmount = parseFloat(((input.basePrice * discountPercent) / 100).toFixed(2));
     const priceAfterDiscount = parseFloat((input.basePrice - discountAmount).toFixed(2));
 
-    // 4. Fetch tax rule
-    const taxRule = await this.repo.findTaxRuleForCategory(input.categoryId);
+    return {
+      basePrice: input.basePrice,
+      appliedRule,
+      discountPercent,
+      discountAmount,
+      priceAfterDiscount,
+      finalBasePrice,
+    };
+  }
+
+  /**
+   * Validate and apply promo code discount.
+   * Throws error if promo code is invalid, returns discount if valid.
+   */
+  private async validateAndApplyPromoCode(
+    promoCode: string,
+    basePriceResult: Awaited<ReturnType<typeof this.calculateBasePrice>>,
+  ): Promise<{ promoCode: string; promoDiscount: number } | null> {
+    if (!promoCode || !promoCode.trim()) {
+      return null;
+    }
+
+    // Validate promo code
+    const validation = await this.promoCodeService.validatePromoCode(promoCode.trim());
+    if (!validation.valid) {
+      throw new Error(`Invalid promo code: ${validation.error}`);
+    }
+
+    // Calculate discount amount
+    const discountCalc = this.promoCodeService.calculateDiscount(
+      validation.code!,
+      basePriceResult.priceAfterDiscount,
+    );
+
+    return {
+      promoCode: promoCode.toUpperCase(),
+      promoDiscount: discountCalc.discountAmount,
+    };
+  }
+
+  /**
+   * Apply tax to final price.
+   * TODO: Can be extended with multiple tax rules in future.
+   */
+  private async applyTax(
+    categoryId: string | undefined,
+    basePriceResult: Awaited<ReturnType<typeof this.calculateBasePrice>>,
+    promoResult: Awaited<ReturnType<typeof this.validateAndApplyPromoCode>>,
+    qty: number,
+  ): Promise<PriceBreakdown> {
+    let priceBeforeTax = basePriceResult.priceAfterDiscount;
+
+    // Apply promo discount if available
+    if (promoResult) {
+      priceBeforeTax = parseFloat((priceBeforeTax - promoResult.promoDiscount).toFixed(2));
+    }
+
+    // Override with fixed price if rule specifies it
+    if (basePriceResult.finalBasePrice !== null) {
+      priceBeforeTax = basePriceResult.finalBasePrice;
+    }
+
+    // Fetch and apply tax rule
+    const taxRule = await this.repo.findTaxRuleForCategory(categoryId);
     const taxRate = taxRule?.rate ?? 0;
     const isInclusive = taxRule?.isInclusive ?? true;
 
-    // 5. Compute tax
     let taxAmount: number;
     let finalPrice: number;
 
     if (isInclusive) {
-      // Tax is already inside the price — extract it for display
       taxAmount = parseFloat(
-        (priceAfterDiscount - priceAfterDiscount / (1 + taxRate / 100)).toFixed(2),
+        (priceBeforeTax - priceBeforeTax / (1 + taxRate / 100)).toFixed(2),
       );
-      finalPrice = priceAfterDiscount;
+      finalPrice = priceBeforeTax;
     } else {
-      // Tax is added on top
-      taxAmount = parseFloat(((priceAfterDiscount * taxRate) / 100).toFixed(2));
-      finalPrice = parseFloat((priceAfterDiscount + taxAmount).toFixed(2));
-    }
-
-    // Use fixedPrice override if rule type is fixed_price
-    if (finalBasePrice !== null) {
-      finalPrice = finalBasePrice;
+      taxAmount = parseFloat(((priceBeforeTax * taxRate) / 100).toFixed(2));
+      finalPrice = parseFloat((priceBeforeTax + taxAmount).toFixed(2));
     }
 
     const unitPrice = parseFloat(finalPrice.toFixed(2));
     const totalPrice = parseFloat((unitPrice * qty).toFixed(2));
 
     return {
-      basePrice: input.basePrice,
+      basePrice: basePriceResult.basePrice,
       qty,
-      appliedRule,
-      discountPercent,
-      discountAmount,
-      priceAfterDiscount,
+      appliedRule: basePriceResult.appliedRule,
+      discountPercent: basePriceResult.discountPercent,
+      discountAmount: basePriceResult.discountAmount + (promoResult?.promoDiscount ?? 0),
+      priceAfterDiscount: priceBeforeTax,
       taxRate,
       taxAmount,
       isInclusive,
       finalPrice: unitPrice,
       unitPrice,
       totalPrice,
-      isOnSale: discountPercent > 0 || finalBasePrice !== null,
+      isOnSale: basePriceResult.discountPercent > 0 || basePriceResult.finalBasePrice !== null || !!promoResult,
     };
   }
 

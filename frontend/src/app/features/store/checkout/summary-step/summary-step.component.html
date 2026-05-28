@@ -97,14 +97,11 @@
         <input
           type="text"
           [(ngModel)]="promoCode"
-          placeholder="Enter promo code"
+          placeholder="Enter promo code (applied from cart step)"
           class="summary-promo-field"
           [disabled]="isPlacing()"
         />
       </div>
-      @if (promoError()) {
-        <p class="summary-promo-error">{{ promoError() }}</p>
-      }
     </div>
 
     <!-- Payment Note -->

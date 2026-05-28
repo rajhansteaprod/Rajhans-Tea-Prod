@@ -120,8 +120,8 @@ export const mergeWishlist = async (req: Request, res: Response) => {
 export const getCheckoutSummary = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
   const sessionId = identifier.value;
-  const { items } = req.body as { items?: any[] };
-  const data = await checkoutService.getSummary(sessionId, items);
+  const { items, promoCode } = req.body as { items?: any[]; promoCode?: string };
+  const data = await checkoutService.getSummary(sessionId, items, promoCode);
   sendSuccess(res, data);
 };
 

@@ -24,6 +24,7 @@ export interface CheckoutSummary {
   totalTax: number; // sum of taxAmount * qty
   total: number; // sum of totalPrice
   itemCount: number;
+  promoError?: string; // error message if promo code validation failed
 }
 
 export interface StockIssue {
@@ -46,9 +47,10 @@ export class CheckoutService {
   // Loads cart, runs pricing engine on each item, returns full breakdown
   // ---------------------------------------------------------------------------
 
-  async getSummary(sessionId: string, providedItems?: any[]): Promise<CheckoutSummary> {
+  async getSummary(sessionId: string, providedItems?: any[], promoCode?: string): Promise<CheckoutSummary> {
     // Use provided items (from temporary cart) or fetch from session
     let cartItems = providedItems;
+    let promoError: string | undefined;
 
     if (!cartItems) {
       const cart = await this.cartRepo.findBySession(sessionId);
@@ -64,6 +66,7 @@ export class CheckoutService {
         totalTax: 0,
         total: 0,
         itemCount: 0,
+        promoError,
       };
     }
 
@@ -97,22 +100,48 @@ export class CheckoutService {
       const categoryId = product.category?.toString();
       const collectionIds = (product.collections ?? []).map((c: any) => c.toString());
 
-      const pricing = await this.pricingService.calculate({
-        productId: product._id.toString(),
-        basePrice: finalPrice,
-        categoryId,
-        collectionIds,
-        qty,
-      });
+      try {
+        const pricing = await this.pricingService.calculate({
+          productId: product._id.toString(),
+          basePrice: finalPrice,
+          categoryId,
+          collectionIds,
+          qty,
+          promoCode,
+        });
 
-      lineItems.push({
-        productId: product._id.toString(),
-        name: product.name,
-        slug: product.slug,
-        image: product.images?.[0] ?? '',
-        qty: item.qty,
-        pricing,
-      });
+        lineItems.push({
+          productId: product._id.toString(),
+          name: product.name,
+          slug: product.slug,
+          image: product.images?.[0] ?? '',
+          qty: item.qty,
+          pricing,
+        });
+      } catch (error: any) {
+        // If promo code validation fails, capture error but continue with base price
+        if (promoCode && error.message?.includes('Invalid promo code')) {
+          promoError = error.message;
+          // Calculate without promo code
+          const pricing = await this.pricingService.calculate({
+            productId: product._id.toString(),
+            basePrice: finalPrice,
+            categoryId,
+            collectionIds,
+            qty,
+          });
+          lineItems.push({
+            productId: product._id.toString(),
+            name: product.name,
+            slug: product.slug,
+            image: product.images?.[0] ?? '',
+            qty: item.qty,
+            pricing,
+          });
+        } else {
+          throw error;
+        }
+      }
     }
 
     const subtotal = lineItems.reduce((s, i) => s + i.pricing.priceAfterDiscount * i.qty, 0);
@@ -128,6 +157,7 @@ export class CheckoutService {
       totalTax: +totalTax.toFixed(2),
       total: +total.toFixed(2),
       itemCount: lineItems.reduce((s, i) => s + i.qty, 0),
+      promoError,
     };
   }
 

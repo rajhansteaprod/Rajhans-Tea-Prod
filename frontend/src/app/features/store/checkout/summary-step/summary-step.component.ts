@@ -1,4 +1,4 @@
-import { Component, inject, signal, output } from '@angular/core';
+import { Component, inject, signal, output, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -27,7 +27,6 @@ export class SummaryStepComponent {
   readonly isPlacing = signal(false);
   readonly orderError = signal('');
   readonly promoCode = signal('');
-  readonly promoError = signal('');
 
   // Get data from service
   readonly cartItems = this.checkoutService.cartItems;
@@ -35,6 +34,9 @@ export class SummaryStepComponent {
   readonly cartSubtotal = this.checkoutService.cartSubtotal;
   readonly cartDiscount = this.checkoutService.cartDiscount;
   readonly cartTotal = this.checkoutService.cartTotal;
+
+  constructor() {
+  }
 
   goBack() {
     this.prevStep.emit();
@@ -55,10 +57,8 @@ export class SummaryStepComponent {
     }
 
     this.isPlacing.set(true);
-    
-    try {
-      this.promoError.set('');
 
+    try {
       // ✅ Use PaymentStore.pay() which handles:
       // 1. Create order on backend
       // 2. Open Razorpay modal

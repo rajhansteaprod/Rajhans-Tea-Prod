@@ -286,6 +286,7 @@
 // Promo Code
 .summary-promo-input {
   margin-bottom: $space-md;
+  position: relative;
 }
 
 .summary-promo-field {
@@ -296,6 +297,7 @@
   font-size: $font-size-md;
   font-family: $font-family;
   transition: border-color 0.2s;
+  text-transform: uppercase;
 
   &:focus {
     outline: none;
@@ -308,10 +310,27 @@
   }
 }
 
+.summary-promo-validating {
+  position: absolute;
+  right: $space-md;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: $font-size-xs;
+  color: #ff9800;
+  font-weight: $font-weight-medium;
+}
+
 .summary-promo-error {
   color: #d32f2f;
   font-size: $font-size-sm;
   margin: 0;
+}
+
+.summary-promo-success {
+  color: #00a86b;
+  font-size: $font-size-sm;
+  margin: 0;
+  font-weight: $font-weight-medium;
 }
 
 // Mobile
