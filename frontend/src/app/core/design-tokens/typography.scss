@@ -1,0 +1,115 @@
+// ============================================================================
+// TYPOGRAPHY TOKENS
+// ============================================================================
+
+// Font Family
+$font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+$font-family-mono: 'Courier New', monospace;
+
+// Font Sizes
+$font-xs: 12px;
+$font-sm: 14px;
+$font-base: 16px;
+$font-lg: 18px;
+$font-xl: 20px;
+$font-2xl: 24px;
+$font-3xl: 28px;
+$font-4xl: 32px;
+$font-5xl: 40px;
+$font-6xl: 48px;
+
+// Font Weights
+$weight-regular: 400;
+$weight-medium: 500;
+$weight-semibold: 600;
+$weight-bold: 700;
+
+// Line Heights
+$line-tight: 1.4;
+$line-normal: 1.5;
+$line-relaxed: 1.6;
+$line-loose: 1.8;
+
+// Letter Spacing
+$tracking-tight: -0.01em;
+$tracking-normal: 0;
+$tracking-wide: 0.02em;
+
+// TYPOGRAPHY STYLES (Mixins)
+@mixin heading-1 {
+  font-family: $font-family;
+  font-size: $font-5xl;
+  font-weight: $weight-bold;
+  line-height: $line-tight;
+  letter-spacing: $tracking-tight;
+}
+
+@mixin heading-2 {
+  font-family: $font-family;
+  font-size: $font-4xl;
+  font-weight: $weight-bold;
+  line-height: $line-tight;
+  letter-spacing: $tracking-tight;
+}
+
+@mixin heading-3 {
+  font-family: $font-family;
+  font-size: $font-3xl;
+  font-weight: $weight-semibold;
+  line-height: $line-normal;
+  letter-spacing: $tracking-tight;
+}
+
+@mixin heading-4 {
+  font-family: $font-family;
+  font-size: $font-2xl;
+  font-weight: $weight-semibold;
+  line-height: $line-normal;
+  letter-spacing: $tracking-tight;
+}
+
+@mixin body-lg {
+  font-family: $font-family;
+  font-size: $font-lg;
+  font-weight: $weight-regular;
+  line-height: $line-relaxed;
+}
+
+@mixin body-base {
+  font-family: $font-family;
+  font-size: $font-base;
+  font-weight: $weight-regular;
+  line-height: $line-relaxed;
+}
+
+@mixin body-sm {
+  font-family: $font-family;
+  font-size: $font-sm;
+  font-weight: $weight-regular;
+  line-height: $line-relaxed;
+}
+
+@mixin body-xs {
+  font-family: $font-family;
+  font-size: $font-xs;
+  font-weight: $weight-regular;
+  line-height: $line-normal;
+}
+
+@mixin label {
+  font-family: $font-family;
+  font-size: $font-sm;
+  font-weight: $weight-semibold;
+  line-height: $line-normal;
+  text-transform: uppercase;
+  letter-spacing: $tracking-wide;
+}
+
+@mixin button {
+  font-family: $font-family;
+  font-size: $font-sm;
+  font-weight: $weight-semibold;
+  line-height: $line-normal;
+  text-transform: uppercase;
+  letter-spacing: $tracking-wide;
+}

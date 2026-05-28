@@ -1,0 +1,44 @@
+// ============================================================================
+// COLOR TOKENS - 5 Colors Only
+// ============================================================================
+
+// PRIMARY COLOR - Rust/Terracotta (#B65A3A)
+$primary: #B65A3A;
+$primary-hover: rgba(182, 90, 58, 0.85);
+$primary-active: rgba(182, 90, 58, 0.7);
+$primary-disabled: rgba(182, 90, 58, 0.5);
+$primary-light: rgba(182, 90, 58, 0.1);
+
+// SECONDARY COLOR - Dark Brown (#7D3C26)
+$secondary: #7D3C26;
+$secondary-hover: rgba(125, 60, 38, 0.85);
+$secondary-active: rgba(125, 60, 38, 0.7);
+$secondary-disabled: rgba(125, 60, 38, 0.5);
+$secondary-light: rgba(125, 60, 38, 0.1);
+
+// TERTIARY COLOR - Light Cream (#F2DDD4)
+$tertiary: #F2DDD4;
+$tertiary-hover: rgba(242, 221, 212, 0.8);
+$tertiary-active: rgba(242, 221, 212, 0.6);
+$tertiary-dark: rgba(242, 221, 212, 0.3);
+
+// NEUTRAL - Black & White
+$text-dark: #000000;
+$bg-white: #FFFFFF;
+
+// BORDERS
+$border-light: rgba(182, 90, 58, 0.2);
+$border-medium: rgba(182, 90, 58, 0.3);
+
+// TEXT COLORS
+$text-primary: #000000;
+$text-secondary: rgba(0, 0, 0, 0.7);
+$text-tertiary: rgba(0, 0, 0, 0.5);
+$text-disabled: rgba(0, 0, 0, 0.4);
+$text-inverse: #FFFFFF;
+
+// SEMANTIC (using primary colors only)
+$success: $secondary;
+$warning: $primary;
+$error: $primary;
+$info: $primary;

@@ -1,0 +1,83 @@
+@import '../../../app/core/design-tokens/index.scss';
+
+// ============================================================================
+// CARD COMPONENT
+// ============================================================================
+
+.card {
+  border-radius: $radius-md;
+  @include transition-normal;
+  position: relative;
+
+  // ─── PADDING VARIANTS ──────────────────────────────────────────────────
+  &--p-sm {
+    padding: $space-sm;
+  }
+
+  &--p-md {
+    padding: $space-md;
+  }
+
+  &--p-lg {
+    padding: $space-lg;
+  }
+
+  // ─── ELEVATED VARIANT ──────────────────────────────────────────────────
+  &--elevated {
+    background-color: $bg-white;
+    @include elevation-1;
+    border: none;
+
+    &.card--hoverable:hover {
+      @include elevation-2;
+    }
+  }
+
+  // ─── SUBTLE VARIANT ────────────────────────────────────────────────────
+  &--subtle {
+    background-color: $bg-white;
+    border: 1px solid $border-light;
+    @include elevation-0;
+
+    &.card--hoverable:hover {
+      border-color: $primary-light;
+      @include elevation-1;
+    }
+  }
+
+  // ─── DARK VARIANT ──────────────────────────────────────────────────────
+  &--dark {
+    background-color: $secondary;
+    color: $text-inverse;
+    @include elevation-2;
+
+    &.card--hoverable:hover {
+      background-color: $secondary-hover;
+      @include elevation-3;
+    }
+
+    // Ensure text and links are light-colored within dark cards
+    a {
+      color: $text-inverse;
+
+      &:hover {
+        color: $primary-light;
+      }
+    }
+  }
+
+  // ─── CLICKABLE STATE ────────────────────────────────────────────────────
+  &--clickable {
+    cursor: pointer;
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  // ─── FOCUS STATE ───────────────────────────────────────────────────────
+  &:focus-within {
+    outline: 2px solid $primary;
+    outline-offset: 2px;
+  }
+}

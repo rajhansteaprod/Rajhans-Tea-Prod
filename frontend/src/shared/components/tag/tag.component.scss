@@ -1,0 +1,98 @@
+@import '../../../app/core/design-tokens/index.scss';
+
+// ============================================================================
+// TAG COMPONENT
+// ============================================================================
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  border-radius: $radius-lg;
+  @include transition-fast;
+  user-select: none;
+
+  // ─── SIZE VARIANTS ────────────────────────────────────────────────────
+  &--sm {
+    padding: 4px $space-sm;
+    @include body-sm;
+    font-weight: $weight-medium;
+  }
+
+  &--md {
+    padding: $space-sm $space-md;
+    @include body-base;
+    font-weight: $weight-medium;
+  }
+
+  // ─── PRIMARY VARIANT ──────────────────────────────────────────────────
+  &--primary {
+    background-color: $primary-light;
+    color: $secondary;
+
+    .tag__remove {
+      background: none;
+      border: none;
+      color: $secondary;
+      cursor: pointer;
+      padding: 0;
+      font-size: 0.8em;
+      @include transition-fast;
+
+      &:hover {
+        color: $primary;
+      }
+    }
+  }
+
+  // ─── SECONDARY VARIANT ─────────────────────────────────────────────────
+  &--secondary {
+    background-color: rgba(125, 60, 38, 0.1);
+    color: $secondary;
+
+    .tag__remove {
+      background: none;
+      border: none;
+      color: $secondary;
+      cursor: pointer;
+      padding: 0;
+      font-size: 0.8em;
+      @include transition-fast;
+
+      &:hover {
+        color: $primary;
+      }
+    }
+  }
+
+  // ─── OUTLINE VARIANT ──────────────────────────────────────────────────
+  &--outline {
+    background-color: transparent;
+    color: $secondary;
+    border: 1px solid $primary;
+
+    .tag__remove {
+      background: none;
+      border: none;
+      color: $secondary;
+      cursor: pointer;
+      padding: 0;
+      font-size: 0.8em;
+      @include transition-fast;
+
+      &:hover {
+        color: $primary;
+      }
+    }
+  }
+
+  // ─── REMOVE BUTTON ────────────────────────────────────────────────────
+  .tag__remove {
+    line-height: 1;
+    min-width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

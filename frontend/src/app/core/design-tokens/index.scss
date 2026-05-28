@@ -1,0 +1,36 @@
+// ============================================================================
+// DESIGN TOKENS - MAIN EXPORT
+// ============================================================================
+// Import all design tokens for use throughout the application
+
+@import './colors.scss';
+@import './typography.scss';
+@import './spacing.scss';
+@import './radius-and-shadow.scss';
+@import './animations.scss';
+
+// Export all tokens for use in components
+
+// ─── Backwards Compatibility Aliases ───────────────────────────────
+// Old naming conventions for gradual migration
+$font-size-xs: $font-xs;
+$font-size-sm: $font-sm;
+$font-size-md: $font-base;
+$font-size-lg: $font-lg;
+$font-size-xl: $font-xl;
+$font-size-2xl: $font-2xl;
+$font-size-3xl: $font-3xl;
+
+$font-weight-regular: $weight-regular;
+$font-weight-medium: $weight-medium;
+$font-weight-semibold: $weight-semibold;
+$font-weight-bold: $weight-bold;
+
+$transition-fast: $duration-fast;
+$transition-normal: $duration-normal;
+$transition-slow: $duration-slow;
+
+$line-height-tight: $line-tight;
+$line-height-normal: $line-normal;
+$line-height-relaxed: $line-relaxed;
+$line-height-loose: $line-loose;

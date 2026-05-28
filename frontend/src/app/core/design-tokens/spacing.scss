@@ -1,0 +1,73 @@
+// ============================================================================
+// SPACING TOKENS
+// ============================================================================
+
+$space-xs: 4px;
+$space-sm: 8px;
+$space-md: 12px;
+$space-lg: 16px;
+$space-xl: 24px;
+$space-2xl: 32px;
+$space-3xl: 48px;
+$space-4xl: 64px;
+
+// Container widths
+$container-sm: 640px;
+$container-md: 768px;
+$container-lg: 1024px;
+$container-xl: 1280px;
+$container-2xl: 1440px;
+
+// Breakpoints
+$bp-mobile: 480px;
+$bp-tablet: 768px;
+$bp-desktop: 1024px;
+$bp-wide: 1440px;
+
+// Padding presets
+@mixin px-sm {
+  padding-left: $space-lg;
+  padding-right: $space-lg;
+}
+
+@mixin px-md {
+  padding-left: $space-xl;
+  padding-right: $space-xl;
+}
+
+@mixin px-lg {
+  padding-left: $space-2xl;
+  padding-right: $space-2xl;
+}
+
+@mixin py-sm {
+  padding-top: $space-lg;
+  padding-bottom: $space-lg;
+}
+
+@mixin py-md {
+  padding-top: $space-xl;
+  padding-bottom: $space-xl;
+}
+
+@mixin py-lg {
+  padding-top: $space-2xl;
+  padding-bottom: $space-2xl;
+}
+
+// Gap presets
+@mixin gap-sm {
+  gap: $space-sm;
+}
+
+@mixin gap-md {
+  gap: $space-md;
+}
+
+@mixin gap-lg {
+  gap: $space-lg;
+}
+
+@mixin gap-xl {
+  gap: $space-xl;
+}

@@ -5,11 +5,12 @@ import { Router } from '@angular/router';
 import { CheckoutService } from '../../../../core/services/checkout.service';
 import { PaymentStore } from '../../../../core/services/payment.store';
 import { CartStore } from '../../../../core/services/cart.store';
+import { ButtonComponent } from '../../../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-summary-step',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ButtonComponent],
   templateUrl: './summary-step.component.html',
   styleUrls: ['./summary-step.component.scss'],
 })

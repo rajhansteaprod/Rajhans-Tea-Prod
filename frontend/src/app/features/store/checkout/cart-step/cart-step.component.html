@@ -147,22 +147,35 @@
         <div class="checkout__price-divider"></div>
 
         <div class="checkout__promo-section">
-          <input
+          <app-input
             type="text"
-            class="checkout__promo-input"
             placeholder="Enter promo code"
             [(ngModel)]="promoCode"
             name="promoCode"
             [disabled]="isValidatingPromo() || isPromoApplied()"
+            variant="subtle"
+            size="sm"
           />
           @if (isPromoApplied()) {
-            <button class="checkout__promo-btn checkout__promo-btn--remove" (click)="removePromo()" [disabled]="isValidatingPromo()">
+            <app-button
+              variant="secondary"
+              size="sm"
+              (click)="removePromo()"
+              [disabled]="isValidatingPromo()"
+              [loading]="isValidatingPromo()"
+            >
               {{ isValidatingPromo() ? 'REMOVING...' : 'REMOVE' }}
-            </button>
+            </app-button>
           } @else {
-            <button class="checkout__promo-btn" (click)="applyPromo()" [disabled]="isValidatingPromo()">
+            <app-button
+              variant="primary"
+              size="sm"
+              (click)="applyPromo()"
+              [disabled]="isValidatingPromo()"
+              [loading]="isValidatingPromo()"
+            >
               {{ isValidatingPromo() ? 'CHECKING...' : 'APPLY' }}
-            </button>
+            </app-button>
           }
         </div>
 
@@ -188,23 +201,26 @@
           </p>
         </div>
 
-        <button class="checkout__btn-next" (click)="goNext()" [disabled]="!canProceed()">
-          @if (checkoutService.summaryLoading()) {
-            <span class="checkout__btn-spinner"></span>
-            LOADING...
-          } @else {
-            NEXT
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M5 12h14M12 5l7 7-7 7"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          }
-        </button>
+        <app-button
+          class="checkout__btn-next"
+          variant="primary"
+          size="md"
+          [fullWidth]="true"
+          (click)="goNext()"
+          [disabled]="!canProceed()"
+          [loading]="checkoutService.summaryLoading()"
+        >
+          NEXT
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-left: 8px;">
+            <path
+              d="M5 12h14M12 5l7 7-7 7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </app-button>
       </div>
     </div>
   }

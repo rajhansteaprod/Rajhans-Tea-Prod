@@ -1,4 +1,4 @@
-@use '../../../core/design-tokens/tokens' as *;
+@import '../../../core/design-tokens/index.scss';
 
 // ─ Host Element (Flex Item in Parent Grid) ─
 :host {
@@ -10,11 +10,11 @@
     flex: 0 0 calc(33.333% - 16px);
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: $bp-tablet) {
     flex: 0 0 calc(50% - 8px);
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: $bp-mobile) {
     flex: 0 0 100%;
   }
 }
@@ -22,16 +22,16 @@
 .product-card {
   display: flex;
   flex-direction: column;
-  background: $color-mono-light;
-  border-radius: 6px;
+  background: $bg-white;
+  border-radius: $radius-md;
   overflow: hidden;
-  transition: all $transition-normal;
-  box-shadow: 0 1px 3px rgba($color-mono-dark, 0.08);
+  @include transition-normal;
+  @include elevation-1;
   cursor: pointer;
   flex: 1;
 
   &:hover {
-    box-shadow: 0 8px 24px rgba($color-mono-dark, 0.12);
+    @include elevation-3;
     transform: translateY(-4px);
   }
 }
@@ -40,10 +40,10 @@
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  background: #f5f5f5;
+  background: $tertiary;
   overflow: hidden;
   flex-shrink: 0;
-  border-radius: 6px 6px 0 0;
+  border-radius: $radius-md $radius-md 0 0;
 }
 
 .product-card__image {
@@ -58,8 +58,8 @@
     opacity: 1;
     transform: scale(1);
     z-index: 2;
-    transition: opacity 0.09s cubic-bezier(0.4, 0, 0.2, 1),
-                transform 0.09s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity $duration-fastest cubic-bezier(0.4, 0, 0.2, 1),
+                transform $duration-fastest cubic-bezier(0.4, 0, 0.2, 1);
 
     &.product-card__image--hidden {
       opacity: 0;
@@ -71,8 +71,8 @@
     opacity: 0;
     transform: scale(0.96);
     z-index: 1;
-    transition: opacity 0.09s cubic-bezier(0.4, 0, 0.2, 1),
-                transform 0.09s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity $duration-fastest cubic-bezier(0.4, 0, 0.2, 1),
+                transform $duration-fastest cubic-bezier(0.4, 0, 0.2, 1);
 
     &.product-card__image--visible {
       opacity: 1;
@@ -87,14 +87,12 @@
   gap: $space-md;
   flex: 1;
   padding: $space-lg;
-  background: $color-mono-light;
+  background: $bg-white;
 }
 
 .product-card__name {
-  font-family: $font-family-heading;
-  font-size: $font-size-md;
-  font-weight: $font-weight-bold;
-  color: $color-mono-dark;
+  @include heading-4;
+  color: $text-primary;
   margin: 0;
   line-height: 1.3;
   display: -webkit-box;
@@ -105,9 +103,8 @@
 }
 
 .product-card__description {
-  font-family: $font-family-body;
-  font-size: $font-size-sm;
-  color: rgba($color-mono-dark, 0.65);
+  @include body-sm;
+  color: $text-secondary;
   margin: 0;
   line-height: 1.4;
   display: -webkit-box;
@@ -124,31 +121,28 @@
 }
 
 .product-card__variant-btn {
-  flex: 1;
-  min-width: 70px;
+  flex: 0 1 calc(50% - 4px);
   padding: $space-sm $space-md;
-  font-family: $font-family-body;
-  font-size: $font-size-xs;
-  color: $color-mono-dark;
-  background: rgba($color-mono-dark, 0.04);
+  @include body-sm;
+  color: $text-primary;
+  background: $tertiary;
   border: 1.5px solid transparent;
-  border-radius: 4px;
+  border-radius: $radius-sm;
   cursor: pointer;
-  transition: all $transition-fast;
+  @include transition-fast;
   text-align: center;
-  white-space: nowrap;
-  font-weight: $font-weight-medium;
+  font-weight: $weight-medium;
 
   &:hover {
-    border-color: $color-mono-dark;
-    background: rgba($color-mono-dark, 0.08);
+    border-color: $primary;
+    background: $primary-light;
   }
 
   &--active {
-    background: $color-mono-dark;
-    color: $color-mono-light;
-    border-color: $color-mono-dark;
-    box-shadow: 0 2px 8px rgba($color-mono-dark, 0.15);
+    background: $primary;
+    color: $text-inverse;
+    border-color: $primary;
+    @include elevation-2;
   }
 }
 
@@ -165,19 +159,18 @@
   svg {
     width: 16px;
     height: 16px;
-    color: #d1d5db;
-    transition: color $transition-fast;
+    color: $border-light;
+    @include transition-fast;
 
     &.filled {
-      color: #fbbf24;
+      color: $primary;
     }
   }
 }
 
 .product-card__reviews {
-  font-family: $font-family-body;
-  font-size: $font-size-xs;
-  color: rgba($color-mono-dark, 0.5);
+  @include body-sm;
+  color: $text-tertiary;
 }
 
 .product-card__price {
@@ -185,22 +178,18 @@
   align-items: baseline;
   gap: $space-sm;
   padding-top: $space-sm;
-  border-top: 1px solid rgba($color-mono-dark, 0.08);
+  border-top: 1px solid $border-light;
 }
 
 .product-card__price-original {
-  font-family: $font-family-heading;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: rgba($color-mono-dark, 0.5);
+  @include body-sm;
+  color: $text-tertiary;
   text-decoration: line-through;
 }
 
 .product-card__price-current {
-  font-family: $font-family-heading;
-  font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
-  color: $color-mono-dark;
+  @include heading-3;
+  color: $primary;
   letter-spacing: -0.01em;
 }
 
@@ -212,15 +201,15 @@
   height: 40px;
   background: rgba(255, 255, 255, 0.97);
   border: none;
-  border-radius: 50%;
+  border-radius: $radius-full;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: rgba($color-mono-dark, 0.25);
-  transition: all $transition-fast;
+  color: $text-tertiary;
+  @include transition-fast;
   z-index: 4;
-  box-shadow: 0 2px 8px rgba($color-mono-dark, 0.1);
+  @include elevation-1;
 
   svg {
     width: 22px;
@@ -229,18 +218,18 @@
 
   &:hover {
     background: rgba(255, 255, 255, 1);
-    box-shadow: 0 4px 16px rgba($color-mono-dark, 0.18);
+    @include elevation-2;
     transform: scale(1.08);
-    color: rgba($color-mono-dark, 0.4);
+    color: $secondary;
   }
 
   &--active {
-    color: #ff4757;
-    background: rgba(255, 71, 87, 0.12);
-    box-shadow: 0 2px 8px rgba(255, 71, 87, 0.2);
+    color: $primary;
+    background: rgba(182, 90, 58, 0.12);
+    @include elevation-1;
 
     &:hover {
-      box-shadow: 0 4px 16px rgba(255, 71, 87, 0.3);
+      @include elevation-2;
     }
   }
 }
@@ -250,35 +239,30 @@
   gap: $space-sm;
   margin-top: auto;
   padding-top: $space-md;
-  border-top: 1px solid rgba($color-mono-dark, 0.08);
+  border-top: 1px solid $border-light;
 }
 
 .product-card__cta {
   padding: $space-md;
-  background: $color-mono-dark;
-  color: $color-mono-light;
+  background: $primary;
+  color: $text-inverse;
   border: none;
-  border-radius: 4px;
-  font-family: $font-family-heading;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  border-radius: $radius-md;
+  @include button;
   cursor: pointer;
-  transition: all $transition-fast;
+  @include transition-fast;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba($color-mono-dark, 0.15);
+  @include elevation-1;
 
   &:hover {
-    background: $color-mono-dark;
-    color: $color-mono-light;
-    box-shadow: 0 4px 12px rgba($color-mono-dark, 0.25);
+    background: $primary-hover;
+    @include elevation-2;
   }
 
   &:active {
-    transform: scale(0.97);
+    transform: scale(0.98);
   }
 
   &--primary {
@@ -291,10 +275,10 @@
     min-height: 44px;
     flex-shrink: 0;
     padding: $space-sm;
-    background: $color-mono-light;
-    color: $color-mono-dark;
-    border: 1.5px solid rgba($color-mono-dark, 0.2);
-    box-shadow: 0 1px 3px rgba($color-mono-dark, 0.08);
+    background: $bg-white;
+    color: $text-primary;
+    border: 1.5px solid $border-light;
+    @include elevation-1;
 
     svg {
       width: 20px;
@@ -302,10 +286,10 @@
     }
 
     &:hover {
-      background: $color-mono-dark;
-      color: $color-mono-light;
-      border-color: $color-mono-dark;
-      box-shadow: 0 4px 12px rgba($color-mono-dark, 0.25);
+      background: $tertiary;
+      color: $primary;
+      border-color: $primary;
+      @include elevation-2;
     }
   }
 }

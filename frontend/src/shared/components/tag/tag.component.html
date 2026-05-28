@@ -1,0 +1,8 @@
+<span [class]="tagClasses">
+  <ng-content></ng-content>
+  @if (removable) {
+    <button type="button" class="tag__remove" (click)="onRemove($event)" aria-label="Remove tag">
+      ✕
+    </button>
+  }
+</span>

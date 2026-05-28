@@ -1,0 +1,136 @@
+@import '../../../app/core/design-tokens/index.scss';
+
+// ============================================================================
+// INPUT COMPONENT
+// ============================================================================
+
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+  position: relative;
+}
+
+.input__label {
+  @include label;
+  color: $text-primary;
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+}
+
+.input__required {
+  color: $secondary;
+}
+
+.input {
+  border: 1px solid $border-light;
+  border-radius: $radius-md;
+  background-color: $bg-white;
+  color: $text-primary;
+  @include body-base;
+  @include transition-normal;
+  outline: none;
+
+  &::placeholder {
+    color: $text-tertiary;
+  }
+
+  // ─── SIZE VARIANTS ────────────────────────────────────────────────────
+  &--sm {
+    padding: $space-sm $space-md;
+    font-size: $font-sm;
+  }
+
+  &--md {
+    padding: $space-md $space-lg;
+    font-size: $font-base;
+  }
+
+  &--lg {
+    padding: $space-lg $space-xl;
+    font-size: $font-lg;
+  }
+
+  // ─── DEFAULT VARIANT ──────────────────────────────────────────────────
+  &--default {
+    border-color: $border-light;
+
+    &:hover:not(.input--disabled) {
+      border-color: $primary-light;
+      @include elevation-1;
+    }
+
+    &:focus {
+      border-color: $primary;
+      @include elevation-1;
+      box-shadow: inset 0 0 0 1px $primary;
+    }
+  }
+
+  // ─── SUBTLE VARIANT ───────────────────────────────────────────────────
+  &--subtle {
+    background-color: rgba(125, 60, 38, 0.05);
+    border-color: transparent;
+
+    &:hover:not(.input--disabled) {
+      background-color: rgba(125, 60, 38, 0.08);
+    }
+
+    &:focus {
+      background-color: $bg-white;
+      border-color: $primary;
+      box-shadow: inset 0 0 0 1px $primary;
+    }
+  }
+
+  // ─── DISABLED STATE ───────────────────────────────────────────────────
+  &--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: rgba(125, 60, 38, 0.05);
+  }
+
+  // ─── ERROR STATE ──────────────────────────────────────────────────────
+  &--error {
+    border-color: $secondary;
+
+    &:focus {
+      border-color: $secondary;
+      box-shadow: inset 0 0 0 1px $secondary;
+    }
+  }
+
+  // ─── FOCUSED STATE ────────────────────────────────────────────────────
+  &--focused:not(.input--error) {
+    border-color: $primary;
+    box-shadow: inset 0 0 0 1px $primary;
+  }
+}
+
+.input__error {
+  @include body-sm;
+  color: $secondary;
+  font-weight: $weight-medium;
+}
+
+.input__helper {
+  @include body-sm;
+  color: $text-tertiary;
+}
+
+.input-wrapper--error {
+  .input__label {
+    color: $secondary;
+  }
+}
+
+// Responsive
+@media (max-width: $bp-tablet) {
+  .input {
+    &--lg {
+      padding: $space-md $space-lg;
+      font-size: $font-base;
+    }
+  }
+}

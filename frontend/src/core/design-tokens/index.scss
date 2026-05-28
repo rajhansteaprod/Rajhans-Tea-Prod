@@ -1,0 +1,12 @@
+// ============================================================================
+// DESIGN TOKENS - MAIN EXPORT
+// ============================================================================
+// Import all design tokens for use throughout the application
+
+@import './colors.scss';
+@import './typography.scss';
+@import './spacing.scss';
+@import './radius-and-shadow.scss';
+@import './animations.scss';
+
+// Export all tokens for use in components

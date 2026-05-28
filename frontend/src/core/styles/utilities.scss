@@ -1,0 +1,205 @@
+// ============================================================================
+// UTILITY CLASSES
+// ============================================================================
+
+@import '../design-tokens/index.scss';
+
+// SPACING UTILITIES
+.p-xs { padding: $space-xs; }
+.p-sm { padding: $space-sm; }
+.p-md { padding: $space-md; }
+.p-lg { padding: $space-lg; }
+.p-xl { padding: $space-xl; }
+.p-2xl { padding: $space-2xl; }
+.p-3xl { padding: $space-3xl; }
+.p-4xl { padding: $space-4xl; }
+
+.px-sm { padding-left: $space-sm; padding-right: $space-sm; }
+.px-md { padding-left: $space-md; padding-right: $space-md; }
+.px-lg { padding-left: $space-lg; padding-right: $space-lg; }
+.px-xl { padding-left: $space-xl; padding-right: $space-xl; }
+.px-2xl { padding-left: $space-2xl; padding-right: $space-2xl; }
+
+.py-sm { padding-top: $space-sm; padding-bottom: $space-sm; }
+.py-md { padding-top: $space-md; padding-bottom: $space-md; }
+.py-lg { padding-top: $space-lg; padding-bottom: $space-lg; }
+.py-xl { padding-top: $space-xl; padding-bottom: $space-xl; }
+.py-2xl { padding-top: $space-2xl; padding-bottom: $space-2xl; }
+
+.m-xs { margin: $space-xs; }
+.m-sm { margin: $space-sm; }
+.m-md { margin: $space-md; }
+.m-lg { margin: $space-lg; }
+.m-xl { margin: $space-xl; }
+.m-2xl { margin: $space-2xl; }
+.m-3xl { margin: $space-3xl; }
+.m-4xl { margin: $space-4xl; }
+
+.mx-auto { margin-left: auto; margin-right: auto; }
+.my-auto { margin-top: auto; margin-bottom: auto; }
+
+// TEXT UTILITIES
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-justify { text-align: justify; }
+
+.text-xs { font-size: $font-xs; }
+.text-sm { font-size: $font-sm; }
+.text-base { font-size: $font-base; }
+.text-lg { font-size: $font-lg; }
+.text-xl { font-size: $font-xl; }
+.text-2xl { font-size: $font-2xl; }
+.text-3xl { font-size: $font-3xl; }
+.text-4xl { font-size: $font-4xl; }
+.text-5xl { font-size: $font-5xl; }
+
+.font-regular { font-weight: $weight-regular; }
+.font-medium { font-weight: $weight-medium; }
+.font-semibold { font-weight: $weight-semibold; }
+.font-bold { font-weight: $weight-bold; }
+
+.leading-tight { line-height: $line-tight; }
+.leading-normal { line-height: $line-normal; }
+.leading-relaxed { line-height: $line-relaxed; }
+.leading-loose { line-height: $line-loose; }
+
+// COLOR UTILITIES
+.text-primary { color: $text-primary; }
+.text-secondary { color: $text-secondary; }
+.text-tertiary { color: $text-tertiary; }
+.text-primary-color { color: $primary; }
+.text-secondary-color { color: $secondary; }
+.text-inverse { color: $text-inverse; }
+
+.bg-white { background-color: $bg-white; }
+.bg-primary { background-color: $primary; }
+.bg-primary-light { background-color: $primary-light; }
+.bg-secondary { background-color: $secondary; }
+.bg-tertiary { background-color: $tertiary; }
+
+// BORDER UTILITIES
+.border { border: 1px solid $border-light; }
+.border-top { border-top: 1px solid $border-light; }
+.border-bottom { border-bottom: 1px solid $border-light; }
+.border-left { border-left: 1px solid $border-light; }
+.border-right { border-right: 1px solid $border-light; }
+
+.border-primary { border-color: $primary; }
+.border-secondary { border-color: $secondary; }
+.border-tertiary { border-color: $tertiary; }
+
+// RADIUS UTILITIES
+.rounded-sm { border-radius: $radius-sm; }
+.rounded-md { border-radius: $radius-md; }
+.rounded-lg { border-radius: $radius-lg; }
+.rounded-xl { border-radius: $radius-xl; }
+.rounded-full { border-radius: $radius-full; }
+
+// SHADOW UTILITIES
+.shadow-none { box-shadow: none; }
+.shadow-xs { box-shadow: $shadow-xs; }
+.shadow-sm { box-shadow: $shadow-sm; }
+.shadow-md { box-shadow: $shadow-md; }
+.shadow-lg { box-shadow: $shadow-lg; }
+.shadow-xl { box-shadow: $shadow-xl; }
+.shadow-2xl { box-shadow: $shadow-2xl; }
+
+// DISPLAY UTILITIES
+.block { display: block; }
+.inline-block { display: inline-block; }
+.inline { display: inline; }
+.flex { display: flex; }
+.inline-flex { display: inline-flex; }
+.grid { display: grid; }
+.hidden { display: none; }
+
+// FLEXBOX UTILITIES
+.flex-row { flex-direction: row; }
+.flex-col { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-nowrap { flex-wrap: nowrap; }
+
+.items-start { align-items: flex-start; }
+.items-center { align-items: center; }
+.items-end { align-items: flex-end; }
+.items-stretch { align-items: stretch; }
+
+.justify-start { justify-content: flex-start; }
+.justify-center { justify-content: center; }
+.justify-end { justify-content: flex-end; }
+.justify-between { justify-content: space-between; }
+.justify-around { justify-content: space-around; }
+
+.gap-xs { gap: $space-xs; }
+.gap-sm { gap: $space-sm; }
+.gap-md { gap: $space-md; }
+.gap-lg { gap: $space-lg; }
+.gap-xl { gap: $space-xl; }
+.gap-2xl { gap: $space-2xl; }
+
+// OPACITY UTILITIES
+.opacity-10 { opacity: 0.1; }
+.opacity-20 { opacity: 0.2; }
+.opacity-30 { opacity: 0.3; }
+.opacity-40 { opacity: 0.4; }
+.opacity-50 { opacity: 0.5; }
+.opacity-60 { opacity: 0.6; }
+.opacity-70 { opacity: 0.7; }
+.opacity-80 { opacity: 0.8; }
+.opacity-90 { opacity: 0.9; }
+.opacity-100 { opacity: 1; }
+
+// WIDTH UTILITIES
+.w-full { width: 100%; }
+.w-auto { width: auto; }
+.max-w-sm { max-width: $container-sm; }
+.max-w-md { max-width: $container-md; }
+.max-w-lg { max-width: $container-lg; }
+.max-w-xl { max-width: $container-xl; }
+.max-w-2xl { max-width: $container-2xl; }
+
+// HEIGHT UTILITIES
+.h-full { height: 100%; }
+.h-auto { height: auto; }
+.min-h-screen { min-height: 100vh; }
+
+// OVERFLOW UTILITIES
+.overflow-hidden { overflow: hidden; }
+.overflow-auto { overflow: auto; }
+.overflow-x-auto { overflow-x: auto; }
+.overflow-y-auto { overflow-y: auto; }
+
+// CURSOR UTILITIES
+.cursor-pointer { cursor: pointer; }
+.cursor-default { cursor: default; }
+.cursor-not-allowed { cursor: not-allowed; }
+
+// TRANSITION UTILITIES
+.transition-fast { @include transition-fast; }
+.transition-normal { @include transition-normal; }
+.transition-slow { @include transition-slow; }
+
+// HOVER STATE UTILITIES
+.hover\:bg-tertiary:hover { background-color: $tertiary-hover; }
+.hover\:text-primary:hover { color: $primary; }
+.hover\:shadow-lg:hover { box-shadow: $shadow-lg; }
+
+// FOCUS STATE UTILITIES
+.focus\:outline:focus {
+  outline: 2px solid $primary;
+  outline-offset: 2px;
+}
+
+// DISABLED STATE UTILITIES
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+// CLEARFIX
+.clearfix::after {
+  content: "";
+  display: table;
+  clear: both;
+}

@@ -1,0 +1,27 @@
+<div [class]="wrapperClasses">
+  @if (label) {
+    <label class="input__label">
+      {{ label }}
+      @if (required) {
+        <span class="input__required">*</span>
+      }
+    </label>
+  }
+
+  <input
+    [class]="inputClasses"
+    [type]="type"
+    [value]="value"
+    [placeholder]="placeholder"
+    [disabled]="disabled"
+    (input)="onInput($event)"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+  />
+
+  @if (error) {
+    <span class="input__error">{{ error }}</span>
+  } @else if (helperText) {
+    <span class="input__helper">{{ helperText }}</span>
+  }
+</div>

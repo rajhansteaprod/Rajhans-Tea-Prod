@@ -119,22 +119,26 @@
 
     <!-- CTA Buttons -->
     <div class="summary-actions">
-      <button type="button" class="summary-btn summary-btn-back" (click)="goBack()">
-        BACK
-      </button>
-      <button
+      <app-button
         type="button"
-        class="summary-btn summary-btn-place"
+        variant="outline"
+        size="md"
+        [fullWidth]="true"
+        (click)="goBack()"
+      >
+        BACK
+      </app-button>
+      <app-button
+        type="button"
+        variant="primary"
+        size="md"
+        [fullWidth]="true"
         (click)="placeOrder()"
         [disabled]="isPlacing()"
+        [loading]="isPlacing()"
       >
-        @if (isPlacing()) {
-          <span class="summary-spinner"></span>
-          PROCESSING...
-        } @else {
-          PAY NOW
-        }
-      </button>
+        PAY NOW
+      </app-button>
     </div>
   </div>
 </div>

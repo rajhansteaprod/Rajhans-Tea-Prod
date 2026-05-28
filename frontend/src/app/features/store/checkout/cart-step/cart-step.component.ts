@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CheckoutService } from '../../../../core/services/checkout.service';
 import { CatalogService, Product } from '../../../../core/services/catalog.service';
+import { ButtonComponent } from '../../../../../shared/components/button/button.component';
+import { InputComponent } from '../../../../../shared/components/input/input.component';
 
 @Component({
   selector: 'app-cart-step',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ButtonComponent, InputComponent],
   templateUrl: './cart-step.component.html',
   styleUrls: ['./cart-step.component.scss'],
 })

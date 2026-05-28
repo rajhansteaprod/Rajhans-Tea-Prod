@@ -1,0 +1,103 @@
+// ============================================================================
+// ANIMATION TOKENS
+// ============================================================================
+
+// Durations
+$duration-fastest: 100ms;
+$duration-fast: 150ms;
+$duration-normal: 200ms;
+$duration-slow: 300ms;
+$duration-slower: 400ms;
+
+// Easing Functions
+$ease-in: cubic-bezier(0.4, 0, 1, 1);
+$ease-out: cubic-bezier(0, 0, 0.2, 1);
+$ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+$ease-bounce: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-linear: linear;
+
+// ANIMATION MIXINS
+@mixin transition-fast {
+  transition: all $duration-fast $ease-in-out;
+}
+
+@mixin transition-normal {
+  transition: all $duration-normal $ease-in-out;
+}
+
+@mixin transition-slow {
+  transition: all $duration-slow $ease-in-out;
+}
+
+@mixin transition-color-fast {
+  transition: color $duration-fast $ease-in-out, background-color $duration-fast $ease-in-out;
+}
+
+@mixin transition-opacity-fast {
+  transition: opacity $duration-fast $ease-in-out;
+}
+
+@mixin transition-transform-fast {
+  transition: transform $duration-fast $ease-in-out;
+}
+
+// Keyframe Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}

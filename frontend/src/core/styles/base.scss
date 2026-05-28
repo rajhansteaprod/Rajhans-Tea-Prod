@@ -1,0 +1,221 @@
+// ============================================================================
+// BASE STYLES - Global Defaults
+// ============================================================================
+
+@import '../design-tokens/index.scss';
+
+// Root Element
+:root {
+  font-family: $font-family;
+  font-size: $font-base;
+  color: $text-primary;
+  background-color: $bg-white;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Body
+body {
+  margin: 0;
+  padding: 0;
+  font-family: $font-family;
+  font-size: $font-base;
+  line-height: $line-relaxed;
+  color: $text-primary;
+  background-color: $bg-white;
+  @include transition-normal;
+}
+
+// Headings
+h1 {
+  @include heading-1;
+  margin: 0 0 $space-xl 0;
+  color: $text-primary;
+}
+
+h2 {
+  @include heading-2;
+  margin: 0 0 $space-lg 0;
+  color: $text-primary;
+}
+
+h3 {
+  @include heading-3;
+  margin: 0 0 $space-md 0;
+  color: $text-primary;
+}
+
+h4 {
+  @include heading-4;
+  margin: 0 0 $space-md 0;
+  color: $text-primary;
+}
+
+h5 {
+  font-size: $font-xl;
+  font-weight: $weight-semibold;
+  margin: 0 0 $space-sm 0;
+  color: $text-primary;
+}
+
+h6 {
+  font-size: $font-lg;
+  font-weight: $weight-semibold;
+  margin: 0 0 $space-sm 0;
+  color: $text-primary;
+}
+
+// Paragraphs
+p {
+  margin: 0 0 $space-lg 0;
+  @include body-base;
+  color: $text-secondary;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Links
+a {
+  color: $primary;
+  text-decoration: none;
+  @include transition-color-fast;
+
+  &:hover {
+    color: $primary-hover;
+    text-decoration: underline;
+  }
+
+  &:active {
+    color: $primary-active;
+  }
+
+  &:focus {
+    outline: 2px solid $primary;
+    outline-offset: 2px;
+  }
+}
+
+// Lists
+ul, ol {
+  margin: 0 0 $space-lg 0;
+  padding-left: $space-2xl;
+
+  li {
+    margin-bottom: $space-sm;
+    line-height: $line-relaxed;
+  }
+}
+
+// Code
+code {
+  font-family: $font-family-mono;
+  font-size: 0.9em;
+  background-color: $tertiary;
+  padding: $space-xs $space-sm;
+  border-radius: $radius-sm;
+  color: $secondary;
+}
+
+pre {
+  background-color: $tertiary;
+  padding: $space-lg;
+  border-radius: $radius-md;
+  overflow-x: auto;
+  margin: 0 0 $space-lg 0;
+
+  code {
+    background-color: transparent;
+    padding: 0;
+    color: $secondary;
+  }
+}
+
+// Blockquote
+blockquote {
+  margin: $space-lg 0;
+  padding-left: $space-lg;
+  border-left: 4px solid $primary;
+  color: $text-secondary;
+  font-style: italic;
+}
+
+// Horizontal Rule
+hr {
+  border: none;
+  border-top: 1px solid $border-light;
+  margin: $space-2xl 0;
+}
+
+// Tables
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: $space-lg 0;
+
+  thead {
+    background-color: $tertiary;
+  }
+
+  th, td {
+    padding: $space-md $space-lg;
+    text-align: left;
+    border-bottom: 1px solid $border-light;
+  }
+
+  th {
+    @include label;
+    color: $secondary;
+  }
+
+  tbody tr {
+    &:hover {
+      background-color: rgba(242, 221, 212, 0.5);
+    }
+  }
+}
+
+// Images
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+// Form Elements - Base
+input, textarea, select {
+  font-family: $font-family;
+  font-size: $font-base;
+  line-height: $line-normal;
+}
+
+// Selection
+::selection {
+  background-color: $primary;
+  color: $text-inverse;
+}
+
+::-moz-selection {
+  background-color: $primary;
+  color: $text-inverse;
+}
+
+// Scrollbar (Webkit browsers)
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: $tertiary;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: $primary-light;
+  border-radius: $radius-full;
+
+  &:hover {
+    background-color: $primary;
+  }
+}
