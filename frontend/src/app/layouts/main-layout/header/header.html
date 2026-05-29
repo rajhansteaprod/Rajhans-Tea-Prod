@@ -235,7 +235,12 @@
         <span>Categories</span>
       </button>
       <button class="mobile-bottom-nav__link" (click)="closeAll()" title="Help">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 17v.01M9 9a3 3 0 1 1 6 0c0-1-1.5-1.5-1.5-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+  <path d="M10 9.5c0-1.1.9-2 2-2s2 .9 2 2c0 .8-.5 1.2-1 1.8-.3.4-.5.8-.5 1.2v.5M12 17.5v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="12" cy="19.5" r="0.4" fill="currentColor"/>
+</svg>
+
         <span>Help</span>
       </button>
       @if (auth.isLoggedIn()) {

@@ -1,6 +1,6 @@
 @use '../../../../core/design-tokens/tokens' as *;
 @use '../../../../core/design-tokens/mixins' as *;
-
+@use '../../../../core/design-tokens/colors' as colors;
 :host {
   display: block;
 }
@@ -140,7 +140,7 @@ picture {
   align-items: center;
   gap: $space-sm;
   padding: $space-md $space-xxl;
-  background: $color-mono-dark;
+  background: colors.$primary;
   color: $color-mono-light;
   font-family: $font-family-heading;
   font-size: $font-size-sm;
@@ -151,6 +151,7 @@ picture {
   cursor: pointer;
   pointer-events: auto;
   transition: all 0.4s $ease-expo-out;
+  border: 2px solid colors.$secondary;
 
   @include respond-to(md) {
     padding: $space-sm $space-lg;
@@ -158,12 +159,11 @@ picture {
   }
 
   &:hover {
-    background: $color-mono-light;
-    color: $color-mono-dark;
+    background:colors.$secondary;
   }
 
   &:focus-visible {
-    outline: 2px solid $color-mono-dark;
+    outline: 2px solid #B65A3A;
     outline-offset: 4px;
   }
 }

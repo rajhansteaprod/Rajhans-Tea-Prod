@@ -1,6 +1,6 @@
 @use '../../../core/design-tokens/tokens' as *;
 @use '../../../core/design-tokens/mixins' as *;
-
+@use '../../../core/design-tokens/colors' as colors;
 // ═══════════════════════════════════════
 // SINGLE LAYER HEADER (Logo + Links + Icons)
 // ═══════════════════════════════════════
@@ -108,7 +108,7 @@
   outline: none;
 
   &:hover {
-    border-bottom-color: $color-primary;
+    border-bottom-color: colors.$secondary;
   }
 }
 
@@ -290,7 +290,7 @@
   height: 100%;
 
   @include respond-to(md) {
-    gap: $space-sm;
+    gap: 18px;
   }
 }
 
