@@ -1,5 +1,6 @@
 @use '../../../core/design-tokens/tokens' as *;
 @use '../../../core/design-tokens/mixins' as *;
+@use '../../../core/design-tokens/colors' as colors;
 
 // ═══════════════════════════════════════
 // CART SIDEBAR — barcoopbevy style
@@ -64,8 +65,8 @@
 }
 
 .count-badge {
-  background: $color-bg-maroon;
-  color: $color-text-inverse;
+  background: #B65A3A;
+  color: $color-mono-light;
   border-radius: 0;
   font-family: $font-family-nav;
   font-size: $font-size-xs;
@@ -155,7 +156,7 @@
 .btn-shop {
   margin-top: $space-lg;
   padding: $space-md $space-xxl;
-  background: #B65A3A;
+  background: colors.$primary;
   color: $color-mono-light;
   border: none;
   border-radius: 0;
@@ -169,7 +170,7 @@
   transition: all $transition-fast;
 
   &:hover {
-    background: rgba(182, 90, 58, 0.9);
+    background: colors.$primary-hover;
     transform: translateY(-1px);
   }
 }
@@ -297,7 +298,7 @@
   display: flex;
   align-items: center;
   gap: 0;
-  border: 1px solid $color-border;
+  border: 1px solid $color-mono-dark;
   border-radius: 0;
   overflow: hidden;
 }
@@ -346,14 +347,13 @@
   border-radius: 0;
   border: none;
   background: transparent;
-  color: $color-text-disabled;
+  color: $color-mono-dark;
   cursor: pointer;
   flex-shrink: 0;
   transition: all $transition-fast;
 
   &:hover {
-    background: rgba(192, 57, 43, 0.06);
-    color: $color-error;
+    opacity: 0.6;
   }
 }
 
@@ -397,7 +397,7 @@
   justify-content: center;
   width: 100%;
   padding: $space-md $space-lg;
-  background: #B65A3A;
+  background: colors.$primary;
   color: $color-mono-light;
   border: none;
   border-radius: 0;
@@ -411,9 +411,9 @@
   transition: all $transition-fast;
 
   &:hover {
-    background: rgba(182, 90, 58, 0.9);
+    background: colors.$primary-hover;
     transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(182, 90, 58, 0.25);
+    box-shadow: 0 8px 24px rgba(colors.$primary, 0.25);
   }
 }
 
@@ -447,7 +447,7 @@
   margin-top: $space-sm;
   padding: $space-xs;
   background: transparent;
-  color: rgba($color-mono-dark, 0.4);
+  color: colors.$error;
   border: none;
   font-size: $font-size-xs;
   font-family: $font-family-nav;
@@ -456,9 +456,9 @@
   text-transform: uppercase;
   cursor: pointer;
   text-align: center;
-  transition: color $transition-fast;
+  transition: opacity $transition-fast;
 
   &:hover {
-    color: $color-mono-dark;
+    opacity: 0.7;
   }
 }

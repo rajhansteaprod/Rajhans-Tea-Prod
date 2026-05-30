@@ -72,7 +72,7 @@ export class CartService {
 
       if (item.variantId) {
         const variant = item.variantId as unknown as any;
-        price = variant.price ?? product.basePrice;
+        price = variant.discountedPrice ?? variant.price ?? product.basePrice;
         variantName = variant.name;
         variantId = variant._id?.toString();
       }
@@ -91,7 +91,7 @@ export class CartService {
         lineTotal,
         shortDescription: product.shortDescription,
         description: product.description,
-        discountedPrice: product.discountedPrice,
+        discountedPrice: item.variantId ? (item.variantId as unknown as any).discountedPrice ?? product.discountedPrice : product.discountedPrice,
       };
     });
 

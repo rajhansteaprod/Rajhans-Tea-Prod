@@ -5,14 +5,14 @@ export class CartRepository {
   async findBySession(sessionId: string): Promise<ICartDoc | null> {
     return Cart.findOne({ sessionId })
       .populate('items.productId', 'name slug images basePrice category collections status shortDescription description discountedPrice')
-      .populate('items.variantId', 'name price')
+      .populate('items.variantId', 'name price discountedPrice')
       .exec();
   }
 
   async findByUserId(userId: string): Promise<ICartDoc | null> {
     return Cart.findOne({ userId: new Types.ObjectId(userId) })
       .populate('items.productId', 'name slug images basePrice category collections status shortDescription description discountedPrice')
-      .populate('items.variantId', 'name price')
+      .populate('items.variantId', 'name price discountedPrice')
       .exec();
   }
 
@@ -105,7 +105,7 @@ export class CartRepository {
   async findByUserIdAndStatus(userId: string, status: 'temporary' | 'user_cart'): Promise<ICartDoc | null> {
     return Cart.findOne({ userId: new Types.ObjectId(userId), status })
       .populate('items.productId', 'name slug images basePrice category collections status shortDescription description discountedPrice')
-      .populate('items.variantId', 'name price')
+      .populate('items.variantId', 'name price discountedPrice')
       .exec();
   }
 
