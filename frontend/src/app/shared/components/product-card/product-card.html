@@ -1,74 +1,35 @@
 <div class="product-card" (click)="onCardClick()">
-  <!-- Single Image with Hover Reflection -->
-  <div
-    class="product-card__image-container"
-    (mouseenter)="onHover(true)"
-    (mouseleave)="onHover(false)"
-  >
+  <!-- Image Container (Large, Dominant) -->
+  <div class="product-card__image-container" (mouseenter)="onHover(true)" (mouseleave)="onHover(false)">
     <!-- Main Image -->
-    <img
-      [src]="product.images[0]"
-      [alt]="product.name"
-      class="product-card__image product-card__image--main"
-      [class.product-card__image--hidden]="isHovering"
-      loading="lazy"
-    />
+    <img [src]="product.images[0]" [alt]="product.name" class="product-card__image product-card__image--main" [class.product-card__image--hidden]="isHovering" loading="lazy" />
 
-    <!-- Reflected Image (shown on hover) -->
+    <!-- Reflected Image (Hover) -->
     @if (product.reflectedImage) {
-      <img
-        [src]="product.reflectedImage"
-        [alt]="product.name + ' reflection'"
-        class="product-card__image product-card__image--reflected"
-        [class.product-card__image--visible]="isHovering"
-        loading="lazy"
-      />
+      <img [src]="product.reflectedImage" [alt]="product.name + ' reflection'" class="product-card__image product-card__image--reflected" [class.product-card__image--visible]="isHovering" loading="lazy" />
     }
 
-    <!-- Wishlist Heart Icon (Top Right) -->
-    <button
-      class="product-card__wishlist"
-      [class.product-card__wishlist--active]="isWishlisted"
-      (click)="onToggleWishlist($event)"
-      aria-label="Add to wishlist"
-    >
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <!-- Subtle Wishlist Button (Top Right) -->
+    <button class="product-card__wishlist" [class.product-card__wishlist--active]="isWishlisted" (click)="onToggleWishlist($event)" aria-label="Add to wishlist" type="button">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
       </svg>
     </button>
   </div>
 
-  <!-- Product Info -->
+  <!-- Minimal Content Section -->
   <div class="product-card__content">
+    <!-- Product Name -->
     <h3 class="product-card__name">{{ product.name }}</h3>
+
+    <!-- Category/Description -->
     <p class="product-card__description">{{ product.description || product.category.name }}</p>
 
-    <!-- Variant Selector -->
-    @if (product.variants && product.variants.length > 0) {
-      <div class="product-card__variant-selector">
-        @for (variant of product.variants; track variant._id) {
-          <button
-            class="product-card__variant-btn"
-            [class.product-card__variant-btn--active]="selectedVariantId() === variant._id"
-            (click)="onVariantChange(variant._id)"
-          >
-            {{ variant.name }}
-          </button>
-        }
-      </div>
-    }
-
-    <!-- Rating -->
+    <!-- Rating & Reviews (Compact) -->
     <div class="product-card__rating">
       <div class="product-card__stars">
         @for (i of [1, 2, 3, 4, 5]; track i) {
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            [class.filled]="i <= getRating()"
-            fill="currentColor"
-          >
+          <svg width="12" height="12" viewBox="0 0 24 24" [class.filled]="i <= getRating()" fill="black">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
           </svg>
         }
@@ -78,27 +39,35 @@
       }
     </div>
 
-    <!-- Price -->
-    <div class="product-card__price">
+    <!-- Price with Sale Label -->
+    <div class="product-card__price-section">
       @if (getOriginalPrice()) {
-        <span class="product-card__price-original">₹{{ getOriginalPrice() | number:'1.0-0' }}</span>
-        <span class="product-card__price-current">₹{{ getDisplayPrice() | number:'1.0-0' }}</span>
+        <div class="product-card__price-row">
+          <span class="product-card__price-original">₹{{ getOriginalPrice() | number:'1.0-0' }}</span>
+          <span class="product-card__price-current">₹{{ getDisplayPrice() | number:'1.0-0' }}</span>
+        </div>
       } @else {
         <span class="product-card__price-current">₹{{ getDisplayPrice() | number:'1.0-0' }}</span>
       }
     </div>
 
+    <!-- Variants as Compact Selector (if exists) -->
+    @if (product.variants && product.variants.length > 0) {
+      <div class="product-card__variants">
+        @for (variant of product.variants; track variant._id) {
+          <button class="product-card__variant-option" [class.product-card__variant-option--active]="selectedVariantId() === variant._id" (click)="onVariantChange(variant._id)" type="button">
+            {{ variant.name }}
+          </button>
+        }
+      </div>
+    }
+
     <!-- Action Buttons -->
-    <div class="product-card__actions">
-      <button class="product-card__cta product-card__cta--primary" (click)="onBuyNow($event)">
+    <div class="product-card__actions-row">
+      <button class="product-card__primary-action" (click)="onBuyNow($event)">
         Buy Now
       </button>
-      <button
-        class="product-card__cta product-card__cta--icon"
-        (click)="onAddToCart($event)"
-        aria-label="Add to cart"
-        title="Add to Cart"
-      >
+      <button class="product-card__cart-icon" (click)="onAddToCart($event)" aria-label="Add to cart" type="button">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="9" cy="21" r="1"/>
           <circle cx="20" cy="21" r="1"/>

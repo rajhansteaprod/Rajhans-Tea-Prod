@@ -1,20 +1,21 @@
-@import '../../../core/design-tokens/index.scss';
+@use '../../../core/design-tokens/tokens' as *;
+@use '../../../core/design-tokens/mixins' as *;
 
-// ─ Host Element (Flex Item in Parent Grid) ─
 :host {
   display: flex;
   flex-direction: column;
   flex: 0 0 calc(25% - 24px);
+  max-width: 300px;
 
-  @media (max-width: 1199px) {
+  @include respond-to(lg) {
     flex: 0 0 calc(33.333% - 16px);
   }
 
-  @media (max-width: $bp-tablet) {
+  @include respond-to(md) {
     flex: 0 0 calc(50% - 8px);
   }
 
-  @media (max-width: $bp-mobile) {
+  @include respond-to(sm) {
     flex: 0 0 100%;
   }
 }
@@ -22,28 +23,23 @@
 .product-card {
   display: flex;
   flex-direction: column;
-  background: $bg-white;
-  border-radius: $radius-md;
+  background: $color-mono-light;
+  border-radius: 0;
   overflow: hidden;
-  @include transition-normal;
-  @include elevation-1;
   cursor: pointer;
+  transition: none;
   flex: 1;
-
-  &:hover {
-    @include elevation-3;
-    transform: translateY(-4px);
-  }
+  aspect-ratio: 2 / 5;
 }
 
+// ── Image Container (Dominates the card) ──
 .product-card__image-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 1;
-  background: $tertiary;
+  flex: 1;
+  background: #f8f8f8;
   overflow: hidden;
   flex-shrink: 0;
-  border-radius: $radius-md $radius-md 0 0;
 }
 
 .product-card__image {
@@ -58,238 +54,251 @@
     opacity: 1;
     transform: scale(1);
     z-index: 2;
-    transition: opacity $duration-fastest cubic-bezier(0.4, 0, 0.2, 1),
-                transform $duration-fastest cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 150ms ease, transform 150ms ease;
 
     &.product-card__image--hidden {
       opacity: 0;
-      transform: scale(0.92);
+      transform: scale(0.98);
     }
   }
 
   &--reflected {
     opacity: 0;
-    transform: scale(0.96);
+    transform: scale(0.99);
     z-index: 1;
-    transition: opacity $duration-fastest cubic-bezier(0.4, 0, 0.2, 1),
-                transform $duration-fastest cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 150ms ease, transform 150ms ease;
 
     &.product-card__image--visible {
       opacity: 1;
-      transform: scale(1.02);
+      transform: scale(1.01);
     }
   }
 }
 
-.product-card__content {
+// ── Subtle Wishlist Button ──
+.product-card__wishlist {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255,1);
+  border: none;
+  border-radius: 50%;
   display: flex;
-  flex-direction: column;
-  gap: $space-md;
-  flex: 1;
-  padding: $space-lg;
-  background: $bg-white;
-}
-
-.product-card__name {
-  @include heading-4;
-  color: $text-primary;
-  margin: 0;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.product-card__description {
-  @include body-sm;
-  color: $text-secondary;
-  margin: 0;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.product-card__variant-selector {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $space-xs;
-  margin: $space-sm 0;
-}
-
-.product-card__variant-btn {
-  flex: 0 1 calc(50% - 4px);
-  padding: $space-sm $space-md;
-  @include body-sm;
-  color: $text-primary;
-  background: $tertiary;
-  border: 1.5px solid transparent;
-  border-radius: $radius-sm;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  @include transition-fast;
-  text-align: center;
-  font-weight: $weight-medium;
+  color: rgba($color-mono-dark, 0.4);
+  transition: all 150ms ease;
+  z-index: 4;
+  padding: 0;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 
   &:hover {
-    border-color: $primary;
-    background: $primary-light;
+    color: rgba($color-mono-dark, 0.7);
+    background: rgba(255, 255, 255, 0.8);
   }
 
   &--active {
-    background: $primary;
-    color: $text-inverse;
-    border-color: $primary;
-    @include elevation-2;
+    color: #c41e3a;
   }
 }
 
+// ── Minimal Content Section ──
+.product-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  padding-top:  12px;
+}
+
+// ── Product Name (Bold, Minimal, Left-Aligned) ──
+.product-card__name {
+  font-family: $font-family-heading;
+  font-size: 14px;
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0;
+  color: $color-mono-dark;
+  margin: 0;
+  line-height: 1.4;
+  text-align: left;
+}
+
+// ── Description/Category (Small, Subtle, Left-Aligned) ──
+.product-card__description {
+  font-family: $font-family-body;
+  font-size: 12px;
+  color: rgba($color-mono-dark, 0.7);
+  margin: 0;
+  line-height: 1.4;
+  text-align: left;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// ── Rating (Compact, Left-Aligned) ──
 .product-card__rating {
   display: flex;
   align-items: center;
-  gap: $space-sm;
+  gap: 6px;
+  padding-top: 2px;
+  justify-content: flex-start;
 }
 
 .product-card__stars {
   display: flex;
-  gap: 2px;
+  gap: 1px;
+  align-items: center;
 
   svg {
-    width: 16px;
-    height: 16px;
-    color: $border-light;
-    @include transition-fast;
+    color: #ddd;
 
     &.filled {
-      color: $primary;
+      color: $color-mono-dark;
     }
   }
 }
 
 .product-card__reviews {
-  @include body-sm;
-  color: $text-tertiary;
+  font-family: $font-family-body;
+  font-size: 11px;
+  color: rgba($color-mono-dark, 0.5);
+  white-space: nowrap;
 }
 
-.product-card__price {
+// ── Price Section ──
+.product-card__price-section {
   display: flex;
-  align-items: baseline;
-  gap: $space-sm;
-  padding-top: $space-sm;
-  border-top: 1px solid $border-light;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 4px;
+}
+
+.product-card__price-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .product-card__price-original {
-  @include body-sm;
-  color: $text-tertiary;
+  font-family: $font-family-body;
+  font-size: 13px;
+  color: rgba($color-mono-dark, 0.5);
   text-decoration: line-through;
 }
 
 .product-card__price-current {
-  @include heading-3;
-  color: $primary;
+  font-family: $font-family-heading;
+  font-size: 16px;
+  font-weight: $font-weight-semibold;
   letter-spacing: -0.01em;
+  color: $color-mono-dark;
 }
 
-.product-card__wishlist {
-  position: absolute;
-  top: $space-md;
-  right: $space-md;
-  width: 40px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.97);
-  border: none;
-  border-radius: $radius-full;
+// ── Compact Variants (Size/Option Pills) ──
+.product-card__variants {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: $text-tertiary;
-  @include transition-fast;
-  z-index: 4;
-  @include elevation-1;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 2px;
+}
 
-  svg {
-    width: 22px;
-    height: 22px;
-  }
+.product-card__variant-option {
+  padding: 5px 10px;
+  background: rgba($color-mono-dark, 0.05);
+  border: 1px solid rgba($color-mono-dark, 0.15);
+  border-radius: 3px;
+  font-family: $font-family-body;
+  font-size: 11px;
+  font-weight: $font-weight-medium;
+  color: $color-mono-dark;
+  cursor: pointer;
+  transition: all 120ms ease;
+  white-space: nowrap;
 
   &:hover {
-    background: rgba(255, 255, 255, 1);
-    @include elevation-2;
-    transform: scale(1.08);
-    color: $secondary;
+    background: rgba($color-mono-dark, 0.1);
+    border-color: rgba($color-mono-dark, 0.25);
   }
 
   &--active {
-    color: $primary;
-    background: rgba(182, 90, 58, 0.12);
-    @include elevation-1;
-
-    &:hover {
-      @include elevation-2;
-    }
+    background: $color-mono-dark;
+    color: $color-mono-light;
+    border-color: $color-mono-dark;
   }
 }
 
-.product-card__actions {
-  display: flex;
-  gap: $space-sm;
-  margin-top: auto;
-  padding-top: $space-md;
-  border-top: 1px solid $border-light;
-}
-
-.product-card__cta {
-  padding: $space-md;
-  background: $primary;
-  color: $text-inverse;
+// ── Primary Action Button (Buy Now - Brand Color) ──
+.product-card__primary-action {
+  flex: 1;
+  padding: 12px;
+  background: #B65A3A;
+  color: $color-mono-light;
   border: none;
-  border-radius: $radius-md;
-  @include button;
+  border-radius: 0;
+  font-family: $font-family-heading;
+  font-size: 12px;
+  font-weight: $font-weight-medium;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   cursor: pointer;
-  @include transition-fast;
+  transition: all 150ms ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  @include elevation-1;
+  min-height: 44px;
 
   &:hover {
-    background: $primary-hover;
-    @include elevation-2;
+    background: rgba(182, 90, 58, 0.9);
   }
 
   &:active {
-    transform: scale(0.98);
+    transform: scale(0.99);
+  }
+}
+
+// ── Actions Row (Buy Now + Add to Cart Icon) ──
+.product-card__actions-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+// ── Cart Icon Button (Black icon on white bg, inverts on hover) ──
+.product-card__cart-icon {
+  flex-shrink: 0;
+  width: 44px;
+  min-height: 44px;
+  padding: 8px;
+  background: $color-mono-light;
+  color: $color-mono-dark;
+  border: 1px solid $color-mono-dark;
+  border-radius: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 5ms ease;
+  svg 
+{
+    width: 20px;
+    height: 20px;
   }
 
-  &--primary {
-    flex: 1;
-    min-height: 44px;
+  &:hover {
+    color: $color-mono-light;
+    background: $color-mono-dark;
   }
 
-  &--icon {
-    width: 44px;
-    min-height: 44px;
-    flex-shrink: 0;
-    padding: $space-sm;
-    background: $bg-white;
-    color: $text-primary;
-    border: 1.5px solid $border-light;
-    @include elevation-1;
-
-    svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    &:hover {
-      background: $tertiary;
-      color: $primary;
-      border-color: $primary;
-      @include elevation-2;
-    }
+  &:active {
+    transform: scale(0.96);
   }
 }
