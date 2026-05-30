@@ -10,6 +10,7 @@ import { BundleBuilderComponent } from './sections/bundle-builder/bundle-builder
 import { StorytellingComponent } from './sections/storytelling/storytelling';
 import { TestimonialComponent } from './sections/testimonial/testimonial';
 import { CupOfStoriesComponent } from './sections/cup-of-stories/cup-of-stories';
+import { TestimonialsComponent } from '../../shared/components/testimonials/testimonials.component';
 
 @Component({
   selector: 'app-home',
@@ -26,6 +27,7 @@ import { CupOfStoriesComponent } from './sections/cup-of-stories/cup-of-stories'
     StorytellingComponent,
     CupOfStoriesComponent,
     TestimonialComponent,
+    TestimonialsComponent,
   ],
   templateUrl: './home.html',
   styleUrls: ['./home.scss'],

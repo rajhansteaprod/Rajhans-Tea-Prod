@@ -1,0 +1,107 @@
+@use '../../../core/design-tokens/tokens' as *;
+@use '../../../core/design-tokens/mixins' as *;
+
+:host {
+  display: block;
+}
+
+.testimonials {
+  background: $color-mono-light;
+  padding: $space-section 0;
+
+  @include respond-to(md) {
+    padding: $space-section-sm 0;
+  }
+
+  @include respond-to(sm) {
+    padding: $space-xxl 0;
+  }
+}
+
+// ── Header Section ──
+.testimonials__header {
+  text-align: center;
+  padding: 0 $space-section-horizontal;
+  margin-bottom: clamp($space-xl, 8vw, $space-section);
+
+  @include respond-to(lg) {
+    padding: 0 $space-lg;
+  }
+
+  @include respond-to(md) {
+    padding: 0 $space-lg;
+    margin-bottom: $space-xl;
+  }
+
+  @include respond-to(sm) {
+    padding: 0 $space-lg;
+    margin-bottom: $space-lg;
+  }
+}
+
+.testimonials__title {
+  font-family: $font-family-heading;
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: $font-weight-medium;
+  letter-spacing: -0.015em;
+  color: $color-mono-dark;
+  margin: 0 0 $space-md 0;
+  line-height: 1.2;
+}
+
+.testimonials__subtitle {
+  font-family: $font-family-body;
+  font-size: clamp($font-size-sm, 2vw, $font-size-md);
+  color: rgba($color-mono-dark, 0.6);
+  margin: 0;
+  line-height: 1.5;
+  font-weight: $font-weight-regular;
+}
+
+// ── Senja Widget Container ──
+.testimonials__widget-container {
+  max-width: 1700px;
+  margin: 0 auto;
+  padding: 0 $space-section-horizontal;
+
+  @include respond-to(lg) {
+    padding: 0 $space-lg;
+  }
+
+  @include respond-to(md) {
+    padding: 0 $space-lg;
+  }
+
+  @include respond-to(sm) {
+    padding: 0 $space-lg;
+  }
+
+  // Senja widget styling
+  ::ng-deep {
+    .senja-embed {
+      width: 100% !important;
+
+      // Testimonial cards
+      [class*="card"] {
+        background: $color-mono-light !important;
+        border: 1px solid rgba($color-mono-dark, 0.08) !important;
+        box-shadow: 0 2px 8px rgba($color-mono-dark, 0.04) !important;
+      }
+
+      // Text colors
+      p {
+        color: $color-mono-dark !important;
+      }
+
+      // Headings/names
+      h3, h4 {
+        color: $color-mono-dark !important;
+      }
+
+      // Star ratings
+      [class*="star"] {
+        color: #fbbf24 !important;
+      }
+    }
+  }
+}
