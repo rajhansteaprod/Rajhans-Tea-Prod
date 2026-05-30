@@ -33,58 +33,16 @@
   } @else {
     <div class="wishlist__grid">
       @for (item of cart.wishlistItems(); track item.productId) {
-        <div class="wishlist__card">
-          <!-- Heart remove button -->
-          <button
-            class="wishlist__heart active"
-            (click)="cart.toggleWishlist(item.productId)"
-            title="Remove from wishlist"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-            </svg>
-          </button>
-
-          <!-- Image -->
-          <a class="wishlist__card-image" [routerLink]="['/products', item.productId]">
-            @if (item.image) {
-              <img [src]="item.image" [alt]="item.name" loading="lazy" />
-            } @else {
-              <div class="wishlist__img-placeholder">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
-                  <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.5"/>
-                  <path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-                </svg>
-              </div>
-            }
-            @if (item.status === 'archived') {
-              <span class="wishlist__badge-archived">Unavailable</span>
-            }
-          </a>
-
-          <!-- Info -->
-          <div class="wishlist__card-body">
-            <p class="wishlist__product-name">{{ item.name }}</p>
-            <p class="wishlist__product-price">₹{{ item.basePrice | number:'1.0-0' }}</p>
-          </div>
-
-          <!-- Add to cart -->
-          <div class="wishlist__card-footer">
-            <button
-              class="wishlist__btn-cart"
-              [disabled]="item.status !== 'active'"
-              (click)="addToCart(item.productId)"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2"/>
-                <path d="M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="2"/>
-              </svg>
-              {{ item.status === 'active' ? 'Add to Cart' : 'Unavailable' }}
-            </button>
-          </div>
-        </div>
+        @let product = getProductBySlug(item.slug);
+        @if (product) {
+          <app-product-card
+            [product]="product"
+            [isWishlisted]="true"
+            (toggleWishlistClick)="onToggleWishlist(item.productId)"
+            (addToCartClick)="onAddToCart($event, item.productId)"
+            (buyNowClick)="onBuyNow($event, product)"
+          />
+        }
       }
     </div>
   }
