@@ -18,13 +18,13 @@ export class CartSidebarComponent {
   private readonly productCache = signal<Map<string, Product>>(new Map());
 
   constructor() {
-    // Auto-load products with variants for all cart items
+    // Auto-load products with variants for all cart items (using public endpoint)
     effect(() => {
       const items = this.cart.cartItems();
-      const uniqueProductIds = [...new Set(items.map(i => i.productId))];
+      const uniqueSlugs = [...new Set(items.map(i => i.slug))];
 
-      for (const productId of uniqueProductIds) {
-        this.getProductWithVariants(productId);
+      for (const slug of uniqueSlugs) {
+        this.getProductWithVariants(slug);
       }
     });
   }
@@ -33,17 +33,17 @@ export class CartSidebarComponent {
     return this.productCache().get(productId)?.variants || [];
   }
 
-  private async getProductWithVariants(productId: string): Promise<Product | undefined> {
+  private async getProductWithVariants(slug: string): Promise<Product | undefined> {
     const cache = this.productCache();
-    if (cache.has(productId)) {
-      return cache.get(productId);
+    if (cache.has(slug)) {
+      return cache.get(slug);
     }
 
     try {
-      const res = await this.catalogService.getProduct(productId).toPromise();
+      const res = await this.catalogService.getProductBySlug(slug).toPromise();
       if (res?.data) {
         const newCache = new Map(cache);
-        newCache.set(productId, res.data);
+        newCache.set(slug, res.data);
         this.productCache.set(newCache);
         return res.data;
       }
