@@ -12,16 +12,7 @@
     </a>
   </div>
 
-  <!-- Filter Tabs -->
-  <div class="orders__filters">
-    @for (f of filters; track f.key) {
-      <button class="orders__filter" [class.active]="activeFilter() === f.key" (click)="setFilter(f.key)">
-        {{ f.label }}
-      </button>
-    }
-  </div>
-
-  @if (filteredOrders().length === 0) {
+  @if (store.orders().length === 0) {
     <div class="orders__empty">
       <div class="orders__empty-icon">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
@@ -35,88 +26,112 @@
       <a class="orders__btn-primary" routerLink="/products">Start Shopping</a>
     </div>
   } @else {
-    <div class="orders__list">
-      @for (order of filteredOrders(); track order._id) {
-        <article class="orders__card">
-          <!-- Header -->
-          <div class="orders__card-header">
-            <div class="orders__card-meta">
-              <span class="orders__card-number">{{ order.orderNumber }}</span>
-              <span class="orders__card-date">{{ order.createdAt | date:'dd MMM yyyy, h:mm a' }}</span>
+    <div class="orders__table">
+      <!-- Table Header -->
+      <div class="orders__table-header">
+        <div class="orders__col orders__col--expand"></div>
+        <div class="orders__col orders__col--order">Order</div>
+        <div class="orders__col orders__col--date">Date</div>
+        <div class="orders__col orders__col--items">Items</div>
+        <div class="orders__col orders__col--total">Total</div>
+        <div class="orders__col orders__col--status">Status</div>
+        <div class="orders__col orders__col--actions">Actions</div>
+      </div>
+
+      <!-- Table Rows -->
+      @for (order of store.orders(); track order._id) {
+        <div class="orders__row" [class.expanded]="expandedOrderId() === order._id">
+          <!-- Main Row -->
+          <div class="orders__row-main">
+            <button class="orders__expand-btn" (click)="toggleExpand(order._id)" [attr.aria-expanded]="expandedOrderId() === order._id">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <div class="orders__col orders__col--order">{{ order.orderNumber }}</div>
+            <div class="orders__col orders__col--date">{{ order.createdAt | date:'dd MMM yyyy' }}</div>
+            <div class="orders__col orders__col--items">{{ order.items.length }} item{{ order.items.length !== 1 ? 's' : '' }}</div>
+            <div class="orders__col orders__col--total">₹{{ order.total | number:'1.0-0' }}</div>
+            <div class="orders__col orders__col--status">
+              <span class="orders__status" [attr.data-status]="order.status">{{ formatStatus(order.status) }}</span>
             </div>
-            <span class="orders__status" [attr.data-status]="order.status">
-              {{ formatStatus(order.status) }}
-            </span>
+            <div class="orders__col orders__col--actions">
+              <a [routerLink]="['/dashboard/orders', order._id]" class="orders__action-link">View</a>
+            </div>
           </div>
 
-          <!-- Items -->
-          <div class="orders__items">
-            @for (item of order.items; track item.productId) {
-              <div class="orders__line">
-                <span class="orders__line-name">{{ item.name }}</span>
-                <span class="orders__line-qty">x{{ item.qty }}</span>
-                <span class="orders__line-price">₹{{ item.totalPrice | number:'1.2-2' }}</span>
-              </div>
-            }
-          </div>
-
-          <!-- Footer -->
-          <div class="orders__card-footer">
-            <div class="orders__footer-left">
-              <div class="orders__address">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2"/>
-                  <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
-                </svg>
-                {{ order.shippingAddress.city }}, {{ order.shippingAddress.state }}
-              </div>
-              @if (order.shiprocket.courierName) {
-                <span class="orders__courier">{{ order.shiprocket.courierName }}
-                  @if (order.shiprocket.awbCode) {
-                    · {{ order.shiprocket.awbCode }}
+          <!-- Expanded Details -->
+          @if (expandedOrderId() === order._id) {
+            <div class="orders__row-details">
+              <!-- Items -->
+              <div class="orders__items-section">
+                <h3 class="orders__section-title">Items</h3>
+                <div class="orders__items-list">
+                  @for (item of order.items; track item.productId) {
+                    <div class="orders__item">
+                      <div class="orders__item-name">{{ item.name }}</div>
+                      <div class="orders__item-meta">
+                        <span class="orders__item-qty">Qty: {{ item.qty }}</span>
+                        <span class="orders__item-price">₹{{ item.totalPrice | number:'1.2-2' }}</span>
+                      </div>
+                    </div>
                   }
-                </span>
-              }
-            </div>
-            <div class="orders__footer-right">
-              <a [routerLink]="['/dashboard/orders', order._id]" class="orders__btn-view">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
-                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                </svg>
-                View Details
-              </a>
-              @if (order.shiprocket.shipmentId) {
-                <button class="orders__btn-track" (click)="openTracking(order)">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                    <polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  </svg>
-                  Tracking
-                </button>
-              }
-              <span class="orders__total">₹{{ order.total | number:'1.0-0' }}</span>
-            </div>
-          </div>
+                </div>
+              </div>
 
-          <!-- Timeline -->
-          @if (order.statusHistory.length > 1) {
-            <div class="orders__timeline">
-              @for (h of order.statusHistory; track h.timestamp) {
-                <div class="orders__timeline-item">
-                  <div class="orders__timeline-dot" [attr.data-status]="h.status"></div>
-                  <div class="orders__timeline-content">
-                    <span class="orders__timeline-status">{{ formatStatus(h.status) }}</span>
-                    <span class="orders__timeline-date">{{ h.timestamp | date:'dd MMM, h:mm a' }}</span>
-                    @if (h.note) {
-                      <span class="orders__timeline-note">{{ h.note }}</span>
+              <!-- Shipping & Tracking -->
+              <div class="orders__info-grid">
+                <div class="orders__info-block">
+                  <h3 class="orders__section-title">Shipping Address</h3>
+                  <p class="orders__info-text">{{ order.shippingAddress.city }}, {{ order.shippingAddress.state }}</p>
+                </div>
+
+                @if (order.shiprocket.courierName) {
+                  <div class="orders__info-block">
+                    <h3 class="orders__section-title">Courier</h3>
+                    <p class="orders__info-text">{{ order.shiprocket.courierName }}</p>
+                    @if (order.shiprocket.awbCode) {
+                      <p class="orders__info-text orders__info-small">{{ order.shiprocket.awbCode }}</p>
+                    }
+                  </div>
+                }
+
+                @if (order.shiprocket.shipmentId) {
+                  <div class="orders__info-block">
+                    <button class="orders__btn-track" (click)="openTracking(order)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                        <polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                      Track Shipment
+                    </button>
+                  </div>
+                }
+              </div>
+
+              <!-- Timeline -->
+              @if (order.statusHistory.length > 1) {
+                <div class="orders__timeline-section">
+                  <h3 class="orders__section-title">Order Timeline</h3>
+                  <div class="orders__timeline">
+                    @for (h of order.statusHistory; track h.timestamp) {
+                      <div class="orders__timeline-item">
+                        <div class="orders__timeline-dot" [attr.data-status]="h.status"></div>
+                        <div class="orders__timeline-content">
+                          <span class="orders__timeline-status">{{ formatStatus(h.status) }}</span>
+                          <span class="orders__timeline-date">{{ h.timestamp | date:'dd MMM, h:mm a' }}</span>
+                          @if (h.note) {
+                            <span class="orders__timeline-note">{{ h.note }}</span>
+                          }
+                        </div>
+                      </div>
                     }
                   </div>
                 </div>
               }
             </div>
           }
-        </article>
+        </div>
       }
     </div>
 
