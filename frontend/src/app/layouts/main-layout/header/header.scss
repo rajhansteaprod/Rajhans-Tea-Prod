@@ -70,6 +70,7 @@
 
   @include respond-to(md) {
     height: 28px;
+    display:none;
   }
 }
 
@@ -123,7 +124,7 @@
   white-space: nowrap;
   display: flex;
   @include respond-to(md) {
-    display: none;
+    
   }
 }
 

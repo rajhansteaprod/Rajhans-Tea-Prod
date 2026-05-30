@@ -9,10 +9,14 @@
 
 .featured {
   background: $color-mono-light;
-  padding: 0 $space-xxxl;
+  padding: 0 $space-section-horizontal;
+
+  @include respond-to(lg) {
+    padding: 0 $space-lg;
+  }
 
   @include respond-to(md) {
-    padding: $space-section-sm $space-lg;
+    padding: 0 $space-lg;
   }
 }
 
