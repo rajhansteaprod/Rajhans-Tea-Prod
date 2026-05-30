@@ -58,7 +58,7 @@
   font-family: $font-family-display;
   font-size: $font-size-xl;
   font-weight: $font-weight-medium;
-  color: $color-text-primary;
+  color: $color-mono-dark;
   letter-spacing: 0.04em;
   margin: 0;
 }
@@ -83,13 +83,13 @@
   border-radius: 0;
   border: none;
   background: transparent;
-  color: $color-text-tertiary;
+  color: $color-mono-dark;
   cursor: pointer;
   transition: all $transition-fast;
 
   &:hover {
-    background: $color-bg-secondary;
-    color: $color-text-primary;
+    background: rgba($color-mono-dark, 0.04);
+    color: $color-mono-dark;
   }
 }
 
@@ -131,9 +131,9 @@
   width: 72px;
   height: 72px;
   border-radius: 0;
-  background: $color-bg-secondary;
+  background: rgba($color-mono-dark, 0.04);
   @include flex-center;
-  color: $color-text-disabled;
+  color: rgba($color-mono-dark, 0.3);
   margin-bottom: $space-sm;
 }
 
@@ -141,22 +141,22 @@
   font-family: $font-family-display;
   font-size: $font-size-xl;
   font-weight: $font-weight-medium;
-  color: $color-text-primary;
+  color: $color-mono-dark;
   margin: 0;
   letter-spacing: 0.04em;
 }
 
 .empty-sub {
   font-size: $font-size-sm;
-  color: $color-text-tertiary;
+  color: rgba($color-mono-dark, 0.6);
   margin: 0;
 }
 
 .btn-shop {
   margin-top: $space-lg;
   padding: $space-md $space-xxl;
-  background: $color-bg-maroon;
-  color: $color-text-inverse;
+  background: #B65A3A;
+  color: $color-mono-light;
   border: none;
   border-radius: 0;
   font-size: 13px;
@@ -169,7 +169,7 @@
   transition: all $transition-fast;
 
   &:hover {
-    background: $color-primary-hover;
+    background: rgba(182, 90, 58, 0.9);
     transform: translateY(-1px);
   }
 }
@@ -237,7 +237,7 @@
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
   font-family: $font-family-display;
-  color: $color-text-primary;
+  color: $color-mono-dark;
   margin: 0;
   line-height: $line-height-tight;
   letter-spacing: 0.02em;
@@ -245,14 +245,14 @@
 
 .item-variant {
   font-size: $font-size-xs;
-  color: $color-text-tertiary;
+  color: rgba($color-mono-dark, 0.6);
   margin: 0;
   font-weight: $font-weight-regular;
 }
 
 .item-price {
   font-size: $font-size-xs;
-  color: $color-text-tertiary;
+  color: rgba($color-mono-dark, 0.6);
   margin: 0;
 }
 
@@ -308,13 +308,13 @@
   @include flex-center;
   border: none;
   background: transparent;
-  color: $color-text-secondary;
+  color: rgba($color-mono-dark, 0.6);
   cursor: pointer;
   transition: all $transition-fast;
 
   &:hover {
-    background: $color-bg-secondary;
-    color: $color-text-primary;
+    background: rgba($color-mono-dark, 0.04);
+    color: $color-mono-dark;
   }
 
   &:disabled {
@@ -327,7 +327,7 @@
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
   font-family: $font-family-nav;
-  color: $color-text-primary;
+  color: $color-mono-dark;
   min-width: 24px;
   text-align: center;
 }
@@ -336,7 +336,7 @@
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
   font-family: $font-family-nav;
-  color: $color-text-primary;
+  color: $color-mono-dark;
 }
 
 .remove-btn {
@@ -373,7 +373,7 @@
   font-size: 12px;
   font-family: $font-family-nav;
   font-weight: $font-weight-medium;
-  color: $color-text-tertiary;
+  color: rgba($color-mono-dark, 0.6);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -382,12 +382,12 @@
   font-family: $font-family-nav;
   font-size: $font-size-xl;
   font-weight: $font-weight-medium;
-  color: $color-text-primary;
+  color: $color-mono-dark;
 }
 
 .tax-note {
   font-size: $font-size-xs;
-  color: $color-text-disabled;
+  color: rgba($color-mono-dark, 0.5);
   margin: 0 0 $space-lg;
 }
 
@@ -397,8 +397,8 @@
   justify-content: center;
   width: 100%;
   padding: $space-md $space-lg;
-  background: $color-bg-maroon;
-  color: $color-text-inverse;
+  background: #B65A3A;
+  color: $color-mono-light;
   border: none;
   border-radius: 0;
   font-size: 14px;
@@ -411,9 +411,9 @@
   transition: all $transition-fast;
 
   &:hover {
-    background: $color-primary-hover;
+    background: rgba(182, 90, 58, 0.9);
     transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba($color-primary, 0.25);
+    box-shadow: 0 8px 24px rgba(182, 90, 58, 0.25);
   }
 }
 
@@ -423,8 +423,8 @@
   margin-top: $space-sm;
   padding: $space-sm $space-lg;
   background: transparent;
-  color: $color-text-secondary;
-  border: 2px solid $color-border;
+  color: rgba($color-mono-dark, 0.6);
+  border: 1px solid rgba($color-mono-dark, 0.2);
   border-radius: 0;
   font-size: 13px;
   font-weight: $font-weight-medium;
@@ -436,8 +436,8 @@
   transition: all $transition-fast;
 
   &:hover {
-    border-color: $color-bg-maroon;
-    color: $color-bg-maroon;
+    border-color: $color-mono-dark;
+    color: $color-mono-dark;
   }
 }
 
@@ -447,7 +447,7 @@
   margin-top: $space-sm;
   padding: $space-xs;
   background: transparent;
-  color: $color-text-disabled;
+  color: rgba($color-mono-dark, 0.4);
   border: none;
   font-size: $font-size-xs;
   font-family: $font-family-nav;
@@ -459,6 +459,6 @@
   transition: color $transition-fast;
 
   &:hover {
-    color: $color-error;
+    color: $color-mono-dark;
   }
 }

@@ -122,9 +122,9 @@
   text-transform: uppercase;
   line-height: 1;
   white-space: nowrap;
-  display: flex;
+  display: none;
   @include respond-to(md) {
-    
+    display: block;
   }
 }
 
