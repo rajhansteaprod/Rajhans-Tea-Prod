@@ -7,7 +7,11 @@
 // ═══════════════════════════════════════════
 
 .wishlist {
-  padding: 0;
+  padding: calc($space-md) clamp($space-lg, 5vw, $space-xxxl);
+
+  @include respond-to(sm) {
+    padding: $space-md $space-lg;
+  }
 }
 
 // ═══ Header ═══
