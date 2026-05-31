@@ -67,14 +67,16 @@ export class CheckoutPageComponent implements OnInit {
       this.checkoutService.initializeCheckout(checkoutItems);
     });
 
-    // Separately listen to route changes (doesn't re-initialize)
+    // Listen to route changes
     this.route.queryParamMap.subscribe((params) => {
       const step = (params.get('step') as Step) || 'cart';
+      console.log('🔄 Route step param:', params.get('step'), 'Setting to:', step);
       if (['cart', 'address', 'summary'].includes(step)) {
         this.currentStep.set(step);
       } else {
         this.currentStep.set('cart');
       }
+      console.log('✅ currentStep set to:', this.currentStep());
     });
   }
 

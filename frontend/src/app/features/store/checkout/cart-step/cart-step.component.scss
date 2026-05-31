@@ -1,4 +1,5 @@
 @import "../../../../core/design-tokens/index.scss";
+@import "../../../../core/design-tokens/colors.scss";
 
 // ═══ Layout Container ═══
 .checkout__bag-container {
@@ -14,7 +15,7 @@
 
 .checkout__bag-right {
   flex: 1;
-  border: 1px solid $border-light;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   padding: $space-lg;
   height: fit-content;
 }
@@ -26,7 +27,7 @@
   align-items: center;
   padding: $space-md 0;
   margin-bottom: $space-lg;
-  border-bottom: 2px solid $border-light;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
 }
 
 // FIXED class name
@@ -46,7 +47,7 @@
 .checkout__product-card {
   display: flex;
   gap: $space-md;
-  border-bottom: 1px solid $border-light;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   padding-bottom: $space-md;
 }
 
@@ -88,7 +89,7 @@
   button {
     width: 28px;
     height: 28px;
-    border: 1px solid $border-light;
+    border: 1px solid rgba(0, 0, 0, 0.2);
     background: $bg-white;
     cursor: pointer;
     @include transition-fast;
@@ -96,7 +97,7 @@
 
     &:hover:not(:disabled) {
       border-color: $primary;
-      background: $primary-light;
+      background: rgba($primary, 0.1);
     }
 
     &:disabled {
@@ -119,9 +120,9 @@
   min-width: 80px;
   padding: $space-xs $space-sm;
   @include body-sm;
-  color: $text-primary;
-  background: $tertiary;
-  border: 1px solid $border-light;
+  color: $text-dark;
+  background: $bg-white;
+  border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: $radius-sm;
   cursor: pointer;
   @include transition-fast;
@@ -130,12 +131,12 @@
 
   &:hover {
     border-color: $primary;
-    background: $primary-light;
+    background: rgba($primary, 0.1);
   }
 
   &--active {
     background: $primary;
-    color: $text-inverse;
+    color: $bg-white;
     border-color: $primary;
   }
 }
@@ -149,14 +150,14 @@
 }
 
 .checkout__promo-error {
-  color: $secondary;
+  color: $primary;
   @include body-sm;
   margin: $space-xs 0;
 }
 
 .checkout__variant-display {
   @include body-sm;
-  color: $text-secondary;
+  color: rgba(0, 0, 0, 0.6);
   font-style: italic;
 }
 
@@ -171,12 +172,12 @@
 
 .checkout__price-strikethrough {
   text-decoration: line-through;
-  color: $text-tertiary;
+  color: rgba(0, 0, 0, 0.5);
   margin-left: $space-xs;
 }
 
 .checkout__price-discount {
-  color: green;
+  color: $primary;
   margin-left: $space-xs;
 }
 
@@ -228,21 +229,21 @@
   font-weight: $weight-semibold;
 
   &--loading {
-    background: rgba(182, 90, 58, 0.1);
+    background: rgba($primary, 0.1);
     color: $primary;
-    border: 1px solid rgba(182, 90, 58, 0.2);
+    border: 1px solid rgba($primary, 0.2);
   }
 
   &--error {
-    background: rgba(125, 60, 38, 0.1);
-    color: $secondary;
-    border: 1px solid rgba(125, 60, 38, 0.2);
+    background: rgba(0, 0, 0, 0.05);
+    color: $primary;
+    border: 1px solid rgba(0, 0, 0, 0.1);
   }
 
   &--success {
-    background: rgba(182, 90, 58, 0.15);
+    background: rgba($primary, 0.15);
     color: $primary;
-    border: 1px solid rgba(182, 90, 58, 0.3);
+    border: 1px solid rgba($primary, 0.3);
   }
 }
 
@@ -259,7 +260,7 @@
 .checkout__spinner-mini {
   width: 12px;
   height: 12px;
-  border: 2px solid rgba(182, 90, 58, 0.3);
+  border: 2px solid rgba($primary, 0.3);
   border-top-color: $primary;
   border-radius: 50%;
   animation: spin $duration-normal linear infinite;
@@ -277,8 +278,8 @@
 .checkout__btn-spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
+  border: 2px solid rgba($bg-white, 0.3);
+  border-top-color: $bg-white;
   border-radius: 50%;
   animation: spin-mini 0.6s linear infinite;
   display: inline-block;
