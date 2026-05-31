@@ -3,6 +3,7 @@ import { WarehouseRepository } from '../repositories/warehouse.repository';
 import { InventoryService } from './inventory.service';
 import { getShippingProvider } from './shipping/shipping.factory';
 import { Payment } from '../../payments/models/payment.model';
+import { Product } from '../../catalog/models/product.model';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../../../utils/api-error';
 import { shipmentLogger } from '../../../utils/shipment-logger';
 import { OrderStatus, IOrderDoc } from '../models/order.model';
@@ -45,18 +46,42 @@ export class OrderService {
     const orderNumber = await this.orderRepo.generateOrderNumber();
     const snapshot = payment.checkoutSnapshot;
 
+    // Enrich items with product images
+    const itemsWithImages = await Promise.all(
+      snapshot.items.map(async (item) => {
+        const enrichedItem: any = {
+          productId: item.productId,
+          name: item.name,
+          qty: item.qty,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice,
+          fulfillmentStatus: 'pending',
+        };
+
+        try {
+          console.log(`[Order] Fetching product images for: ${item.productId}`);
+          const product = await Product.findById(item.productId).select('images').lean<any>().exec();
+          console.log(`[Order] Product found:`, product);
+
+          if (product?.images && product.images.length > 0) {
+            enrichedItem.image = product.images[0];
+            console.log(`[Order] Image added:`, enrichedItem.image);
+          } else {
+            console.log(`[Order] No images found for product:`, item.productId);
+          }
+        } catch (err) {
+          console.log(`[Order] Error fetching product:`, err);
+        }
+
+        return enrichedItem;
+      }),
+    );
+
     const order = await this.orderRepo.create({
       orderNumber,
       userId: payment.userId,
       paymentId: payment._id,
-      items: snapshot.items.map((item) => ({
-        productId: item.productId,
-        name: item.name,
-        qty: item.qty,
-        unitPrice: item.unitPrice,
-        totalPrice: item.totalPrice,
-        fulfillmentStatus: 'pending',
-      })),
+      items: itemsWithImages,
       subtotal: snapshot.subtotal,
       totalDiscount: snapshot.totalDiscount,
       totalTax: snapshot.totalTax,

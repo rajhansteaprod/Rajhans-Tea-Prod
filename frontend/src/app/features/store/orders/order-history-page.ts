@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { OrderStore } from '../../../core/services/order.store';
-import { OrderView, OrderItem } from '../../../core/services/order.store';
+import { OrderView } from '../../../core/services/order.store';
 import { CatalogService } from '../../../core/services/catalog.service';
 
 @Component({
@@ -21,30 +21,6 @@ export class OrderHistoryPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.store.loadOrders();
-    setTimeout(() => this.loadAllProductImages(), 500);
-  }
-
-  private loadAllProductImages(): void {
-    this.store.orders().forEach(order => {
-      order.items.forEach(item => {
-        if (!item.image && item.productId) {
-          this.catalog.getProduct(item.productId).subscribe({
-            next: (response) => {
-              if (response.data) {
-                item.image = response.data.images?.[0];
-                if (item.variantId && response.data.variants) {
-                  const variant = response.data.variants.find((v: any) => v._id === item.variantId);
-                  if (variant) {
-                    item.variant = variant.name;
-                  }
-                }
-              }
-            },
-            error: () => {}
-          });
-        }
-      });
-    });
   }
 
   openTracking(order: OrderView): void {

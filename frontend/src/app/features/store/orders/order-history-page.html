@@ -26,7 +26,11 @@
     </div>
   } @else {
     <div class="orders__table">
-      <!-- Table Header -->
+      @for (order of store.orders(); track order._id) {
+     
+      <!-- Table Rows -->
+        <div class="orders__row expanded">
+           <!-- Table Header -->
       <div class="orders__table-header">
         <div class="orders__col orders__col--order">Order</div>
         <div class="orders__col orders__col--shipping">Ship To</div>
@@ -37,9 +41,6 @@
         <div class="orders__col orders__col--actions">Actions</div>
       </div>
 
-      <!-- Table Rows -->
-      @for (order of store.orders(); track order._id) {
-        <div class="orders__row expanded">
           <!-- Main Row -->
           <div class="orders__row-main">
             <div class="orders__col orders__col--order">
@@ -54,11 +55,13 @@
               </div>
             </div>
             <div class="orders__col orders__col--shipping">{{ order.shippingAddress.street }}, {{ order.shippingAddress.city }}, {{ order.shippingAddress.state }} {{ order.shippingAddress.pincode }}</div>
-            <div class="orders__col orders__col--date">{{ order.createdAt | date:'dd MMM yyyy' }}</div>
-            <div class="orders__col orders__col--items">{{ order.items.length }} item{{ order.items.length !== 1 ? 's' : '' }}</div>
-            <div class="orders__col orders__col--total">₹{{ order.total | number:'1.0-0' }}</div>
-            <div class="orders__col orders__col--status">
-              <span class="orders__status" [attr.data-status]="order.status">{{ formatStatus(order.status) }}</span>
+            <div class="orders__info-grid-mobile">
+              <div class="orders__col orders__col--date">{{ order.createdAt | date:'dd MMM yyyy' }}</div>
+              <div class="orders__col orders__col--items">{{ order.items.length }} item{{ order.items.length !== 1 ? 's' : '' }}</div>
+              <div class="orders__col orders__col--total">₹{{ order.total | number:'1.0-0' }}</div>
+              <div class="orders__col orders__col--status">
+                <span class="orders__status" [attr.data-status]="order.status">{{ formatStatus(order.status) }}</span>
+              </div>
             </div>
             <div class="orders__col orders__col--actions">
               <button (click)="openTracking(order)" class="orders__action-link">
