@@ -73,9 +73,11 @@ export class CheckoutService {
   // Computed values — prefer backend pricing if available, fallback to client calculation
   readonly cartSubtotal = computed(() => {
     const backendSummary = this.summaryDataSignal();
-    return (
-      backendSummary?.subtotal ?? this.cartItems().reduce((sum, item) => sum + item.lineTotal, 0)
-    );
+    if (backendSummary) {
+      // Original MRP = discounted subtotal + discount amount (MRP never changes, only discount varies)
+      return backendSummary.subtotal + backendSummary.totalDiscount;
+    }
+    return this.cartItems().reduce((sum, item) => sum + item.lineTotal, 0);
   });
 
   readonly cartDiscount = computed(() => {

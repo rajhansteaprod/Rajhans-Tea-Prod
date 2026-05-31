@@ -47,14 +47,20 @@
 .checkout__product-card {
   display: flex;
   gap: $space-md;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  padding-bottom: $space-md;
+  align-items: flex-start;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: $space-md;
+  background: $bg-white;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.015);
+  }
 }
 
 // Image
 .checkout__product-card-image {
-  width: 80px;
-  height: 100px;
+  width: 96px;
+  height: 120px;
   flex-shrink: 0;
 
   img {
@@ -72,39 +78,61 @@
   gap: $space-xs;
 }
 
-// Qty + Price row
-.checkout__product-card-qty-price {
+// Product name
+.checkout__product-card-name {
+  @include body-sm;
+  font-weight: $weight-semibold;
+  color: $text-dark;
+  margin: 0;
+}
+
+// Qty wrapper
+.checkout__qty-wrapper {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: $space-xs;
   margin-top: $space-sm;
+}
+
+.checkout__qty-label {
+  @include body-sm;
+  color: $text-dark;
 }
 
 // Qty group
 .checkout__qty-group {
   display: flex;
   align-items: center;
-  gap: $space-xs;
+  gap: 4px;
 
   button {
-    width: 28px;
-    height: 28px;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    background: $bg-white;
+    width: 26px;
+    height: 26px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background: transparent;
+    color: $text-dark;
     cursor: pointer;
-    @include transition-fast;
-    border-radius: $radius-sm;
+    border-radius: $radius-md;
+    @include body-sm;
+    font-weight: $weight-medium;
 
     &:hover:not(:disabled) {
       border-color: $primary;
-      background: rgba($primary, 0.1);
+      color: $primary;
     }
 
     &:disabled {
-      opacity: 0.6;
+      opacity: 0.35;
       cursor: not-allowed;
     }
   }
+}
+
+.checkout__qty-value {
+  @include body-sm;
+  font-weight: $weight-medium;
+  min-width: 24px;
+  text-align: center;
 }
 
 // Variant Selector
@@ -121,29 +149,35 @@
   padding: $space-xs $space-sm;
   @include body-sm;
   color: $text-dark;
-  background: $bg-white;
+  background: transparent;
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: $radius-sm;
   cursor: pointer;
-  @include transition-fast;
   text-align: center;
   white-space: nowrap;
 
   &:hover {
     border-color: $primary;
-    background: rgba($primary, 0.1);
+    color: $primary;
   }
 
   &--active {
-    background: $primary;
-    color: $bg-white;
+    background: transparent;
+    color: $primary;
     border-color: $primary;
   }
 }
 
+// Variant display (current selected variant name)
+.checkout__variant-display {
+  @include body-sm;
+  color: rgba(0, 0, 0, 0.45);
+  font-style: italic;
+}
+
 // Promo Messages
 .checkout__promo-success {
-  color: $primary;
+  color: #10b981;
   @include body-sm;
   margin: $space-xs 0;
   font-weight: $weight-medium;
@@ -155,30 +189,55 @@
   margin: $space-xs 0;
 }
 
-.checkout__variant-display {
+// Subdescription (product shortDescription link)
+.checkout__product-card-subdescription {
   @include body-sm;
-  color: rgba(0, 0, 0, 0.6);
-  font-style: italic;
+  color: rgba(0, 0, 0, 0.45);
+  text-decoration: none;
+
+  &:hover {
+    color: rgba(0, 0, 0, 0.65);
+  }
 }
 
-// Pricing
-.checkout__product-card-pricing {
-  text-align: right;
+// Right column: Price + Remove
+.checkout__product-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  min-width: 72px;
+  flex-shrink: 0;
 }
 
-.checkout__price-current {
-  font-weight: bold;
+// Product price in right column
+.checkout__product-price {
+  font-weight: $weight-bold;
+  color: $text-dark;
+  @include body-sm;
+  line-height: 1.4;
 }
 
-.checkout__price-strikethrough {
-  text-decoration: line-through;
-  color: rgba(0, 0, 0, 0.5);
-  margin-left: $space-xs;
-}
+// Remove button
+.checkout__remove-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.3);
+  padding: 4px;
+  border-radius: $radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
 
-.checkout__price-discount {
-  color: $primary;
-  margin-left: $space-xs;
+  &:hover {
+    color: $primary;
+  }
+
+  &:active {
+    opacity: 0.7;
+  }
 }
 
 // ═══ Price Section ═══
@@ -198,17 +257,79 @@
   gap: $space-xs;
   margin: $space-md 0;
 
-  app-input {
+  .checkout__promo-input {
     flex: 1;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background: white;
+    color: black;
+    padding: $space-sm $space-md;
+    border-radius: $radius-md;
+    font-size: $font-size-sm;
+
+    &::placeholder {
+      color: rgba(0, 0, 0, 0.35);
+    }
+
+    &:focus {
+      border-color: rgba(0, 0, 0, 0.3);
+      outline: none;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   }
 
-  app-button {
+  .checkout__promo-btn {
     flex-shrink: 0;
-  }
-}
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background: white;
+    color: black;
+    padding: $space-sm $space-md;
+    border-radius: $radius-md;
+    font-size: $font-size-sm;
+    font-weight: $weight-semibold;
+    cursor: pointer;
 
-.checkout__promo-btn--remove {
-  // Will be styled via secondary variant
+    &:hover:not(:disabled) {
+      background: rgba(0, 0, 0, 0.05);
+      border-color: rgba(0, 0, 0, 0.2);
+    }
+
+    &:active:not(:disabled) {
+      background: black;
+      color: white;
+      border-color: black;
+    }
+
+    &:focus {
+      outline: none;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--remove {
+      background: black;
+      color: white;
+      border-color: black;
+
+      &:hover:not(:disabled) {
+        background: rgba(0, 0, 0, 0.85);
+      }
+
+      &:focus {
+        outline: none;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+      }
+    }
+  }
 }
 
 // Button
@@ -219,32 +340,14 @@
 
 // Pricing Sync Status Indicator
 .checkout__pricing-status {
+  min-height: 24px;
   display: flex;
   align-items: center;
   gap: $space-xs;
-  padding: $space-sm;
-  border-radius: $radius-md;
-  @include body-sm;
+  padding: $space-sm 0;
   margin-bottom: $space-md;
-  font-weight: $weight-semibold;
-
-  &--loading {
-    background: rgba($primary, 0.1);
-    color: $primary;
-    border: 1px solid rgba($primary, 0.2);
-  }
-
-  &--error {
-    background: rgba(0, 0, 0, 0.05);
-    color: $primary;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-  }
-
-  &--success {
-    background: rgba($primary, 0.15);
-    color: $primary;
-    border: 1px solid rgba($primary, 0.3);
-  }
+  @include body-sm;
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .checkout__status-icon {
