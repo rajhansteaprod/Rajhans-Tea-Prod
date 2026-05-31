@@ -2,7 +2,8 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { OrderStore } from '../../../core/services/order.store';
-import { OrderView } from '../../../core/services/order.store';
+import { OrderView, OrderItem } from '../../../core/services/order.store';
+import { CatalogService } from '../../../core/services/catalog.service';
 
 @Component({
   selector: 'app-order-history-page',
@@ -13,34 +14,50 @@ import { OrderView } from '../../../core/services/order.store';
 })
 export class OrderHistoryPageComponent implements OnInit {
   readonly store = inject(OrderStore);
-  readonly expandedOrderId = signal<string | null>(null);
+  readonly catalog = inject(CatalogService);
   readonly selectedOrderForTracking = signal<OrderView | null>(null);
   readonly trackingLoading = signal(false);
   readonly trackingError = signal('');
 
   ngOnInit(): void {
     this.store.loadOrders();
+    setTimeout(() => this.loadAllProductImages(), 500);
   }
 
-  toggleExpand(orderId: string): void {
-    if (this.expandedOrderId() === orderId) {
-      this.expandedOrderId.set(null);
-    } else {
-      this.expandedOrderId.set(orderId);
-    }
+  private loadAllProductImages(): void {
+    this.store.orders().forEach(order => {
+      order.items.forEach(item => {
+        if (!item.image && item.productId) {
+          this.catalog.getProduct(item.productId).subscribe({
+            next: (response) => {
+              if (response.data) {
+                item.image = response.data.images?.[0];
+                if (item.variantId && response.data.variants) {
+                  const variant = response.data.variants.find((v: any) => v._id === item.variantId);
+                  if (variant) {
+                    item.variant = variant.name;
+                  }
+                }
+              }
+            },
+            error: () => {}
+          });
+        }
+      });
+    });
   }
 
-  formatStatus(status: string): string {
-    return status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-  }
-
-  openTracking(order: any): void {
+  openTracking(order: OrderView): void {
     this.selectedOrderForTracking.set(order);
     this.trackingError.set('');
   }
 
   closeTracking(): void {
     this.selectedOrderForTracking.set(null);
+  }
+
+  formatStatus(status: string): string {
+    return status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
 
   formatDate(date: string | null): string {

@@ -65,9 +65,9 @@
 .account__mobile-toggle {
   display: none;
   align-items: center;
-  gap: $space-xs;
-  width: 100%;
-  padding: $space-md;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   margin-bottom: $space-md;
   border: 1px solid rgba($color-mono-dark, 0.1);
   background: none;
@@ -104,47 +104,76 @@
 .account__sidebar {
   display: flex;
   flex-direction: column;
-  gap: $space-xxs;
+  gap: $space-lg;
   position: sticky;
   top: 120px;
 
   @include respond-to(md) {
-    display: none;
     position: static;
     margin-bottom: $space-lg;
+    overflow: hidden;
+  }
+}
 
-    &.open {
-      display: flex;
+.account__nav-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+  width: 100%;
+
+  @include respond-to(md) {
+    flex-direction: row;
+    gap: $space-sm;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    padding-bottom: $space-xs;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba($color-mono-dark, 0.04);
+      border-radius: 2px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba($color-mono-dark, 0.15);
+      border-radius: 2px;
+
+      &:hover {
+        background: rgba($color-mono-dark, 0.25);
+      }
     }
   }
 }
 
 .account__nav-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: $space-md;
-  padding: $space-sm $space-md;
+  justify-content: center;
+  gap: $space-sm;
+  padding: $space-lg;
   font-family: $font-family;
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
   color: rgba($color-mono-dark, 0.7);
   text-decoration: none;
-  border: none;
-  background: none;
+  border: 1px solid rgba($color-mono-dark, 0.08);
+  background: rgba($color-mono-dark, 0.02);
   cursor: pointer;
-  text-align: left;
-  width: 100%;
+  text-align: center;
   border-radius: 8px;
+  transition: all 150ms ease;
+  width: 100%;
 
-  // Icon container
   ::ng-deep svg {
-    flex-shrink: 0;
-    width: 18px;
-    height: 18px;
-    padding: 8px;
-    box-sizing: content-box;
-    border-radius: 8px;
-    background: rgba($color-mono-dark, 0.05);
+    width: 24px;
+    height: 24px;
     stroke: rgba($color-mono-dark, 0.5);
     stroke-width: 1.5;
     stroke-linecap: round;
@@ -152,52 +181,90 @@
     fill: none;
   }
 
+  span {
+    line-height: 1.2;
+  }
+
   &:hover {
     color: $color-mono-dark;
-    background: rgba($color-mono-dark, 0.03);
+    border-color: rgba($color-mono-dark, 0.12);
+    background: rgba($color-mono-dark, 0.04);
 
     ::ng-deep svg {
       stroke: $color-mono-dark;
-      background: rgba($color-mono-dark, 0.08);
     }
   }
 
-  // Active state — highlighted bg like reference
   &.active {
-    color: $color-mono-brown;
-    background: rgba($color-mono-brown, 0.06);
+    color: $color-mono-light;
+    border-color: $color-mono-dark;
+    background: $color-mono-dark;
     font-weight: $font-weight-semibold;
 
     ::ng-deep svg {
-      background: rgba($color-mono-brown, 0.12);
-      stroke: $color-mono-brown;
+      stroke: $color-mono-light;
     }
   }
 
-  &--logout {
-    color: rgba($color-mono-dark, 0.4);
+  // Mobile: pill buttons (text only)
+  @include respond-to(md) {
+    flex-direction: row;
+    width: auto;
+    padding: 6px 16px;
+    gap: $space-xs;
+    font-size: 11px;
+    border-radius: 20px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    scroll-snap-align: start;
 
     ::ng-deep svg {
-      background: rgba($color-mono-dark, 0.03);
-      stroke: rgba($color-mono-dark, 0.3);
+      display: none;
     }
 
-    &:hover {
-      color: $color-error;
-      background: rgba($color-error, 0.04);
-
-      ::ng-deep svg {
-        stroke: $color-error;
-        background: rgba($color-error, 0.08);
-      }
+    span {
+      line-height: 1.3;
     }
   }
 }
 
-.account__nav-divider {
-  height: 1px;
-  background: rgba($color-mono-dark, 0.06);
-  margin: $space-xs 0;
+.account__logout-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-xs;
+  padding: $space-sm $space-md;
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: rgba($color-mono-dark, 0.4);
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: center;
+  border-radius: 8px;
+  transition: all 150ms ease;
+  width: 100%;
+  margin-top: $space-xl;
+
+  ::ng-deep svg {
+    width: 18px;
+    height: 18px;
+    stroke: rgba($color-mono-dark, 0.3);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+
+  &:hover {
+    color: $color-error;
+    background: rgba($color-error, 0.04);
+
+    ::ng-deep svg {
+      stroke: $color-error;
+    }
+  }
 }
 
 // ── Content ──

@@ -16,6 +16,7 @@
 
   @include respond-to(sm) {
     flex-direction: column;
+    margin-bottom: $space-lg;
   }
 }
 
@@ -38,6 +39,10 @@
   margin: 0;
   line-height: 1.1;
   letter-spacing: -0.02em;
+
+  @include respond-to(sm) {
+    font-size: 24px;
+  }
 }
 
 .orders__back {
@@ -70,6 +75,11 @@
   text-align: center;
   padding: $space-section-sm 0;
   gap: $space-md;
+
+  @include respond-to(sm) {
+    padding: $space-lg 0;
+    gap: $space-sm;
+  }
 }
 
 .orders__empty-icon {
@@ -79,6 +89,11 @@
   background: rgba($color-mono-dark, 0.04);
   color: rgba($color-mono-dark, 0.25);
   border-radius: 50%;
+
+  @include respond-to(sm) {
+    width: 56px;
+    height: 56px;
+  }
 }
 
 .orders__empty-title {
@@ -128,7 +143,7 @@
 
 .orders__table-header {
   display: grid;
-  grid-template-columns: 40px 120px 100px 80px 100px 120px 100px;
+  grid-template-columns: 120px 100px 100px 80px 100px 120px 100px;
   gap: $space-lg;
   padding: $space-md $space-lg;
   background: rgba($color-mono-dark, 0.02);
@@ -162,11 +177,10 @@
 
 .orders__row-main {
   display: grid;
-  grid-template-columns: 40px 120px 100px 80px 100px 120px 100px;
+  grid-template-columns: 120px 100px 100px 80px 100px 120px 100px;
   gap: $space-lg;
   padding: $space-md $space-lg;
   align-items: center;
-  cursor: pointer;
 
   @include respond-to(lg) {
     grid-template-columns: 1fr;
@@ -174,41 +188,22 @@
     padding: $space-lg;
     background: rgba($color-mono-dark, 0.02);
   }
-}
 
-.orders__expand-btn {
-  width: 32px;
-  height: 32px;
-  @include flex-center;
-  border: none;
-  background: transparent;
-  color: $color-mono-dark;
-  cursor: pointer;
-  transition: all 150ms ease;
-  padding: 0;
-
-  svg {
-    transition: transform 200ms ease;
-  }
-
-  .orders__row.expanded & svg {
-    transform: rotate(90deg);
-  }
-
-  &:hover {
-    color: colors.$primary;
-  }
-
-  @include respond-to(lg) {
-    width: 40px;
-    height: 40px;
+  @include respond-to(sm) {
+    padding: $space-sm $space-md;
+    gap: $space-sm;
   }
 }
+
 
 .orders__col {
   font-family: $font-family-body;
   font-size: $font-size-sm;
   color: $color-mono-dark;
+
+  @include respond-to(sm) {
+    font-size: 13px;
+  }
 
   @include respond-to(lg) {
     display: flex;
@@ -229,6 +224,21 @@
         content: 'Order: ';
         font-weight: $font-weight-semibold;
         color: rgba($color-mono-dark, 0.5);
+        font-size: $font-size-xs;
+        margin-bottom: 2px;
+      }
+    }
+  }
+
+  &--shipping {
+    color: rgba($color-mono-dark, 0.6);
+    font-size: $font-size-sm;
+
+    @include respond-to(lg) {
+      &::before {
+        content: 'Ship To: ';
+        color: rgba($color-mono-dark, 0.5);
+        font-weight: $font-weight-semibold;
         font-size: $font-size-xs;
         margin-bottom: 2px;
       }
@@ -311,31 +321,22 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
-  background: rgba($color-mono-dark, 0.06);
-  color: rgba($color-mono-dark, 0.6);
+  background: #fff3cd;
+  color: #856404;
 
-  &[data-status="confirmed"],
-  &[data-status="processing"] {
-    background: rgba(colors.$primary, 0.1);
-    color: colors.$primary;
+  @include respond-to(sm) {
+    padding: 4px 8px;
+    font-size: 8px;
   }
 
-  &[data-status="shipped"],
-  &[data-status="in_transit"],
-  &[data-status="out_for_delivery"] {
-    background: rgba(colors.$primary, 0.08);
-    color: colors.$primary;
+  &[data-status="confirmed"] {
+    background: rgba($color-mono-dark, 0.06);
+    color: rgba($color-mono-dark, 0.6);
   }
 
   &[data-status="delivered"] {
-    background: rgba($color-mono-dark, 0.08);
-    color: $color-mono-dark;
-  }
-
-  &[data-status="cancelled"],
-  &[data-status="returned"] {
-    background: rgba($color-error, 0.08);
-    color: $color-error;
+    background: #d4edda;
+    color: #155724;
   }
 }
 
@@ -346,16 +347,55 @@
   font-family: $font-family-nav;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
-  color: colors.$primary;
-  text-decoration: none;
+  color: $color-mono-dark;
+  text-decoration: underline;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   transition: all 150ms ease;
-  padding: $space-xxs $space-sm;
-  border: 1px solid transparent;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+
+  @include respond-to(sm) {
+    font-size: 10px;
+  }
 
   &:hover {
-    color: colors.$primary-hover;
+    color: rgba($color-mono-dark, 0.7);
+  }
+
+  &--mobile {
+    display: none;
+
+    @include respond-to(sm) {
+      display: inline-flex;
+    }
+  }
+}
+
+.orders__order-wrapper {
+  display: none;
+
+  @include respond-to(sm) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: $space-md;
+  }
+}
+
+.orders__order-item {
+  @include respond-to(sm) {
+    flex-shrink: 0;
+  }
+}
+
+.orders__col--actions {
+  @include respond-to(sm) {
+    display: none;
   }
 }
 
@@ -370,7 +410,8 @@
 
   @include respond-to(sm) {
     grid-template-columns: 1fr;
-    gap: $space-lg;
+    gap: $space-md;
+    padding: $space-md;
   }
 }
 
@@ -382,6 +423,11 @@
   letter-spacing: 0.06em;
   color: rgba($color-mono-dark, 0.5);
   margin: 0 0 $space-sm 0;
+
+  @include respond-to(sm) {
+    font-size: 11px;
+    margin-bottom: 8px;
+  }
 }
 
 // Items Section
@@ -435,6 +481,7 @@
 
   @include respond-to(sm) {
     grid-template-columns: 1fr;
+    gap: $space-sm;
   }
 }
 
@@ -442,6 +489,10 @@
   padding: $space-md;
   background: $color-mono-light;
   border: 1px solid rgba($color-mono-dark, 0.06);
+
+  @include respond-to(sm) {
+    padding: $space-sm;
+  }
 }
 
 .orders__info-text {
@@ -450,12 +501,20 @@
   color: $color-mono-dark;
   margin: 0 0 $space-xs 0;
 
+  @include respond-to(sm) {
+    font-size: 13px;
+  }
+
   &.orders__info-small {
     font-size: $font-size-xs;
     color: rgba($color-mono-dark, 0.5);
     font-family: monospace;
     background: rgba($color-mono-dark, 0.03);
     padding: 2px 4px;
+
+    @include respond-to(sm) {
+      font-size: 10px;
+    }
   }
 }
 
@@ -602,6 +661,495 @@
   color: rgba($color-mono-dark, 0.4);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+// ── Modal Backdrop ──
+.modal-backdrop,
+.tracking-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+// ── Modal Window ──
+.modal-window {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: $color-mono-light;
+  width: min(90vw, 700px);
+  max-height: 90vh;
+  border-radius: 0;
+  box-shadow: 0 10px 40px rgba($color-mono-dark, 0.12);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  @include respond-to(sm) {
+    width: 95vw;
+    max-height: 95vh;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: $space-lg;
+  border-bottom: 1px solid rgba($color-mono-dark, 0.08);
+}
+
+.modal-title {
+  font-family: $font-family-heading;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-mono-dark;
+  margin: 0 0 $space-xs 0;
+}
+
+.modal-subtitle {
+  font-family: $font-family-nav;
+  font-size: $font-size-xs;
+  color: rgba($color-mono-dark, 0.5);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: $font-size-lg;
+  cursor: pointer;
+  color: rgba($color-mono-dark, 0.5);
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 150ms ease;
+
+  &:hover {
+    color: $color-mono-dark;
+  }
+}
+
+.modal-body {
+  overflow-y: auto;
+  padding: $space-lg;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $space-xl;
+}
+
+.modal-footer {
+  display: flex;
+  gap: $space-md;
+  padding: $space-lg;
+  border-top: 1px solid rgba($color-mono-dark, 0.08);
+  background: rgba($color-mono-dark, 0.01);
+}
+
+.modal-btn {
+  flex: 1;
+  padding: $space-sm $space-md;
+  border: 1px solid rgba($color-mono-dark, 0.15);
+  background: transparent;
+  color: $color-mono-dark;
+  cursor: pointer;
+  font-family: $font-family-nav;
+  font-size: $font-size-xs;
+  text-decoration: none;
+  text-align: center;
+  border-radius: 0;
+  transition: all 150ms ease;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &:hover {
+    background: rgba($color-mono-dark, 0.05);
+    border-color: $color-mono-dark;
+  }
+
+  &--primary {
+    background: colors.$primary;
+    color: $color-mono-light;
+    border-color: colors.$primary;
+
+    &:hover {
+      background: colors.$primary-hover;
+      border-color: colors.$primary-hover;
+    }
+  }
+
+  &--secondary {
+    &:hover {
+      background: rgba($color-mono-dark, 0.05);
+      border-color: $color-mono-dark;
+    }
+  }
+}
+
+// ── Detail Sections ──
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+}
+
+.detail-section-title {
+  font-family: $font-family-nav;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba($color-mono-dark, 0.5);
+  margin: 0;
+}
+
+// Items Table
+.detail-items-table {
+  display: grid;
+  gap: 0;
+  border: 1px solid rgba($color-mono-dark, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: $space-lg;
+
+  @include respond-to(sm) {
+    margin-bottom: $space-md;
+  }
+}
+
+.detail-items-header {
+  display: grid;
+  grid-template-columns: 2fr 0.8fr 1fr 1fr;
+  gap: $space-md;
+  padding: $space-md $space-lg;
+  background: rgba($color-mono-dark, 0.02);
+  border-bottom: 1px solid rgba($color-mono-dark, 0.08);
+  font-family: $font-family-nav;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba($color-mono-dark, 0.5);
+
+  @include respond-to(sm) {
+    display: none;
+  }
+}
+
+.detail-items-row {
+  display: grid;
+  grid-template-columns: 2fr 0.8fr 1fr 1fr;
+  gap: $space-md;
+  padding: $space-md $space-lg;
+  border-bottom: 1px solid rgba($color-mono-dark, 0.04);
+  align-items: center;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  @include respond-to(sm) {
+    grid-template-columns: 1fr;
+    gap: $space-sm;
+    padding: $space-sm $space-md;
+  }
+}
+
+.col {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  color: $color-mono-dark;
+
+  @include respond-to(sm) {
+    display: inline;
+    font-size: 12px;
+  }
+
+  &--product {
+    @include respond-to(sm) {
+      &::before {
+        content: 'Product';
+        font-weight: $font-weight-semibold;
+        color: rgba($color-mono-dark, 0.5);
+        font-size: $font-size-xs;
+        margin-bottom: 4px;
+      }
+    }
+  }
+
+  &--qty {
+    text-align: center;
+
+    @include respond-to(sm) {
+      &::before {
+        content: 'Qty.';
+        font-weight: $font-weight-semibold;
+        color: rgba($color-mono-dark, 0.5);
+        font-size: $font-size-xs;
+        margin-bottom: 4px;
+      }
+    }
+  }
+
+  &--price {
+    text-align: right;
+
+    @include respond-to(sm) {
+      &::before {
+        content: 'Price';
+        font-weight: $font-weight-semibold;
+        color: rgba($color-mono-dark, 0.5);
+        font-size: $font-size-xs;
+        margin-bottom: 4px;
+      }
+    }
+  }
+
+  &--total {
+    text-align: right;
+    font-weight: $font-weight-semibold;
+
+    @include respond-to(sm) {
+      &::before {
+        content: 'Total';
+        font-weight: $font-weight-semibold;
+        color: rgba($color-mono-dark, 0.5);
+        font-size: $font-size-xs;
+        margin-bottom: 4px;
+      }
+    }
+  }
+}
+
+.product-cell {
+  display: flex;
+  gap: $space-md;
+  align-items: flex-start;
+
+  @include respond-to(sm) {
+    gap: $space-sm;
+  }
+}
+
+.product-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: rgba($color-mono-dark, 0.04);
+  flex-shrink: 0;
+
+  @include respond-to(sm) {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.product-name {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-mono-dark;
+
+  @include respond-to(sm) {
+    font-size: 13px;
+  }
+}
+
+.product-sku {
+  font-family: $font-family-nav;
+  font-size: $font-size-xs;
+  color: rgba($color-mono-dark, 0.4);
+}
+
+// Order Summary
+.order-summary {
+  padding: $space-lg 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-xl;
+
+  @include respond-to(sm) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-sm;
+    font-size: 12px;
+    padding: $space-md 0;
+  }
+}
+
+.summary-left {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+}
+
+.summary-right {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+  justify-content: flex-end;
+}
+
+.summary-row {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+
+  @include respond-to(sm) {
+    gap: 12px;
+    font-size: 12px;
+  }
+
+  &--grand-total {
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-sm;
+    justify-content: flex-end !important;
+    .summary-label,
+    .summary-value {
+      font-weight: $font-weight-semibold;
+      color: $color-mono-dark;
+    }
+  }
+}
+
+.summary-label {
+  font-family: $font-family-nav;
+  font-size: $font-size-xs;
+  color: rgba($color-mono-dark, 0.5);
+  text-transform: capitalize;
+
+  @include respond-to(sm) {
+    font-size: 10px;
+  }
+}
+
+.summary-value {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  color: $color-mono-dark;
+
+  @include respond-to(sm) {
+    font-size: 12px;
+  }
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-lg;
+
+  @include respond-to(sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-info-block {
+  padding: $space-md;
+  background: rgba($color-mono-dark, 0.02);
+  border: 1px solid rgba($color-mono-dark, 0.06);
+}
+
+.detail-label {
+  display: block;
+  font-family: $font-family-nav;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba($color-mono-dark, 0.5);
+  margin-bottom: $space-xs;
+}
+
+.detail-label-small {
+  display: block;
+  font-family: $font-family-nav;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba($color-mono-dark, 0.5);
+  margin-bottom: 4px;
+}
+
+.detail-value {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  color: $color-mono-dark;
+  margin: 0;
+
+  &-small {
+    display: block;
+    font-size: $font-size-xs;
+    color: rgba($color-mono-dark, 0.5);
+    margin-top: 4px;
+    font-family: monospace;
+  }
+}
+
+.detail-tracking {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+  padding: $space-md;
+  background: rgba($color-mono-dark, 0.02);
+  border: 1px solid rgba($color-mono-dark, 0.06);
+}
+
+.detail-tracking-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-tracking-link {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  color: colors.$primary;
+  text-decoration: none;
+  font-family: $font-family-nav;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 150ms ease;
+  padding: $space-xs $space-sm;
+  border: 1px solid transparent;
+
+  &:hover {
+    color: colors.$primary-hover;
+  }
+}
+
+.detail-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+}
+
+.timeline-list {
+  display: grid;
+  gap: $space-md;
 }
 
 // ── Tracking Modal ──

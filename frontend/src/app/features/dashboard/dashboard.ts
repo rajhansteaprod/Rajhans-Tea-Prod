@@ -29,8 +29,6 @@ export class DashboardComponent {
     return this.sanitizer.bypassSecurityTrustHtml(svg);
   }
 
-  readonly mobileMenuOpen = signal(false);
-
   readonly userName = computed(() => {
     const user = this.auth.user();
     if (user?.firstName) return `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`;
@@ -80,14 +78,6 @@ export class DashboardComponent {
     ];
     return items;
   });
-
-  toggleMobileMenu(): void {
-    this.mobileMenuOpen.set(!this.mobileMenuOpen());
-  }
-
-  closeMobileMenu(): void {
-    this.mobileMenuOpen.set(false);
-  }
 
   signOut(): void {
     this.auth.logout();

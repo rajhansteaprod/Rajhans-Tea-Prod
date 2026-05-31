@@ -2,14 +2,7 @@
 @use '../../../core/design-tokens/mixins' as *;
 
 .addresses {
-  @include content-container($max-width-narrow);
-  padding-top: $space-section-sm;
-  padding-bottom: $space-section-sm;
-
-  @include respond-to(md) {
-    padding-top: $space-xxl;
-    padding-bottom: $space-xxl;
-  }
+  padding: 0;
 }
 
 .addresses__header {
@@ -24,26 +17,35 @@
 }
 
 .addresses__title {
-  font-family: $font-family;
-  font-size: $font-size-xxl;
-  font-weight: $font-weight-regular;
+  font-family: $font-family-heading;
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: $font-weight-semibold;
   color: $color-mono-dark;
   margin: 0;
-  line-height: $line-height-tight;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .addresses__add {
-  font-family: $font-family;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  font-family: $font-family-nav;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
   color: $color-mono-light;
   background: $color-mono-dark;
+  padding: $space-sm $space-lg;
+  text-decoration: none;
+  letter-spacing: $letter-spacing-wide;
+  text-transform: uppercase;
+  white-space: nowrap;
   border: none;
-  padding: $space-xs $space-lg;
   cursor: pointer;
+  transition: all 150ms ease;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba($color-mono-dark, 0.85);
   }
 }
 

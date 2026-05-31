@@ -7,14 +7,7 @@
 // ═══════════════════════════════════════════
 
 .wishlist {
-  @include content-container($max-width-content);
-  padding-top: $space-section-sm;
-  padding-bottom: $space-section-sm;
-
-  @include respond-to(md) {
-    padding-top: $space-xxl;
-    padding-bottom: $space-xxl;
-  }
+  padding: 0;
 }
 
 // ═══ Header ═══
@@ -42,16 +35,12 @@
 
 .wishlist__title {
   font-family: $font-family-heading;
-  font-size: $font-size-display;
-  font-weight: $font-weight-medium;
-  letter-spacing: $letter-spacing-heading;
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: $font-weight-semibold;
+  letter-spacing: -0.02em;
   color: $color-mono-dark;
   margin: 0;
-  line-height: 1;
-
-  @include respond-to(md) {
-    font-size: $font-size-xxxl;
-  }
+  line-height: 1.1;
 }
 
 .wishlist__count {
@@ -66,22 +55,21 @@
   align-items: center;
   gap: $space-xs;
   font-family: $font-family-nav;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
   color: $color-mono-dark;
   text-decoration: none;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: $letter-spacing-wide;
   padding: $space-sm $space-lg;
-  border: 2px solid $color-mono-dark;
-  border-radius: 0;
-  transition: all $transition-fast;
+  border: 1px solid $color-mono-dark;
+  background: transparent;
+  transition: all 150ms ease;
   white-space: nowrap;
-  flex-shrink: 0;
 
   &:hover {
-    color: $color-mono-dark;
-    border-color: $color-mono-dark;
+    background: $color-mono-dark;
+    color: $color-mono-light;
   }
 }
 

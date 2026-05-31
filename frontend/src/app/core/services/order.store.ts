@@ -5,7 +5,10 @@ import { environment } from '../../../environments/environment';
 
 export interface OrderItem {
   productId: string;
+  variantId?: string;
   name: string;
+  image?: string;
+  variant?: string;
   qty: number;
   unitPrice: number;
   totalPrice: number;
@@ -82,7 +85,7 @@ export class OrderStore {
   loadOrders(page = 1): void {
     this._loading.set(true);
     this.http
-      .get<PaginatedResponse<OrderView>>(`${this.api}/orders/user?page=${page}&limit=10`)
+      .get<PaginatedResponse<OrderView>>(`${this.api}/orders/user?page=${page}&limit=5`)
       .subscribe({
         next: (res) => {
           this._orders.set(res.data);
