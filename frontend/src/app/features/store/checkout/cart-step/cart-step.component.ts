@@ -97,8 +97,8 @@ export class CartStepComponent {
     return undefined;
   }
 
-  async changeVariant(productId: string, oldVariantId: string | undefined, newVariantId: string) {
-    const product = await this.getProductWithVariants(productId);
+  async changeVariant(slug: string, productId: string, oldVariantId: string | undefined, newVariantId: string) {
+    const product = await this.getProductWithVariants(slug);
     if (!product?.variants) return;
 
     const selectedVariant = product.variants.find(v => v._id === newVariantId);

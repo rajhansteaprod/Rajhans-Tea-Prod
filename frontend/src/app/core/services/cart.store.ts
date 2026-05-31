@@ -241,10 +241,11 @@ export class CartStore {
       );
   }
 
-  addItem(productId: string, qty = 1, variantId?: string, openSidebar = true): void {
+  addItem(productId: string, qty = 1, variantId?: string, openSidebar = true, slug?: string): void {
     this._cartLoading.set(true);
     const body: Record<string, unknown> = { productId, qty };
     if (variantId) body['variantId'] = variantId;
+    if (slug) body['slug'] = slug;
 
     this.http
       .post<ApiResponse<CartView>>(`${this.api}/cart/items`, body, { headers: this.headers() })
@@ -401,6 +402,10 @@ export class CartStore {
   }
 
   private headers(): HttpHeaders {
+    // Only send X-Session-ID for guests; logged-in users use JWT
+    if (this.auth.isLoggedIn()) {
+      return new HttpHeaders();
+    }
     return new HttpHeaders({ 'X-Session-ID': this.sessionId });
   }
 

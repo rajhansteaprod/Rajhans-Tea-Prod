@@ -327,6 +327,10 @@ export class PaymentStore {
   // ─── Helpers ───────────────────────────────────────────────────────────────
 
   private sessionHeaders(): HttpHeaders {
+    // Only send X-Session-ID for guests; logged-in users use JWT
+    if (this.auth.isLoggedIn()) {
+      return new HttpHeaders();
+    }
     return new HttpHeaders({ 'X-Session-ID': this.cart.sessionId });
   }
 

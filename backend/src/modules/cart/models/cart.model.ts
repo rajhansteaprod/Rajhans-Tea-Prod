@@ -2,17 +2,16 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export interface ICartItem {
   productId: Types.ObjectId;
+  slug: string; // Denormalized for quick access without populate
   variantId?: Types.ObjectId;
   qty: number;
   addedAt: Date;
 }
 
 export interface ICartDoc extends Document {
-  sessionId: string;
-  userId: Types.ObjectId | null;
+  guestSessionId?: string;
+  userId?: Types.ObjectId;
   items: ICartItem[];
-  status: 'temporary' | 'checkout_started' | 'completed' | 'abandoned' | 'user_cart';
-  checkoutStartedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,6 +19,7 @@ export interface ICartDoc extends Document {
 const cartItemSchema = new Schema<ICartItem>(
   {
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+    slug: { type: String, required: true }, // Denormalized for quick access
     variantId: { type: Schema.Types.ObjectId, ref: 'ProductVariant', required: false },
     qty: { type: Number, required: true, min: 1, default: 1 },
     addedAt: { type: Date, default: () => new Date() },
@@ -29,18 +29,17 @@ const cartItemSchema = new Schema<ICartItem>(
 
 const cartSchema = new Schema<ICartDoc>(
   {
-    sessionId: { type: String, required: true },
-    userId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    guestSessionId: { type: String, sparse: true },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', sparse: true },
     items: [cartItemSchema],
-    status: { type: String, enum: ['temporary', 'checkout_started', 'completed', 'abandoned','user_cart'], default: 'temporary' },
-    checkoutStartedAt: { type: Date, required: false },
   },
   { timestamps: true },
 );
 
-cartSchema.index({ sessionId: 1 }, { unique: true });
+// Indexes for fast lookups
+cartSchema.index({ guestSessionId: 1 }, { sparse: true });
 cartSchema.index({ userId: 1 }, { sparse: true });
-cartSchema.index({ status: 1 });
-cartSchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 });
+// TTL index: auto-delete guest carts older than 7 days
+cartSchema.index({ createdAt: 1 }, { expireAfterSeconds: 604800, partialFilterExpression: { guestSessionId: { $exists: true } } });
 
 export const Cart = mongoose.model<ICartDoc>('Cart', cartSchema);

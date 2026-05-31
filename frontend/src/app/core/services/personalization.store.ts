@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Product } from './catalog.service';
 import { PlatformService } from './platform.service';
+import { AuthService } from './auth.service';
 
 export interface Banner { _id: string; title: string; subtitle: string | null; image: string; link: string | null; }
 export interface FeedSection { key: string; title: string; products: Product[]; }
@@ -15,6 +16,7 @@ interface ApiResponse<T> { success: boolean; data: T; }
 export class PersonalizationStore {
   private readonly http = inject(HttpClient);
   private readonly platform = inject(PlatformService);
+  private readonly auth = inject(AuthService);
   private readonly api = environment.apiUrl;
 
   readonly feed = signal<HomeFeed | null>(null);
@@ -27,6 +29,10 @@ export class PersonalizationStore {
   }
 
   private headers(): HttpHeaders {
+    // Only send X-Session-ID for guests; logged-in users use JWT
+    if (this.auth.isLoggedIn()) {
+      return new HttpHeaders();
+    }
     return new HttpHeaders({ 'X-Session-ID': this.sessionId });
   }
 

@@ -66,7 +66,7 @@
                         <button
                           class="checkout__variant-btn"
                           [class.checkout__variant-btn--active]="item.variantId === variant._id"
-                          (click)="changeVariant(item.productId, item.variantId, variant._id)"
+                          (click)="changeVariant(item.slug, item.productId, item.variantId, variant._id)"
                         >
                           {{ variant.name }}
                         </button>

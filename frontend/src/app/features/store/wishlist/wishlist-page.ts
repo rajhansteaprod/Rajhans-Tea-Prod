@@ -67,6 +67,6 @@ export class WishlistPageComponent implements OnInit {
 
   onBuyNow(data: { event: Event; variantId?: string }, product: Product): void {
     // For buy now, navigate to product page or handle directly
-    this.cart.addItem(product._id, 1, data.variantId);
+    this.cart.addItem(product._id, 1, data.variantId, true, product.slug);
   }
 }

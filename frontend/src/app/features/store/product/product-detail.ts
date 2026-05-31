@@ -126,12 +126,11 @@ export class ProductDetailComponent implements OnInit {
   addToCart(): void {
     if (this.product()) {
       // Add to cart WITHOUT opening sidebar
-      this.cartStore.addItem(this.product()!._id, this.quantity(), this.selectedVariant()?._id, false);
+      this.cartStore.addItem(this.product()!._id, this.quantity(), this.selectedVariant()?._id, false, this.product()!.slug);
     }
   }
 
   buyNow(): void {
-    alert("Clicked");
     if (this.product()) {
       this.cartStore.buyNowItem(this.product()!, this.quantity(), this.selectedVariant());
       // Navigate to checkout; CheckoutService detects temporary cart and uses it

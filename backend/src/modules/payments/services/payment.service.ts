@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { Types } from 'mongoose';
 import { config } from '../../../config';
 import { getRazorpayClient } from '../../../loaders/razorpay.loader';
 import { PaymentRepository } from '../repositories/payment.repository';
@@ -220,7 +221,7 @@ export class PaymentService {
       });
 
       if (userId) {
-        await this.cartService.clearCartForUser(userId);
+        await this.cartService.clearCart(new Types.ObjectId(userId));
       } else {
         await this.cartService.clearCart(sessionId);
       }
@@ -456,7 +457,7 @@ export class PaymentService {
 
       // 5. Clear cart (purchase complete) - handle both guest and user carts
       if (payment.userId) {
-        await this.cartService.clearCartForUser(payment.userId.toString());
+        await this.cartService.clearCart(payment.userId);
       } else {
         await this.cartService.clearCart(payment.sessionId);
       }
@@ -612,7 +613,7 @@ export class PaymentService {
               razorpayPaymentId: rpPaymentId,
             });
             if (payment.userId) {
-              await this.cartService.clearCartForUser(payment.userId.toString());
+              await this.cartService.clearCart(payment.userId);
             } else {
               await this.cartService.clearCart(payment.sessionId);
             }

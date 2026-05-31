@@ -3,6 +3,7 @@ import { HttpClient , HttpHeaders} from '@angular/common/http';
 import { CartItem } from './cart.store';
 import { environment } from '../../../environments/environment';
 import { PlatformService } from './platform.service';
+import { AuthService } from './auth.service';
 export interface CheckoutAddress {
   name: string;
   phone: string;
@@ -50,6 +51,8 @@ const emptyAddress = (): CheckoutAddress => ({
 export class CheckoutService {
   private readonly http = inject(HttpClient);
   private readonly api = environment.apiUrl;
+  private readonly platform = inject(PlatformService);
+  private readonly auth = inject(AuthService);
 
   // State signals
   private cartItemsSignal = signal<CartItem[]>([]);
@@ -67,7 +70,6 @@ export class CheckoutService {
   readonly address = this.addressSignal.asReadonly();
   readonly summaryLoading = this.summaryLoadingSignal.asReadonly();
   readonly summaryError = this.summaryErrorSignal.asReadonly();
-private readonly platform = inject(PlatformService);
   // Computed values — prefer backend pricing if available, fallback to client calculation
   readonly cartSubtotal = computed(() => {
     const backendSummary = this.summaryDataSignal();
@@ -230,6 +232,10 @@ private readonly platform = inject(PlatformService);
     };
   }
   private headers(): HttpHeaders {
-    return new HttpHeaders({ 'X-Session-ID': this.platform.localStorage.getItem('guestSessionId')??'' });
+    // Only send X-Session-ID for guests; logged-in users use JWT
+    if (this.auth.isLoggedIn()) {
+      return new HttpHeaders();
+    }
+    return new HttpHeaders({ 'X-Session-ID': this.platform.localStorage.getItem('guestSessionId') ?? '' });
   }
 }

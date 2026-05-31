@@ -30,3 +30,32 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
   req.user = payload;
   next();
 };
+
+// Optional auth - tries to authenticate but doesn't fail if no token
+export const authenticateOptional = async (req: Request, _res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader?.startsWith('Bearer ')) {
+    // No token - that's fine for optional auth, continue as guest
+    return next();
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  let payload: ITokenPayload;
+  try {
+    payload = jwt.verify(token, config.jwt.accessSecret) as ITokenPayload;
+  } catch {
+    // Invalid token - treat as guest
+    return next();
+  }
+
+  // Check if user is banned
+  const user = await User.findById(payload.userId, 'isBanned').lean();
+  if (user?.isBanned) {
+    throw new ForbiddenError('Your account has been suspended. Contact support for assistance.');
+  }
+
+  req.user = payload;
+  next();
+};

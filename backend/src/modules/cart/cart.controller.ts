@@ -13,10 +13,12 @@ const checkoutService = new CheckoutService();
 // Helper — extract session identifier (userId if logged in, else sessionId)
 // ---------------------------------------------------------------------------
 
-function getSessionIdentifier(req: Request): { type: 'userId' | 'sessionId'; value: string } {
+import { Types } from 'mongoose';
+
+function getSessionIdentifier(req: Request): string | Types.ObjectId {
   // If user is authenticated, use userId
   if (req.user?.userId) {
-    return { type: 'userId', value: req.user.userId };
+    return new Types.ObjectId(req.user.userId);
   }
 
   // Otherwise use X-Session-ID header for guest
@@ -24,7 +26,7 @@ function getSessionIdentifier(req: Request): { type: 'userId' | 'sessionId'; val
   if (!sid || typeof sid !== 'string' || sid.trim() === '') {
     throw new BadRequestError('X-Session-ID header is required for guests');
   }
-  return { type: 'sessionId', value: sid.trim() };
+  return sid.trim();
 }
 
 // ---------------------------------------------------------------------------
@@ -33,28 +35,22 @@ function getSessionIdentifier(req: Request): { type: 'userId' | 'sessionId'; val
 
 export const getCart = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
-  const data = identifier.type === 'userId'
-    ? await cartService.getCartByUserId(identifier.value)
-    : await cartService.getCart(identifier.value);
+  const data = await cartService.getCart(identifier);
   sendSuccess(res, data);
 };
 
 export const addItem = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
-  const { productId, variantId, qty } = req.body as { productId: string; variantId?: string; qty: number };
-  const data = identifier.type === 'userId'
-    ? await cartService.addItemForUser(identifier.value, productId, qty, variantId)
-    : await cartService.addItem(identifier.value, productId, qty, variantId);
+  const { productId, variantId, qty, slug } = req.body as { productId: string; variantId?: string; qty: number; slug?: string };
+  const data = await cartService.addItem(identifier, productId, qty, variantId, slug);
   sendSuccess(res, data, 'Item added to cart');
 };
 
 export const updateItem = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
   const productId = req.params['productId'] as string;
-  const { qty, variantId } = req.body as { qty: number; variantId?: string };
-  const data = identifier.type === 'userId'
-    ? await cartService.updateItemForUser(identifier.value, productId, qty, variantId)
-    : await cartService.updateItem(identifier.value, productId, qty, variantId);
+  const { qty, variantId, slug } = req.body as { qty: number; variantId?: string; slug?: string };
+  const data = await cartService.addItem(identifier, productId, qty, variantId, slug);
   sendSuccess(res, data, 'Cart updated');
 };
 
@@ -62,17 +58,13 @@ export const removeItem = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
   const productId = req.params['productId'] as string;
   const { variantId } = req.body as { variantId?: string };
-  const data = identifier.type === 'userId'
-    ? await cartService.removeItemForUser(identifier.value, productId, variantId)
-    : await cartService.removeItem(identifier.value, productId, variantId);
+  const data = await cartService.removeItem(identifier, productId, variantId);
   sendSuccess(res, data, 'Item removed from cart');
 };
 
 export const clearCart = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
-  identifier.type === 'userId'
-    ? await cartService.clearCartForUser(identifier.value)
-    : await cartService.clearCart(identifier.value);
+  await cartService.clearCart(identifier);
   sendNoContent(res);
 };
 
@@ -80,7 +72,7 @@ export const mergeCart = async (req: Request, res: Response) => {
   const { guestSessionId } = req.body as { guestSessionId: string };
   const userId = req.user!.userId;
   const data = await cartService.mergeOnLogin(guestSessionId, userId);
-  sendSuccess(res, data, 'Cart merged');
+  sendSuccess(res, data, 'Cart merged successfully');
 };
 
 // ---------------------------------------------------------------------------
@@ -89,14 +81,14 @@ export const mergeCart = async (req: Request, res: Response) => {
 
 export const getWishlist = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
-  const sessionId = identifier.value; // Use value for both userId and sessionId
+  const sessionId = typeof identifier === 'string' ? identifier : identifier.toString();
   const data = await wishlistService.getWishlist(sessionId);
   sendSuccess(res, data);
 };
 
 export const toggleWishlist = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
-  const sessionId = identifier.value;
+  const sessionId = typeof identifier === 'string' ? identifier : identifier.toString();
   const productId = req.params['productId'] as string;
   const result = await wishlistService.toggle(sessionId, productId);
   sendSuccess(
@@ -119,7 +111,7 @@ export const mergeWishlist = async (req: Request, res: Response) => {
 
 export const getCheckoutSummary = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
-  const sessionId = identifier.value;
+  const sessionId = typeof identifier === 'string' ? identifier : identifier.toString();
   const { items, promoCode } = req.body as { items?: any[]; promoCode?: string };
   const data = await checkoutService.getSummary(sessionId, items, promoCode);
   sendSuccess(res, data);
@@ -127,7 +119,7 @@ export const getCheckoutSummary = async (req: Request, res: Response) => {
 
 export const reserveStock = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
-  const sessionId = identifier.value;
+  const sessionId = typeof identifier === 'string' ? identifier : identifier.toString();
   const result = await checkoutService.reserveStock(sessionId);
   if (result.issues.length > 0) {
     res.status(409).json({
@@ -143,7 +135,7 @@ export const reserveStock = async (req: Request, res: Response) => {
 
 export const releaseReservation = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
-  const sessionId = identifier.value;
+  const sessionId = typeof identifier === 'string' ? identifier : identifier.toString();
   await checkoutService.releaseReservation(sessionId);
   sendNoContent(res);
 };
