@@ -178,6 +178,24 @@
           <div class="checkout__promo-error">{{ promoError() }}</div>
         }
 
+        <!-- Mobile Order Summary -->
+        <div class="checkout__order-summary-mobile">
+          <div class="checkout__order-summary-row">
+            <span>Subtotal</span>
+            <span>₹{{ cartSubtotal() | number: '1.0-0' }}</span>
+          </div>
+          @if (cartDiscount() > 0) {
+            <div class="checkout__order-summary-row checkout__order-summary-row--discount">
+              <span>Discount</span>
+              <span>-₹{{ cartDiscount() | number: '1.0-0' }}</span>
+            </div>
+          }
+          <div class="checkout__order-summary-row checkout__order-summary-row--total">
+            <span>Total</span>
+            <span>₹{{ cartTotal() | number: '1.0-0' }}</span>
+          </div>
+        </div>
+
         <div class="checkout__price-divider"></div>
 
         <div class="checkout__price-row checkout__price-total">

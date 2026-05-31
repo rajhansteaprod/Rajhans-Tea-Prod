@@ -4,9 +4,9 @@
     <router-outlet />
   </main>
 
-  <!-- Trust bar — Kusmi Tea style -->
-
-
-  <app-footer />
+  <!-- Hide footer on checkout page -->
+  @if (!isCheckout()) {
+    <app-footer />
+  }
 </div>
 <app-cart-sidebar />

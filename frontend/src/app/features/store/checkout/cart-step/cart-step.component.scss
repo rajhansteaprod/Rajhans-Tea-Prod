@@ -6,11 +6,21 @@
   display: flex;
   gap: $space-xl;
   align-items: flex-start;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: $space-lg;
+  }
 }
 
 // LEFT + RIGHT columns
 .checkout__bag-left {
   flex: 2;
+
+  @media (max-width: 768px) {
+    flex: 1;
+    padding-bottom: 200px;
+  }
 }
 
 .checkout__bag-right {
@@ -18,6 +28,26 @@
   border: 1px solid rgba(0, 0, 0, 0.1);
   padding: $space-lg;
   height: fit-content;
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    border: none;
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: white !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+    z-index: 999 !important;
+    padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+  }
 }
 
 // ═══ Cart Header ═══
@@ -28,12 +58,22 @@
   padding: $space-md 0;
   margin-bottom: $space-lg;
   border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    padding: 12px 0;
+    margin-bottom: $space-md;
+  }
 }
 
-// FIXED class name
+// Items label
 .checkout__items-label {
   @include label;
   text-transform: uppercase;
+  font-size: 12px;
+
+  @media (max-width: 768px) {
+    font-size: 11px;
+  }
 }
 
 // ═══ Product List ═══
@@ -43,7 +83,7 @@
   gap: $space-lg;
 }
 
-// Product Card
+// Product Card - Premium app card design
 .checkout__product-card {
   display: flex;
   gap: $space-md;
@@ -51,55 +91,105 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   padding: $space-md;
   background: $bg-white;
+  border-radius: 0;
 
   &:hover {
     background: rgba(0, 0, 0, 0.015);
   }
+
+  @media (max-width: 768px) {
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 8px;
+  }
+
+  @media (max-width: 480px) {
+    gap: 10px;
+    padding: 10px;
+    margin-bottom: 8px;
+  }
 }
 
-// Image
+// Image - Optimized for mobile
 .checkout__product-card-image {
   width: 96px;
   height: 120px;
   flex-shrink: 0;
+  border-radius: 4px;
+  overflow: hidden;
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
+
+  @media (max-width: 768px) {
+    width: 80px;
+    height: 100px;
+  }
+
+  @media (max-width: 480px) {
+    width: 70px;
+    height: 88px;
+  }
 }
 
-// Content
+// Content - Better hierarchy on mobile
 .checkout__product-card-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: $space-xs;
+  min-width: 0;
+
+  @media (max-width: 768px) {
+    gap: 4px;
+  }
 }
 
-// Product name
+// Product name - Bold, clear hierarchy
 .checkout__product-card-name {
   @include body-sm;
   font-weight: $weight-semibold;
   color: $text-dark;
   margin: 0;
+  line-height: 1.3;
+
+  @media (max-width: 768px) {
+    font-size: 13px;
+    font-weight: 600;
+  }
 }
 
-// Qty wrapper
+// Qty wrapper - Compact on mobile
 .checkout__qty-wrapper {
   display: flex;
   align-items: center;
   gap: $space-xs;
   margin-top: $space-sm;
+
+  @media (max-width: 768px) {
+    margin-top: 6px;
+    gap: 6px;
+  }
 }
 
 .checkout__qty-label {
   @include body-sm;
   color: $text-dark;
+  font-size: 12px;
+
+  @media (max-width: 768px) {
+    font-size: 11px;
+  }
 }
 
-// Qty group
+// Qty group - Touch-friendly
 .checkout__qty-group {
   display: flex;
   align-items: center;
@@ -125,6 +215,12 @@
       opacity: 0.35;
       cursor: not-allowed;
     }
+
+    @media (max-width: 768px) {
+      width: 24px;
+      height: 24px;
+      font-size: 11px;
+    }
   }
 }
 
@@ -133,6 +229,12 @@
   font-weight: $weight-medium;
   min-width: 24px;
   text-align: center;
+  font-size: 12px;
+
+  @media (max-width: 768px) {
+    min-width: 20px;
+    font-size: 11px;
+  }
 }
 
 // Variant Selector
@@ -168,39 +270,66 @@
   }
 }
 
-// Variant display (current selected variant name)
+// Variant display - Current selected variant
 .checkout__variant-display {
   @include body-sm;
   color: rgba(0, 0, 0, 0.45);
   font-style: italic;
+  font-size: 12px;
+
+  @media (max-width: 768px) {
+    font-size: 11px;
+  }
 }
 
-// Promo Messages
+// Promo Messages - Smaller, separated
 .checkout__promo-success {
   color: #10b981;
-  @include body-sm;
+  font-size: 11px;
   margin: $space-xs 0;
   font-weight: $weight-medium;
+  padding: 8px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  margin-top: $space-sm;
+
+  @media (max-width: 768px) {
+    font-size: 10px;
+    padding: 6px 0;
+  }
 }
 
 .checkout__promo-error {
   color: $primary;
-  @include body-sm;
+  font-size: 11px;
   margin: $space-xs 0;
+  padding: 8px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  margin-top: $space-sm;
+
+  @media (max-width: 768px) {
+    font-size: 10px;
+    padding: 6px 0;
+  }
 }
 
-// Subdescription (product shortDescription link)
+// Subdescription - Subtle, secondary text
 .checkout__product-card-subdescription {
   @include body-sm;
   color: rgba(0, 0, 0, 0.45);
   text-decoration: none;
+  font-size: 12px;
+  line-height: 1.3;
 
   &:hover {
     color: rgba(0, 0, 0, 0.65);
   }
+
+  @media (max-width: 768px) {
+    font-size: 11px;
+  }
 }
 
-// Right column: Price + Remove
+// Right column: Price + Remove - Premium layout
 .checkout__product-card-right {
   display: flex;
   flex-direction: column;
@@ -208,28 +337,40 @@
   justify-content: space-between;
   min-width: 72px;
   flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    min-width: 60px;
+    gap: 4px;
+  }
 }
 
-// Product price in right column
+// Product price - Bold, prominent
 .checkout__product-price {
   font-weight: $weight-bold;
   color: $text-dark;
   @include body-sm;
   line-height: 1.4;
+  font-size: 13px;
+
+  @media (max-width: 768px) {
+    font-size: 12px;
+  }
 }
 
-// Remove button
+// Remove button - Touch-friendly
 .checkout__remove-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: rgba(0, 0, 0, 0.3);
-  padding: 4px;
+  color: rgba(0, 0, 0, 0.25);
+  padding: 6px;
   border-radius: $radius-sm;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: color 0.15s;
+  min-width: 32px;
+  min-height: 32px;
 
   &:hover {
     color: $primary;
@@ -238,6 +379,53 @@
   &:active {
     opacity: 0.7;
   }
+
+  svg {
+    width: 16px;
+    height: 16px;
+
+    @media (max-width: 768px) {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+// ═══ Order Summary Section (Mobile Compact) ═══
+.checkout__order-summary-mobile {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    background: white;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    margin-bottom: 12px;
+  }
+}
+
+.checkout__order-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+
+  &--discount {
+    color: #10b981;
+  }
+
+  &--total {
+    font-weight: 700;
+    font-size: 15px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  span:last-child {
+    font-weight: 500;
+  }
 }
 
 // ═══ Price Section ═══
@@ -245,11 +433,62 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: $space-sm;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+
+  @media (max-width: 480px) {
+    margin-bottom: $space-xs;
+    font-size: 12px;
+  }
+}
+
+.checkout__terms {
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+.checkout__price-divider {
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+.checkout__price-heading {
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+.checkout__price-row {
+  @media (max-width: 768px) {
+    &:not(.checkout__price-total) {
+      display: none;
+    }
+  }
+}
+
+.checkout__promo-section {
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
 
 .checkout__price-total {
   font-weight: bold;
   font-size: $font-size-md;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  @media (max-width: 768px) {
+    font-size: 15px;
+    margin-bottom: 0;
+    padding: 0;
+    order: 1;
+  }
 }
 
 .checkout__promo-section {
@@ -257,9 +496,14 @@
   gap: $space-xs;
   margin: $space-md 0;
 
+  @media (max-width: 768px) {
+    gap: 8px;
+    margin: 12px 0;
+  }
+
   .checkout__promo-input {
     flex: 1;
-    border: 1px solid rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.12);
     background: white;
     color: black;
     padding: $space-sm $space-md;
@@ -278,12 +522,25 @@
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    @media (max-width: 768px) {
+      padding: 10px 12px;
+      font-size: 13px;
+      border-radius: 6px;
+    }
+
+    @media (max-width: 480px) {
+      flex: 1;
+      padding: 10px 12px;
+      font-size: 12px;
     }
   }
 
   .checkout__promo-btn {
     flex-shrink: 0;
-    border: 1px solid rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.12);
     background: white;
     color: black;
     padding: $space-sm $space-md;
@@ -291,6 +548,10 @@
     font-size: $font-size-sm;
     font-weight: $weight-semibold;
     cursor: pointer;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     &:hover:not(:disabled) {
       background: rgba(0, 0, 0, 0.05);
@@ -310,6 +571,20 @@
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+
+    @media (max-width: 768px) {
+      padding: 10px 14px;
+      font-size: 12px;
+      min-height: 40px;
+      border-radius: 6px;
+    }
+
+    @media (max-width: 480px) {
+      flex-shrink: 0;
+      padding: 10px 12px;
+      font-size: 11px;
+      white-space: nowrap;
     }
 
     &--remove {
@@ -332,10 +607,29 @@
   }
 }
 
-// Button
+// Button - Sticky bar on mobile
 .checkout__btn-next {
   width: 100%;
   margin-top: $space-md;
+  padding: 12px 24px;
+  min-height: 48px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  visibility: visible !important;
+  opacity: 1 !important;
+
+  @media (max-width: 768px) {
+    width: 100% !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding: 14px 16px !important;
+    min-height: 48px !important;
+    font-size: 14px !important;
+    order: 2 !important;
+    display: grid !important;
+    place-items: center !important;
+  }
 }
 
 // Pricing Sync Status Indicator

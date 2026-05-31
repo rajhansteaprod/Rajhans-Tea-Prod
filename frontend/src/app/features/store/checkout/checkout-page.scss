@@ -16,6 +16,56 @@
   }
 }
 
+// ═══ Mobile Header (mobile only) ═══
+.checkout__mobile-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  @media (max-width: 768px) {
+    display: flex;
+  }
+}
+
+.checkout__mobile-back {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: black;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:active {
+    opacity: 0.6;
+  }
+}
+
+.checkout__mobile-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+  text-align: center;
+  color: black;
+}
+
+.checkout__mobile-count {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+}
+
 // ═══ Step Indicator ═══
 .checkout__steps {
   display: flex;
@@ -23,12 +73,21 @@
   justify-content: center;
   margin-bottom: $space-xxl;
   gap: 0;
+
+  @media (max-width: 768px) {
+    margin-bottom: $space-lg;
+    padding: 0 16px;
+  }
 }
 
 .checkout__step {
   @include flex-column;
   align-items: center;
   gap: $space-xs;
+
+  @media (max-width: 768px) {
+    gap: 4px;
+  }
 }
 
 // Step icon styling
@@ -40,6 +99,11 @@
 
   .checkout__step.active & {
     color: #000000;
+  }
+
+  @media (max-width: 480px) {
+    width: 16px;
+    height: 16px;
   }
 }
 
@@ -67,6 +131,19 @@
     background: $color-bg-teal;
     color: $color-text-inverse;
   }
+
+  @media (max-width: 768px) {
+    width: 32px;
+    height: 32px;
+    font-size: 11px;
+    border-width: 1.5px;
+  }
+
+  @media (max-width: 480px) {
+    width: 28px;
+    height: 28px;
+    font-size: 10px;
+  }
 }
 
 // Step label: default gray, black when active step
@@ -80,6 +157,15 @@
 
   // Default: gray (not active)
   color: #999999;
+
+  @media (max-width: 768px) {
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 9px;
+  }
 }
 
 // Active step: black
@@ -99,6 +185,17 @@
 
   &.done {
     background: #cccccc;
+  }
+
+  @media (max-width: 768px) {
+    min-width: 40px;
+    max-width: 80px;
+    height: 1.5px;
+  }
+
+  @media (max-width: 480px) {
+    min-width: 24px;
+    max-width: 50px;
   }
 }
 

@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject, computed } from '@angular/core';
+import { RouterOutlet, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from './header/header';
 import { FooterComponent } from './footer/footer';
@@ -12,4 +12,10 @@ import { CartSidebarComponent } from '../../features/store/cart/cart-sidebar';
   templateUrl: './main-layout.html',
   styleUrls: ['./main-layout.scss'],
 })
-export class MainLayoutComponent {}
+export class MainLayoutComponent {
+  private readonly router = inject(Router);
+
+  isCheckout = computed(() => {
+    return this.router.url.includes('/checkout');
+  });
+}
