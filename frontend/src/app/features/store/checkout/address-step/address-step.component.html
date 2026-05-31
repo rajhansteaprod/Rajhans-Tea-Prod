@@ -113,11 +113,11 @@
         <input
           type="text"
           class="checkout__form-input"
-          formControlName="street"
-          [class.error]="form.get('street')?.invalid && form.get('street')?.touched"
+          formControlName="address"
+          [class.error]="form.get('address')?.invalid && form.get('address')?.touched"
           placeholder="Address"
         />
-        @if (form.get('street')?.invalid && form.get('street')?.touched) {
+        @if (form.get('address')?.invalid && form.get('address')?.touched) {
           <span class="checkout__form-error">Address is required</span>
         }
       </div>

@@ -65,10 +65,11 @@ export interface IOrderDoc extends Document {
   shippingAddress: {
     name: string;
     phone: string;
-    street: string;
+    address: string;
+    landmark?: string;
     city: string;
     state: string;
-    pincode: string;
+    pinCode: string;
   };
   warehouseId: Types.ObjectId;
   shiprocket: IShiprocketInfo;
@@ -138,10 +139,11 @@ const orderSchema = new Schema<IOrderDoc>(
     shippingAddress: {
       name: { type: String, required: true },
       phone: { type: String, required: true },
-      street: { type: String, required: true },
+      address: { type: String, required: true },
+      landmark: { type: String, default: null },
       city: { type: String, required: true },
       state: { type: String, required: true },
-      pincode: { type: String, required: true },
+      pinCode: { type: String, required: true },
     },
     warehouseId: { type: Schema.Types.ObjectId, ref: 'Warehouse', required: true },
     shiprocket: {

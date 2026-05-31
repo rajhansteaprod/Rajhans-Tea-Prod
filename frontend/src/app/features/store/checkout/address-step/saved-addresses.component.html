@@ -23,9 +23,9 @@
                 {{ expandedIndex() === i ? '▲' : '▼' }}
               </span>
 
-              <span class="saved-addresses__field">{{ address.pincode }}</span>
+              <span class="saved-addresses__field">{{ address.pinCode }}</span>
               <span class="saved-addresses__field saved-addresses__field--truncate">
-                {{ address.street }}
+                {{ address.address }}
               </span>
               <span class="saved-addresses__field">{{ address.city }}</span>
               <span class="saved-addresses__field">{{ address.state }}</span>
@@ -40,9 +40,9 @@
             <div class="saved-addresses__expanded">
               <div class="saved-addresses__details">
                 <p class="saved-addresses__detail-value">{{ address.name }}</p>
-                <p class="saved-addresses__detail-value">{{ address.street }}</p>
+                <p class="saved-addresses__detail-value">{{ address.address }}</p>
                 <p class="saved-addresses__detail-value">
-                  {{ address.city }}, {{ address.state }} - {{ address.pincode }}
+                  {{ address.city }}, {{ address.state }} - {{ address.pinCode }}
                 </p>
                 <p class="saved-addresses__detail-value">{{ address.phone }}</p>
               </div>

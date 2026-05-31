@@ -29,11 +29,11 @@ export const updateProfileSchema = z.object({
 
 const addressBodySchema = z.object({
   label: z.string().trim().min(1, 'Label is required').max(50),
-  street: z.string().trim().min(1, 'Street is required').max(200),
+  address: z.string().trim().min(1, 'Address is required').max(200),
+  landmark: z.string().trim().max(100).optional(),
   city: z.string().trim().min(1, 'City is required').max(100),
   state: z.string().trim().min(1, 'State is required').max(100),
-  postalCode: z.string().trim().regex(/^\d{6}$/, 'Postal code must be 6 digits'),
-  country: z.string().trim().min(1).max(100).optional().default('India'),
+  pinCode: z.string().trim().regex(/^\d{6}$/, 'PIN code must be 6 digits'),
   isDefault: z.boolean().optional().default(false),
 });
 

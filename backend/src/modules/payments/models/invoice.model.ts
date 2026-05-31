@@ -17,10 +17,10 @@ export interface IInvoiceDoc extends Document {
   billingAddress: {
     name: string;
     phone: string;
-    street: string;
+    address: string;
     city: string;
     state: string;
-    pincode: string;
+    pinCode: string;
   };
   lineItems: IInvoiceLineItem[];
   subtotal: number;
@@ -52,10 +52,10 @@ const invoiceSchema = new Schema<IInvoiceDoc>(
     billingAddress: {
       name: { type: String, required: true },
       phone: { type: String, required: true },
-      street: { type: String, required: true },
+      address: { type: String, required: true },
       city: { type: String, required: true },
       state: { type: String, required: true },
-      pincode: { type: String, required: true },
+      pinCode: { type: String, required: true },
     },
     lineItems: [lineItemSchema],
     subtotal: { type: Number, required: true },

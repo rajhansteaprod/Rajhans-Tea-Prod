@@ -3,11 +3,11 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 export interface IAddressDoc {
   _id: Types.ObjectId;
   label: string;
-  street: string;
+  address: string;
+  landmark?: string;
   city: string;
   state: string;
-  postalCode: string;
-  country: string;
+  pinCode: string;
   isDefault: boolean;
 }
 
@@ -32,11 +32,11 @@ export interface IUserDoc extends Document {
 const addressSchema = new Schema<IAddressDoc>(
   {
     label: { type: String, required: true },
-    street: { type: String, required: true },
+    address: { type: String, required: true },
+    landmark: { type: String, default: null },
     city: { type: String, required: true },
     state: { type: String, required: true },
-    postalCode: { type: String, required: true },
-    country: { type: String, required: true, default: 'India' },
+    pinCode: { type: String, required: true },
     isDefault: { type: Boolean, default: false },
   },
   { _id: true },

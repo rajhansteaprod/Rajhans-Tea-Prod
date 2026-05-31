@@ -78,8 +78,8 @@ interface PaginatedResponse<T> {
 export interface AddressForm {
   name: string;
   phone: string;
-  pincode: string;
-  street: string;
+  pinCode: string;
+  address: string;
   city: string;
   state: string;
 }

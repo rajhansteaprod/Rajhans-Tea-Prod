@@ -6,8 +6,9 @@ import { PlatformService } from './platform.service';
 export interface CheckoutAddress {
   name: string;
   phone: string;
-  pincode: string;
-  street: string;
+  pinCode: string;
+  address: string;
+  landmark?: string;
   city: string;
   state: string;
 }
@@ -36,8 +37,9 @@ interface ApiResponse<T> {
 const emptyAddress = (): CheckoutAddress => ({
   name: '',
   phone: '',
-  pincode: '',
-  street: '',
+  pinCode: '',
+  address: '',
+  landmark: '',
   city: '',
   state: '',
 });

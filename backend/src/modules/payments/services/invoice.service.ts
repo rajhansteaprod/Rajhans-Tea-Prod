@@ -117,8 +117,8 @@ export class InvoiceService {
       // ── Shipping Address ────────────────────────────────────────
       doc.font('Helvetica-Bold').text('Ship To:');
       doc.font('Helvetica').text(`${addr.name}`);
-      doc.text(`${addr.street}`);
-      doc.text(`${addr.city}, ${addr.state} - ${addr.pincode}`);
+      doc.text(`${addr.address}`);
+      doc.text(`${addr.city}, ${addr.state} - ${addr.pinCode}`);
       doc.text(`Phone: ${addr.phone}`);
       doc.moveDown();
 

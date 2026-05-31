@@ -27,7 +27,7 @@ export class AddressStepComponent {
     pincode: ['', [Validators.required, Validators.pattern(/^[1-9]\d{5}$/)]],
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
-    street: ['', Validators.required],
+    address: ['', Validators.required],
     city: ['', Validators.required],
     state: ['', Validators.required],
     phone: ['', [Validators.required, Validators.pattern(/^(\+91\d{10}|0\d{10}|\d{10})$/)]],
@@ -63,8 +63,8 @@ export class AddressStepComponent {
         firstName,
         lastName: lastNameParts.join(' '),
         phone: existingAddress.phone,
-        pincode: existingAddress.pincode,
-        street: existingAddress.street,
+        pincode: existingAddress.pinCode,
+        address: existingAddress.address,
         city: existingAddress.city,
         state: existingAddress.state,
       });
@@ -126,8 +126,8 @@ export class AddressStepComponent {
       const address: CheckoutAddress = {
         name: `${formValue.firstName} ${formValue.lastName}`,
         phone: formValue.phone!,
-        pincode: formValue.pincode!,
-        street: formValue.street!,
+        pinCode: formValue.pincode!,
+        address: formValue.address!,
         city: formValue.city!,
         state: formValue.state!,
       };

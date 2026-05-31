@@ -9,13 +9,29 @@
       <h2 class="addresses__form-title">{{ editingId() ? 'Edit address' : 'New address' }}</h2>
 
       <div class="addresses__field">
-        <label class="addresses__label" for="label">Label</label>
-        <input class="addresses__input" id="label" type="text" [(ngModel)]="form.label" name="label" placeholder="e.g. Home, Office" />
+        <label class="addresses__label">Label</label>
+        <div class="addresses__label-pills">
+          @for (option of labelOptions; track option) {
+            <button
+              type="button"
+              class="addresses__pill"
+              [class.addresses__pill--active]="form.label === option"
+              (click)="form.label = option"
+            >
+              {{ option }}
+            </button>
+          }
+        </div>
       </div>
 
       <div class="addresses__field">
-        <label class="addresses__label" for="street">Street</label>
-        <input class="addresses__input" id="street" type="text" [(ngModel)]="form.street" name="street" placeholder="Street address" />
+        <label class="addresses__label" for="address">Address</label>
+        <input class="addresses__input" id="address" type="text" [(ngModel)]="form.address" name="address" placeholder="Street address" />
+      </div>
+
+      <div class="addresses__field">
+        <label class="addresses__label" for="landmark">Landmark</label>
+        <input class="addresses__input" id="landmark" type="text" [(ngModel)]="form.landmark" name="landmark" placeholder="Landmark (optional)" />
       </div>
 
       <div class="addresses__row">
@@ -29,15 +45,9 @@
         </div>
       </div>
 
-      <div class="addresses__row">
-        <div class="addresses__field">
-          <label class="addresses__label" for="postalCode">Postal Code</label>
-          <input class="addresses__input" id="postalCode" type="text" [(ngModel)]="form.postalCode" name="postalCode" placeholder="PIN code" />
-        </div>
-        <div class="addresses__field">
-          <label class="addresses__label" for="country">Country</label>
-          <input class="addresses__input" id="country" type="text" [(ngModel)]="form.country" name="country" placeholder="Country" />
-        </div>
+      <div class="addresses__field">
+        <label class="addresses__label" for="pinCode">Pin Code</label>
+        <input class="addresses__input" id="pinCode" type="text" [(ngModel)]="form.pinCode" name="pinCode" placeholder="PIN code" />
       </div>
 
       <div class="addresses__form-actions">
@@ -62,8 +72,11 @@
             <span class="addresses__badge">Default</span>
           }
         </div>
-        <p class="addresses__card-line">{{ addr.street }}</p>
-        <p class="addresses__card-line">{{ addr.city }}, {{ addr.state }} {{ addr.postalCode }}</p>
+        <p class="addresses__card-line">{{ addr.address }}</p>
+        @if (addr.landmark) {
+          <p class="addresses__card-line">{{ addr.landmark }}</p>
+        }
+        <p class="addresses__card-line">{{ addr.city }}, {{ addr.state }} {{ addr.pinCode }}</p>
         <div class="addresses__card-actions">
           <button class="addresses__link" (click)="openEdit(addr)">Edit</button>
           <button class="addresses__link" (click)="remove(addr._id)">Delete</button>

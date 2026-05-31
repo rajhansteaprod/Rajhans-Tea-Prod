@@ -7,21 +7,21 @@ import { environment } from '../../../../environments/environment';
 interface Address {
   _id: string;
   label: string;
-  street: string;
+  address: string;
+  landmark: string;
   city: string;
   state: string;
-  postalCode: string;
-  country: string;
+  pinCode: string;
   isDefault: boolean;
 }
 
 interface AddressForm {
   label: string;
-  street: string;
+  address: string;
+  landmark: string;
   city: string;
   state: string;
-  postalCode: string;
-  country: string;
+  pinCode: string;
 }
 
 @Component({
@@ -39,6 +39,7 @@ export class AddressesComponent implements OnInit {
   editingId = signal<string | null>(null);
   form: AddressForm = this.emptyForm();
   saving = signal(false);
+  labelOptions = ['Home', 'Office', 'Others'];
 
   constructor(private http: HttpClient) {}
 
@@ -55,7 +56,7 @@ export class AddressesComponent implements OnInit {
   }
 
   private emptyForm(): AddressForm {
-    return { label: '', street: '', city: '', state: '', postalCode: '', country: 'India' };
+    return { label: 'Home', address: '', landmark: '', city: '', state: '', pinCode: '' };
   }
 
   openAdd(): void {
@@ -67,11 +68,11 @@ export class AddressesComponent implements OnInit {
   openEdit(addr: Address): void {
     this.form = {
       label: addr.label,
-      street: addr.street,
+      address: addr.address,
+      landmark: addr.landmark,
       city: addr.city,
       state: addr.state,
-      postalCode: addr.postalCode,
-      country: addr.country,
+      pinCode: addr.pinCode,
     };
     this.editingId.set(addr._id);
     this.showForm.set(true);

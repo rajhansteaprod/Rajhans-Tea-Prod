@@ -5,10 +5,11 @@ export const createOrderSchema = z.object({
     address: z.object({
       name: z.string().min(1),
       phone: z.string().min(10).max(10),
-      street: z.string().min(1),
+      address: z.string().min(1),
+      landmark: z.string().optional(),
       city: z.string().min(1),
       state: z.string().min(1),
-      pincode: z.string().length(6),
+      pinCode: z.string().length(6),
     }),
     items: z.array(z.object({
       productId: z.string(),
