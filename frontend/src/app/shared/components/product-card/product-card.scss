@@ -221,12 +221,12 @@
   font-weight: $font-weight-medium;
   color: $color-mono-dark;
   cursor: pointer;
-  transition: all 120ms ease;
+  transition: background 120ms ease;
   white-space: nowrap;
+  opacity: 1;
 
   &:hover {
-    background: rgba($color-mono-dark, 0.1);
-    border-color: rgba($color-mono-dark, 0.25);
+    opacity: 0.7;
   }
 
   &--active {

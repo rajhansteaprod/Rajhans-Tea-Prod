@@ -7,10 +7,10 @@
   </div>
 } @else if (notFound()) {
   <div class="not-found">
-    <span class="not-found__code">404</span>
-    <h2 class="not-found__title">PAGE NOT FOUND</h2>
-    <p class="not-found__sub">The page you're looking for doesn't exist.</p>
-    <a routerLink="/" class="not-found__link">Go Home</a>
+    <div class="not-found__code">404</div>
+    <h2 class="not-found__title">Page Not Found</h2>
+    <p class="not-found__sub">The page you're looking for doesn't exist or has been moved.</p>
+    <a routerLink="/" class="not-found__link">← Go Home</a>
   </div>
 } @else {
   <div class="loading">
