@@ -72,6 +72,7 @@ export class CartSidebarComponent {
     // Initialize checkout with current cart items and load summary from backend
     this.checkoutService.initializeCheckout(this.cart.cartItems());
     this.cart.closeSidebar();
+    this.cart.clearTemporaryCart();
     this.router.navigate(['/checkout']);
   }
 }
