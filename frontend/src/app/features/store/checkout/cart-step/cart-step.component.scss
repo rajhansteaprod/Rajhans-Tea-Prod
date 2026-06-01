@@ -19,7 +19,7 @@
 
   @media (max-width: 768px) {
     flex: 1;
-    padding-bottom: 200px;
+    padding-bottom: 32px;
   }
 }
 
@@ -38,13 +38,8 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 12px;
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
     background: white !important;
     border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
-    z-index: 999 !important;
     padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
   }
