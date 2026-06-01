@@ -8,9 +8,11 @@
 
 .checkout {
   @include content-container(1200px);
+  padding-top: $space-xxl;
   padding-bottom: $space-section-sm;
-   
+
   @include respond-to(md) {
+    padding-top: 0;
     padding-bottom: $space-xxl;
   }
 }

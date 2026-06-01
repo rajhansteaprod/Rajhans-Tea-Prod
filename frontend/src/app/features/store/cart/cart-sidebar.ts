@@ -1,8 +1,9 @@
 import { Component, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { CartStore } from '../../../core/services/cart.store';
 import { CatalogService, Product } from '../../../core/services/catalog.service';
+import { CheckoutService } from '../../../core/services/checkout.service';
 
 @Component({
   selector: 'app-cart-sidebar',
@@ -14,6 +15,8 @@ import { CatalogService, Product } from '../../../core/services/catalog.service'
 export class CartSidebarComponent {
   readonly cart = inject(CartStore);
   readonly catalogService = inject(CatalogService);
+  private readonly checkoutService = inject(CheckoutService);
+  private readonly router = inject(Router);
 
   private readonly productCache = signal<Map<string, Product>>(new Map());
 
@@ -63,5 +66,12 @@ export class CartSidebarComponent {
     // Update cart with new variant
     this.cart.removeItem(productId, oldVariantId);
     this.cart.addItem(productId, 1, newVariantId, false);
+  }
+
+  proceedToCheckout() {
+    // Initialize checkout with current cart items and load summary from backend
+    this.checkoutService.initializeCheckout(this.cart.cartItems());
+    this.cart.closeSidebar();
+    this.router.navigate(['/checkout']);
   }
 }

@@ -113,13 +113,12 @@
         <span class="subtotal-value">&#8377;{{ cart.cartSubtotal() | number:'1.0-0' }}</span>
       </div>
       <p class="tax-note">Taxes & discounts calculated at checkout</p>
-      <a
+      <button
         class="btn-checkout"
-        routerLink="/checkout"
-        (click)="cart.closeSidebar()"
+        (click)="proceedToCheckout()"
       >
         Proceed to Checkout
-      </a>
+      </button>
       <button class="btn-continue" (click)="cart.closeSidebar()">Continue Shopping</button>
       <button class="btn-clear" (click)="cart.clearCart()">Clear cart</button>
     </div>

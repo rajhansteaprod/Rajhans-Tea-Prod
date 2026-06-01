@@ -115,8 +115,8 @@ export class CheckoutService {
   // Initialize checkout with cart items
   initializeCheckout(items: CartItem[]) {
     this.cartItemsSignal.set([...items]);
-    // Load actual pricing from backend on init
-    this.loadCheckoutSummary(false);
+    // Load actual pricing from backend on init (force refresh to get latest pricing)
+    this.loadCheckoutSummary(true);
   }
 
   // Update cart items
