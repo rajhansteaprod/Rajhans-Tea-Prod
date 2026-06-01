@@ -115,4 +115,9 @@ export class CheckoutPageComponent implements OnInit {
     if (step === 'address') return this.isAddressDone();
     return false;
   }
+
+  isLineDone(index: number): boolean {
+    const currentStepIndex = this.steps.findIndex(s => s.key === this.currentStep());
+    return index < currentStepIndex;
+  }
 }

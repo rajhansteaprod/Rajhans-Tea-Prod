@@ -1,7 +1,19 @@
 <section class="checkout">
   <!-- Mobile Header (only visible on mobile) -->
   <div class="checkout__mobile-header">
-    <h1 class="checkout__mobile-title">Checkout</h1>
+    <h1 class="checkout__mobile-title">
+      @switch(currentStep()) {
+        @case('cart') {
+          Checkout
+        }
+        @case('address') {
+          Choose Address
+        }
+        @case('summary') {
+          Order Summary
+        }
+      }
+    </h1>
   </div>
 
   <!-- Step Indicator -->
@@ -28,7 +40,7 @@
         <span class="checkout__step-label">{{ s.label }}</span>
       </div>
       @if (i < steps.length - 1) {
-        <div class="checkout__step-line" [class.done]="isStepDone(s.key)"></div>
+        <div class="checkout__step-line" [class.done]="isLineDone(i)"></div>
       }
     }
   </div>

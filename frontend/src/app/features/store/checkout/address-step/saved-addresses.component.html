@@ -1,77 +1,22 @@
 <div class="saved-addresses">
-  <h3 class="saved-addresses__heading">Delivery Address</h3>
-
   @if (savedAddresses().length > 0) {
     <div class="saved-addresses__list">
       @for (address of savedAddresses(); track $index; let i = $index) {
-        <div class="saved-addresses__item">
-          <!-- Collapsed Row -->
-          <div
-            class="saved-addresses__row"
-            (click)="toggleExpand(i)"
-            [class.expanded]="expandedIndex() === i"
-          >
-            <div class="saved-addresses__row-content">
-              <input
-                type="radio"
-                class="saved-addresses__radio"
-                [checked]="selectedAddressIndex() === i"
-                (change)="selectedAddressIndex.set(i)"
-              />
-
-              <span class="saved-addresses__chevron">
-                {{ expandedIndex() === i ? '▲' : '▼' }}
-              </span>
-
-              <span class="saved-addresses__field">{{ address.pinCode }}</span>
-              <span class="saved-addresses__field saved-addresses__field--truncate">
-                {{ address.address }}
-              </span>
-              <span class="saved-addresses__field">{{ address.city }}</span>
-              <span class="saved-addresses__field">{{ address.state }}</span>
-              <span class="saved-addresses__field">{{ address.phone }}</span>
-
-              <span class="saved-addresses__default-badge">DEFAULT</span>
-            </div>
+        <div class="saved-addresses__card" (click)="selectCurrentAddress(address)">
+          <input
+            type="radio"
+            class="saved-addresses__radio"
+            [checked]="selectedAddressIndex() === i"
+            (change)="selectedAddressIndex.set(i)"
+          />
+          <div class="saved-addresses__card-content">
+            <span class="saved-addresses__label">{{ address.label }}</span>
+            <p class="saved-addresses__address-full">
+              {{ address.address }} • {{ address.city }}, {{ address.state }} - {{ address.pinCode }}
+            </p>
           </div>
-
-          <!-- Expanded Details -->
-          @if (expandedIndex() === i) {
-            <div class="saved-addresses__expanded">
-              <div class="saved-addresses__details">
-                <p class="saved-addresses__detail-value">{{ address.name }}</p>
-                <p class="saved-addresses__detail-value">{{ address.address }}</p>
-                <p class="saved-addresses__detail-value">
-                  {{ address.city }}, {{ address.state }} - {{ address.pinCode }}
-                </p>
-                <p class="saved-addresses__detail-value">{{ address.phone }}</p>
-              </div>
-
-              <div class="saved-addresses__actions">
-                <button class="saved-addresses__btn saved-addresses__btn--secondary">
-                  Mark as default
-                </button>
-                <button class="saved-addresses__btn saved-addresses__btn--secondary">
-                  Edit
-                </button>
-                <button class="saved-addresses__btn saved-addresses__btn--secondary">
-                  Delete
-                </button>
-                <button
-                  class="saved-addresses__btn saved-addresses__btn--primary"
-                  (click)="selectCurrentAddress(address)"
-                >
-                  Select
-                </button>
-              </div>
-            </div>
-          }
         </div>
       }
     </div>
-
-    <button class="saved-addresses__add-btn" (click)="openAddNewAddressForm()">
-      + Add New Address
-    </button>
   }
 </div>

@@ -1,11 +1,10 @@
 <div class="checkout__panel checkout__panel--address">
   <!-- Saved Addresses Section -->
   <div class="checkout__saved-addresses-wrapper">
-    <app-saved-addresses></app-saved-addresses>
+    <app-saved-addresses (selectAddress)="onAddressSelected($event)"></app-saved-addresses>
   </div>
 
   <!-- New Address Form Section -->
-  <h2 class="checkout__panel-title">Add New Address</h2>
 
   @if (submitError()) {
     <div class="checkout__alert">

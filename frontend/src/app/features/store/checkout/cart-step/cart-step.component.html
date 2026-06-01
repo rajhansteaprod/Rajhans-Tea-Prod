@@ -277,7 +277,6 @@
           [fullWidth]="true"
           (click)="goNext()"
           [disabled]="!canProceed()"
-          [loading]="checkoutService.summaryLoading()"
         >
           NEXT
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-left: 8px;">
@@ -307,7 +306,6 @@
     size="sm"
     (click)="goNext()"
     [disabled]="!canProceed()"
-    [loading]="checkoutService.summaryLoading()"
   >
     NEXT
   </app-button>

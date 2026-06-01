@@ -77,6 +77,10 @@
     color: #000000;
   }
 
+  .checkout__step.done & {
+    color: #000000;
+  }
+
   @media (max-width: 480px) {
     width: 16px;
     height: 16px;
@@ -103,8 +107,8 @@
   }
 
   .checkout__step.done & {
-    border-color: $color-bg-teal;
-    background: $color-bg-teal;
+    border-color: #000000;
+    background: #000000;
     color: $color-text-inverse;
   }
 
@@ -150,6 +154,11 @@
   font-weight: $font-weight-medium;
 }
 
+// Done step: black
+.checkout__step.done .checkout__step-label {
+  color: #000000;
+}
+
 .checkout__step-line {
   flex: 1;
   height: 2px;
@@ -160,7 +169,7 @@
   transition: background $transition-normal;
 
   &.done {
-    background: #cccccc;
+    background: #000000;
   }
 
   @media (max-width: 768px) {

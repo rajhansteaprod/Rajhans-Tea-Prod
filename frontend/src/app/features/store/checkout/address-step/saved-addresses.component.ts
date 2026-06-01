@@ -1,6 +1,19 @@
-import { Component, inject, signal, output } from '@angular/core';
+import { Component, inject, signal, output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { CheckoutService, CheckoutAddress } from '../../../../core/services/checkout.service';
+import { environment } from '../../../../../environments/environment';
+
+interface SavedAddress {
+  _id: string;
+  label: string;
+  address: string;
+  landmark: string;
+  city: string;
+  state: string;
+  pinCode: string;
+  isDefault: boolean;
+}
 
 @Component({
   selector: 'app-saved-addresses',
@@ -9,53 +22,45 @@ import { CheckoutService, CheckoutAddress } from '../../../../core/services/chec
   templateUrl: './saved-addresses.component.html',
   styleUrls: ['./saved-addresses.component.scss'],
 })
-export class SavedAddressesComponent {
+export class SavedAddressesComponent implements OnInit {
+  private readonly http = inject(HttpClient);
   private readonly checkoutService = inject(CheckoutService);
+  private readonly apiUrl = `${environment.apiUrl}/auth/addresses`;
 
-  readonly savedAddresses = signal<CheckoutAddress[]>([]);
-  readonly expandedIndex = signal<number | null>(null);
+  readonly savedAddresses = signal<SavedAddress[]>([]);
   readonly selectedAddressIndex = signal<number | null>(null);
-  readonly showForm = signal(false);
 
   readonly selectAddress = output<CheckoutAddress>();
-  readonly addNewAddress = output<void>();
 
   ngOnInit() {
     this.loadAddresses();
   }
 
-  loadAddresses() {
-    const address = this.checkoutService.getAddress();
-    if (address.name) {
-      this.savedAddresses.set([address]);
-    }
+  private loadAddresses() {
+    this.http
+      .get<{ success: boolean; data: SavedAddress[] }>(this.apiUrl)
+      .subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.savedAddresses.set(res.data);
+          }
+        },
+        error: (err) => {
+          console.error('Failed to load addresses:', err);
+        },
+      });
   }
 
-  toggleExpand(index: number) {
-    this.expandedIndex.set(this.expandedIndex() === index ? null : index);
-    this.selectedAddressIndex.set(index);
-  }
-
-  selectCurrentAddress(address: CheckoutAddress) {
-    this.selectAddress.emit(address);
-  }
-
-  markAsDefault(address: CheckoutAddress) {
-    this.checkoutService.saveAddress(address);
-    alert('Address marked as default');
-  }
-
-  openAddNewAddressForm() {
-    this.showForm.set(true);
-    this.expandedIndex.set(null);
-  }
-
-  closeAddNewAddressForm() {
-    this.showForm.set(false);
-  }
-
-  onFormSubmit() {
-    this.closeAddNewAddressForm();
-    this.loadAddresses();
+  selectCurrentAddress(address: SavedAddress) {
+    const checkoutAddress: CheckoutAddress = {
+      name: address.label,
+      phone: '', // Phone not in saved address, user will fill in form
+      pinCode: address.pinCode,
+      address: address.address,
+      city: address.city,
+      state: address.state,
+      landmark: address.landmark,
+    };
+    this.selectAddress.emit(checkoutAddress);
   }
 }

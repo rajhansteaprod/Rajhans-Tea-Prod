@@ -64,6 +64,7 @@ export class CheckoutService {
   private summaryErrorSignal = signal<string | null>(null);
   private lastSummaryFetchTime = signal<number>(0);
   private summaryFetchInProgress = signal(false);
+  private skipNextEffectCall = false;
 
   // Public readonly accessors
   readonly cartItems = this.cartItemsSignal.asReadonly();
@@ -104,7 +105,12 @@ export class CheckoutService {
       this.cartItems(); // Track changes
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
-        // Only refresh if we have items and summary was previously loaded
+        // Skip effect if explicit call was made during initialization
+        if (this.skipNextEffectCall) {
+          this.skipNextEffectCall = false;
+          return;
+        }
+        // Only refresh if we have items
         if (this.cartItems().length > 0) {
           this.loadCheckoutSummary(true);
         }
@@ -114,8 +120,8 @@ export class CheckoutService {
 
   // Initialize checkout with cart items
   initializeCheckout(items: CartItem[]) {
+    this.skipNextEffectCall = true;
     this.cartItemsSignal.set([...items]);
-    // Load actual pricing from backend on init (force refresh to get latest pricing)
     this.loadCheckoutSummary(true);
   }
 

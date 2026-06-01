@@ -140,4 +140,17 @@ export class AddressStepComponent {
   goBack() {
     this.prevStep.emit();
   }
+
+  onAddressSelected(address: CheckoutAddress) {
+    const [firstName, ...lastNameParts] = address.name.split(' ');
+    this.form.patchValue({
+      firstName,
+      lastName: lastNameParts.join(' '),
+      phone: address.phone,
+      pincode: address.pinCode,
+      address: address.address,
+      city: address.city,
+      state: address.state,
+    });
+  }
 }
