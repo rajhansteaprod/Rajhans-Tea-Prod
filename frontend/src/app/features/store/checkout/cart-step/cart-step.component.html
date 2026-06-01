@@ -117,6 +117,63 @@
             }
           </div>
         </div>
+
+        <!-- Mobile Price Breakdown (only visible on mobile) -->
+        <div class="checkout__mobile-price-breakdown">
+          <div class="checkout__mobile-price-row">
+            <span>Subtotal</span>
+            <span>₹{{ cartSubtotal() | number: '1.0-0' }}</span>
+          </div>
+          @if (cartDiscount() > 0) {
+            <div class="checkout__mobile-price-row checkout__mobile-price-row--discount">
+              <span>Discount</span>
+              <span>-₹{{ cartDiscount() | number: '1.0-0' }}</span>
+            </div>
+          }
+
+          <!-- Promo Code Section -->
+          <div class="checkout__mobile-promo">
+            <input
+              type="text"
+              class="checkout__mobile-promo-input"
+              [placeholder]="isPromoApplied() ? promoCode() : 'Apply promo code'"
+              [(ngModel)]="promoCode"
+              name="promoCode"
+              [disabled]="isValidatingPromo() || isPromoApplied()"
+            />
+            @if (isPromoApplied()) {
+              <button
+                class="checkout__mobile-promo-btn checkout__mobile-promo-btn--remove"
+                (click)="removePromo()"
+                [disabled]="isValidatingPromo()"
+              >
+                {{ isValidatingPromo() ? 'REMOVING...' : 'REMOVE' }}
+              </button>
+            } @else {
+              <button
+                class="checkout__mobile-promo-btn"
+                (click)="applyPromo()"
+                [disabled]="isValidatingPromo()"
+              >
+                {{ isValidatingPromo() ? 'CHECKING...' : 'APPLY' }}
+              </button>
+            }
+          </div>
+
+          @if (promoSuccess()) {
+            <div class="checkout__mobile-promo-success">{{ promoSuccess() }}</div>
+          }
+          @if (promoError()) {
+            <div class="checkout__mobile-promo-error">{{ promoError() }}</div>
+          }
+
+          <!-- Terms Below Promo -->
+          <p class="checkout__mobile-terms-text">
+            By placing your order, you agree to our
+            <a routerLink="/terms" class="checkout__link">Terms of Use</a> and
+            <a routerLink="/privacy" class="checkout__link">Privacy Policy</a>.
+          </p>
+        </div>
       </div>
 
       <!-- RIGHT COLUMN: Price Summary -->
@@ -132,14 +189,16 @@
         </div>
 
         <div class="checkout__price-row">
-          <span>Total MRP</span>
+          <span>Total Amount</span>
           <span>₹{{ cartSubtotal() | number: '1.0-0' }}</span>
         </div>
 
-        <div class="checkout__price-row">
-          <span>Discount on MRP</span>
-          <span class="checkout__discount-price">-₹{{ cartDiscount() | number: '1.0-0' }}</span>
-        </div>
+        @if (cartDiscount() > 0) {
+          <div class="checkout__price-row">
+            <span>Discount on MRP</span>
+            <span class="checkout__discount-price">-₹{{ cartDiscount() | number: '1.0-0' }}</span>
+          </div>
+        }
 
         <div class="checkout__price-divider"></div>
 
@@ -234,4 +293,22 @@
       </div>
     </div>
   }
+</div>
+
+<!-- Mobile Bottom Footer - Fixed outside panel -->
+<div class="checkout__bottom-footer">
+  <div class="checkout__bottom-left">
+    <span class="checkout__bottom-label">Total Amount:</span>
+    <span class="checkout__bottom-amount">₹{{ cartTotal() | number: '1.0-0' }}</span>
+  </div>
+  <app-button
+    class="checkout__bottom-btn"
+    variant="primary"
+    size="sm"
+    (click)="goNext()"
+    [disabled]="!canProceed()"
+    [loading]="checkoutService.summaryLoading()"
+  >
+    NEXT
+  </app-button>
 </div>

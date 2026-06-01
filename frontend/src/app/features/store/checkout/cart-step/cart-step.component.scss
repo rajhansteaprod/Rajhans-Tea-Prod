@@ -19,7 +19,7 @@
 
   @media (max-width: 768px) {
     flex: 1;
-    padding-bottom: 32px;
+    padding-bottom: 40px;
   }
 }
 
@@ -32,16 +32,7 @@
   flex-direction: column;
 
   @media (max-width: 768px) {
-    width: 100%;
-    border: none;
-    padding: 12px 16px;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-    background: white !important;
-    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
-    padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+    display: none;
   }
 }
 
@@ -428,6 +419,12 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: $space-sm;
+  color: rgba(0, 0, 0, 0.7);
+
+  &:has(.checkout__discount-price) {
+    color: #10b981;
+    font-weight: 500;
+  }
 
   @media (max-width: 768px) {
     display: none;
@@ -680,5 +677,241 @@
 @keyframes spin-mini {
   to {
     transform: rotate(360deg);
+  }
+}
+
+// ═══ Mobile Bottom Footer ═══
+.checkout__bottom-footer {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    position: fixed !important;
+    bottom: 60px !important;
+    left: 0 !important;
+    right: 0 !important;
+    padding: 8px 16px !important;
+    background: white !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08) !important;
+    z-index: 999999 !important;
+    margin: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    height: auto !important;
+  }
+}
+
+.checkout__bottom-left {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.checkout__bottom-label {
+  font-size: 10px !important;
+  color: rgba(0, 0, 0, 0.6) !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+  line-height: 1.2 !important;
+}
+
+.checkout__bottom-amount {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: $text-dark !important;
+  line-height: 1.2 !important;
+}
+
+.checkout__bottom-btn {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  height: 36px !important;
+  padding: 6px 16px !important;
+  min-width: auto !important;
+  font-size: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+// ═══ Mobile Bottom Terms ═══
+.checkout__bottom-terms {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block !important;
+    position: fixed !important;
+    bottom: 106px !important;
+    left: 0 !important;
+    right: 0 !important;
+    padding: 12px 16px !important;
+    background: white !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+    z-index: 999999 !important;
+  }
+}
+
+.checkout__bottom-terms-text {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 10px !important;
+  color: rgba(0, 0, 0, 0.6) !important;
+  line-height: 1.4 !important;
+  text-align: center !important;
+
+  a {
+    color: $primary !important;
+    text-decoration: none !important;
+    font-weight: 500 !important;
+
+    &:hover {
+      text-decoration: underline !important;
+    }
+  }
+}
+
+// ═══ Mobile Price Breakdown ═══
+.checkout__mobile-price-breakdown {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block !important;
+    padding: 12px 16px !important;
+    background: rgba(0, 0, 0, 0.02) !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+    margin-top: 12px !important;
+  }
+}
+
+.checkout__mobile-price-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 8px 0 !important;
+  font-size: 13px !important;
+  color: rgba(0, 0, 0, 0.7) !important;
+
+  &--discount {
+    color: #10b981 !important;
+  }
+
+  span:last-child {
+    font-weight: 500 !important;
+  }
+}
+
+// ═══ Mobile Promo Code ═══
+.checkout__mobile-promo {
+  display: flex !important;
+  gap: 8px !important;
+  margin-top: 12px !important;
+  padding-top: 12px !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.checkout__mobile-promo-input {
+  flex: 1 !important;
+  padding: 8px 12px !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  background: white !important;
+  color: $text-dark !important;
+
+  &::placeholder {
+    color: rgba(0, 0, 0, 0.4) !important;
+  }
+
+  &:focus {
+    outline: none !important;
+    border-color: rgba(0, 0, 0, 0.3) !important;
+  }
+
+  &:disabled {
+    background: rgba(0, 0, 0, 0.02) !important;
+    opacity: 0.6 !important;
+  }
+}
+
+.checkout__mobile-promo-btn {
+  flex-shrink: 0 !important;
+  padding: 8px 12px !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  background: white !important;
+  color: $text-dark !important;
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: all 0.15s !important;
+
+  &:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.05) !important;
+    border-color: rgba(0, 0, 0, 0.2) !important;
+  }
+
+  &:active:not(:disabled) {
+    background: black !important;
+    color: white !important;
+    border-color: black !important;
+  }
+
+  &:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+  }
+
+  &--remove {
+    background: black !important;
+    color: white !important;
+    border-color: black !important;
+
+    &:hover:not(:disabled) {
+      background: rgba(0, 0, 0, 0.85) !important;
+    }
+  }
+}
+
+.checkout__mobile-promo-success {
+  margin-top: 8px !important;
+  padding: 6px 0 !important;
+  font-size: 11px !important;
+  color: #10b981 !important;
+  font-weight: 500 !important;
+}
+
+.checkout__mobile-promo-error {
+  margin-top: 8px !important;
+  padding: 6px 0 !important;
+  font-size: 11px !important;
+  color: $primary !important;
+  font-weight: 500 !important;
+}
+
+.checkout__mobile-terms-text {
+  margin: 12px 0 0 0 !important;
+  padding: 12px 0 0 0 !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+  font-size: 10px !important;
+  color: rgba(0, 0, 0, 0.6) !important;
+  line-height: 1.4 !important;
+  text-align: center !important;
+
+  a {
+    color: $primary !important;
+    text-decoration: none !important;
+    font-weight: 500 !important;
+
+    &:hover {
+      text-decoration: underline !important;
+    }
   }
 }

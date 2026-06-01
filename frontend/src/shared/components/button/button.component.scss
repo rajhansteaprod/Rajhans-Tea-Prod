@@ -80,9 +80,10 @@
   // ─── SIZE VARIANTS ─────────────────────────────────────────────────────
   &--sm {
     @include body-sm;
-    padding: $space-sm $space-md;
+    padding: 4px 26px;
     border-radius: $radius-sm;
     font-weight: $weight-medium;
+    font-size:12px;
   }
 
   &--md {
