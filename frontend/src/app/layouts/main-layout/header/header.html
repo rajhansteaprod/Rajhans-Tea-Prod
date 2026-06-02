@@ -139,11 +139,8 @@
           <div class="mega-column">
             <h3 class="mega-column__heading">catalog</h3>
             <ul class="mega-column__list">
-              <li><a class="mega-column__item" (click)="navigateTo('/products')">Premium Selection</a></li>
-              <li><a class="mega-column__item" (click)="navigateTo('/products')">Best Sellers</a></li>
-              <li><a class="mega-column__item" (click)="navigateTo('/products')">New Arrivals</a></li>
-              @for (cat of categories().slice(0, 3); track cat._id) {
-                <li><a class="mega-column__item" [routerLink]="'/catalog/' + cat.slug" (click)="closeShop()">{{ cat.name }} Collection</a></li>
+              @for (col of collections(); track col._id) {
+                <li><a class="mega-column__item" [routerLink]="'/catalog/' + col.slug" (click)="closeShop()">{{ col.name }}</a></li>
               }
             </ul>
           </div>

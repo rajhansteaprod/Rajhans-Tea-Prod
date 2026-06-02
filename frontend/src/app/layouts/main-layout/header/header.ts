@@ -12,7 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartStore } from '../../../core/services/cart.store';
-import { CatalogService, Product, Category } from '../../../core/services/catalog.service';
+import { CatalogService, Product, Category, Collection } from '../../../core/services/catalog.service';
 @Component({
   selector: 'app-header',
   standalone: true,
@@ -33,6 +33,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   readonly recentSearches = signal<string[]>([]);
   readonly shopOpen = signal(false);
   readonly categories = signal<Category[]>([]);
+  readonly collections = signal<Collection[]>([]);
   readonly featuredProducts = signal<Product[]>([]);
   readonly activeCatId = signal<string | null>(null);
   private allFeaturedProducts: Product[] = [];
@@ -61,6 +62,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadRecentSearches();
     this.loadCategories();
+    this.loadCollections();
     this.loadFeaturedProducts();
   }
 
@@ -201,6 +203,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.catalog.getCategoriesPublic().subscribe({
       next: (res) => this.categories.set(res.data),
       error: () => this.categories.set([]),
+    });
+  }
+
+  private loadCollections(): void {
+    this.catalog.getCollectionsPublic().subscribe({
+      next: (res) => this.collections.set(res.data),
+      error: () => this.collections.set([]),
     });
   }
 
