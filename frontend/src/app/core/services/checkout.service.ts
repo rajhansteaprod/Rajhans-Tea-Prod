@@ -83,7 +83,7 @@ export class CheckoutService {
 
   readonly cartDiscount = computed(() => {
     const backendSummary = this.summaryDataSignal();
-    return backendSummary?.totalDiscount ?? this.cartSubtotal() * 0.1;
+    return backendSummary?.totalDiscount ?? 0;
   });
 
   readonly cartTax = computed(() => {

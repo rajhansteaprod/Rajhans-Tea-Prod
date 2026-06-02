@@ -24,9 +24,9 @@ export class AddressStepComponent implements OnInit {
 
   // Form
   readonly form = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', [Validators.email]],
     pincode: ['', [Validators.required, Validators.pattern(/^[1-9]\d{5}$/)]],
-    name: ['', Validators.required],
+    name: [''],
     address: ['', Validators.required],
     landmark: [''],
     city: ['', Validators.required],

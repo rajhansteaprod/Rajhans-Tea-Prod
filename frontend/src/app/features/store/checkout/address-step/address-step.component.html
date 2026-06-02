@@ -23,84 +23,19 @@
   }
 
   <form [formGroup]="form" class="checkout__form">
-    <!-- Email -->
+    <!-- SHIPPING ADDRESS SECTION -->
+    <h3 class="checkout__section-heading">Shipping Address</h3>
+
+    <!-- Address Line -->
     <div class="checkout__form-row">
       <div class="checkout__form-group">
-        <label class="checkout__form-label">Email *</label>
-        <input
-          type="email"
-          class="checkout__form-input"
-          formControlName="email"
-          [class.error]="form.get('email')?.invalid && form.get('email')?.touched"
-          placeholder="Email"
-        />
-        @if (form.get('email')?.invalid && form.get('email')?.touched) {
-          <span class="checkout__form-error">Invalid email</span>
-        }
-      </div>
-    </div>
-
-    <!-- PIN Code Autocomplete -->
-    <div class="checkout__form-row">
-      <div class="checkout__form-group checkout__pincode-group">
-        <label class="checkout__form-label">PIN Code *</label>
-        <input
-          type="text"
-          class="checkout__form-input"
-          formControlName="pincode"
-          [class.error]="form.get('pincode')?.invalid && form.get('pincode')?.touched"
-          placeholder="Enter or search pincode"
-          (input)="onPincodeInput($event.target.value)"
-          (focus)="showSuggestions.set(pincodeSuggestions().length > 0)"
-          (blur)="showSuggestions.set(false)"
-          autocomplete="off"
-        />
-        @if (showSuggestions() && pincodeSuggestions().length > 0) {
-          <div class="checkout__pincode-suggestions">
-            @for (suggestion of pincodeSuggestions(); track suggestion.pincode) {
-              <button
-                type="button"
-                class="checkout__suggestion-item"
-                (mousedown)="selectPincode(suggestion)"
-              >
-                <span class="checkout__suggestion-pincode">{{ suggestion.pincode }}</span>
-              </button>
-            }
-          </div>
-        }
-        @if (form.get('pincode')?.invalid && form.get('pincode')?.touched) {
-          <span class="checkout__form-error">PIN Code must be 6 digits (not starting with 0)</span>
-        }
-      </div>
-    </div>
-
-    <!-- Name -->
-    <div class="checkout__form-row">
-      <div class="checkout__form-group">
-        <label class="checkout__form-label">Name *</label>
-        <input
-          type="text"
-          class="checkout__form-input"
-          formControlName="name"
-          [class.error]="form.get('name')?.invalid && form.get('name')?.touched"
-          placeholder="Full name"
-        />
-        @if (form.get('name')?.invalid && form.get('name')?.touched) {
-          <span class="checkout__form-error">Name is required</span>
-        }
-      </div>
-    </div>
-
-    <!-- Address -->
-    <div class="checkout__form-row">
-      <div class="checkout__form-group">
-        <label class="checkout__form-label">Address *</label>
+        <label class="checkout__form-label">Address Line *</label>
         <input
           type="text"
           class="checkout__form-input"
           formControlName="address"
           [class.error]="form.get('address')?.invalid && form.get('address')?.touched"
-          placeholder="Address"
+          placeholder="Enter your address"
         />
         @if (form.get('address')?.invalid && form.get('address')?.touched) {
           <span class="checkout__form-error">Address is required</span>
@@ -111,18 +46,18 @@
     <!-- Landmark -->
     <div class="checkout__form-row">
       <div class="checkout__form-group">
-        <label class="checkout__form-label">Landmark</label>
+        <label class="checkout__form-label">Landmark <span class="checkout__optional">(Optional)</span></label>
         <input
           type="text"
           class="checkout__form-input"
           formControlName="landmark"
-          placeholder="Landmark (optional)"
+          placeholder="Landmark"
         />
       </div>
     </div>
 
-    <!-- City + State -->
-    <div class="checkout__form-row">
+    <!-- City, State, Pincode -->
+    <div class="checkout__form-row checkout__form-row--three">
       <div class="checkout__form-group">
         <label class="checkout__form-label">City *</label>
         <input
@@ -150,24 +85,78 @@
           <span class="checkout__form-error">State is required</span>
         }
       </div>
+
+      <div class="checkout__form-group checkout__pincode-group">
+        <label class="checkout__form-label">Pincode *</label>
+        <input
+          type="text"
+          class="checkout__form-input"
+          formControlName="pincode"
+          [class.error]="form.get('pincode')?.invalid && form.get('pincode')?.touched"
+          placeholder="Pincode"
+          (input)="onPincodeInput($event.target.value)"
+          (focus)="showSuggestions.set(pincodeSuggestions().length > 0)"
+          (blur)="showSuggestions.set(false)"
+          autocomplete="off"
+        />
+        @if (showSuggestions() && pincodeSuggestions().length > 0) {
+          <div class="checkout__pincode-suggestions">
+            @for (suggestion of pincodeSuggestions(); track suggestion.pincode) {
+              <button
+                type="button"
+                class="checkout__suggestion-item"
+                (mousedown)="selectPincode(suggestion)"
+              >
+                <span class="checkout__suggestion-pincode">{{ suggestion.pincode }}</span>
+              </button>
+            }
+          </div>
+        }
+        @if (form.get('pincode')?.invalid && form.get('pincode')?.touched) {
+          <span class="checkout__form-error">PIN Code must be 6 digits (not starting with 0)</span>
+        }
+      </div>
     </div>
 
-    <!-- Phone Number -->
+    <!-- CONTACT INFO SECTION -->
+    <h3 class="checkout__section-heading">Contact Info</h3>
+
+    <!-- Mobile Number -->
     <div class="checkout__form-row">
       <div class="checkout__form-group">
-        <label class="checkout__form-label">Phone Number *</label>
+        <label class="checkout__form-label">Mobile Number *</label>
         <input
           type="tel"
           class="checkout__form-input"
           formControlName="phone"
           [class.error]="form.get('phone')?.invalid && form.get('phone')?.touched"
-          placeholder="Phone"
+          placeholder="10-digit mobile number"
         />
         @if (form.get('phone')?.invalid && form.get('phone')?.touched) {
           <span class="checkout__form-error">Phone: 10 digits, 0+10 digits, or +91+10 digits</span>
         }
       </div>
     </div>
+
+    <!-- Email -->
+    <div class="checkout__form-row">
+      <div class="checkout__form-group">
+        <label class="checkout__form-label">Email <span class="checkout__optional">(Optional)</span></label>
+        <input
+          type="email"
+          class="checkout__form-input"
+          formControlName="email"
+          [class.error]="form.get('email')?.invalid && form.get('email')?.touched"
+          placeholder="Email"
+        />
+        @if (form.get('email')?.invalid && form.get('email')?.touched) {
+          <span class="checkout__form-error">Invalid email</span>
+        }
+      </div>
+    </div>
+
+    <!-- Name (Hidden - kept for form) -->
+    <input type="hidden" formControlName="name" />
   </form>
 
 </div>

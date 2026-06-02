@@ -5,73 +5,43 @@
     <div class="summary-panel">
       <h3 class="summary-heading">Order Items ({{ cartItems().length }} items)</h3>
 
-      <div class="summary-items">
+      <div class="summary-items-compact">
         @for (item of cartItems(); track item.productId) {
-          <div class="summary-item">
-            <div class="summary-item-image">
-              @if (item.image) {
-                <img [src]="item.image" [alt]="item.name" />
-              } @else {
-                <div class="summary-item-placeholder"></div>
-              }
+          <div class="summary-item-compact">
+            <div class="summary-item-compact-left">
+              <div class="summary-item-compact-name">
+                {{ item.name }}
+                @if (item.variantName) {
+                  <span class="summary-item-compact-variant"> - {{ item.variantName }}</span>
+                }
+              </div>
+              <div class="summary-item-compact-qty">Qty: {{ item.qty }}</div>
             </div>
-
-            <div class="summary-item-content">
-              <p class="summary-item-name">{{ item.name }}</p>
-              @if (item.variantName) {
-                <p class="summary-item-variant">{{ item.variantName }}</p>
-              }
-              <p class="summary-item-price">
-                Qty: {{ item.qty }} × ₹{{ item.basePrice | number: '1.0-0' }} = ₹{{ item.lineTotal | number: '1.0-0' }}
-              </p>
-            </div>
+            <div class="summary-item-compact-price">₹{{ item.lineTotal | number: '1.0-0' }}</div>
           </div>
         }
-      </div>
-    </div>
 
-    <!-- Price Summary Section -->
-    <div class="summary-panel">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h3 class="summary-heading">Price Summary</h3>
-        @if (checkoutService.isPricingFromBackend()) {
-          <span style="font-size: 11px; color: #4caf50; font-weight: 600;">✓ LIVE</span>
-        } @else {
-          <span style="font-size: 11px; color: #ff9800; font-weight: 600;">~ ESTIMATED</span>
-        }
-      </div>
+      
 
-      <div class="summary-prices">
-        <div class="summary-price-row">
-          <span>Subtotal</span>
-          <span>₹{{ cartSubtotal() | number: '1.0-0' }}</span>
+        <div class="summary-item-compact summary-item-compact-row">
+          <div>Subtotal</div>
+          <div>₹{{ cartSubtotal() | number: '1.0-0' }}</div>
         </div>
 
         @if (cartDiscount() > 0) {
-          <div class="summary-price-row summary-price-discount">
-            <span>Discount</span>
-            <span>-₹{{ cartDiscount() | number: '1.0-0' }}</span>
+          <div class="summary-item-compact summary-item-compact-row summary-item-compact-discount">
+            <div>Discount</div>
+            <div>-₹{{ cartDiscount() | number: '1.0-0' }}</div>
           </div>
         }
 
-        <div class="summary-price-row">
-          <span>Shipping</span>
-          <span>₹0</span>
-        </div>
-
-        <div class="summary-price-row">
-          <span>Tax</span>
-          <span>₹{{ (checkoutService.cartTax() || (cartTotal() * 0.18)) | number: '1.0-0' }}</span>
-        </div>
-
-        <div class="summary-price-divider"></div>
-
-        <div class="summary-price-row summary-price-total">
-          <span>TOTAL</span>
-          <span>₹{{ cartTotal() | number: '1.0-0' }}</span>
+        <div class="summary-item-compact summary-item-compact-row summary-item-compact-total">
+          <div>TOTAL</div>
+          <div>₹{{ cartTotal() | number: '1.0-0' }}</div>
         </div>
       </div>
     </div>
+
   </div>
 
   <!-- RIGHT COLUMN: Address & Payment -->

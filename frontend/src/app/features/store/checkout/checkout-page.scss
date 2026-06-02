@@ -13,7 +13,7 @@
 
   @include respond-to(md) {
     padding-top: 0;
-    padding-bottom: $space-xxl;
+    padding-bottom: 102px;
   }
 }
 
@@ -70,7 +70,7 @@
 .checkout__step-icon {
   width: 24px;
   height: 24px;
-  color: #999999;
+  color: #000000;
   transition: color $transition-normal;
 
   .checkout__step.active & {
@@ -126,7 +126,7 @@
   }
 }
 
-// Step label: default gray, black when active step
+// Step label: default black
 .checkout__step-label {
   font-family: $font-family-nav;
   font-size: $font-size-xs;
@@ -135,8 +135,8 @@
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
 
-  // Default: gray (not active)
-  color: #999999;
+  // Default: black
+  color: #000000;
 
   @media (max-width: 768px) {
     font-size: 10px;
@@ -162,7 +162,7 @@
 .checkout__step-line {
   flex: 1;
   height: 2px;
-  background: #cccccc;
+  background: #000000;
   min-width: 60px;
   max-width: 120px;
   margin: auto 0;
