@@ -2,12 +2,12 @@
   @if (savedAddresses().length > 0) {
     <div class="saved-addresses__list">
       @for (address of savedAddresses(); track $index; let i = $index) {
-        <div class="saved-addresses__card" [class.selected]="selectedAddressIndex() === i" (click)="selectCurrentAddress(address)">
+        <div class="saved-addresses__card" [class.selected]="selectedAddressIndex() === i" (click)="selectCurrentAddress(address, i)">
           <input
             type="radio"
             class="saved-addresses__radio"
             [checked]="selectedAddressIndex() === i"
-            (change)="selectedAddressIndex.set(i)"
+            (change)="selectCurrentAddress(address, i)"
           />
           <div class="saved-addresses__card-content">
             <span class="saved-addresses__label">{{ address.label }}</span>

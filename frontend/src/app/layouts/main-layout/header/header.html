@@ -170,6 +170,7 @@
 
         <!-- Column 2: Links (no heading) -->
         <div class="mobile-drawer__column">
+          <h3 class="mobile-drawer__section-title">&nbsp;</h3>
           <div class="mobile-drawer__links-group">
             <a routerLink="/page/about-us" class="mobile-drawer__link" (click)="closeAll()">Our Story</a>
             <a routerLink="/blog" class="mobile-drawer__link" (click)="closeAll()">Cup of Stories</a>
@@ -184,7 +185,6 @@
         @if (auth.isLoggedIn()) {
           <a routerLink="/dashboard" class="mobile-drawer__link" (click)="closeAll()">Account</a>
           <a routerLink="/orders" class="mobile-drawer__link" (click)="closeAll()">Orders</a>
-          <a routerLink="/page/contact-us" class="mobile-drawer__link" (click)="closeAll()">Contact Us</a>
           @if (auth.isAdmin()) {
             <a routerLink="/admin" class="mobile-drawer__link" (click)="closeAll()">Admin</a>
           }
@@ -194,11 +194,21 @@
             </svg>
             Sign Out
           </button>
-        } @else {
-          <a routerLink="/page/contact-us" class="mobile-drawer__link" (click)="closeAll()">Contact Us</a>
         }
       </div>
 
+      </div>
+
+      <!-- Row 3: Quick Links -->
+      <div class="mobile-drawer__section">
+        <h3 class="mobile-drawer__section-title">QUICK LINKS</h3>
+        <div class="mobile-drawer__links-group">
+          <a routerLink="/page/faq" class="mobile-drawer__link" (click)="closeAll()">FAQs</a>
+          <a routerLink="/page/shipping-policy" class="mobile-drawer__link" (click)="closeAll()">Shipping Policy</a>
+          <a routerLink="/page/return-refund" class="mobile-drawer__link" (click)="closeAll()">Return & Refund Policy</a>
+          <a routerLink="/track-order" class="mobile-drawer__link" (click)="closeAll()">Track Order</a>
+          <a routerLink="/page/contact-us" class="mobile-drawer__link" (click)="closeAll()">Contact Us</a>
+        </div>
       </div>
 
       <!-- Sign In Button (Guest Only) -->
