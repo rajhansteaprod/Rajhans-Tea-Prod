@@ -118,8 +118,22 @@
     <!-- CONTACT INFO SECTION -->
     <h3 class="checkout__section-heading">Contact Info</h3>
 
-    <!-- Mobile Number & Email -->
+    <!-- Full Name & Mobile Number -->
     <div class="checkout__form-row checkout__form-row--two">
+      <div class="checkout__form-group">
+        <label class="checkout__form-label">Full Name *</label>
+        <input
+          type="text"
+          class="checkout__form-input"
+          formControlName="name"
+          [class.error]="form.get('name')?.invalid && form.get('name')?.touched"
+          placeholder="Your full name"
+        />
+        @if (form.get('name')?.invalid && form.get('name')?.touched) {
+          <span class="checkout__form-error">Name is required</span>
+        }
+      </div>
+
       <div class="checkout__form-group">
         <label class="checkout__form-label">Mobile Number *</label>
         <input
@@ -133,24 +147,22 @@
           <span class="checkout__form-error">Phone: 10 digits, 0+10 digits, or +91+10 digits</span>
         }
       </div>
-
-      <div class="checkout__form-group">
-        <label class="checkout__form-label">Email <span class="checkout__optional">(Optional)</span></label>
-        <input
-          type="email"
-          class="checkout__form-input"
-          formControlName="email"
-          [class.error]="form.get('email')?.invalid && form.get('email')?.touched"
-          placeholder="Email"
-        />
-        @if (form.get('email')?.invalid && form.get('email')?.touched) {
-          <span class="checkout__form-error">Invalid email</span>
-        }
-      </div>
     </div>
 
-    <!-- Name (Hidden - kept for form) -->
-    <input type="hidden" formControlName="name" />
+    <!-- Email -->
+    <div class="checkout__form-group">
+      <label class="checkout__form-label">Email <span class="checkout__optional">(Optional)</span></label>
+      <input
+        type="email"
+        class="checkout__form-input"
+        formControlName="email"
+        [class.error]="form.get('email')?.invalid && form.get('email')?.touched"
+        placeholder="Email"
+      />
+      @if (form.get('email')?.invalid && form.get('email')?.touched) {
+        <span class="checkout__form-error">Invalid email</span>
+      }
+    </div>
 
     <!-- Desktop Footer Buttons -->
     <div class="checkout__panel-footer">

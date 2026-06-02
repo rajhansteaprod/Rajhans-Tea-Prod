@@ -99,6 +99,20 @@ export class CheckoutService {
   readonly isPricingFromBackend = computed(() => !!this.summaryDataSignal());
 
   constructor() {
+    // Load address from localStorage on init
+    const saved = localStorage.getItem('checkout_address');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        // Validate required fields
+        if (data.phone && data.pinCode && data.address && data.city && data.state) {
+          this.addressSignal.set(data);
+        }
+      } catch (e) {
+        // Ignore invalid localStorage data
+      }
+    }
+
     // Auto-refresh pricing when cart items change (with debounce)
     let debounceTimer: any;
     effect(() => {
@@ -135,6 +149,8 @@ export class CheckoutService {
   // Save address (called when user clicks Next on address step)
   saveAddress(address: CheckoutAddress) {
     this.addressSignal.set({ ...address });
+    // Persist to localStorage for recovery on page reload
+    localStorage.setItem('checkout_address', JSON.stringify(address));
   }
 
   // Get current address

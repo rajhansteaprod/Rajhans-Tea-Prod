@@ -1,6 +1,6 @@
 import { Component, inject, signal, output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { CheckoutService, CheckoutAddress } from '../../../../core/services/checkout.service';
 import { SavedAddressesComponent } from './saved-addresses.component';
@@ -26,7 +26,7 @@ export class AddressStepComponent implements OnInit {
   readonly form = this.fb.group({
     email: ['', [Validators.email]],
     pincode: ['', [Validators.required, Validators.pattern(/^[1-9]\d{5}$/)]],
-    name: [''],
+    name: ['', Validators.required],
     address: ['', Validators.required],
     landmark: [''],
     city: ['', Validators.required],
@@ -49,25 +49,42 @@ export class AddressStepComponent implements OnInit {
     this.http.get<any[]>('/pincodes.json').subscribe({
       next: (data) => {
         this.allPincodes = data;
-        console.log('Pincodes loaded:', this.allPincodes.length);
       },
       error: (error) => {
         console.error('Failed to load pincodes:', error);
       }
     });
 
-    // Load existing address from service
-    const existingAddress = this.checkoutService.getAddress();
-    if (existingAddress.name) {
-      this.form.patchValue({
-        name: existingAddress.name,
-        phone: existingAddress.phone,
-        pincode: existingAddress.pinCode,
-        address: existingAddress.address,
-        landmark: existingAddress.landmark,
-        city: existingAddress.city,
-        state: existingAddress.state,
-      });
+    // Load address from localStorage with validation
+    const saved = localStorage.getItem('checkout_address');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        // Validate phone format
+        const phonePattern = /^(\+91\d{10}|0\d{10}|\d{10})$/;
+        const pincodePattern = /^[1-9]\d{5}$/;
+
+        if (data.phone && !phonePattern.test(data.phone)) {
+          localStorage.removeItem('checkout_address');
+          return;
+        }
+        if (data.pinCode && !pincodePattern.test(data.pinCode)) {
+          localStorage.removeItem('checkout_address');
+          return;
+        }
+
+        // Set valid values
+        this.form.get('name')?.setValue(data.name || '', { emitEvent: false });
+        this.form.get('phone')?.setValue(data.phone || '', { emitEvent: false });
+        this.form.get('pincode')?.setValue(data.pinCode || '', { emitEvent: false });
+        this.form.get('address')?.setValue(data.address || '', { emitEvent: false });
+        this.form.get('landmark')?.setValue(data.landmark || '', { emitEvent: false });
+        this.form.get('city')?.setValue(data.city || '', { emitEvent: false });
+        this.form.get('state')?.setValue(data.state || '', { emitEvent: false });
+        this.form.get('email')?.setValue(data.email || '', { emitEvent: false });
+      } catch (e) {
+        localStorage.removeItem('checkout_address');
+      }
     }
   }
 
@@ -133,6 +150,7 @@ export class AddressStepComponent implements OnInit {
         state: formValue.state!,
       };
       this.checkoutService.saveAddress(address);
+      localStorage.setItem('checkout_address', JSON.stringify({ ...address, email: formValue.email || '' }));
       this.isSubmitting.set(false);
       this.nextStep.emit();
     }, 500);
