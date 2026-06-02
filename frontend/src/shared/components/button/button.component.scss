@@ -8,7 +8,6 @@
   @include button;
   padding: $space-md $space-lg;
   border: none;
-  border-radius: $radius-md;
   cursor: pointer;
   @include transition-fast;
   display: inline-flex;

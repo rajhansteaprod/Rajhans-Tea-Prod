@@ -26,8 +26,8 @@
     <!-- SHIPPING ADDRESS SECTION -->
     <h3 class="checkout__section-heading">Shipping Address</h3>
 
-    <!-- Address Line -->
-    <div class="checkout__form-row">
+    <!-- Address Line & Landmark -->
+    <div class="checkout__form-row checkout__form-row--two">
       <div class="checkout__form-group">
         <label class="checkout__form-label">Address Line *</label>
         <input
@@ -41,10 +41,7 @@
           <span class="checkout__form-error">Address is required</span>
         }
       </div>
-    </div>
 
-    <!-- Landmark -->
-    <div class="checkout__form-row">
       <div class="checkout__form-group">
         <label class="checkout__form-label">Landmark <span class="checkout__optional">(Optional)</span></label>
         <input
@@ -121,8 +118,8 @@
     <!-- CONTACT INFO SECTION -->
     <h3 class="checkout__section-heading">Contact Info</h3>
 
-    <!-- Mobile Number -->
-    <div class="checkout__form-row">
+    <!-- Mobile Number & Email -->
+    <div class="checkout__form-row checkout__form-row--two">
       <div class="checkout__form-group">
         <label class="checkout__form-label">Mobile Number *</label>
         <input
@@ -136,10 +133,7 @@
           <span class="checkout__form-error">Phone: 10 digits, 0+10 digits, or +91+10 digits</span>
         }
       </div>
-    </div>
 
-    <!-- Email -->
-    <div class="checkout__form-row">
       <div class="checkout__form-group">
         <label class="checkout__form-label">Email <span class="checkout__optional">(Optional)</span></label>
         <input
@@ -157,6 +151,28 @@
 
     <!-- Name (Hidden - kept for form) -->
     <input type="hidden" formControlName="name" />
+
+    <!-- Desktop Footer Buttons -->
+    <div class="checkout__panel-footer">
+      <button type="button" class="checkout__back-to-cart-underline" (click)="goBack()">
+        <span class="checkout__back-arrow">←</span>
+        <span>BACK TO CART</span>
+      </button>
+      <button
+        type="button"
+        class="checkout__btn-next"
+        (click)="saveAddress()"
+        [disabled]="form.invalid || isSubmitting()"
+      >
+        @if (isSubmitting()) {
+          <span class="checkout__btn-spinner"></span>
+        }
+        PROCEED TO CHECKOUT
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-left: 8px;">
+          <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
   </form>
 
 </div>

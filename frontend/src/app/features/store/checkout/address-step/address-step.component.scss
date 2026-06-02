@@ -2,14 +2,14 @@
 
 .checkout__saved-addresses-wrapper {
   padding-top: 16px;
-  padding-bottom: 16px;
+  padding-bottom: 8px;
   border-bottom: 1px solid hsl(0 0% 90%);
 }
 
 .checkout__form {
   display: flex;
   flex-direction: column;
-  gap: $space-lg;
+  gap: 12px;
 }
 
 .checkout__section-heading {
@@ -19,21 +19,27 @@
   color: #000;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
-  margin: $space-lg 0 0px;
-  padding-top: $space-md;
+  margin: 16px 0 8px 0;
+  padding-top: 16px;
   border-top: 1px solid #e0e0e0;
 
   &:first-of-type {
     border-top: none;
     margin-top: 0;
-    padding-top: 0;
+    padding-top: 16px;
   }
 }
 
 .checkout__form-row {
   display: grid;
   grid-template-columns: 1fr;
-  gap: $space-md;
+  gap: 10px;
+
+  &--two {
+    @media (min-width: 768px) {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
 
   &--three {
     @media (min-width: 768px) {
@@ -130,18 +136,23 @@
 
 .checkout__panel-footer {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
   gap: $space-md;
   margin-top: $space-lg;
   padding-top: $space-lg;
   border-top: 1px solid hsl(0 0% 95%);
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
 
-.checkout__btn-back,
 .checkout__btn-next {
-  flex: 1;
   padding: $space-md;
   border: none;
-  border-radius: 0;
+  border-radius: 0 !important;
   font-family: $font-family-nav;
   font-size: $font-size-xs;
   font-weight: $font-weight-medium;
@@ -149,21 +160,8 @@
   letter-spacing: $letter-spacing-wide;
   cursor: pointer;
   transition: all $transition-fast;
-}
-
-.checkout__btn-back {
-  background: white;
-  border: 1px solid $color-text-secondary;
-  color: $color-text-secondary;
-
-  &:hover {
-    border-color: $color-text-primary;
-    color: $color-text-primary;
-  }
-}
-
-.checkout__btn-next {
-  background: $color-text-primary;
+  flex: 0 0 50%;
+  background: #B65A3A;
   color: white;
   display: flex;
   align-items: center;
@@ -171,13 +169,46 @@
   gap: $space-sm;
 
   &:hover:not(:disabled) {
-    background: darken($color-text-primary, 10%);
+    background: rgba(182, 90, 58, 0.85);
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
+}
+
+.checkout__back-to-cart-underline {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: $font-family-nav;
+  font-size: 11px;
+  font-weight: $font-weight-medium;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+
+  &:hover {
+    color: #000;
+  }
+
+  &:active {
+    color: #666;
+  }
+}
+
+.checkout__back-arrow {
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  margin-right: 2px;
 }
 
 .checkout__btn-spinner {

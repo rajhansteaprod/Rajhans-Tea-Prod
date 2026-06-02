@@ -3,41 +3,41 @@
   <div class="summary-left">
     <!-- Order Items Section -->
     <div class="summary-panel">
-      <h3 class="summary-heading">Order Items ({{ cartItems().length }} items)</h3>
+      <h3 class="summary-heading">Order Items ({{ cartItems().length }})</h3>
 
-      <div class="summary-items-compact">
+      <!-- Product Items -->
+      <div class="order-items">
         @for (item of cartItems(); track item.productId) {
-          <div class="summary-item-compact">
-            <div class="summary-item-compact-left">
-              <div class="summary-item-compact-name">
-                {{ item.name }}
-                @if (item.variantName) {
-                  <span class="summary-item-compact-variant"> - {{ item.variantName }}</span>
-                }
-              </div>
-              <div class="summary-item-compact-qty">Qty: {{ item.qty }}</div>
+          <div class="order-item">
+            <div class="order-item-info">
+              <div class="order-item-name">{{ item.name }}</div>
+              @if (item.variantName) {
+                <div class="order-item-variant">{{ item.variantName }}</div>
+              }
+              <div class="order-item-qty">Qty {{ item.qty }}</div>
             </div>
-            <div class="summary-item-compact-price">₹{{ item.lineTotal | number: '1.0-0' }}</div>
+            <div class="order-item-price">₹{{ item.lineTotal | number: '1.0-0' }}</div>
           </div>
         }
+      </div>
 
-      
-
-        <div class="summary-item-compact summary-item-compact-row">
-          <div>Subtotal</div>
-          <div>₹{{ cartSubtotal() | number: '1.0-0' }}</div>
+      <!-- Summary Section -->
+      <div class="order-summary">
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span>₹{{ cartSubtotal() | number: '1.0-0' }}</span>
         </div>
 
         @if (cartDiscount() > 0) {
-          <div class="summary-item-compact summary-item-compact-row summary-item-compact-discount">
-            <div>Discount</div>
-            <div>-₹{{ cartDiscount() | number: '1.0-0' }}</div>
+          <div class="summary-row summary-row-discount">
+            <span>Discount</span>
+            <span>-₹{{ cartDiscount() | number: '1.0-0' }}</span>
           </div>
         }
 
-        <div class="summary-item-compact summary-item-compact-row summary-item-compact-total">
-          <div>TOTAL</div>
-          <div>₹{{ cartTotal() | number: '1.0-0' }}</div>
+        <div class="summary-row summary-row-total">
+          <span>TOTAL</span>
+          <span>₹{{ cartTotal() | number: '1.0-0' }}</span>
         </div>
       </div>
     </div>
@@ -48,56 +48,35 @@
   <div class="summary-right">
     <!-- Delivery Address (Sticky) -->
     <div class="summary-panel  ">
-      <h3 class="summary-heading">📍 Delivery Address</h3>
+      <h3 class="summary-heading">Delivery Address</h3>
 
       <div class="summary-address">
-        <p class="summary-address-name">{{ address().name }}</p>
-        <p class="summary-address-line">{{ address().address }}</p>
-        <p class="summary-address-line">
-          {{ address().city }}, {{ address().state }} - {{ address().pinCode }}
+        <p class="summary-address-text">
+          {{ address().address }}
+          @if (address().landmark) {
+            <span class="summary-address-separator"> - {{ address().landmark }}</span>
+          }
         </p>
-        <p class="summary-address-phone">{{ address().phone }}</p>
+        <p class="summary-address-text">
+          {{ address().city }}, {{ address().state }} {{ address().pinCode }}
+        </p>
+        <p class="summary-address-text">{{ address().phone }}</p>
       </div>
     </div>
 
-    <!-- Promo Code Section -->
+    <!-- Payment Section -->
     <div class="summary-panel">
-      <h3 class="summary-heading">🎟️ Promo Code (Optional)</h3>
-      <div class="summary-promo-input">
-        <input
-          type="text"
-          [(ngModel)]="promoCode"
-          placeholder="Enter promo code (applied from cart step)"
-          class="summary-promo-field"
-          [disabled]="isPlacing()"
-        />
-      </div>
-    </div>
-
-    <!-- Payment Note -->
-    <div class="summary-panel">
-      <h3 class="summary-heading">💳 Payment</h3>
+      <h3 class="summary-heading">Payment</h3>
       <p class="summary-payment-note">Secure payment via Razorpay</p>
-    </div>
 
-    <!-- Error Message -->
-    @if (orderError()) {
-      <div class="summary-error">
-        <p>{{ orderError() }}</p>
-      </div>
-    }
+      <!-- Error Message -->
+      @if (orderError()) {
+        <div class="summary-error">
+          <p>{{ orderError() }}</p>
+        </div>
+      }
 
-    <!-- CTA Buttons -->
-    <div class="summary-actions">
-      <app-button
-        type="button"
-        variant="outline"
-        size="md"
-        [fullWidth]="true"
-        (click)="goBack()"
-      >
-        BACK
-      </app-button>
+      <!-- PAY NOW Button -->
       <app-button
         type="button"
         variant="primary"
@@ -106,9 +85,16 @@
         (click)="placeOrder()"
         [disabled]="isPlacing()"
         [loading]="isPlacing()"
+        class="summary-pay-button"
       >
         PAY NOW
       </app-button>
+
+      <!-- Back to Address Link -->
+      <button type="button" class="summary-back-link" (click)="goBack()">
+        <span class="summary-back-arrow">←</span>
+        <span>BACK TO ADDRESS</span>
+      </button>
     </div>
   </div>
 </div>

@@ -16,9 +16,14 @@
 }
 
 .saved-addresses__list {
-  @include flex-column;
-  gap: $space-sm;
-  margin-bottom: $space-lg;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-md;
+  margin-bottom: 8px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 // Address Row Item
