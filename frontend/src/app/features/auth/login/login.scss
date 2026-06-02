@@ -39,19 +39,22 @@
 }
 
 .login__brand-logo {
-  font-family: $font-family-heading;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-medium;
-  color: #ffffff;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
   cursor: pointer;
-  transition: color $transition-normal;
+  transition: opacity $transition-normal;
 
   &:hover {
-    color: rgba(#ffffff, 0.8);
+    opacity: 0.8;
   }
+}
+
+.login__brand-image {
+  height: 60px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
 }
 
 .login__brand-content {
@@ -124,39 +127,50 @@
   justify-content: center;
   padding: $space-xxl;
   position: relative;
+  gap: $space-xl;
 
   @include respond-to(md) {
-    padding: $space-xl $space-lg;
+    padding: $space-lg;
+    padding-top: $space-xl;
     min-height: 100vh;
     min-height: 100dvh;
+     display: flex;
+      justify-content:flex-start;
+    gap: $space-lg;
   }
 
   @include respond-to(xs) {
-    padding: $space-section-sm $space-md $space-xl;
-    align-items: flex-start;
+    padding: $space-lg $space-md;
+    padding-top: $space-lg;
+    align-items: center;
+     display: flex;
+    justify-content:flex-start;
+    gap: $space-md;
   }
 }
 
 .login__logo-mobile {
   display: none;
-  font-family: $font-family-heading;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-medium;
-  color: #000000;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  align-items: center;
   text-decoration: none;
   cursor: pointer;
-  margin-bottom: $space-xl;
-  transition: color $transition-normal;
+  transition: opacity $transition-normal;
+  order: -1;
 
   &:hover {
-    color: #000000;
+    opacity: 0.8;
   }
 
   @include respond-to(md) {
-    display: block;
+    display: inline-flex;
   }
+}
+
+.login__logo-mobile-image {
+  height: 40px;
+  width: auto;
+  max-width: 140px;
+  object-fit: contain;
 }
 
 .login__form-inner {

@@ -2,7 +2,9 @@
   <!-- Left: Brand Panel -->
   <div class="login__brand">
     <div class="login__brand-top">
-      <a routerLink="/" class="login__brand-logo">RAJHANS TEA</a>
+      <a routerLink="/" class="login__brand-logo">
+        <img src="logo.png" alt="Rajhans Tea Logo" class="login__brand-image" />
+      </a>
     </div>
     <div class="login__brand-content">
       <h1 class="login__brand-headline">Welcome Back to the World of Fresh Indian Tea's!</h1>
@@ -26,7 +28,9 @@
   <!-- Right: Auth Form -->
   <div class="login__form-panel">
     <!-- Logo for mobile (hidden on desktop) -->
-    <a routerLink="/" class="login__logo-mobile">RAJHANS TEA</a>
+    <a routerLink="/" class="login__logo-mobile">
+      <img src="logo.png" alt="Rajhans Tea Logo" class="login__logo-mobile-image" />
+    </a>
 
     <div class="login__form-inner" [class.entered]="entered()">
       <!-- Step dots -->
