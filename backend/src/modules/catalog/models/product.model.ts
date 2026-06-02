@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
+import { IProductVariantDoc } from './product-variant.model';
 
 export type ProductStatus = 'draft' | 'active' | 'archived';
 
@@ -20,6 +21,7 @@ export interface IProductDoc extends Document {
   stock: number;
   trackInventory: boolean;
   hasVariants: boolean;
+  variants?: IProductVariantDoc[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -56,5 +58,13 @@ productSchema.index({ category: 1, status: 1 });
 productSchema.index({ collections: 1, status: 1 });
 productSchema.index({ isFeatured: 1, status: 1 });
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });
+
+// Virtual populate for variants
+productSchema.virtual('variants', {
+  ref: 'ProductVariant',
+  localField: '_id',
+  foreignField: 'productId',
+  justOne: false,
+});
 
 export const Product = mongoose.model<IProductDoc>('Product', productSchema);

@@ -19,7 +19,7 @@ export class SearchService {
 
     // Transform products via DTO
     const response = {
-      products: result.products.map((p) => ProductDTO.toView(p)),
+      products: result.products.map((p) => ProductDTO.toPublic(p, p.variants as any)),
       meta: result.meta,
       facets: result.facets,
       query: params.q || '',

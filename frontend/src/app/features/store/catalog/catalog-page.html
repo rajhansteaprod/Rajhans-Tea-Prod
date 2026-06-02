@@ -17,24 +17,23 @@
     @if (!store.hasResults()) {
       <div class="catalog__empty">
         <p>No products found in this category.</p>
-        <a routerLink="/products" class="catalog__back-link">Browse all teas</a>
+        <app-button variant="primary" size="md" (click)="goToAllProducts()">Browse All Teas</app-button>
       </div>
     } @else {
       <div class="catalog__grid">
         @for (p of store.results(); track p._id) {
-          <a [routerLink]="'/product/' + p.slug" class="catalog-card">
-            <div class="catalog-card__image">
-              @if (p.images[0]) {
-                <img [src]="p.images[0]" [alt]="p.name" loading="lazy" />
-              } @else {
-                <div class="catalog-card__placeholder"></div>
-              }
-            </div>
-            <div class="catalog-card__body">
-              <p class="catalog-card__name">{{ p.name }}</p>
-              <p class="catalog-card__price">&#8377;{{ p.basePrice | number:'1.0-0' }}</p>
-            </div>
-          </a>
+          <app-product-card
+            [product]="p"
+            [isHovering]="isHovering(p._id)"
+            [isWishlisted]="isWishlisted(p._id)"
+            [getRating]="getRating"
+            [getReviewCount]="getReviewCount"
+            (imageHover)="setHovering(p._id, $event)"
+            (toggleWishlistClick)="toggleWishlist(p, $event)"
+            (addToCartClick)="addToCart(p, $event)"
+            (buyNowClick)="buyNow(p, $event)"
+            (cardClick)="goToProduct(p)"
+          />
         }
       </div>
     }
