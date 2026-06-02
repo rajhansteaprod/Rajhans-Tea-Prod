@@ -88,9 +88,11 @@ export class OrderRepository {
   }
 
   async generateOrderNumber(): Promise<string> {
-    const prefix = 'RJT26';
-    const randomNum = Math.floor(100000 + Math.random() * 900000); // 6-digit random number
-    return `${prefix}+${randomNum}`;
+    // Generate 2 random uppercase letters
+    const letters = String.fromCharCode(65 + Math.random() * 26, 65 + Math.random() * 26);
+    // Generate 6-digit random number
+    const randomNum = Math.floor(100000 + Math.random() * 900000);
+    return `RJT_${letters}_${randomNum}`;
   }
 
   async getOrderStats(): Promise<{
