@@ -188,12 +188,6 @@
           @if (auth.isAdmin()) {
             <a routerLink="/admin" class="mobile-drawer__link" (click)="closeAll()">Admin</a>
           }
-          <button class="mobile-drawer__link mobile-drawer__link--logout" (click)="auth.logout(); closeAll()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 13l4-4m0 0l-4-4m4 4H9"/>
-            </svg>
-            Sign Out
-          </button>
         }
       </div>
 
@@ -210,6 +204,18 @@
           <a routerLink="/page/contact-us" class="mobile-drawer__link" (click)="closeAll()">Contact Us</a>
         </div>
       </div>
+
+      <!-- Row 4: Sign Out (Logged In Only) -->
+      @if (auth.isLoggedIn()) {
+        <div class="mobile-drawer__section">
+          <button class="mobile-drawer__link mobile-drawer__link--logout" (click)="auth.logout(); closeAll()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 13l4-4m0 0l-4-4m4 4H9"/>
+            </svg>
+            Sign Out
+          </button>
+        </div>
+      }
 
       <!-- Sign In Button (Guest Only) -->
       @if (!auth.isLoggedIn()) {
