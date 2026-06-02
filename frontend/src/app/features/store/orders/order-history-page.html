@@ -179,13 +179,28 @@
     </div>
 
     <div class="tracking-modal__body">
+      <!-- Loading State -->
+      @if (trackingLoading()) {
+        <div class="tracking-loading">
+          <div class="tracking-spinner"></div>
+          <p>Fetching live tracking information from Shiprocket...</p>
+        </div>
+      }
+
+      <!-- Error State -->
+      @if (trackingError()) {
+        <div class="tracking-error">
+          <p>{{ trackingError() }}</p>
+        </div>
+      }
+
       <!-- Shipment Status Card -->
-      @if (selectedOrderForTracking()!.shiprocket.shipmentId) {
+      @if (!trackingLoading() && selectedOrderForTracking()!.shiprocket.shipmentId) {
         <div class="tracking-card">
           <div class="tracking-card__header">
             <span class="tracking-card__label">Shipment Status</span>
-            <span class="tracking-card__badge" [attr.data-status]="selectedOrderForTracking()!.status">
-              {{ formatStatus(selectedOrderForTracking()!.status) }}
+            <span class="tracking-card__badge" [attr.data-status]="selectedOrderForTracking()!.shiprocket.status || selectedOrderForTracking()!.status">
+              {{ formatStatus(selectedOrderForTracking()!.shiprocket.status || selectedOrderForTracking()!.status) }}
             </span>
           </div>
 
@@ -234,8 +249,27 @@
         </div>
       }
 
-      <!-- Status Timeline -->
-      @if (selectedOrderForTracking()!.statusHistory && selectedOrderForTracking()!.statusHistory.length > 0) {
+      <!-- Status Timeline - Shiprocket Activities -->
+      @if (selectedOrderForTracking()!.shiprocket?.trackingActivities && (selectedOrderForTracking()!.shiprocket.trackingActivities | json) !== '[]') {
+        <div class="tracking-timeline">
+          <h3 class="tracking-timeline__title">Tracking History</h3>
+          @for (activity of selectedOrderForTracking()!.shiprocket.trackingActivities; track activity.date) {
+            <div class="timeline-event">
+              <div class="timeline-event__dot"></div>
+              <div class="timeline-event__content">
+                <span class="timeline-event__status">{{ activity.status }}</span>
+                <span class="timeline-event__date">{{ activity.date | date:'dd MMM yyyy, h:mm a' }}</span>
+                @if (activity.location) {
+                  <span class="timeline-event__note">📍 {{ activity.location }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Status Timeline - Order History Fallback -->
+      @else if (selectedOrderForTracking()!.statusHistory && selectedOrderForTracking()!.statusHistory.length > 0) {
         <div class="tracking-timeline">
           <h3 class="tracking-timeline__title">Order Timeline</h3>
           @for (event of selectedOrderForTracking()!.statusHistory; track event.timestamp) {

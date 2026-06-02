@@ -51,7 +51,9 @@ export class ShipmentsController {
   async trackShipment(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const shipmentId = parseInt(req.params.shipmentId as string);
-      const result = await this.shipmentsService.trackShipment({ shipmentId });
+      // orderId is expected to come from query params or be looked up
+      const orderId = req.query.orderId as string;
+      const result = await this.shipmentsService.trackShipment({ shipmentId, orderId });
       res.status(200).json(result);
     } catch (error) {
       next(error);

@@ -102,6 +102,7 @@ export interface SchedulePickupResponse {
 
 export interface TrackShipmentRequest {
   shipmentId: number;
+  orderId?: string;
 }
 
 export interface TrackingData {

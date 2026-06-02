@@ -1512,3 +1512,51 @@
   font-style: italic;
   margin-top: $space-xs;
 }
+
+// ── Tracking Loading & Error States ──
+.tracking-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-md;
+  padding: $space-xxl $space-lg;
+  text-align: center;
+
+  p {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: rgba($color-mono-dark, 0.6);
+    margin: 0;
+  }
+}
+
+.tracking-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba($color-mono-dark, 0.1);
+  border-top-color: colors.$primary;
+  border-radius: 50%;
+  animation: trackingSpinning 0.8s linear infinite;
+}
+
+@keyframes trackingSpinning {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.tracking-error {
+  padding: $space-lg;
+  background: rgba($color-error, 0.08);
+  border: 1px solid rgba($color-error, 0.2);
+  border-radius: 4px;
+  margin-bottom: $space-lg;
+
+  p {
+    font-family: $font-family-body;
+    font-size: $font-size-sm;
+    color: $color-error;
+    margin: 0;
+  }
+}

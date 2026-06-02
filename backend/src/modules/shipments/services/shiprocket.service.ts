@@ -123,10 +123,22 @@ export class ShiprocketService implements IShippingBase {
 
   async trackShipment(request: TrackShipmentRequest, token: string): Promise<TrackingData> {
     try {
-      const response = await this.axiosInstance.get(`/shipments/track/shipment/${request.shipmentId}`, {
+      const config = require('../../../config').config;
+      const channelId = config.shipping.shiprocket.channelId;
+
+      // orderId is the order number (e.g., RJT_KA_948501)
+      logger.info({ orderId: request.orderId, channelId, shipmentId: request.shipmentId }, 'Tracking request');
+
+      // Use courier/track endpoint with order_id and channel_id
+      const response = await this.axiosInstance.get(`/courier/track`, {
+        params: {
+          order_id: request.orderId,
+          channel_id: channelId
+        },
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      logger.info({ status: response.status }, 'Tracking response received');
       return response.data;
     } catch (error: any) {
       const errorData = error.response?.data;

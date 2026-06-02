@@ -37,6 +37,7 @@ export interface OrderView {
     label: string | null;
     estimatedDelivery: string | null;
     pickupScheduledDate: string | null;
+    status?: string | null;
   };
   createdAt: string;
 }
