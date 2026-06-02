@@ -43,6 +43,12 @@ export class SavedAddressesComponent implements OnInit {
         next: (res) => {
           if (res.success) {
             this.savedAddresses.set(res.data);
+            // Auto-select and populate default address
+            const defaultIndex = res.data.findIndex(addr => addr.isDefault);
+            if (defaultIndex !== -1) {
+              this.selectedAddressIndex.set(defaultIndex);
+              this.selectCurrentAddress(res.data[defaultIndex]);
+            }
           }
         },
         error: (err) => {
@@ -53,7 +59,7 @@ export class SavedAddressesComponent implements OnInit {
 
   selectCurrentAddress(address: SavedAddress) {
     const checkoutAddress: CheckoutAddress = {
-      name: address.label,
+      name: '', // User will fill name in form
       phone: '', // Phone not in saved address, user will fill in form
       pinCode: address.pinCode,
       address: address.address,

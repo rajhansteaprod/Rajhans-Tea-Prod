@@ -74,33 +74,19 @@
       </div>
     </div>
 
-    <!-- First Name + Last Name -->
+    <!-- Name -->
     <div class="checkout__form-row">
       <div class="checkout__form-group">
-        <label class="checkout__form-label">First Name *</label>
+        <label class="checkout__form-label">Name *</label>
         <input
           type="text"
           class="checkout__form-input"
-          formControlName="firstName"
-          [class.error]="form.get('firstName')?.invalid && form.get('firstName')?.touched"
-          placeholder="First name"
+          formControlName="name"
+          [class.error]="form.get('name')?.invalid && form.get('name')?.touched"
+          placeholder="Full name"
         />
-        @if (form.get('firstName')?.invalid && form.get('firstName')?.touched) {
-          <span class="checkout__form-error">First name is required</span>
-        }
-      </div>
-
-      <div class="checkout__form-group">
-        <label class="checkout__form-label">Last Name *</label>
-        <input
-          type="text"
-          class="checkout__form-input"
-          formControlName="lastName"
-          [class.error]="form.get('lastName')?.invalid && form.get('lastName')?.touched"
-          placeholder="Last name"
-        />
-        @if (form.get('lastName')?.invalid && form.get('lastName')?.touched) {
-          <span class="checkout__form-error">Last name is required</span>
+        @if (form.get('name')?.invalid && form.get('name')?.touched) {
+          <span class="checkout__form-error">Name is required</span>
         }
       </div>
     </div>
@@ -119,6 +105,19 @@
         @if (form.get('address')?.invalid && form.get('address')?.touched) {
           <span class="checkout__form-error">Address is required</span>
         }
+      </div>
+    </div>
+
+    <!-- Landmark -->
+    <div class="checkout__form-row">
+      <div class="checkout__form-group">
+        <label class="checkout__form-label">Landmark</label>
+        <input
+          type="text"
+          class="checkout__form-input"
+          formControlName="landmark"
+          placeholder="Landmark (optional)"
+        />
       </div>
     </div>
 
@@ -171,28 +170,27 @@
     </div>
   </form>
 
-  <div class="checkout__panel-footer">
-    <button type="button" class="checkout__btn-back" (click)="goBack()">BACK</button>
-    <button
-      class="checkout__btn-next"
-      (click)="saveAddress()"
-      [disabled]="form.invalid || isSubmitting()"
-    >
-      @if (isSubmitting()) {
-        <div class="checkout__btn-spinner"></div>
-        SAVING...
-      } @else {
-        NEXT
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M5 12h14M12 5l7 7-7 7"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-      }
-    </button>
-  </div>
+</div>
+
+<!-- Mobile Bottom Footer - Fixed outside panel -->
+<div class="checkout__bottom-footer">
+  <button type="button" class="checkout__back-to-cart" (click)="goBack()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; flex-shrink: 0;">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+    <span>Back to<br>Cart</span>
+  </button>
+  <app-button
+    class="checkout__bottom-btn"
+    variant="primary"
+    size="sm"
+    (click)="saveAddress()"
+    [disabled]="form.invalid || isSubmitting()"
+  >
+    @if (isSubmitting()) {
+      SAVING...
+    } @else {
+      NEXT
+    }
+  </app-button>
 </div>

@@ -35,7 +35,7 @@
   font-family: $font-family-nav;
   font-size: $font-size-xs;
   font-weight: $font-weight-medium;
-  color: $color-text-primary;
+  color: #000;
   text-transform: uppercase;
   letter-spacing: $letter-spacing-wide;
 }
@@ -211,4 +211,77 @@
   font-family: inherit;
   font-size: $font-size-xs;
   color: $color-text-secondary;
+}
+
+// ═══ Mobile Bottom Footer ═══
+.checkout__bottom-footer {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    position: fixed !important;
+    bottom: 60px !important;
+    left: 0 !important;
+    right: 0 !important;
+    padding: 8px 24px !important;
+    background: white !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08) !important;
+    z-index: 999999 !important;
+    margin: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    height: auto !important;
+  }
+}
+
+.checkout__back-to-cart {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  font-family: $font-family-nav;
+  font-size: 11px !important;
+  font-weight: $font-weight-medium;
+  color: #333 !important;
+  text-transform: uppercase !important;
+  letter-spacing: $letter-spacing-wide;
+  text-decoration: underline !important;
+  cursor: pointer !important;
+  transition: color 200ms ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  line-height: 1.2 !important;
+  
+
+  span {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+  }
+
+  &:hover {
+    color: #000 !important;
+  }
+
+  &:active {
+    color: #666 !important;
+  }
+}
+
+.checkout__bottom-btn {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  height: 36px !important;
+  padding: 6px 16px !important;
+  min-width: auto !important;
+  font-size: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }

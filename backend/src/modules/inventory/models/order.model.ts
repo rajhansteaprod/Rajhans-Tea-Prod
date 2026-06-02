@@ -2,7 +2,7 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export type OrderStatus =
   | 'confirmed'
-  | 'processing'
+  | 'In Progress'
   | 'shipped'
   | 'in_transit'
   | 'out_for_delivery'

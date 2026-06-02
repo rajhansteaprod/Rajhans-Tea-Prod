@@ -16,6 +16,7 @@ export class MainLayoutComponent {
   private readonly router = inject(Router);
 
   isCheckout = computed(() => {
-    return this.router.url.includes('/checkout');
+    const url = this.router.url;
+    return url.startsWith('/checkout') || url.includes('/checkout?');
   });
 }

@@ -108,7 +108,7 @@ export class AddressesComponent implements OnInit {
 
   setDefault(id: string): void {
     this.http
-      .put<{ success: boolean }>(`${this.apiUrl}/${id}/default`, {})
+      .patch<{ success: boolean }>(`${this.apiUrl}/${id}/default`, {})
       .subscribe(() => this.load());
   }
 }

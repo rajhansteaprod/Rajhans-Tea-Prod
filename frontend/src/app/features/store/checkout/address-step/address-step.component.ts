@@ -1,18 +1,19 @@
-import { Component, inject, signal, output } from '@angular/core';
+import { Component, inject, signal, output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { CheckoutService, CheckoutAddress } from '../../../../core/services/checkout.service';
 import { SavedAddressesComponent } from './saved-addresses.component';
+import { ButtonComponent } from '../../../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-address-step',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, SavedAddressesComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, SavedAddressesComponent, ButtonComponent],
   templateUrl: './address-step.component.html',
   styleUrls: ['./address-step.component.scss'],
 })
-export class AddressStepComponent {
+export class AddressStepComponent implements OnInit {
   private readonly checkoutService = inject(CheckoutService);
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
@@ -25,9 +26,9 @@ export class AddressStepComponent {
   readonly form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     pincode: ['', [Validators.required, Validators.pattern(/^[1-9]\d{5}$/)]],
-    firstName: ['', Validators.required],
-    lastName: ['', Validators.required],
+    name: ['', Validators.required],
     address: ['', Validators.required],
+    landmark: [''],
     city: ['', Validators.required],
     state: ['', Validators.required],
     phone: ['', [Validators.required, Validators.pattern(/^(\+91\d{10}|0\d{10}|\d{10})$/)]],
@@ -58,13 +59,12 @@ export class AddressStepComponent {
     // Load existing address from service
     const existingAddress = this.checkoutService.getAddress();
     if (existingAddress.name) {
-      const [firstName, ...lastNameParts] = existingAddress.name.split(' ');
       this.form.patchValue({
-        firstName,
-        lastName: lastNameParts.join(' '),
+        name: existingAddress.name,
         phone: existingAddress.phone,
         pincode: existingAddress.pinCode,
         address: existingAddress.address,
+        landmark: existingAddress.landmark,
         city: existingAddress.city,
         state: existingAddress.state,
       });
@@ -124,10 +124,11 @@ export class AddressStepComponent {
     setTimeout(() => {
       const formValue = this.form.value;
       const address: CheckoutAddress = {
-        name: `${formValue.firstName} ${formValue.lastName}`,
+        name: formValue.name!,
         phone: formValue.phone!,
         pinCode: formValue.pincode!,
         address: formValue.address!,
+        landmark: formValue.landmark || '',
         city: formValue.city!,
         state: formValue.state!,
       };
@@ -142,13 +143,12 @@ export class AddressStepComponent {
   }
 
   onAddressSelected(address: CheckoutAddress) {
-    const [firstName, ...lastNameParts] = address.name.split(' ');
     this.form.patchValue({
-      firstName,
-      lastName: lastNameParts.join(' '),
+      name: address.name,
       phone: address.phone,
       pincode: address.pinCode,
       address: address.address,
+      landmark: address.landmark,
       city: address.city,
       state: address.state,
     });

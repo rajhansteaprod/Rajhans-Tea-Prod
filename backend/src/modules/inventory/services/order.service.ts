@@ -11,8 +11,8 @@ import { Types } from 'mongoose';
 
 // Valid status transitions (state machine)
 const VALID_TRANSITIONS: Record<string, OrderStatus[]> = {
-  confirmed: ['processing', 'cancelled'],
-  processing: ['shipped', 'cancelled'],
+  confirmed: ['In Progress', 'cancelled'],
+  "In Progress": ['shipped', 'cancelled'],
   shipped: ['in_transit'],
   in_transit: ['out_for_delivery'],
   out_for_delivery: ['delivered'],
@@ -122,7 +122,7 @@ export class OrderService {
   async shipOrder(orderId: string): Promise<IOrderDoc> {
     const order = await this.orderRepo.findById(orderId);
     if (!order) throw new NotFoundError('Order not found');
-    if (order.status !== 'confirmed' && order.status !== 'processing') {
+    if (order.status !== 'confirmed' && order.status !== 'In Progress') {
       throw new BadRequestError('Order cannot be shipped in current status');
     }
 
@@ -149,7 +149,7 @@ export class OrderService {
     }, '✅ Order created in Shiprocket. AWB, label, pickup to be done via GUI');
 
     // Update status to processing (order is now in Shiprocket pipeline)
-    return this.updateStatus(orderId, 'processing', 'Order created in Shiprocket', null);
+    return this.updateStatus(orderId, 'In Progress', 'Order created in Shiprocket', null);
   }
 
   // ─── Update order status ──────────────────────────────────────────────────
@@ -208,8 +208,8 @@ export class OrderService {
     const order = await this.orderRepo.findById(orderId);
     if (!order) throw new NotFoundError('Order not found');
 
-    if (!['confirmed', 'processing'].includes(order.status)) {
-      throw new BadRequestError('Order can only be cancelled in confirmed or processing status');
+    if (!['confirmed', 'In Progress'].includes(order.status)) {
+      throw new BadRequestError('Order can only be cancelled in confirmed or In Progress status');
     }
 
     // Cancel shipping if already created
