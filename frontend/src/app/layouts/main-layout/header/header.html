@@ -150,76 +150,62 @@
 
     <!-- ══════ MOBILE DRAWER ══════ -->
     <nav class="mobile-drawer" [class.open]="mobileOpen()">
-      <!-- Shop Section (Collapsible) -->
-      <div class="mobile-drawer__section">
-        <button class="mobile-drawer__section-header" (click)="toggleShopSection()">
-          <span>SHOP</span>
-          <svg class="mobile-drawer__chevron" [class.flip]="shopSectionOpen()" width="12" height="12" viewBox="0 0 24 24" fill="none">
-            <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
+      <div class="mobile-drawer__content">
+        <div class="mobile-drawer__header">
+          <h2 class="mobile-drawer__title">MENU</h2>
+        </div>
 
-        @if (shopSectionOpen()) {
-          <!-- Categories -->
-          <div class="mobile-drawer__categories">
-            <button class="mobile-drawer__category" (click)="navigateTo('/products'); closeAll()">
-              All Products
-            </button>
+        <!-- Row 1: 2 Column Layout -->
+        <div class="mobile-drawer__grid">
+        <!-- Column 1: SHOP -->
+        <div class="mobile-drawer__column">
+          <h3 class="mobile-drawer__section-title">SHOP</h3>
+          <div class="mobile-drawer__links-group">
+            <a class="mobile-drawer__link" (click)="navigateTo('/products'); closeAll()">All Products</a>
             @for (cat of categories(); track cat._id) {
-              <button class="mobile-drawer__category" (click)="navigateTo('/catalog/' + cat.slug); closeAll()">
-                {{ cat.name }}
-              </button>
+              <a class="mobile-drawer__link" [routerLink]="'/catalog/' + cat.slug" (click)="closeAll()">{{ cat.name }}</a>
             }
           </div>
+        </div>
 
-          <!-- Products Slider -->
-          @if (featuredProducts().length > 0) {
-            <div class="mobile-drawer__products-slider">
-              <div class="mobile-drawer__products-scroll">
-                @for (p of featuredProducts(); track p._id) {
-                  <div class="mobile-drawer__product-card" (click)="navigateTo('/product/' + p.slug); closeAll()">
-                    @if (p.images[0]) {
-                      <img [src]="p.images[0]" [alt]="p.name" class="mobile-drawer__product-img" />
-                    }
-                    <span class="mobile-drawer__product-name">{{ p.name }}</span>
-                    <span class="mobile-drawer__product-price">₹{{ p.basePrice }}</span>
-                  </div>
-                }
-              </div>
-            </div>
-          }
-        }
+        <!-- Column 2: Links (no heading) -->
+        <div class="mobile-drawer__column">
+          <div class="mobile-drawer__links-group">
+            <a routerLink="/page/about-us" class="mobile-drawer__link" (click)="closeAll()">Our Story</a>
+            <a routerLink="/blog" class="mobile-drawer__link" (click)="closeAll()">Cup of Stories</a>
+            <a routerLink="/page/reseller" class="mobile-drawer__link" (click)="closeAll()">Buy in Bulk</a>
+            <a routerLink="/wishlist" class="mobile-drawer__link" (click)="closeAll()">Wishlist</a>
+          </div>
+        </div>
       </div>
 
-      <!-- Other Links Section -->
+      <!-- Row 2: Account Links -->
       <div class="mobile-drawer__section">
-        <a routerLink="/page/about-us" class="mobile-drawer__link" (click)="closeAll()">Our Story</a>
-        <a routerLink="/blog" class="mobile-drawer__link" (click)="closeAll()">Cup of Stories</a>
-        <a routerLink="/page/reseller" class="mobile-drawer__link" (click)="closeAll()">Buy in bulk</a>
-        <a routerLink="/page/contact-us" class="mobile-drawer__link" (click)="closeAll()">Contact Us</a>
-        <a routerLink="/wishlist" class="mobile-drawer__link" (click)="closeAll()">Wishlist</a>
-      </div>
-
-      <!-- User Section -->
-      <div class="mobile-drawer__footer">
         @if (auth.isLoggedIn()) {
           <a routerLink="/dashboard" class="mobile-drawer__link" (click)="closeAll()">Account</a>
           <a routerLink="/orders" class="mobile-drawer__link" (click)="closeAll()">Orders</a>
+          <a routerLink="/page/contact-us" class="mobile-drawer__link" (click)="closeAll()">Contact Us</a>
           @if (auth.isAdmin()) {
             <a routerLink="/admin" class="mobile-drawer__link" (click)="closeAll()">Admin</a>
           }
-          <button class="mobile-drawer__link mobile-drawer__link--danger" (click)="auth.logout(); closeAll()">
+          <button class="mobile-drawer__link mobile-drawer__link--logout" (click)="auth.logout(); closeAll()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 13l4-4m0 0l-4-4m4 4H9"/>
+            </svg>
             Sign Out
           </button>
         } @else {
-          <a routerLink="/auth/login" class="mobile-drawer__link" (click)="closeAll()">Sign In</a>
+          <a routerLink="/page/contact-us" class="mobile-drawer__link" (click)="closeAll()">Contact Us</a>
         }
       </div>
-    </nav>
 
-    @if (mobileOpen()) {
-      <div class="mobile-backdrop" (click)="closeMobile()"></div>
-    }
+      </div>
+
+      <!-- Sign In Button (Guest Only) -->
+      @if (!auth.isLoggedIn()) {
+        <app-button variant="primary" size="md" [fullWidth]="true" class="mobile-drawer__signin-btn" (click)="navigateTo('/auth/login'); closeAll()">Sign In</app-button>
+      }
+    </nav>
 
     <!-- ══════ BOTTOM MOBILE NAV (Home, Categories, Help, Account) ══════ -->
     <nav class="mobile-bottom-nav show-mobile">
