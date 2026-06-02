@@ -88,19 +88,9 @@ export class OrderRepository {
   }
 
   async generateOrderNumber(): Promise<string> {
-    const year = new Date().getFullYear();
-    const prefix = `ORD-${year}-`;
-    const last = await Order.findOne({ orderNumber: { $regex: `^${prefix}` } })
-      .sort({ orderNumber: -1 })
-      .select('orderNumber')
-      .exec();
-
-    let seq = 1;
-    if (last) {
-      const lastSeq = parseInt(last.orderNumber.replace(prefix, ''), 10);
-      seq = lastSeq + 1;
-    }
-    return `${prefix}${seq.toString().padStart(5, '0')}`;
+    const prefix = 'RJT26';
+    const randomNum = Math.floor(100000 + Math.random() * 900000); // 6-digit random number
+    return `${prefix}+${randomNum}`;
   }
 
   async getOrderStats(): Promise<{

@@ -22,14 +22,6 @@
     </p>
   </div>
 
-  <!-- Payment Reference -->
-  @if (paymentId()) {
-    <div class="confirmation__reference">
-      <span class="confirmation__reference-label">Payment Reference</span>
-      <span class="confirmation__reference-value">{{ paymentId() }}</span>
-    </div>
-  }
-
   <!-- Order Number (async — may take a moment to appear) -->
   <div class="confirmation__order-block">
     @if (orderLoading()) {

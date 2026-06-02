@@ -18,7 +18,7 @@
 
 // Success Checkmark
 .confirmation__icon {
-  color: $color-primary-700;
+  color: #22c55e;
   width: 80px;
   height: 80px;
   @include flex-center;
@@ -34,7 +34,7 @@
   @include eyebrow-text;
   display: block;
   margin-bottom: $space-xs;
-  color: $color-primary-700;
+  color: #22c55e;
 }
 
 .confirmation__title {
@@ -51,31 +51,6 @@
   color: $color-gray-600;
   margin: 0;
   line-height: $line-height-relaxed;
-}
-
-// Payment Reference
-.confirmation__reference {
-  @include flex-column;
-  gap: $space-xxs;
-  padding: $space-md $space-xl;
-  background: $color-gray-50;
-  border: 1px solid $color-gray-200;
-  width: 100%;
-}
-
-.confirmation__reference-label {
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
-  color: $color-gray-500;
-}
-
-.confirmation__reference-value {
-  font-size: $font-size-sm;
-  font-family: monospace;
-  color: $color-mono-dark;
-  word-break: break-all;
 }
 
 // Order Number Block
@@ -109,10 +84,8 @@
 
 .confirmation__order-found {
   @include flex-column;
-  gap: $space-xxs;
-  padding: $space-md $space-xl;
-  background: rgba($color-primary-700, 0.05);
-  border: 1px solid rgba($color-primary-700, 0.2);
+  gap: $space-xs;
+  padding: $space-lg 0;
   width: 100%;
 }
 
@@ -121,18 +94,18 @@
   font-weight: $font-weight-semibold;
   letter-spacing: $letter-spacing-wide;
   text-transform: uppercase;
-  color: $color-gray-500;
+  color: #666;
 }
 
 .confirmation__order-number {
-  font-size: $font-size-lg;
-  font-weight: $font-weight-medium;
-  color: $color-mono-dark;
+  font-size: 32px;
+  font-weight: $font-weight-semibold;
+  color: #000;
 }
 
 .confirmation__order-total {
   font-size: $font-size-sm;
-  color: $color-gray-600;
+  color: #666;
 }
 
 .confirmation__order-pending {
@@ -169,24 +142,25 @@
   cursor: pointer;
   transition: all 150ms ease;
   border: none;
+  border-radius: 0;
 
   &--primary {
-    background: $color-mono-dark;
-    color: $color-mono-light;
+    background: #B65A3A;
+    color: white;
 
     &:hover {
-      background: $color-gray-800;
+      background: rgba(182, 90, 58, 0.85);
     }
   }
 
   &--secondary {
     background: transparent;
-    color: $color-mono-dark;
-    border: 1px solid $color-gray-300;
+    color: #000;
+    border: 1px solid #d0d0d0;
 
     &:hover {
-      background: $color-gray-50;
-      border-color: $color-gray-500;
+      background: #f5f5f5;
+      border-color: #999;
     }
   }
 }

@@ -11,9 +11,14 @@ const walletService = new WalletService();
 const invoiceService = new InvoiceService();
 
 function getSessionId(req: Request): string {
+  // For logged-in users, use userId as session identifier
+  if (req.user?.userId) {
+    return req.user.userId;
+  }
+  // For guests, require X-Session-ID header
   const sid = req.headers['x-session-id'];
   if (!sid || typeof sid !== 'string' || sid.trim() === '') {
-    throw new BadRequestError('X-Session-ID header is required');
+    throw new BadRequestError('X-Session-ID header is required for guest checkout');
   }
   return sid.trim();
 }
