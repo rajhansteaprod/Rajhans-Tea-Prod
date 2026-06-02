@@ -26,11 +26,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/store/catalog/catalog-page').then((m) => m.CatalogPageComponent),
       },
-      {
-        path: 'collections',
-        loadComponent: () =>
-          import('./features/store/collections/collections-page').then((m) => m.CollectionsPageComponent),
-      },
+      // {
+      //   path: 'collections',
+      //   loadComponent: () =>
+      //     import('./features/store/collections/collections-page').then((m) => m.CollectionsPageComponent),
+      // },
       {
         path: 'blog',
         loadComponent: () =>
@@ -97,26 +97,26 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./features/dashboard/profile/profile').then((m) => m.ProfileComponent),
           },
-          {
-            path: 'wallet',
-            loadComponent: () =>
-              import('./features/store/wallet/wallet-page').then((m) => m.WalletPageComponent),
-          },
+          // {
+          //   path: 'wallet',
+          //   loadComponent: () =>
+          //     import('./features/store/wallet/wallet-page').then((m) => m.WalletPageComponent),
+          // },
           {
             path: 'wishlist',
             loadComponent: () =>
               import('./features/store/wishlist/wishlist-page').then((m) => m.WishlistPageComponent),
           },
-          {
-            path: 'loyalty',
-            loadComponent: () =>
-              import('./features/dashboard/loyalty/loyalty').then((m) => m.LoyaltyComponent),
-          },
-          {
-            path: 'referral',
-            loadComponent: () =>
-              import('./features/dashboard/referral/referral').then((m) => m.ReferralComponent),
-          },
+          // {
+          //   path: 'loyalty',
+          //   loadComponent: () =>
+          //     import('./features/dashboard/loyalty/loyalty').then((m) => m.LoyaltyComponent),
+          // },
+          // {
+          //   path: 'referral',
+          //   loadComponent: () =>
+          //     import('./features/dashboard/referral/referral').then((m) => m.ReferralComponent),
+          // },
         ],
       },
     ],
