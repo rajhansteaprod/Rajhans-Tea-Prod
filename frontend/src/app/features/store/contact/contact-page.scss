@@ -194,8 +194,8 @@
 
   &:focus {
     outline: none;
-    border-color: $color-primary;
-    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+    border-color: rgba($color-mono-dark, 0.5);
+    background: rgba(0, 0, 0, 0.02);
   }
 
   &.input-error {

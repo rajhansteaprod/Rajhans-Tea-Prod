@@ -22,7 +22,7 @@
           </button>
           <a routerLink="/page/about-us" class="nav-link" (click)="closeAll()">Our Story</a>
           <a routerLink="/blog" class="nav-link" (click)="closeAll()">Cup of Stories</a>
-          <a routerLink="/page/reseller" class="nav-link" (click)="closeAll()">Buy in bulk</a>
+          <a routerLink="/contact" [queryParams]="{ reason: 'bulk' }" class="nav-link" (click)="closeAll()">Buy in bulk</a>
         </nav>
 
         <!-- RIGHT: Icons -->

@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { environment } from '../../../../environments/environment';
 
@@ -26,6 +27,7 @@ interface ContactFormData {
 export class ContactPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
+  private readonly route = inject(ActivatedRoute);
 
   form!: FormGroup;
   submitted = signal(false);
@@ -43,6 +45,17 @@ export class ContactPageComponent {
 
   constructor() {
     this.initForm();
+    this.preFillReasonFromQueryParam();
+  }
+
+  private preFillReasonFromQueryParam(): void {
+    this.route.queryParams.subscribe(params => {
+      const reason = params['reason'];
+      if (reason && ['help', 'bulk', 'gifting'].includes(reason)) {
+        this.form.get('reasonToContact')?.setValue(reason);
+        this.updateMessageValidation();
+      }
+    });
   }
 
   private initForm(): void {
