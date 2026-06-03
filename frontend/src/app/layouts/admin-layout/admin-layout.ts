@@ -85,6 +85,7 @@ export class AdminLayoutComponent {
       collapsed: false,
       items: [
         { label: 'Users', icon: '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>', route: '/admin/users' },
+        { label: 'Contact Submissions', icon: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" fill="none"/></svg>', route: '/admin/contact-submissions' },
       ],
     },
     {

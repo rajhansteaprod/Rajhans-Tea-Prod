@@ -1,0 +1,215 @@
+<div class="contact-container">
+  <!-- Success State - Full Page -->
+  @if (successSubmitted()) {
+    <div class="success-state">
+      <div class="success-box">
+        <div class="success-icon">✅</div>
+        <h2 class="success-title">Thank You!</h2>
+        <p class="success-content">{{ successMessage() }}</p>
+        <button class="btn-new-submission" (click)="successSubmitted.set(false)">
+          Submit Another Request
+        </button>
+      </div>
+    </div>
+  } @else {
+    <!-- Form State -->
+    <div class="contact-header">
+      <h1>Contact Us</h1>
+      <p class="subtitle">We'd love to hear from you. Let us know how we can help!</p>
+    </div>
+
+    <!-- Error Message -->
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        <div class="alert-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05l-8.47-14.14a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="alert-content">{{ errorMessage() }}</div>
+        <button class="alert-close" (click)="errorMessage.set('')">×</button>
+      </div>
+    }
+
+    <!-- Contact Form -->
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="contact-form">
+    <div class="form-grid">
+      <!-- Full Name (Required) -->
+      <div class="form-group">
+        <label for="fullName" class="form-label">
+          Full Name <span class="required">*</span>
+        </label>
+        <input
+          id="fullName"
+          type="text"
+          formControlName="fullName"
+          class="form-input"
+          placeholder="Enter your full name"
+          [class.input-error]="submitted() && form.get('fullName')?.invalid"
+        />
+        @if (submitted() && form.get('fullName')?.invalid) {
+          <span class="error-text">Full name is required</span>
+        }
+      </div>
+
+      <!-- Mobile Number (Required) -->
+      <div class="form-group">
+        <label for="mobileNumber" class="form-label">
+          Mobile Number <span class="required">*</span>
+        </label>
+        <input
+          id="mobileNumber"
+          type="tel"
+          formControlName="mobileNumber"
+          class="form-input"
+          placeholder=" +919876543210"
+          [class.input-error]="submitted() && form.get('mobileNumber')?.invalid"
+        />
+        @if (submitted() && form.get('mobileNumber')?.invalid) {
+          <span class="error-text">
+            @if (form.get('mobileNumber')?.errors?.['required']) {
+              Mobile number is required
+            } @else {
+              Enter valid mobile number (10 digits, 0+10 digits, or +91+10 digits)
+            }
+          </span>
+        }
+      </div>
+
+      <!-- Email Address (Required) -->
+      <div class="form-group">
+        <label for="emailAddress" class="form-label">
+          Email Address <span class="required">*</span>
+        </label>
+        <input
+          id="emailAddress"
+          type="email"
+          formControlName="emailAddress"
+          class="form-input"
+          placeholder="Enter your email"
+          [class.input-error]="submitted() && form.get('emailAddress')?.invalid"
+        />
+        @if (submitted() && form.get('emailAddress')?.invalid) {
+          <span class="error-text">
+            @if (form.get('emailAddress')?.errors?.['required']) {
+              Email is required
+            } @else {
+              Please enter a valid email
+            }
+          </span>
+        }
+      </div>
+
+      <!-- Address (Optional) -->
+      <div class="form-group">
+        <label for="address" class="form-label">Address</label>
+        <textarea
+          id="address"
+          formControlName="address"
+          class="form-textarea"
+          placeholder="Enter your address"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <!-- Reason to Contact (Required) -->
+      <div class="form-group full-width">
+        <label for="reasonToContact" class="form-label">
+          Reason to Contact <span class="required">*</span>
+        </label>
+        <select
+          id="reasonToContact"
+          formControlName="reasonToContact"
+          class="form-select"
+          [class.input-error]="submitted() && form.get('reasonToContact')?.invalid"
+        >
+          <option value="">-- Select a reason --</option>
+          @for (option of reasonOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+        @if (submitted() && form.get('reasonToContact')?.invalid) {
+          <span class="error-text">Please select a reason to contact</span>
+        }
+      </div>
+
+      <!-- Conditional: Help & Support / Buy in Bulk / Corporate Gifting Message -->
+      @if (isFieldVisible('message')) {
+        <div class="form-group full-width">
+          <label for="message" class="form-label">
+            @switch (form.get('reasonToContact')?.value) {
+              @case ('help') {
+                Describe Your Issue <span class="required">*</span>
+              }
+              @case ('bulk') {
+                Tell Us Your Requirements
+              }
+              @case ('gifting') {
+                Tell Us Your Requirements
+              }
+              @default {
+                Message
+              }
+            }
+          </label>
+          <textarea
+            id="message"
+            formControlName="message"
+            class="form-textarea"
+            [class.input-error]="submitted() && form.get('message')?.invalid && isFieldRequired('message', form.get('reasonToContact')?.value)"
+            placeholder="Enter your message or requirements"
+            rows="4"
+          ></textarea>
+          @if (submitted() && form.get('message')?.invalid && isFieldRequired('message', form.get('reasonToContact')?.value)) {
+            <span class="error-text">This field is required</span>
+          }
+        </div>
+      }
+
+      <!-- Conditional: Corporate Gifting Fields -->
+      @if (isFieldVisible('companyName')) {
+        <div class="form-group">
+          <label for="companyName" class="form-label">Company Name</label>
+          <input
+            id="companyName"
+            type="text"
+            formControlName="companyName"
+            class="form-input"
+            placeholder="Enter your company name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="preferredDeliveryDate" class="form-label">Preferred Delivery Date</label>
+          <input
+            id="preferredDeliveryDate"
+            type="date"
+            formControlName="preferredDeliveryDate"
+            class="form-input"
+          />
+        </div>
+      }
+    </div>
+
+    <!-- Submit Button -->
+    <div class="form-actions">
+      <app-button
+        type="submit"
+        variant="primary"
+        size="md"
+        [disabled]="loading()"
+        [fullWidth]="true"
+      >
+        @if (loading()) {
+          <span class="loading-spinner"></span>
+          Submitting...
+        } @else {
+          Send Message
+        }
+      </app-button>
+    </div>
+  </form>
+  }
+</div>

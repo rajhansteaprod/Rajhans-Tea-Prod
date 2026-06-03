@@ -23,6 +23,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () => import('./users/user-list/user-list').then((m) => m.UserListComponent),
       },
       {
+        path: 'contact-submissions',
+        loadComponent: () =>
+          import('./contact-submissions/contact-submissions').then((m) => m.ContactSubmissionsComponent),
+      },
+      {
         path: 'products',
         loadComponent: () =>
           import('./products/product-list/product-list').then((m) => m.ProductListComponent),

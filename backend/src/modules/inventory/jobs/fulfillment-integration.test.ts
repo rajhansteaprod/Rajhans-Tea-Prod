@@ -305,13 +305,13 @@ async function test7_FindActiveShipments() {
   console.log('1️⃣  Creating orders with different statuses...');
   const payment1 = await createTestPayment();
   const order1 = await orderService.createFromPayment(payment1._id);
-  await orderService.updateStatus(order1._id.toString(), 'processing', null, null);
+  await orderService.updateStatus(order1._id.toString(), 'In Progress', null, null);
   await orderService.updateStatus(order1._id.toString(), 'shipped', null, null);
   await orderService.updateStatus(order1._id.toString(), 'in_transit', null, null);
 
   const payment2 = await createTestPayment();
   const order2 = await orderService.createFromPayment(payment2._id);
-  await orderService.updateStatus(order2._id.toString(), 'processing', null, null);
+  await orderService.updateStatus(order2._id.toString(), 'In Progress', null, null);
   await orderService.updateStatus(order2._id.toString(), 'shipped', null, null);
 
   const payment3 = await createTestPayment();
