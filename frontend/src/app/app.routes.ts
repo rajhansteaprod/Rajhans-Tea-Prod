@@ -47,6 +47,11 @@ export const routes: Routes = [
           import('./features/store/pages/about/about').then((m) => m.AboutComponent),
       },
       {
+        path: 'contact',
+        loadComponent: () =>
+          import('./features/store/contact/contact-page').then((m) => m.ContactPageComponent),
+      },
+      {
         path: 'page/:slug',
         loadComponent: () =>
           import('./features/store/pages/static-page').then((m) => m.StaticPageComponent),

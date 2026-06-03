@@ -30,8 +30,8 @@
   }
 
   @include respond-to(md) {
-    grid-template-columns: 1fr;
-    gap: $space-xxl;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
     padding: $space-xxl $space-lg;
   }
 }
