@@ -38,6 +38,7 @@ export interface OrderView {
     estimatedDelivery: string | null;
     pickupScheduledDate: string | null;
     status?: string | null;
+    trackingActivities?: Array<{ date: string; status: string; location?: string }>;
   };
   createdAt: string;
 }
