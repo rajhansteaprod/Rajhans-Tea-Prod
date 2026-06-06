@@ -17,7 +17,7 @@ export function app(): express.Express {
   const server = express();
 
   // Enable compression
-  server.use(compression());
+  server.use(compression() as any);
 
   // CORS headers for development
   server.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
