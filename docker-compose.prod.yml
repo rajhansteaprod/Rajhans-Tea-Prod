@@ -3,8 +3,6 @@ services:
     image: rajhansteaprod/rajhans-tea-backend:latest
     pull_policy: always
     container_name: tea-backend
-    ports:
-      - "3000:3000"
     env_file: .env
     restart: unless-stopped
     depends_on:
@@ -22,8 +20,6 @@ services:
     image: rajhansteaprod/rajhans-tea-frontend:latest
     pull_policy: always
     container_name: tea-frontend
-    ports:
-      - "80:80"
     restart: unless-stopped
     depends_on:
       - backend
