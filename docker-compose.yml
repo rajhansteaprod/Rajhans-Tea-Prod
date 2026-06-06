@@ -7,8 +7,9 @@ services:
     restart: unless-stopped
     networks:
       - tea-network
+    command: redis-server --requirepass ""
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
