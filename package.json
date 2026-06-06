@@ -4,7 +4,8 @@
   "description": "Industry-grade MEAN stack ecommerce application",
   "private": true,
   "workspaces": [
-    "backend"
+    "backend",
+    "frontend"
   ],
   "scripts": {
     "dev": "npm run dev --workspace=backend",
