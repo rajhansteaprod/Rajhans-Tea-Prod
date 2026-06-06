@@ -3,8 +3,6 @@ services:
     image: rajhansteaprod/rajhans-tea-backend:latest
     pull_policy: always
     container_name: tea-backend
-    ports:
-      - "3000:3000"
     env_file: .env
     restart: unless-stopped
     depends_on:
@@ -22,19 +20,32 @@ services:
     image: rajhansteaprod/rajhans-tea-frontend:latest
     pull_policy: always
     container_name: tea-frontend
-    ports:
-      - "80:80"
     restart: unless-stopped
     depends_on:
       - backend
     networks:
       - tea-network
 
+  nginx:
+    image: nginx:alpine
+    container_name: tea-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.prod.conf:/etc/nginx/conf.d/default.conf
+      - /etc/ssl/certs/self.crt:/etc/nginx/ssl/cert.crt
+      - /etc/ssl/private/self.key:/etc/nginx/ssl/key.key
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - tea-network
+    restart: unless-stopped
+
   redis:
     image: redis:7-alpine
     container_name: tea-redis
-    ports:
-      - "6379:6379"
     restart: unless-stopped
     networks:
       - tea-network
