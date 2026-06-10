@@ -9,7 +9,7 @@ export const config = {
     testUri: process.env.MONGO_TEST_URI || 'mongodb://localhost:27018/rajhans-tea-test',
   },
   redis: {
-    host: process.env.REDIS_HOST || 'localhost',
+    host: process.env.NODE_ENV === 'development' ? 'localhost' : process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
     password: process.env.REDIS_PASSWORD || undefined,
   },
