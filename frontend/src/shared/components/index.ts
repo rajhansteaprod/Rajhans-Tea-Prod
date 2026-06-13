@@ -1,9 +1,6 @@
 // Button
 export { ButtonComponent, type ButtonVariant, type ButtonSize } from './button/button.component';
 
-// Card
-export { CardComponent, type CardVariant } from './card/card.component';
-
 // Tag
 export { TagComponent, type TagVariant, type TagSize } from './tag/tag.component';
 

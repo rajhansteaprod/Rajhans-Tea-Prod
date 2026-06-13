@@ -1,12 +1,12 @@
 <button
-  [class]="buttonClasses"
+  [ngClass]="buttonClasses"
   [type]="type"
   [disabled]="disabled || loading"
   (click)="onClick($event)"
 >
   @if (loading) {
-    <span class="btn__spinner"></span>
-    <span class="btn__text">Loading...</span>
+    <span class="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></span>
+    <span>Loading...</span>
   } @else {
     <ng-content></ng-content>
   }
