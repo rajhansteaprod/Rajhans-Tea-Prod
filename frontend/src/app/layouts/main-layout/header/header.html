@@ -1,3 +1,10 @@
+    <!-- ══════ TOP ANNOUNCEMENT BAR ══════ -->
+    <div class="announcement-bar">
+      <div class="announcement-bar__content">
+        Free Shipping on Orders Above ₹500 | Use Code: FREESHIP
+      </div>
+    </div>
+
     <!-- ══════ SINGLE LAYER HEADER ══════ -->
     <header class="nav nav-unified">
       <div class="nav-inner">
@@ -14,19 +21,25 @@
 
         <!-- CENTER: Nav Links -->
         <nav class="nav-links hide-mobile">
-          <button class="nav-link" (mouseenter)="openShop(); onCatHover(null)" (click)="navigateTo('/products')">
-            All Products
-            <svg class="nav-chevron" [class.flip]="shopOpen()" width="10" height="10" viewBox="0 0 24 24" fill="none">
-              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <a routerLink="/" class="nav-link" (click)="closeAll()">Home</a>
+          <a routerLink="/products" class="nav-link" (click)="closeAll()">Products</a>
+          <a routerLink="/page/about-us" class="nav-link" (click)="closeAll()">About Us</a>
+          <a routerLink="/contact" [queryParams]="{ reason: 'bulk' }" class="nav-link" (click)="closeAll()">Buy in Bulk</a>
+          <a routerLink="/blog" class="nav-link" (click)="closeAll()">Blog</a>
+           <!-- TEA FINDER Button -->
+          <a routerLink="/tea-finder" class="tea-finder-btn" (click)="closeAll()" title="Tea Finder">
+            <span>TEA FINDER</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
-          </button>
-          <a routerLink="/page/about-us" class="nav-link" (click)="closeAll()">Our Story</a>
-          <a routerLink="/blog" class="nav-link" (click)="closeAll()">Cup of Stories</a>
-          <a routerLink="/contact" [queryParams]="{ reason: 'bulk' }" class="nav-link" (click)="closeAll()">Buy in bulk</a>
+          </a>
         </nav>
 
-        <!-- RIGHT: Icons -->
+        <!-- RIGHT: TEA FINDER + Icons -->
         <div class="nav-right">
+         
+
           <!-- Search (hidden for now) -->
           @if (false) {
             <div class="nav-search-wrapper">

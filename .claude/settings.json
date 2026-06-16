@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+      "Bash (*)",
       "Bash(docker compose:*)",
       "Bash(npm audit:*)",
       "Bash(wc -l backend/src/modules/*/models/*.ts)",

@@ -25,7 +25,7 @@ body {
   min-height: 100vh;
 }
 
-// Headings: Poppins font family
+// Headings: DM Sans font family
 h1, h2, h3, h4, h5, h6 {
   font-family: $font-family-heading;
   font-weight: $font-weight-semibold;
@@ -39,13 +39,13 @@ h4 { font-size: $font-size-xl; }
 h5 { font-size: $font-size-lg; }
 h6 { font-size: $font-size-md; }
 
-// Buttons inherit Poppins
+// Buttons inherit DM Sans
 button {
   font-family: $font-family-heading;
   font-weight: $font-weight-medium;
 }
 
-// Form inputs use Poppins
+// Form inputs use DM Sans
 input,
 textarea,
 select {

@@ -1,13 +1,39 @@
 @use '../../../core/design-tokens/tokens' as *;
 @use '../../../core/design-tokens/mixins' as *;
 @use '../../../core/design-tokens/colors' as colors;
+
+// ═══════════════════════════════════════
+// ANNOUNCEMENT BAR
+// ═══════════════════════════════════════
+
+.announcement-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  background: #000000;
+  color: #ffffff;
+  z-index: #{$z-sticky + 1};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.announcement-bar__content {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
 // ═══════════════════════════════════════
 // SINGLE LAYER HEADER (Logo + Links + Icons)
 // ═══════════════════════════════════════
 
 .nav {
   position: fixed;
-  top: 0;
+  top: 32px;
   left: 0;
   right: 0;
   z-index: $z-sticky;
@@ -79,7 +105,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: $space-xxl;
+  gap: 24px;
   flex: 1;
   height: 100%;
 
@@ -109,7 +135,7 @@
   outline: none;
 
   &:hover {
-    border-bottom-color: colors.$secondary;
+    opacity: 0.8;
   }
 }
 
@@ -295,6 +321,43 @@
   }
 }
 
+.tea-finder-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #d14c2a;
+  color: #ffffff;
+  text-decoration: none;
+  border: none;
+  border-radius: 4px;
+  font-family: $font-family-heading;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: #c43d1f;
+    opacity: 0.9;
+  }
+
+  @include respond-to(md) {
+    display: none;
+  }
+}
+
 .nav-icon {
   display: flex;
   align-items: center;
@@ -409,7 +472,7 @@
 // ═══ MEGA MENU ═══
 .mega-menu {
   position: fixed;
-  top: $header-height;
+  top: calc(32px + $header-height);
   left: 0;
   right: 0;
   background: $color-mono-light;
@@ -497,7 +560,7 @@
   @include respond-to(md) {
     display: flex;
     position: fixed;
-    top: $header-height-md;
+    top: calc(32px + $header-height-md);
     left: 0;
     bottom: 65px;
     width: 100%;

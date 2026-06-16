@@ -59,7 +59,7 @@
   border: 1px solid $color-border-light;
 }
 
-// --- Display Typography (Poppins) ---
+// --- Display Typography (DM Sans) ---
 @mixin display-text($size: $font-size-display) {
   font-family: $font-family-display;
   font-size: $size;
@@ -90,7 +90,7 @@
   @include respond-to(md) { padding-top: $space-section-sm; padding-bottom: $space-section-sm; }
 }
 
-// --- Eyebrow Text (small uppercase label) — Poppins ---
+// --- Eyebrow Text (small uppercase label) — DM Sans ---
 @mixin eyebrow-text {
   font-family: $font-family-nav;
   font-size: $font-size-xs;
@@ -100,7 +100,7 @@
   color: $color-text-tertiary;
 }
 
-// --- Mega Headline (Poppins bold, ALL CAPS) ---
+// --- Mega Headline (DM Sans bold, ALL CAPS) ---
 @mixin mega-headline($size: $font-size-hero) {
   font-family: $font-family-heading;
   font-size: $size;
@@ -111,7 +111,7 @@
   color: $color-text-primary;
 }
 
-// --- Ghost Button (outlined, Poppins) ---
+// --- Ghost Button (outlined, DM Sans) ---
 @mixin ghost-button($border-color: $color-text-inverse, $text-color: $color-text-inverse) {
   display: inline-flex;
   align-items: center;
@@ -146,7 +146,7 @@
   }
 }
 
-// --- Luxury Nav Link (Poppins spaced uppercase) ---
+// --- Luxury Nav Link (DM Sans spaced uppercase) ---
 @mixin luxury-nav-link {
   font-family: $font-family-nav;
   font-size: 11px;
