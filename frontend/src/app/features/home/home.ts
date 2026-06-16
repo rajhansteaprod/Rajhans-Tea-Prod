@@ -15,6 +15,7 @@ import { StatsCarouselComponent } from './sections/stats-carousel/stats-carousel
 import { WhyChooseRajhansComponent } from './sections/why-choose-rajhans/why-choose-rajhans';
 import { QualityPromiseComponent } from './sections/quality-promise/quality-promise';
 import { ComparisonTableComponent } from './sections/comparison-table/comparison-table';
+import { OurGardensComponent } from './sections/our-gardens/our-gardens';
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -24,6 +25,7 @@ import { ComparisonTableComponent } from './sections/comparison-table/comparison
     WhyChooseRajhansComponent,
     QualityPromiseComponent,
     ComparisonTableComponent,
+    OurGardensComponent,
     BigStatementComponent,
     Usp2Component,
     USPGridComponent,
