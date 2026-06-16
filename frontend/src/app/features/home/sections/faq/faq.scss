@@ -1,0 +1,139 @@
+@use '../../../../core/design-tokens/tokens' as *;
+@use '../../../../core/design-tokens/mixins' as *;
+
+.faq {
+  width: 100%;
+  background: #ffffff;
+  padding-top: 40px;
+
+  @include respond-to(md) {
+   padding-top: 20px;
+  }
+
+  @include respond-to(sm) {
+    padding-top: 20px;
+  }
+}
+
+.faq__container {
+  @include content-container();
+}
+
+.faq__title {
+  font-family: $font-family-display;
+  font-size: clamp(40px, 5vw, 56px);
+  font-weight: $font-weight-medium;
+  color: #000000;
+  margin: 0 0 64px 0;
+  text-align: center;
+  line-height: 1.2;
+
+  @include respond-to(md) {
+    font-size: 40px;
+    margin-bottom: 48px;
+  }
+
+  @include respond-to(sm) {
+    font-size: 32px;
+    margin-bottom: 40px;
+  }
+}
+
+.faq__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.faq__item {
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #d0d0d0;
+  }
+
+  &--open {
+    border-color: #d0d0d0;
+  }
+}
+
+.faq__question {
+  width: 100%;
+  padding: 24px;
+  border: none;
+  background: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: all 0.2s ease;
+
+  @include respond-to(sm) {
+    padding: 20px;
+  }
+
+  &:hover {
+    background: #fafafa;
+  }
+
+  .faq__item--open & {
+    background: #fafafa;
+  }
+}
+
+.faq__question-text {
+  font-family: $font-family-heading;
+  font-size: 16px;
+  font-weight: $font-weight-medium;
+  color: #000000;
+  text-align: left;
+  flex: 1;
+  line-height: 1.5;
+
+  @include respond-to(sm) {
+    font-size: 15px;
+  }
+}
+
+.faq__icon {
+  flex-shrink: 0;
+  color: #666666;
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s ease;
+
+  .faq__item--open & {
+    transform: rotate(180deg);
+  }
+}
+
+.faq__answer {
+  padding: 0 24px 24px 24px;
+  font-family: $font-family-body;
+  font-size: 15px;
+  font-weight: $font-weight-regular;
+  color: #666666;
+  line-height: 1.6;
+  background: #fafafa;
+  animation: slideDown 0.3s ease;
+
+  @include respond-to(sm) {
+    padding: 0 20px 20px 20px;
+    font-size: 14px;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

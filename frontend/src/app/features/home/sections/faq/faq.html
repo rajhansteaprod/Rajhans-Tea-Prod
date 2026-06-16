@@ -1,0 +1,25 @@
+<section class="faq">
+  <div class="faq__container">
+    <!-- Title -->
+    <h2 class="faq__title">Frequently Asked Questions</h2>
+
+    <!-- FAQ Items -->
+    <div class="faq__list">
+      @for (faq of faqs; track faq.id) {
+        <div class="faq__item" [class.faq__item--open]="faq.isOpen">
+          <button class="faq__question" (click)="toggleFAQ(faq)">
+            <span class="faq__question-text">{{ faq.question }}</span>
+            <svg class="faq__icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          @if (faq.isOpen) {
+            <div class="faq__answer">
+              {{ faq.answer }}
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</section>
