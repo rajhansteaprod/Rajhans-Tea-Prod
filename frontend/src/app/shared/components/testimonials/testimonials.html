@@ -1,23 +1,69 @@
 <section class="testimonials">
-  <!-- Header -->
-  <div class="testimonials__header">
-    <h2 class="testimonials__title">Customer Testimonials</h2>
-    <p class="testimonials__subtitle">What our customers love about Rajhans Tea</p>
-  </div>
+  <div class="testimonials__container">
+    <!-- Header with Scroll Arrows -->
+    <div class="testimonials__header">
+      <h2 class="testimonials__title">RECENT TESTIMONIALS</h2>
+      <div class="testimonials__controls">
+        <button
+          class="testimonials__scroll-btn"
+          (click)="scrollLeft()"
+          [disabled]="!canScrollLeft"
+          aria-label="Scroll testimonials left">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button
+          class="testimonials__scroll-btn"
+          (click)="scrollRight()"
+          [disabled]="!canScrollRight"
+          aria-label="Scroll testimonials right">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
 
-  <!-- Senja Widget Container -->
-  <div class="testimonials__widget-container">
-    <script
-      src="https://widget.senja.io/widget/55cc1781-1621-4504-8830-8e1437297226/platform.js"
-      type="text/javascript"
-      async
-    ></script>
-    <div
-      class="senja-embed"
-      data-id="55cc1781-1621-4504-8830-8e1437297226"
-      data-mode="shadow"
-      data-lazyload="false"
-      style="display: block; width: 100%"
-    ></div>
+    <!-- Testimonials Grid -->
+    <div class="testimonials__grid">
+      @for (testimonial of visibleTestimonials; track $index) {
+        <div class="testimonials__card">
+          <!-- Stars -->
+          <div class="testimonials__rating">
+            @for (star of [1,2,3,4,5]; track star) {
+              <svg class="testimonials__star" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+              </svg>
+            }
+          </div>
+
+          <!-- Badge -->
+          <div class="testimonials__badge">VERIFIED BUYER</div>
+
+          <!-- Product Name -->
+          <h3 class="testimonials__product">{{ testimonial.productName }}</h3>
+
+          <!-- Quote -->
+          <p class="testimonials__quote">{{ testimonial.quote }}</p>
+
+          <!-- Image -->
+          @if (testimonial.image) {
+            <img class="testimonials__image" [src]="testimonial.image" alt="{{ testimonial.productName }}"/>
+          }
+
+          <!-- User Info -->
+          <div class="testimonials__user">
+            <div class="testimonials__avatar" [style.background-color]="testimonial.userInitialsBg">
+              {{ testimonial.userInitials }}
+            </div>
+            <div class="testimonials__user-info">
+              <h4 class="testimonials__user-name">{{ testimonial.userName }}</h4>
+              <p class="testimonials__user-date">{{ testimonial.date }}</p>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
   </div>
 </section>
