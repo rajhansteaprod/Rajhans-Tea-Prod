@@ -338,7 +338,7 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   white-space: nowrap;
   flex-shrink: 0;
 
@@ -349,8 +349,9 @@
   }
 
   &:hover {
-    background: #c43d1f;
-    opacity: 0.9;
+    background: #000000;
+    color: #ffffff;
+    transform: translate(2px, 2px);
   }
 
   @include respond-to(md) {
