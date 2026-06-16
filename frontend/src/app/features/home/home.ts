@@ -11,12 +11,13 @@ import { StorytellingComponent } from './sections/storytelling/storytelling';
 import { TestimonialComponent } from './sections/testimonial/testimonial';
 import { CupOfStoriesComponent } from './sections/cup-of-stories/cup-of-stories';
 import { TestimonialsComponent } from '../../shared/components/testimonials/testimonials.component';
-
+import { StatsCarouselComponent } from './sections/stats-carousel/stats-carousel';
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [
     HeroComponent,
+    StatsCarouselComponent,
     BigStatementComponent,
     Usp2Component,
     USPGridComponent,

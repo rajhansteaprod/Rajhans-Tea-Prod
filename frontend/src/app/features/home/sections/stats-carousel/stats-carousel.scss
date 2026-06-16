@@ -1,0 +1,76 @@
+@use '../../../../core/design-tokens/tokens' as *;
+@use '../../../../core/design-tokens/mixins' as *;
+
+.stats-carousel {
+  width: 100%;
+  background: #000000;
+  overflow: hidden;
+  padding: $space-md 0;
+
+  @include respond-to(md) {
+    padding: $space-sm 0;
+  }
+}
+
+.stats-carousel__track {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: $space-lg;
+  animation: scroll 20s linear infinite;
+  white-space: nowrap;
+
+  @include respond-to(md) {
+    gap: $space-md;
+    animation: scroll 15s linear infinite;
+  }
+
+  @include respond-to(sm) {
+    gap: $space-sm;
+    animation: scroll 12s linear infinite;
+  }
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.stats-carousel__item {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  flex-shrink: 0;
+  min-width: max-content;
+
+  @include respond-to(md) {
+    gap: $space-sm;
+  }
+}
+
+.stats-carousel__text {
+  font-family: $font-family-heading;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+  white-space: nowrap;
+
+  @include respond-to(md) {
+    font-size: 11px;
+  }
+
+  @include respond-to(sm) {
+    font-size: 10px;
+  }
+}
+
+.stats-carousel__divider {
+  flex-shrink: 0;
+  opacity: 0.8;
+}

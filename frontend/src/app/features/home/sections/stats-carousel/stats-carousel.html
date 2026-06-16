@@ -1,0 +1,14 @@
+<div class="stats-carousel">
+  <div class="stats-carousel__track">
+    @for (stat of displayStats(); track $index) {
+      <div class="stats-carousel__item">
+        <span class="stats-carousel__text">{{ stat.text }}</span>
+        @if ($index < displayStats().length - 1) {
+          <svg class="stats-carousel__divider" width="8" height="8" viewBox="0 0 8 8" fill="none">
+            <circle cx="4" cy="4" r="4" fill="#D4A574"/>
+          </svg>
+        }
+      </div>
+    }
+  </div>
+</div>
