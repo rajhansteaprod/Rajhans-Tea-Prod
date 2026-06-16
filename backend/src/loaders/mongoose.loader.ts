@@ -3,7 +3,7 @@ import { config } from '../config';
 import { logger } from '../utils/logger';
 
 export const connectMongoDB = async (): Promise<void> => {
-  const uri = config.env === 'test' ? config.mongo.testUri : config.mongo.uri;
+  const uri = config.env === 'development' ? config.mongo.testUri : config.mongo.uri;
 
   try {
     await mongoose.connect(uri);

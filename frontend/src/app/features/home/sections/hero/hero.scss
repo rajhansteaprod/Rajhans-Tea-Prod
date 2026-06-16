@@ -278,16 +278,15 @@ picture {
 .hero__dot {
   width: 10px;
   height: 10px;
-  border-radius: $radius-full;
-  background: rgba($color-mono-dark, 0.3);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.4);
   border: none;
   cursor: pointer;
   padding: 0;
   transition: all 0.3s ease;
 
   &:hover {
-    background: rgba($color-mono-dark, 0.6);
-    transform: scale(1.15);
+    background: rgba(255, 255, 255, 0.6);
   }
 
   &:focus-visible {
@@ -311,10 +310,22 @@ picture {
 }
 
 .hero__dot--active {
-  background: $color-mono-dark;
+  width: 24px;
+  height: 6px;
+  background: #ffffff;
   transform: scale(1);
 
   &:hover {
-    transform: scale(1.15);
+    background: #ffffff;
+  }
+
+  @include respond-to(md) {
+    width: 20px;
+    height: 5px;
+  }
+
+  @include respond-to(sm) {
+    width: 16px;
+    height: 4px;
   }
 }

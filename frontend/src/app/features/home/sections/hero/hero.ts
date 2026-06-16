@@ -9,7 +9,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { CmsService, HeroSlide } from '../../../../core/services/cms.service';
 
-const AUTO_SLIDE_INTERVAL = 5000;
+const AUTO_SLIDE_INTERVAL = 3000;
 
 @Component({
   selector: 'app-hero',
