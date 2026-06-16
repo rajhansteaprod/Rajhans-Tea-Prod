@@ -1,0 +1,282 @@
+@use '../../../../core/design-tokens/tokens' as *;
+@use '../../../../core/design-tokens/mixins' as *;
+
+.comparison {
+  width: 100%;
+  background: #ffffff;
+  padding: 40px 0;
+
+  @include respond-to(md) {
+    padding: 20px 0;
+  }
+}
+
+.comparison__header {
+  @include content-container();
+  text-align: center;
+   
+ 
+}
+
+.comparison__heading {
+  font-family: $font-family-display;
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: $font-weight-medium;
+  color: #000000;
+  margin: 0 0 $space-md;
+  line-height: 1.2;
+
+  @include respond-to(md) {
+    font-size: 28px;
+    margin-bottom: $space-sm;
+  }
+
+  @include respond-to(sm) {
+    font-size: 24px;
+  }
+}
+
+.comparison__vs {
+  color: #c55a29;
+}
+
+.comparison__subtitle {
+  font-family: $font-family-body;
+  font-size: $font-size-md;
+  font-weight: $font-weight-regular;
+  color: #666666;
+  margin: 0;
+
+  @include respond-to(md) {
+    font-size: $font-size-sm;
+  }
+}
+
+.comparison__table-wrapper {
+  @include content-container();
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  @include respond-to(md) {
+    overflow-x: auto;
+  }
+
+  @include respond-to(sm) {
+    overflow-x: auto;
+    min-width: 100%;
+  }
+}
+
+.comparison__table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  overflow: hidden;
+
+  @include respond-to(md) {
+    min-width: 700px;
+  }
+
+  @include respond-to(sm) {
+    min-width: 700px;
+  }
+}
+
+.comparison__th {
+  padding: $space-md $space-md;
+  text-align: center;
+  font-family: $font-family-heading;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: #000000;
+  border-bottom: 1px solid #e5e5e5;
+  background: #ffffff;
+
+  @include respond-to(md) {
+    padding: $space-md $space-md;
+    font-size: 13px;
+  }
+
+  @include respond-to(sm) {
+    padding: $space-sm $space-sm;
+    font-size: 12px;
+  }
+
+  &--key {
+    text-align: center;
+  }
+
+  &--rajhans {
+    border-left: 2px solid #c55a29;
+    border-right: 2px solid #c55a29;
+    border-top: 2px solid #c55a29;
+    background: rgba(197, 90, 41, 0.05);
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+  }
+}
+
+.comparison__header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.comparison__cup-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+
+  @include respond-to(md) {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.comparison__column-title {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+
+  @include respond-to(md) {
+    font-size: 13px;
+  }
+
+  .comparison__th--rajhans & {
+    color: #c55a29;
+  }
+}
+
+.comparison__row {
+  border-bottom: 1px solid #e5e5e5;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  &--last {
+    border-bottom: none;
+  }
+}
+
+.comparison__td {
+  padding: $space-md $space-md;
+  text-align: left;
+  vertical-align: middle;
+ padding:32px 40px;
+  @include respond-to(md) {
+    padding:32px 40px;
+  }
+
+  @include respond-to(sm) {
+    padding: $space-sm $space-sm;
+  }
+
+  &--key {
+    text-align: left;
+    background: transparent;
+  }
+
+  &--rajhans {
+    background: rgba(197, 90, 41, 0.05);
+    border-left: 2px solid #c55a29;
+    border-right: 2px solid #c55a29;
+  }
+
+  .comparison__row--last &--rajhans {
+    border-bottom: 2px solid #c55a29;
+    border-radius: 0 0 4px 4px;
+  }
+}
+
+.comparison__feature {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  justify-content: flex-start;
+}
+
+.comparison__feature-icon {
+  flex-shrink: 0;
+  color: #666666;
+  width: 20px;
+  height: 20px;
+}
+
+.comparison__feature-name {
+  font-family: $font-family-heading;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: #000000;
+  line-height: 1.3;
+
+  @include respond-to(md) {
+    font-size: 14px;
+  }
+
+  @include respond-to(sm) {
+    font-size: 13px;
+  }
+}
+
+.comparison__benefit-group {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-sm;
+  justify-content: flex-start;
+}
+
+.comparison__icon-check,
+.comparison__icon-cross {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+}
+
+.comparison__benefit {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: #000000;
+  margin: 0;
+  line-height: 1.3;
+  text-align: left;
+
+  @include respond-to(md) {
+    font-size: 14px;
+  }
+
+  @include respond-to(sm) {
+    font-size: 13px;
+  }
+
+  &--negative {
+    color: #666666;
+  }
+}
+
+.comparison__subtext {
+  font-family: $font-family-body;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-regular;
+  color: #999999;
+  margin: 2px 0 0 0;
+  line-height: 1.3;
+  text-align: left;
+
+  @include respond-to(md) {
+    font-size: 12px;
+  }
+
+  @include respond-to(sm) {
+    font-size: 11px;
+  }
+
+  &--negative {
+    color: #999999;
+  }
+}

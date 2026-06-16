@@ -1,0 +1,45 @@
+<section class="why-choose">
+  <div class="why-choose__content">
+    <h2 class="why-choose__heading">Why Choose Rajhans?</h2>
+
+    <div class="why-choose__grid">
+      @for (feature of features; track feature.title) {
+        <div class="why-choose__card">
+          <div class="why-choose__icon-wrapper">
+            @switch (feature.icon) {
+              @case ('leaf') {
+                <svg class="why-choose__icon" width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <path d="M24 4C24 4 16 12 16 20C16 28.8366 19.5817 36 24 36C28.4183 36 32 28.8366 32 20C32 12 24 4 24 4Z" stroke="#B65A3A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M24 36V44" stroke="#B65A3A" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              }
+              @case ('shield') {
+                <svg class="why-choose__icon" width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <path d="M24 4L8 12V24C8 35.0457 24 44 24 44C24 44 40 35.0457 40 24V12L24 4Z" stroke="#B65A3A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M18 24L22 28L30 20" stroke="#B65A3A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              }
+              @case ('spice') {
+                <svg class="why-choose__icon" width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <path d="M24 4C24 4 16 12 16 20C16 28.8366 19.5817 36 24 36C28.4183 36 32 28.8366 32 20C32 12 24 4 24 4Z" stroke="#B65A3A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M24 36V44" stroke="#B65A3A" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              }
+              @case ('cups') {
+                <svg class="why-choose__icon" width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <circle cx="16" cy="24" r="8" stroke="#B65A3A" stroke-width="2"/>
+                  <circle cx="32" cy="24" r="8" stroke="#B65A3A" stroke-width="2"/>
+                  <circle cx="12" cy="36" r="4" stroke="#B65A3A" stroke-width="1.5" opacity="0.6"/>
+                  <circle cx="28" cy="36" r="4" stroke="#B65A3A" stroke-width="1.5" opacity="0.6"/>
+                </svg>
+              }
+            }
+          </div>
+
+          <h3 class="why-choose__card-title">{{ feature.title }}</h3>
+          <p class="why-choose__card-description">{{ feature.description }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>

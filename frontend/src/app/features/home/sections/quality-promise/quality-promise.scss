@@ -1,0 +1,84 @@
+@use '../../../../core/design-tokens/tokens' as *;
+@use '../../../../core/design-tokens/mixins' as *;
+
+.quality-promise {
+  width: 100%;
+  background: #7a7a7a;
+  padding: 120px 0;
+
+  @include respond-to(md) {
+    padding: 100px 0;
+  }
+
+  @include respond-to(sm) {
+    padding: 80px 0;
+  }
+}
+
+.quality-promise__content {
+  @include content-container();
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+
+  @include respond-to(md) {
+    gap: 20px;
+  }
+
+  @include respond-to(sm) {
+    gap: 16px;
+  }
+}
+
+.quality-promise__label {
+  font-family: $font-family-heading;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d4a574;
+  margin: 0;
+  line-height: 1;
+
+  @include respond-to(sm) {
+    font-size: 11px;
+  }
+}
+
+.quality-promise__heading {
+  font-family: $font-family-display;
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: $font-weight-medium;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.3;
+  max-width: 800px;
+
+  @include respond-to(md) {
+    font-size: 32px;
+  }
+
+  @include respond-to(sm) {
+    font-size: 24px;
+  }
+}
+
+.quality-promise__description {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-regular;
+  color: #ffffff;
+  margin: 0;
+  line-height: $line-height-relaxed;
+  max-width: 900px;
+
+  @include respond-to(md) {
+    font-size: 15px;
+  }
+
+  @include respond-to(sm) {
+    font-size: 14px;
+  }
+}
