@@ -17,7 +17,7 @@
           <h1 class="hero__h1">{{ slides()[activeSlide()].title }}</h1>
           <p class="hero__sub">{{ slides()[activeSlide()].subtitle }}</p>
           <div class="hero__actions">
-            <a [routerLink]="slides()[activeSlide()].ctaLink" class="hero__cta">{{ slides()[activeSlide()].ctaText }}</a>
+            <a [routerLink]="slides()[activeSlide()].ctaLink" class="hero__cta">{{ slides()[activeSlide()].ctaText }} &rarr;</a>
           </div>
         </div>
       </div>

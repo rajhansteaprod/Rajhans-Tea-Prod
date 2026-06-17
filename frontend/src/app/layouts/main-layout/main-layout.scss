@@ -10,10 +10,10 @@
 
 .content {
   flex: 1;
-  padding-top: $header-height; // single unified header (70px)
+  padding-top: calc(#{$announcement-bar-height} + #{$header-height});
 
   @include respond-to(md) {
-    padding-top: $header-height-md; // header only on mobile (60px)
+    padding-top: calc(#{$announcement-bar-height} + #{$header-height-md});
     padding-bottom: $bottom-nav-height; // bottom mobile nav (60px)
   }
 }

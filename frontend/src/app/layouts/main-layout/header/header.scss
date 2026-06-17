@@ -119,14 +119,14 @@
   align-items: center;
   height: 100%;
   font-family: $font-family-heading;
-  font-size: $font-size-sm;
-  font-weight: 500;
-  color: $color-mono-dark;
+  font-size: 16px;
+  font-weight:400;
+  color: #364153;
   text-decoration: none;
   border: none;
   border-bottom: 2px solid transparent;
   transition: all 0.2s ease;
-  text-transform: uppercase;
+  
   letter-spacing: 0.05em;
   padding: 0 $space-xs;
   white-space: nowrap;
@@ -312,7 +312,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: $space-lg;
+  gap: 12px;
   flex-shrink: 0;
   height: 100%;
 
