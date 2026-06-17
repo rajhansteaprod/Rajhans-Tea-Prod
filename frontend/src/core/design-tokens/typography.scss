@@ -3,7 +3,8 @@
 // ============================================================================
 
 // Font Family
-$font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+$font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+$font-family-heading: 'Cormorant Garamond', serif;
 $font-family-mono: 'Courier New', monospace;
 
 // Font Sizes
@@ -37,7 +38,7 @@ $tracking-wide: 0.02em;
 
 // TYPOGRAPHY STYLES (Mixins)
 @mixin heading-1 {
-  font-family: $font-family;
+  font-family: $font-family-heading;
   font-size: $font-5xl;
   font-weight: $weight-bold;
   line-height: $line-tight;
@@ -45,7 +46,7 @@ $tracking-wide: 0.02em;
 }
 
 @mixin heading-2 {
-  font-family: $font-family;
+  font-family: $font-family-heading;
   font-size: $font-4xl;
   font-weight: $weight-bold;
   line-height: $line-tight;
@@ -53,7 +54,7 @@ $tracking-wide: 0.02em;
 }
 
 @mixin heading-3 {
-  font-family: $font-family;
+  font-family: $font-family-heading;
   font-size: $font-3xl;
   font-weight: $weight-semibold;
   line-height: $line-normal;
@@ -61,7 +62,7 @@ $tracking-wide: 0.02em;
 }
 
 @mixin heading-4 {
-  font-family: $font-family;
+  font-family: $font-family-heading;
   font-size: $font-2xl;
   font-weight: $weight-semibold;
   line-height: $line-normal;

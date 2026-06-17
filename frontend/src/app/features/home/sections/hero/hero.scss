@@ -96,12 +96,11 @@ picture {
 
 // ── Typography ──
 .hero__h1 {
-  font-family: $font-family-display;
+  font-family: $font-heading;
   font-size: clamp(36px, 5vw, 64px);
-  font-weight: $font-weight-medium;
+  font-weight: 700;
   line-height: 1.15;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: $color-text-inverse;
   margin: 0 0 $space-md;
   max-width: 700px;
