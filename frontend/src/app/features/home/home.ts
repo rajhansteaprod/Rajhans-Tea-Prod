@@ -17,6 +17,7 @@ import { QualityPromiseComponent } from './sections/quality-promise/quality-prom
 import { ComparisonTableComponent } from './sections/comparison-table/comparison-table';
 import { OurGardensComponent } from './sections/our-gardens/our-gardens';
 import { FAQComponent } from './sections/faq/faq';
+import { BoringBannerComponent } from './sections/boring-banner/boring-banner.component';
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -26,6 +27,7 @@ import { FAQComponent } from './sections/faq/faq';
     WhyChooseRajhansComponent,
     QualityPromiseComponent,
     ComparisonTableComponent,
+    BoringBannerComponent,
     OurGardensComponent,
     FAQComponent,
     BigStatementComponent,
