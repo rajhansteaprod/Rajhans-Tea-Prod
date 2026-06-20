@@ -121,11 +121,11 @@
 
           <!-- Account -->
           @if (auth.isLoggedIn()) {
-            <a routerLink="/dashboard" class="nav-icon hide-mobile" (click)="closeAll()" title="Account">
+            <a routerLink="/dashboard" class="nav-icon" (click)="closeAll()" title="Account">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/></svg>
             </a>
           } @else {
-            <a routerLink="/auth/login" class="nav-icon hide-mobile" (click)="closeAll()" title="Account">
+            <a routerLink="/auth/login" class="nav-icon" (click)="closeAll()" title="Account">
              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user w-5 h-5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             </a>
           }
