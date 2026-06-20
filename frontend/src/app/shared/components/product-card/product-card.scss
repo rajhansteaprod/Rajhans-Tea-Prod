@@ -4,19 +4,19 @@
 :host {
   display: flex;
   flex-direction: column;
-  flex: 0 0 calc(25% - 24px);
-  max-width: 300px;
+  flex: 0 0 100%;
 
-  @include respond-to(lg) {
-    flex: 0 0 calc(33.333% - 16px);
+  @media (min-width: 640px) {
+    flex: 0 0 calc(50% - 12px);
   }
 
-  @include respond-to(md) {
-    flex: 0 0 calc(50% - 8px);
+  @media (min-width: 768px) {
+    flex: 0 0 calc(33.333% - 10px);
   }
 
-  @include respond-to(sm) {
-    flex: 0 0 100%;
+  @media (min-width: 1024px) {
+    flex: 0 0 calc(25% - 8px);
+    max-width: 300px;
   }
 }
 

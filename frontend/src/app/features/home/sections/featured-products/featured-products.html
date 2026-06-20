@@ -1,29 +1,32 @@
 @if (products().length > 0) {
   <section class="featured">
-    <!-- Header -->
-    <div class="featured__header">
-      <div class="featured__header-content">
-        <h2 class="featured__title">Featured Products</h2>
-        <p class="featured__subtitle">Discover our handpicked selection of premium teas</p>
+    <div class="featured__container">
+      <!-- Header -->
+      <div class="featured__header">
+        <div class="featured__header-left">
+          <p class="featured__label">Start Your Day</p>
+          <h2 class="featured__title">Morning Tea</h2>
+        </div>
+        <a class="featured__view-all" href="/products">View All →</a>
       </div>
-    </div>
 
-    <!-- Product Grid -->
-    <div class="featured__grid">
-      @for (product of products(); track product._id) {
-        <app-product-card
-          [product]="product"
-          [isHovering]="isHovering(product._id)"
-          [isWishlisted]="isWishlisted(product._id)"
-          [getRating]="getRating"
-          [getReviewCount]="getReviewCount"
-          (imageHover)="setHovering(product._id, $event)"
-          (toggleWishlistClick)="toggleWishlist(product, $event)"
-          (addToCartClick)="addToCart(product, $event)"
-          (buyNowClick)="buyNow(product, $event)"
-          (cardClick)="goToProduct(product)"
-        />
-      }
+      <!-- Product Grid -->
+      <div class="featured__grid">
+        @for (product of products(); track product._id) {
+          <app-product-card
+            [product]="product"
+            [isHovering]="isHovering(product._id)"
+            [isWishlisted]="isWishlisted(product._id)"
+            [getRating]="getRating"
+            [getReviewCount]="getReviewCount"
+            (imageHover)="setHovering(product._id, $event)"
+            (toggleWishlistClick)="toggleWishlist(product, $event)"
+            (addToCartClick)="addToCart(product, $event)"
+            (buyNowClick)="buyNow(product, $event)"
+            (cardClick)="goToProduct(product)"
+          />
+        }
+      </div>
     </div>
   </section>
 }
