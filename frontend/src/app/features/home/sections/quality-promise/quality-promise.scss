@@ -2,83 +2,104 @@
 @use '../../../../core/design-tokens/mixins' as *;
 
 .quality-promise {
+  position: relative;
   width: 100%;
-  background: #7a7a7a;
-  padding: 120px 0;
+  background: #111827;
+  padding: 96px 0;
+  overflow: hidden;
 
-  @include respond-to(md) {
-    padding: 100px 0;
+  @media (min-width: 768px) {
+    padding: 128px 0;
+  }
+}
+
+.quality-promise__bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('/uploads/tea-tasting.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  @media (min-width: 768px) {
+    background-position: right;
+  }
+}
+
+.quality-promise__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0));
+  z-index: 1;
+}
+
+.quality-promise__container {
+  position: relative;
+  z-index: 2;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  justify-content: flex-start;
+
+  @media (min-width: 640px) {
+    padding: 0 24px;
   }
 
-  @include respond-to(sm) {
-    padding: 80px 0;
+  @media (min-width: 1024px) {
+    padding: 0 32px;
   }
 }
 
 .quality-promise__content {
-  @include content-container();
-  text-align: center;
+  max-width: 640px;
+  text-align: left;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 24px;
+  gap: 16px;
 
-  @include respond-to(md) {
-    gap: 20px;
-  }
-
-  @include respond-to(sm) {
-    gap: 16px;
+  @media (min-width: 768px) {
+    gap: 24px;
   }
 }
 
 .quality-promise__label {
-  font-family: $font-family-heading;
+  font-family: $font-family;
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #d4a574;
+  color: #b35c3e;
   margin: 0;
   line-height: 1;
 
-  @include respond-to(sm) {
-    font-size: 11px;
+  @media (min-width: 768px) {
+    font-size: 14px;
   }
 }
 
 .quality-promise__heading {
-  font-family: $font-family-display;
-  font-size: clamp(28px, 4vw, 44px);
-  font-weight: $font-weight-medium;
+  font-family: $font-heading;
+  font-size: 30px;
+  font-weight: 700;
   color: #ffffff;
   margin: 0;
   line-height: 1.3;
-  max-width: 800px;
 
-  @include respond-to(md) {
-    font-size: 32px;
-  }
-
-  @include respond-to(sm) {
-    font-size: 24px;
+  @media (min-width: 768px) {
+    font-size: 48px;
   }
 }
 
 .quality-promise__description {
-  font-family: $font-family-body;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-regular;
-  color: #ffffff;
+  font-family: $font-family;
+  font-size: 14px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.8);
   margin: 0;
-  line-height: $line-height-relaxed;
-  max-width: 900px;
+  line-height: 1.6;
 
-  @include respond-to(md) {
-    font-size: 15px;
-  }
-
-  @include respond-to(sm) {
-    font-size: 14px;
+  @media (min-width: 768px) {
+    font-size: 16px;
   }
 }
