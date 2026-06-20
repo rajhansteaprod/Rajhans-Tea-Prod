@@ -14,9 +14,11 @@
         </button>
 
         <!-- LEFT: Logo -->
-        <a routerLink="/" class="logo" (click)="closeAll()">
-          <img src="logo.png" alt="Rajhans Tea Logo" class="logo-image" />
-          <span class="logo-name">RAJHANS TEA</span>
+        <a class="logo" href="/">
+          <div class="logo-icon">
+            <span>RT</span>
+          </div>
+          <span class="logo-text">Rajhans Tea</span>
         </a>
 
         <!-- CENTER: Nav Links -->
@@ -28,11 +30,8 @@
           <a routerLink="/blog" class="nav-link" (click)="closeAll()">Blog</a>
            <!-- TEA FINDER Button -->
           <a routerLink="/tea-finder" class="tea-finder-btn" (click)="closeAll()" title="Tea Finder">
-            <span>TEA FINDER</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/>
-              <path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
+            <span>  Tea Finder 🎯</span>
+           
           </a>
         </nav>
 

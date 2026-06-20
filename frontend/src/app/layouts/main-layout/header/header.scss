@@ -73,31 +73,35 @@
 
 .logo {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: $space-xs;
+  gap: 8px;
   text-decoration: none;
-  flex-shrink: 0;
-  padding: 0 $space-sm;
-  margin-right: $space-lg;
-  cursor: pointer;
 
   &:hover {
     opacity: 0.8;
   }
 }
 
-.logo-image {
-  height: 50px;
-  width: auto;
-  display: block;
-  object-fit: contain;
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background-color: #c2410c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
 
-  @include respond-to(md) {
-    height: 28px;
-    display:none;
-  }
+.logo-icon span {
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.logo-text {
+  font-weight: 600;
+  color: #111827;
+  font-size: 16px;
 }
 
 // Center navigation links
@@ -115,42 +119,12 @@
 }
 
 .nav-link {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  font-family: $font-family-heading;
   font-size: 16px;
-  font-weight:400;
-  color: #364153;
+  color: #374151;
   text-decoration: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s ease;
-  
-  letter-spacing: 0.05em;
-  padding: 0 $space-xs;
-  white-space: nowrap;
-  cursor: pointer;
-  background: none;
-  outline: none;
 
   &:hover {
-    opacity: 0.8;
-  }
-}
-
-.logo-name {
-  font-family: $font-family-body;
-  font-size: 12px;
-  font-weight: $font-weight-medium;
-  color: $color-mono-dark;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  line-height: 1;
-  white-space: nowrap;
-  display: none;
-  @include respond-to(md) {
-    display: block;
+    color: #111827;
   }
 }
 
@@ -322,23 +296,21 @@
 }
 
 .tea-finder-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: #d14c2a;
-  color: #ffffff;
-  text-decoration: none;
-  border: none;
-  border-radius: 4px;
-  font-family: $font-family-heading;
-  font-size: 11px;
+  padding: 6px 16px;
+  background: #c2410c;
+  color: #fff;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  border: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.3s ease, transform 0.3s ease;
   cursor: pointer;
-  transition: all 0.3s ease;
   white-space: nowrap;
   flex-shrink: 0;
 
@@ -349,9 +321,8 @@
   }
 
   &:hover {
-    background: #000000;
-    color: #ffffff;
-    transform: translate(2px, 2px);
+    background-color: #2d1810;
+    transform: scale(1.02);
   }
 
   @include respond-to(md) {
