@@ -531,6 +531,7 @@
 
   @include respond-to(md) {
     display: flex;
+    justify-content: space-between;
     position: fixed;
     top: calc(32px + $header-height-md);
     left: 0;
