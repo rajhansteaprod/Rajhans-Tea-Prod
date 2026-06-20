@@ -2,71 +2,112 @@
 @use '../../../../core/design-tokens/mixins' as *;
 
 .why-choose {
+  position: relative;
   width: 100%;
-  background: #f5f1ed;
-  padding: $space-section 0;
+  background: #f5f2eb;
+  overflow: hidden;
+
+  @media (min-width: 993px) {
+    aspect-ratio: 8 / 3;
+  }
+}
+
+.why-choose__bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('/uploads/why-choose-rajhans.png');
+  background-size: cover;
+  background-position: right;
+  background-repeat: no-repeat;
+  opacity: 1;
 
   @include respond-to(md) {
-    padding: $space-section-sm 0;
+    background-position: center;
+  }
+}
+
+.why-choose__overlay {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 64px 16px;
+
+  @media (min-width: 576px) {
+    padding: 64px 24px;
+  }
+
+  @media (min-width: 993px) {
+    height: 100%;
+    padding: 0 16px;
   }
 }
 
 .why-choose__content {
-  @include content-container();
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 12px;
+
+  @include respond-to(lg) {
+    padding: 0 8px;
+  }
+
+  @include respond-to(md) {
+    padding: 0;
+  }
+}
+
+.why-choose__text-wrapper {
+  transform: translateX(0);
+
+  @media (min-width: 993px) {
+    transform: translateX(-24px);
+  }
 }
 
 .why-choose__heading {
-  font-family: $font-family-display;
-  font-size: clamp(40px, 5vw, 52px);
-  font-weight: $font-weight-medium;
-  letter-spacing: 0;
-  color: #000000;
-  margin: 0 0 $space-section;
+  font-family: $font-heading;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1f1f1f;
+  margin: 0 0 40px;
   text-align: left;
+  max-width: 700px;
 
   @include respond-to(md) {
-    margin-bottom: $space-section-sm;
-    font-size: 32px;
+    font-size: 48px;
+    margin-bottom: 32px;
   }
 
-  @include respond-to(sm) {
-    font-size: 28px;
-    margin-bottom: $space-lg;
+  @include respond-to(lg) {
+    font-size: 60px;
   }
 }
 
 .why-choose__grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: $space-xxl;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  max-width: 1024px;
 
-  @include respond-to(md) {
-    grid-template-columns: repeat(2, 1fr);
-    gap: $space-xl;
-  }
-
-  @include respond-to(sm) {
-    grid-template-columns: repeat(2, 1fr);
-    gap: $space-lg;
+  @media (min-width: 993px) {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
 .why-choose__card {
   display: flex;
   flex-direction: column;
-  gap: $space-md;
+  gap: 10px;
   padding: 0;
   background: transparent;
   border: none;
   box-shadow: none;
-
-  @include respond-to(md) {
-    gap: $space-md;
-  }
-
-  @include respond-to(sm) {
-    gap: $space-sm;
-  }
+  align-items: flex-start;
+  text-align: left;
 }
 
 .why-choose__icon-wrapper {
@@ -74,9 +115,10 @@
   align-items: center;
   justify-content: center;
   width: 56px;
-  height: 56px;
+  height: 60px;
   background: transparent;
   border-radius: 0;
+  flex-shrink: 0;
 
   @include respond-to(md) {
     width: 48px;
@@ -90,39 +132,50 @@
 }
 
 .why-choose__icon {
-  width: 100%;
-  height: 100%;
-  color: #b65a3a;
+  width: 56px;
+  height: 60px;
+  color: #b35c3e;
+  stroke-width: 1.5;
   flex-shrink: 0;
-}
-
-.why-choose__card-title {
-  font-family: $font-family-display;
-  font-size: $font-size-md;
-  font-weight: $font-weight-medium;
-  color: #000000;
-  margin: 0;
-  line-height: $line-height-tight;
 
   @include respond-to(md) {
-    font-size: $font-size-sm;
+    width: 48px;
+    height: 48px;
   }
 
   @include respond-to(sm) {
-    font-size: $font-size-sm;
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.why-choose__card-title {
+  font-family: $font-heading;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+
+  @include respond-to(md) {
+    font-size: 18px;
+  }
+
+  @include respond-to(sm) {
+    font-size: 16px;
   }
 }
 
 .why-choose__card-description {
-  font-family: $font-family-body;
-  font-size: $font-size-xs;
+  font-family: $font-family;
+  font-size: 14px;
   font-weight: $font-weight-regular;
-  color: #2c5f7f;
+  color: #4b5563;
   margin: 0;
-  line-height: $line-height-relaxed;
+  line-height: 1.6;
 
   @include respond-to(md) {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   @include respond-to(sm) {
