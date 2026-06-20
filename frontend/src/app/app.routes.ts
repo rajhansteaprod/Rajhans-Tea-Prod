@@ -47,6 +47,11 @@ export const routes: Routes = [
           import('./features/store/pages/about/about').then((m) => m.AboutComponent),
       },
       {
+        path: 'tea-finder',
+        loadComponent: () =>
+          import('./features/store/tea-finder/tea-finder').then((m) => m.TeaFinderComponent),
+      },
+      {
         path: 'contact',
         loadComponent: () =>
           import('./features/store/contact/contact-page').then((m) => m.ContactPageComponent),
