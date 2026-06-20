@@ -48,7 +48,7 @@
   max-width: 1280px;
   margin: 0 auto;
   width: 100%;
-  padding: 0 12px;
+  padding: 0 48px;
 
   @include respond-to(lg) {
     padding: 0 8px;
@@ -69,7 +69,7 @@
 
 .why-choose__heading {
   font-family: $font-heading;
-  font-size: 40px;
+  font-size: 60px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: #1f1f1f;
