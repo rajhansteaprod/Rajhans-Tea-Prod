@@ -15,13 +15,13 @@
 .hero__frame {
   position: relative;
   width: 100%;
-  height: calc(100vh - #{$header-height});
+  height: calc(100vh - #{$announcement-bar-height} - #{$header-height});
   overflow: hidden;
   cursor: grab;
   user-select: none;
 
   @include respond-to(md) {
-    height: calc(100vh - #{$header-height-md} - #{$bottom-nav-height});
+    height: calc(100vh - #{$announcement-bar-height} - #{$header-height-md} - #{$bottom-nav-height});
   }
 
   &:active { cursor: grabbing; }
