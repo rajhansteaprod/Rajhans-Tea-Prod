@@ -118,7 +118,7 @@ picture {
 .hero__sub {
   font-family: $font-family-display;
   font-size: $font-size-md;
-  font-style: italic;
+  
   color: rgba($color-text-inverse, 0.85);
   line-height: $line-height-relaxed;
   margin: 0 0 $space-xl;
@@ -138,27 +138,32 @@ picture {
   display: inline-flex;
   align-items: center;
   gap: $space-sm;
-  padding: $space-md $space-xxl;
-  background: colors.$primary;
-  color: $color-mono-light;
-  font-family: $font-family-heading;
-  font-size: $font-size-sm;
+  padding: 16px 32px;
+  background: #b84e0c;
+  color: #ffffff;
+  font-family: $font-family;
+  font-size: 18px;
   font-weight: $font-weight-medium;
-  letter-spacing: $letter-spacing-luxury;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-transform: none;
   text-decoration: none;
   cursor: pointer;
   pointer-events: auto;
-  transition: all 0.4s $ease-expo-out;
-  border: 2px solid colors.$secondary;
+  transition: all 0.3s ease;
+  border: none;
 
   @include respond-to(md) {
-    padding: $space-sm $space-lg;
-    font-size: $font-size-xs;
+    padding: 12px 24px;
+    font-size: 14px;
+  }
+
+  @include respond-to(sm) {
+    padding: 10px 20px;
+    font-size: 13px;
   }
 
   &:hover {
-    background:colors.$secondary;
+    background: #8a3a08;
   }
 
   &:focus-visible {
