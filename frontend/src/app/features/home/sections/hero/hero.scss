@@ -53,6 +53,7 @@ picture {
   inset: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
   z-index: 2;
   background: linear-gradient(
     to bottom,
@@ -64,69 +65,160 @@ picture {
   pointer-events: none;
 }
 
-.hero__content {
-  padding: 0 clamp($space-xl, 6vw, 140px);
-  max-width: 1440px;
-  width: 100%;
+.hero__overlay > * {
   pointer-events: auto;
+}
 
-  @include respond-to(md) {
-    padding: 0 $space-lg;
+// ── Text Alignment Variants ──
+.hero__overlay--center {
+  .hero__overlay-container {
+    justify-content: center;
+  }
+
+  .hero__overlay-content {
+    text-align: center;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .hero__actions {
+    justify-content: center;
   }
 }
 
-// ── Text alignment variants (admin-controlled) ──
-.hero__overlay--center .hero__content { text-align: center; }
-.hero__overlay--center .hero__actions { justify-content: center; }
+.hero__overlay--left {
+  .hero__overlay-container {
+    justify-content: flex-start;
+  }
 
-.hero__overlay--left .hero__content { text-align: left; }
-.hero__overlay--left .hero__actions { justify-content: flex-start; }
+  .hero__overlay-content {
+    text-align: left;
+    margin-left: 0;
+  }
 
-.hero__overlay--right .hero__content { text-align: right; }
-.hero__overlay--right .hero__actions { justify-content: flex-end; }
+  .hero__actions {
+    justify-content: flex-start;
+  }
+}
 
-// Mobile: always center regardless of admin setting
+.hero__overlay--right {
+  .hero__overlay-container {
+    justify-content: flex-end;
+  }
+
+  .hero__overlay-content {
+    text-align: right;
+    margin-left: auto;
+  }
+
+  .hero__actions {
+    justify-content: flex-end;
+  }
+}
+
+// Mobile: always center
 @include respond-to(md) {
-  .hero__overlay--left .hero__content,
-  .hero__overlay--right .hero__content { text-align: center; }
+  .hero__overlay--left,
+  .hero__overlay--right {
+    .hero__overlay-container {
+      justify-content: center;
+    }
 
-  .hero__overlay--left .hero__actions,
-  .hero__overlay--right .hero__actions { justify-content: center; }
+    .hero__overlay-content {
+      text-align: center;
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    .hero__actions {
+      justify-content: center;
+    }
+  }
+}
+
+// ── Overlay Layout (Reference Structure) ──
+.hero__overlay-container {
+  max-width: 1280px;
+  padding: 0 16px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+
+  @include respond-to(lg) {
+    padding: 0 24px;
+  }
+
+  @include respond-to(md) {
+    padding: 0 16px;
+  }
+
+  @include respond-to(sm) {
+    padding: 0 16px;
+  }
+}
+
+.hero__overlay-content {
+  max-width: 512px;
+
+  @include respond-to(md) {
+    max-width: 512px;
+  }
+
+  @include respond-to(lg) {
+    margin-left: -64px;
+  }
+
+  @include respond-to(sm) {
+    max-width: 100%;
+    margin-left: 0;
+  }
+}
+
+.hero__overlay-content {
+  @include respond-to(md) {
+    margin-left: -32px;
+  }
 }
 
 // ── Typography ──
 .hero__h1 {
   font-family: $font-heading;
-  font-size: clamp(36px, 5vw, 64px);
+  font-size: clamp(40px, 5vw, 112px);
   font-weight: 700;
   line-height: 1.15;
-  letter-spacing: 0.06em;
+  letter-spacing: -0.01em;
   color: $color-text-inverse;
-  margin: 0 0 $space-md;
+  margin: 0 0 24px;
   max-width: 700px;
+  white-space: pre-line;
 
   @include respond-to(md) {
-    font-size: clamp(28px, 8vw, 44px);
+    font-size: clamp(32px, 8vw, 56px);
     max-width: none;
+    margin: 0 0 16px;
+  }
+
+  @include respond-to(sm) {
+    font-size: 48px;
   }
 }
 
-// Left/right: title stays on its side. Center: auto-center the max-width block.
-.hero__overlay--center .hero__h1 { margin-left: auto; margin-right: auto; }
-.hero__overlay--right .hero__h1 { margin-left: auto; }
-
 .hero__sub {
-  font-family: $font-family-display;
-  font-size: $font-size-md;
-  
-  color: rgba($color-text-inverse, 0.85);
-  line-height: $line-height-relaxed;
-  margin: 0 0 $space-xl;
+  font-family: $font-family;
+  font-size: 20px;
+  color: rgba($color-text-inverse, 0.9);
+  line-height: 1.6;
+  margin: 0 0 32px;
   font-weight: $font-weight-regular;
   letter-spacing: 0.02em;
 
   @include respond-to(md) {
-    font-size: $font-size-sm;
+    font-size: 16px;
+    margin: 0 0 24px;
+  }
+
+  @include respond-to(sm) {
+    font-size: 24px;
   }
 }
 
