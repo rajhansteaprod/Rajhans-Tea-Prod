@@ -3,150 +3,196 @@
 
 :host {
   display: block;
-  --social-icon-size: 40px;
-  --social-icon-inner: 30px;
-  --social-icon-padding: 7px;
 }
 
-// ═══════════════════════════════════════
-// FOOTER — Multi-Column Responsive Layout
-// ═══════════════════════════════════════
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 .footer {
-  background: $color-mono-dark;
-  color: $color-text-inverse;
+  background: #000;
+  color: white;
+  padding: 48px 16px;
+
+  @media (min-width: 640px) {
+    padding: 48px 24px;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 48px 32px;
+  }
 }
 
-// ── Footer Content Grid ──
-.footer-content {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: $space-xxxl;
-  padding: calc($space-xxl + $space-sm) clamp($space-lg, 5vw, $space-xxxl);
-  max-width: $max-width-wide;
+.container {
+  max-width: 80rem;
   margin: 0 auto;
+}
 
-  @include respond-to(lg) {
-    gap: $space-xxl;
-  }
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  margin-bottom: 48px;
 
-  @include respond-to(md) {
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    padding: $space-xxl $space-lg;
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
-// ── Footer Column ──
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// BRAND SECTION
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+.brand-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-box {
+  width: 32px;
+  height: 32px;
+  background: #b45309;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.brand-name {
+  font-weight: 600;
+  color: white;
+}
+
+.description {
+  font-size: 14px;
+  color: #d1d5db;
+  line-height: 1.5;
+}
+
+.social-links {
+  display: flex;
+  gap: 12px;
+}
+
+.social-btn {
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  padding: 0;
+
+  svg {
+    width: 24px;
+    height: 24px;
+    color: #9ca3af;
+    transition: color 0.3s ease;
+  }
+
+  &:hover {
+    transform: scale(1.1);
+
+    svg {
+      color: white;
+    }
+  }
+
+  &:hover svg.instagram-icon {
+    color: #e4405f;
+  }
+
+  &:hover svg.facebook-icon {
+    color: #1877f2;
+  }
+
+  &:hover svg.youtube-icon {
+    color: #ff0000;
+  }
+
+  &:hover svg.linkedin-icon {
+    color: #0a66c2;
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// COLUMNS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 .footer-column {
   display: flex;
   flex-direction: column;
-  gap: $space-lg;
+  gap: 16px;
 }
 
-.footer-column-title {
-  font-family: $font-family-heading;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: $color-text-inverse;
-  margin: 0;
+.column-title {
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  letter-spacing: $letter-spacing-luxury;
+  color: white;
 }
 
-// ── Footer Links List ──
-.footer-links {
+.link-list {
   list-style: none;
-  padding: 0;
-  margin: 0;
   display: flex;
   flex-direction: column;
-  gap: $space-md;
-
-  li {
-    a {
-      font-family: $font-family-body;
-      font-size: $font-size-sm;
-      color: rgba(252, 255, 247, 0.65);
-      text-decoration: none;
-      transition: color 0.3s ease;
-
-      &:hover {
-        color: $color-text-inverse;
-      }
-    }
-  }
+  gap: 8px;
 }
 
-// ── Contact Text ──
-.footer-contact-text {
-  font-family: $font-family-body;
-  font-size: $font-size-sm;
-  color: rgba(252, 255, 247, 0.65);
-  margin: 0 0 $space-md 0;
-  line-height: $line-height-relaxed;
-
-  a {
-    color: rgba(252, 255, 247, 0.85);
-    text-decoration: none;
-    transition: color 0.3s ease;
-
-    &:hover {
-      color: $color-text-inverse;
-    }
-  }
-}
-
-// ── Social Links ──
-.footer-social-icons {
-  display: flex;
-  align-items: center;
-  gap: $space-md;
-  margin-top: $space-sm;
-}
-
-.footer-social-icon {
-  border: none;
+.link {
+  font-size: 14px;
+  color: #d1d5db;
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: color 0.3s ease;
 
   &:hover {
-    transform: translateY(-3px);
-    opacity: 0.85;
-  }
-
-  &:active {
-    transform: translateY(-1px);
+    color: #fbbf24;
   }
 }
 
-// ── Trust Section Divider ──
-.footer-trust-section {
-  padding: $space-lg clamp($space-lg, 5vw, $space-xxxl);
-  border-top: 1px solid rgba(252, 255, 247, 0.08);
-  border-bottom: 1px solid rgba(252, 255, 247, 0.08);
-  text-align: left;
+.contact-item {
+  font-size: 14px;
+  color: #d1d5db;
+}
 
-  @include respond-to(md) {
-    padding: $space-lg $space-lg;
+.contact-note {
+  list-style: none;
+  padding-top: 16px;
+
+  p {
+    font-size: 12px;
+    color: #9ca3af;
+    line-height: 1.5;
   }
 }
 
-.footer-trust-title {
-  font-family: $font-family-heading;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: $color-text-inverse;
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: $letter-spacing-luxury;
-}
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// FOOTER BOTTOM
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// ── Copyright ──
-.footer-copyright {
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 32px;
   text-align: center;
-  padding: $space-md clamp($space-lg, 5vw, $space-xxxl);
-  font-size: $font-size-xs;
-  color: $color-mono-light;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
+}
+
+.copyright {
+  font-size: 14px;
+  color: #9ca3af;
 }

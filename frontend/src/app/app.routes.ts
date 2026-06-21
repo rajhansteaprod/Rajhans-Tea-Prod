@@ -57,6 +57,11 @@ export const routes: Routes = [
           import('./features/store/contact/contact-page').then((m) => m.ContactPageComponent),
       },
       {
+        path: 'page/track-order',
+        loadComponent: () =>
+          import('./features/store/pages/track-order/track-order').then((m) => m.TrackOrderComponent),
+      },
+      {
         path: 'page/:slug',
         loadComponent: () =>
           import('./features/store/pages/static-page').then((m) => m.StaticPageComponent),

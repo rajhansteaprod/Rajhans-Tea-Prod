@@ -1,0 +1,84 @@
+<div class="track-order-section">
+  <div class="container">
+    <div class="header">
+      <h1>Track Your Order</h1>
+      <p>Enter your tracking number to see the latest updates on your order</p>
+    </div>
+
+    <div class="search-box">
+      <div class="input-group">
+        <input
+          type="text"
+          [(ngModel)]="trackingNumber"
+          (keyup.enter)="searchOrder()"
+          placeholder="Enter tracking number (e.g., RJ123456789)"
+          class="tracking-input"
+          [disabled]="isSearching()"
+        />
+        <button
+          (click)="searchOrder()"
+          [disabled]="isSearching()"
+          class="search-btn"
+        >
+          {{ isSearching() ? 'Searching...' : 'Track Order' }}
+        </button>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="error-message">{{ errorMessage() }}</div>
+      }
+    </div>
+
+    @if (orderFound()) {
+      <div class="order-result">
+        <div class="result-header">
+          <h2>Order Details</h2>
+          <button (click)="reset()" class="reset-btn">Search Again</button>
+        </div>
+
+        <div class="order-card">
+          <div class="order-row">
+            <span class="label">Tracking Number:</span>
+            <span class="value">{{ orderFound().trackingNumber }}</span>
+          </div>
+          <div class="order-row">
+            <span class="label">Status:</span>
+            <span class="value status" [class]="orderFound().status.toLowerCase().replace(' ', '-')">
+              {{ orderFound().status }}
+            </span>
+          </div>
+          <div class="order-row">
+            <span class="label">Estimated Delivery:</span>
+            <span class="value">{{ orderFound().estimatedDelivery }}</span>
+          </div>
+          <div class="order-row last">
+            <span class="label">Last Update:</span>
+            <span class="value">{{ orderFound().lastUpdate }}</span>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <p>Your order is on its way! We'll send you email updates as your package moves through our delivery network.</p>
+        </div>
+      </div>
+    }
+
+    <div class="faq-section">
+      <h3>Frequently Asked Questions</h3>
+      <div class="faq-items">
+        <div class="faq-item">
+          <h4>How long does delivery take?</h4>
+          <p>Standard delivery takes 3-5 business days. Express delivery is available for select locations.</p>
+        </div>
+        <div class="faq-item">
+          <h4>Where can I find my tracking number?</h4>
+          <p>You'll receive your tracking number via email once your order is dispatched from our warehouse.</p>
+        </div>
+        <div class="faq-item">
+          <h4>What if my order is delayed?</h4>
+          <p>Contact our support team at giftings@rajhanstea.com if your order is delayed beyond the estimated date.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
