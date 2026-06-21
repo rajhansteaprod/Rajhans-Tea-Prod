@@ -1,192 +1,222 @@
-<div class="checkout__panel checkout__panel--address">
-  <!-- Saved Addresses Section -->
-  <div class="checkout__saved-addresses-wrapper">
-    <app-saved-addresses (selectAddress)="onAddressSelected($event)"></app-saved-addresses>
-  </div>
+<div class="checkout__grid">
+  <div class="checkout__grid-left">
+    <form [formGroup]="form" class="checkout__form">
+      <h2 class="checkout__heading">Select Shipping Address</h2>
 
-  <!-- New Address Form Section -->
-
-  @if (submitError()) {
-    <div class="checkout__alert">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-        <path
-          d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linejoin="round"
-        />
-      </svg>
-      <div>
-        <p class="checkout__alert-title">{{ submitError() }}</p>
-      </div>
-    </div>
-  }
-
-  <form [formGroup]="form" class="checkout__form">
-    <!-- SHIPPING ADDRESS SECTION -->
-    <h3 class="checkout__section-heading">Shipping Address</h3>
-
-    <!-- Address Line & Landmark -->
-    <div class="checkout__form-row checkout__form-row--two">
-      <div class="checkout__form-group">
-        <label class="checkout__form-label">Address Line *</label>
-        <input
-          type="text"
-          class="checkout__form-input"
-          formControlName="address"
-          [class.error]="form.get('address')?.invalid && form.get('address')?.touched"
-          placeholder="Enter your address"
-        />
-        @if (form.get('address')?.invalid && form.get('address')?.touched) {
-          <span class="checkout__form-error">Address is required</span>
-        }
+      <div class="checkout__address-list">
+        <label class="checkout__address-option">
+          <div class="checkout__option-content">
+            <input type="radio" name="addressSelection" class="checkout__radio" value="new" checked="" />
+            <div class="checkout__option-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="checkout__icon-plus">
+                <path d="M5 12h14"></path>
+                <path d="M12 5v14"></path>
+              </svg>
+              <span>Add a New Shipping Address</span>
+            </div>
+          </div>
+        </label>
       </div>
 
-      <div class="checkout__form-group">
-        <label class="checkout__form-label">Landmark <span class="checkout__optional">(Optional)</span></label>
-        <input
-          type="text"
-          class="checkout__form-input"
-          formControlName="landmark"
-          placeholder="Landmark"
-        />
-      </div>
-    </div>
+      @if (submitError()) {
+        <div class="checkout__alert">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <div>
+            <p class="checkout__alert-title">{{ submitError() }}</p>
+          </div>
+        </div>
+      }
 
-    <!-- City, State, Pincode -->
-    <div class="checkout__form-row checkout__form-row--three">
-      <div class="checkout__form-group">
-        <label class="checkout__form-label">City *</label>
-        <input
-          type="text"
-          class="checkout__form-input"
-          formControlName="city"
-          [class.error]="form.get('city')?.invalid && form.get('city')?.touched"
-          placeholder="City"
-        />
-        @if (form.get('city')?.invalid && form.get('city')?.touched) {
-          <span class="checkout__form-error">City is required</span>
-        }
-      </div>
+      <div class="checkout__form-section">
+        <h3 class="checkout__section-heading">New Address Details</h3>
 
-      <div class="checkout__form-group">
-        <label class="checkout__form-label">State *</label>
-        <input
-          type="text"
-          class="checkout__form-input"
-          formControlName="state"
-          [class.error]="form.get('state')?.invalid && form.get('state')?.touched"
-          placeholder="State"
-        />
-        @if (form.get('state')?.invalid && form.get('state')?.touched) {
-          <span class="checkout__form-error">State is required</span>
-        }
-      </div>
-
-      <div class="checkout__form-group checkout__pincode-group">
-        <label class="checkout__form-label">Pincode *</label>
-        <input
-          type="text"
-          class="checkout__form-input"
-          formControlName="pincode"
-          [class.error]="form.get('pincode')?.invalid && form.get('pincode')?.touched"
-          placeholder="Pincode"
-          (input)="onPincodeInput($event.target.value)"
-          (focus)="showSuggestions.set(pincodeSuggestions().length > 0)"
-          (blur)="showSuggestions.set(false)"
-          autocomplete="off"
-        />
-        @if (showSuggestions() && pincodeSuggestions().length > 0) {
-          <div class="checkout__pincode-suggestions">
-            @for (suggestion of pincodeSuggestions(); track suggestion.pincode) {
-              <button
-                type="button"
-                class="checkout__suggestion-item"
-                (mousedown)="selectPincode(suggestion)"
-              >
-                <span class="checkout__suggestion-pincode">{{ suggestion.pincode }}</span>
-              </button>
+        <div class="checkout__form-grid checkout__form-grid--two">
+          <div class="checkout__form-group">
+            <label class="checkout__form-label">Full Name</label>
+            <input
+              type="text"
+              class="checkout__form-input"
+              formControlName="name"
+              [class.error]="form.get('name')?.invalid && form.get('name')?.touched"
+              placeholder="e.g. Balbhadra"
+            />
+            @if (form.get('name')?.invalid && form.get('name')?.touched) {
+              <span class="checkout__form-error">Name is required</span>
             }
           </div>
+
+          <div class="checkout__form-group">
+            <label class="checkout__form-label">Mobile Number</label>
+            <input
+              type="tel"
+              class="checkout__form-input"
+              formControlName="phone"
+              [class.error]="form.get('phone')?.invalid && form.get('phone')?.touched"
+              placeholder="10-digit number"
+              pattern="\d{10}"
+              maxlength="10"
+            />
+            @if (form.get('phone')?.invalid && form.get('phone')?.touched) {
+              <span class="checkout__form-error">Phone: 10 digits, 0+10 digits, or +91+10 digits</span>
+            }
+          </div>
+        </div>
+
+        <div class="checkout__form-group">
+          <label class="checkout__form-label">Street Address</label>
+          <textarea
+            class="checkout__form-input checkout__form-textarea"
+            formControlName="address"
+            [class.error]="form.get('address')?.invalid && form.get('address')?.touched"
+            rows="3"
+            placeholder="House no, Street name, Locality"
+          ></textarea>
+          @if (form.get('address')?.invalid && form.get('address')?.touched) {
+            <span class="checkout__form-error">Address is required</span>
+          }
+        </div>
+
+        <div class="checkout__form-grid checkout__form-grid--two">
+          <div class="checkout__form-group">
+            <label class="checkout__form-label">Landmark (Optional)</label>
+            <input
+              type="text"
+              class="checkout__form-input"
+              formControlName="landmark"
+              placeholder="e.g. Near bus stand"
+            />
+          </div>
+
+          <div class="checkout__form-group">
+            <label class="checkout__form-label">City</label>
+            <input
+              type="text"
+              class="checkout__form-input"
+              formControlName="city"
+              [class.error]="form.get('city')?.invalid && form.get('city')?.touched"
+              placeholder="City"
+            />
+            @if (form.get('city')?.invalid && form.get('city')?.touched) {
+              <span class="checkout__form-error">City is required</span>
+            }
+          </div>
+        </div>
+
+        <div class="checkout__form-grid checkout__form-grid--two">
+          <div class="checkout__form-group">
+            <label class="checkout__form-label">State</label>
+            <input
+              type="text"
+              class="checkout__form-input"
+              formControlName="state"
+              [class.error]="form.get('state')?.invalid && form.get('state')?.touched"
+              placeholder="State"
+            />
+            @if (form.get('state')?.invalid && form.get('state')?.touched) {
+              <span class="checkout__form-error">State is required</span>
+            }
+          </div>
+
+          <div class="checkout__form-group checkout__pincode-group">
+            <label class="checkout__form-label">Pin Code</label>
+            <input
+              type="text"
+              class="checkout__form-input"
+              formControlName="pincode"
+              [class.error]="form.get('pincode')?.invalid && form.get('pincode')?.touched"
+              placeholder="6 digits"
+              pattern="\d{6}"
+              maxlength="6"
+              (input)="onPincodeInput($event.target.value)"
+              (focus)="showSuggestions.set(pincodeSuggestions().length > 0)"
+              (blur)="showSuggestions.set(false)"
+              autocomplete="off"
+            />
+            @if (showSuggestions() && pincodeSuggestions().length > 0) {
+              <div class="checkout__pincode-suggestions">
+                @for (suggestion of pincodeSuggestions(); track suggestion.pincode) {
+                  <button
+                    type="button"
+                    class="checkout__suggestion-item"
+                    (mousedown)="selectPincode(suggestion)"
+                  >
+                    <span class="checkout__suggestion-pincode">{{ suggestion.pincode }}</span>
+                  </button>
+                }
+              </div>
+            }
+            @if (form.get('pincode')?.invalid && form.get('pincode')?.touched) {
+              <span class="checkout__form-error">PIN Code must be 6 digits (not starting with 0)</span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="checkout__button-group">
+        <button type="button" class="checkout__btn-back" (click)="goBack()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="checkout__icon-arrow">
+            <path d="m12 19-7-7 7-7"></path>
+            <path d="M19 12H5"></path>
+          </svg>
+          <span>Back to Cart</span>
+        </button>
+        <button
+          type="submit"
+          class="checkout__btn-submit"
+          (click)="saveAddress()"
+          [disabled]="form.invalid || isSubmitting()"
+        >
+          @if (isSubmitting()) {
+            <span class="checkout__btn-spinner"></span>
+          }
+          <span>Proceed to Payment</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="checkout__icon-arrow">
+            <path d="M5 12h14"></path>
+            <path d="m12 5 7 7-7 7"></path>
+          </svg>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="checkout__grid-right">
+    <div class="checkout__price-card">
+      <h2 class="checkout__price-heading">Price Details</h2>
+      <div class="checkout__price-content">
+        <div class="checkout__price-row">
+          <span>Subtotal</span>
+          <span class="checkout__price-value">₹{{ cartSubtotal() | number: '1.0-0' }}</span>
+        </div>
+        @if (cartDiscount() > 0) {
+          <div class="checkout__price-row">
+            <span>Discount</span>
+            <span class="checkout__price-value" style="color: #10b981;">-₹{{ cartDiscount() | number: '1.0-0' }}</span>
+          </div>
         }
-        @if (form.get('pincode')?.invalid && form.get('pincode')?.touched) {
-          <span class="checkout__form-error">PIN Code must be 6 digits (not starting with 0)</span>
+        @if (cartTax() > 0) {
+          <div class="checkout__price-row">
+            <span>Tax</span>
+            <span class="checkout__price-value">₹{{ cartTax() | number: '1.0-0' }}</span>
+          </div>
         }
+        <div class="checkout__price-row">
+          <span>Shipping Fee</span>
+          <span class="checkout__price-badge">Free</span>
+        </div>
+        <div class="checkout__price-total">
+          <span class="checkout__price-label">Total Amount</span>
+          <span class="checkout__price-final">₹{{ cartTotal() | number: '1.0-0' }}</span>
+        </div>
       </div>
     </div>
-
-    <!-- CONTACT INFO SECTION -->
-    <h3 class="checkout__section-heading">Contact Info</h3>
-
-    <!-- Full Name & Mobile Number -->
-    <div class="checkout__form-row checkout__form-row--two">
-      <div class="checkout__form-group">
-        <label class="checkout__form-label">Full Name *</label>
-        <input
-          type="text"
-          class="checkout__form-input"
-          formControlName="name"
-          [class.error]="form.get('name')?.invalid && form.get('name')?.touched"
-          placeholder="Your full name"
-        />
-        @if (form.get('name')?.invalid && form.get('name')?.touched) {
-          <span class="checkout__form-error">Name is required</span>
-        }
-      </div>
-
-      <div class="checkout__form-group">
-        <label class="checkout__form-label">Mobile Number *</label>
-        <input
-          type="tel"
-          class="checkout__form-input"
-          formControlName="phone"
-          [class.error]="form.get('phone')?.invalid && form.get('phone')?.touched"
-          placeholder="10-digit mobile number"
-        />
-        @if (form.get('phone')?.invalid && form.get('phone')?.touched) {
-          <span class="checkout__form-error">Phone: 10 digits, 0+10 digits, or +91+10 digits</span>
-        }
-      </div>
-    </div>
-
-    <!-- Email -->
-    <div class="checkout__form-group">
-      <label class="checkout__form-label">Email <span class="checkout__optional">(Optional)</span></label>
-      <input
-        type="email"
-        class="checkout__form-input"
-        formControlName="email"
-        [class.error]="form.get('email')?.invalid && form.get('email')?.touched"
-        placeholder="Email"
-      />
-      @if (form.get('email')?.invalid && form.get('email')?.touched) {
-        <span class="checkout__form-error">Invalid email</span>
-      }
-    </div>
-
-    <!-- Desktop Footer Buttons -->
-    <div class="checkout__panel-footer">
-      <button type="button" class="checkout__back-to-cart-underline" (click)="goBack()">
-        <span class="checkout__back-arrow">←</span>
-        <span>BACK TO CART</span>
-      </button>
-      <button
-        type="button"
-        class="checkout__btn-next"
-        (click)="saveAddress()"
-        [disabled]="form.invalid || isSubmitting()"
-      >
-        @if (isSubmitting()) {
-          <span class="checkout__btn-spinner"></span>
-        }
-        PROCEED TO CHECKOUT
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-left: 8px;">
-          <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-    </div>
-  </form>
-
+  </div>
 </div>
 
 <!-- Mobile Bottom Footer - Fixed outside panel -->
