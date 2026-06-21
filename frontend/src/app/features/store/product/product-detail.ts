@@ -78,6 +78,27 @@ export class ProductDetailComponent implements OnInit {
     return 0;
   });
 
+  readonly discountPercent = computed(() => {
+    const variant = this.selectedVariant();
+    const product = this.product();
+    let originalPrice = 0;
+    let discountedPrice = 0;
+
+    if (variant) {
+      originalPrice = variant.price;
+      discountedPrice = variant.discountedPrice ?? 0;
+    } else if (product) {
+      originalPrice = product.basePrice;
+      discountedPrice = product.discountedPrice ?? 0;
+    }
+
+    if (discountedPrice && originalPrice > discountedPrice) {
+      return Math.round(((originalPrice - discountedPrice) / originalPrice) * 100);
+    }
+
+    return 0;
+  });
+
   ngOnInit(): void {
     this.route.params.subscribe((params) => {
       const slug = params['slug'];

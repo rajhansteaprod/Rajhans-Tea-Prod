@@ -90,7 +90,17 @@
               </div>
             </div>
           }
-
+              <!-- Price Section -->
+          <div class="pd__price-container">
+            <!-- Price Display Row -->
+            <div class="pd__price-display">
+              <span class="pd__price-current">₹{{ effectivePrice() | number:'1.0-0' }}</span>
+              @if (selectedVariant()?.discountedPrice || product()?.discountedPrice) {
+                <span class="pd__price-original">₹{{ (selectedVariant()?.price ?? product()?.basePrice) | number:'1.0-0' }}</span>
+                <span class="pd__discount-badge">{{ discountPercent() }}% OFF</span>
+              }
+            </div>
+          </div>
           <!-- Short description -->
           <p class="pd__short-desc">{{ product()?.shortDescription }}</p>
           <!-- Full description -->
@@ -98,8 +108,7 @@
             <p class="pd__full-desc">{{ product()?.description }}</p>
           } -->
 
-          <hr class="pd__divider" />
-
+          
           <!-- Tags with checkmarks -->
           @if (product()?.tags?.length) {
             <ul class="pd__tags">
@@ -120,21 +129,7 @@
               }
             </ul>
           }
-            <!-- Price Section -->
-          <div class="pd__price-container">
-            <p class="pd__price-label">PRICE</p>
-
-            <!-- Price Display Row -->
-            <div class="pd__price-display">
-              <span class="pd__price-mrp">MRP</span>
-              @if (selectedVariant()?.discountedPrice || product()?.discountedPrice) {
-                <span class="pd__price-original">₹{{ (selectedVariant()?.price ?? product()?.basePrice) | number:'1.0-0' }}</span>
-              }
-              <span class="pd__price-current">₹{{ effectivePrice() | number:'1.0-0' }}</span>
-            </div>
-
-            <p class="pd__price-note">(incl. of all taxes)</p>
-          </div>
+        
           <!-- Variant selector -->
           @if (product()?.variants?.length) {
             <div class="pd__variants">

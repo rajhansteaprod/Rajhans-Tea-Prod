@@ -136,7 +136,7 @@
   font-size: clamp(28px, 4vw, 40px);
   font-weight: 700;
   color: $color-mono-dark;
-  margin: 0 0 $space-md 0;
+  margin: 0 0 12px 0;
   line-height: 1.25;
   letter-spacing: -0.02em;
 }
@@ -145,7 +145,7 @@
 .pd__rating-row {
   display: flex;
   align-items: center;
-  gap: $space-md;
+  gap: 8px;
   margin-bottom: $space-md;
 }
 
@@ -156,11 +156,11 @@
   svg {
     width: 18px;
     height: 18px;
-    color: #e5e7eb;
+    color: #e8670a;
     transition: color $transition-fast;
 
     &.filled {
-      color: #fbbf24;
+      color: #e8670a;
     }
   }
 }
@@ -227,7 +227,7 @@
   font-family: $font-family-body;
   font-size: $font-size-md;
   line-height: 1.6;
-  font-weight: $font-weight-semibold;
+  font-weight:400;
   color: rgba($color-mono-dark, 0.7);
   margin: $space-md 0;
 }
@@ -345,8 +345,7 @@
 // Price
 // Price Section - Exact replica of reference design
 .pd__price-container {
-  margin: $space-lg 0;
-  padding: $space-lg 0px;
+  margin: 10px 0;
   background: #fafafa;
   border-radius: 4px;
 }
@@ -379,7 +378,7 @@
 
 .pd__price-original {
   font-family: $font-family-body;
-  font-size: $font-size-sm;
+  font-size: 24px;
   color: rgba($color-mono-dark, 0.5);
   text-decoration: line-through;
 }
@@ -387,7 +386,7 @@
 .pd__price-current {
   font-family: $font-family-heading;
   font-size: 32px;
-  font-weight: $font-weight-medium;
+  font-weight: 700;
   color: $color-mono-dark;
   letter-spacing: -0.01em;
 }
@@ -402,6 +401,18 @@
   border-radius: 2px;
   text-transform: none;
   letter-spacing: 0;
+}
+
+.pd__discount-badge {
+  background: #d4edda;
+  color: #2d7a3d;
+  font-family: $font-family-body;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .pd__price-info {
