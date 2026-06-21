@@ -35,6 +35,9 @@ export class ProductsPageComponent implements OnInit {
 
   // Filters
   readonly selectedCategory = signal<string | null>(null);
+  readonly selectedRegion = signal<string | null>(null);
+  readonly selectedBestTakenFor = signal<string | null>(null);
+  readonly selectedWeight = signal<string | null>(null);
   readonly selectedTags = signal<string[]>([]);
   readonly sortBy = signal('createdAt:desc');
   readonly maxPrice = signal(4000); // Max price (multiple of 200)
@@ -51,6 +54,9 @@ export class ProductsPageComponent implements OnInit {
 
   readonly isFiltered = computed(() =>
     !!this.selectedCategory() ||
+    !!this.selectedRegion() ||
+    !!this.selectedBestTakenFor() ||
+    !!this.selectedWeight() ||
     this.selectedTags().length > 0 ||
     this.priceRangeModel.value < this.maxPrice()
   );
@@ -98,6 +104,9 @@ export class ProductsPageComponent implements OnInit {
     };
 
     if (this.selectedCategory()) params['categoryId'] = this.selectedCategory()!;
+    if (this.selectedRegion()) params['region'] = this.selectedRegion()!;
+    if (this.selectedBestTakenFor()) params['bestTakenFor'] = this.selectedBestTakenFor()!;
+    if (this.selectedWeight()) params['weight'] = this.selectedWeight()!;
     if (this.priceRangeModel.value < this.maxPrice()) params['priceMax'] = this.priceRangeModel.value;
     if (this.selectedTags().length > 0) params['tags'] = this.selectedTags();
 
@@ -119,6 +128,18 @@ export class ProductsPageComponent implements OnInit {
     this.currentPage.set(1);
     this.loadProducts();
     this.filterOpen.set(false);
+  }
+
+  selectRegion(region: string | null): void {
+    this.selectedRegion.set(region);
+    this.currentPage.set(1);
+    this.loadProducts();
+  }
+
+  selectBestTakenFor(time: string | null): void {
+    this.selectedBestTakenFor.set(time);
+    this.currentPage.set(1);
+    this.loadProducts();
   }
 
   applyPriceFilter(): void {
@@ -150,8 +171,17 @@ export class ProductsPageComponent implements OnInit {
     this.loadProducts();
   }
 
+  selectWeight(weight: string): void {
+    this.selectedWeight.set(this.selectedWeight() === weight ? null : weight);
+    this.currentPage.set(1);
+    this.loadProducts();
+  }
+
   clearFilters(): void {
     this.selectedCategory.set(null);
+    this.selectedRegion.set(null);
+    this.selectedBestTakenFor.set(null);
+    this.selectedWeight.set(null);
     this.selectedTags.set([]);
     this.priceRangeModel.value = this.maxPrice();
     this.currentPage.set(1);

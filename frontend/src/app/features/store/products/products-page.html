@@ -1,141 +1,176 @@
-<div class="products">
-  <!-- Page Hero -->
-  <header class="products__hero">
-    <div class="products__hero-inner">
-      <h1 class="products__title">Our Tea Collection</h1>
-      <p class="products__subtitle">Discover our premium selection of whole leaf teas, sourced with care from the finest tea gardens. Each blend is crafted to deliver the perfect cup every time.</p>
+<div class="products-page">
+  <!-- Breadcrumb -->
+  <div class="breadcrumb-section">
+    <div class="breadcrumb-container">
+      <div class="breadcrumb">
+        <a href="/" class="breadcrumb-link">Home</a>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="breadcrumb-icon"><path d="m9 18 6-6-6-6"></path></svg>
+        <span class="breadcrumb-current">All Products</span>
+      </div>
     </div>
-  </header>
+  </div>
 
-   
-
-  <div class="products__layout">
-    <!-- Filter Sidebar (Desktop) / Drawer (Mobile) -->
-    <aside class="products__sidebar" [class.open]="filterOpen()">
-      <div class="products__sidebar-head">
-        <h3 class="products__sidebar-title">FILTERS</h3>
-        @if (isFiltered()) {
-          <button class="products__clear-all" (click)="clearFilters()">Clear all</button>
-        }
-        <button class="products__sidebar-close" (click)="filterOpen.set(false)">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-
-      <!-- Category filter -->
-      <!-- Sort Filter -->
-      <div class="filter-group">
-        <h4 class="filter-group__title">SORT BY</h4>
-        <select class="filter-sort-select" [ngModel]="sortBy()" (ngModelChange)="onSort($event)">
-          <option value="createdAt:desc">Newest</option>
-          <option value="basePrice:asc">Price: Low to High</option>
-          <option value="basePrice:desc">Price: High to Low</option>
-          <option value="name:asc">Name A-Z</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
-        <h4 class="filter-group__title">CATEGORY</h4>
-        <button class="filter-option" [class.active]="!selectedCategory()" (click)="selectCategory(null)">
-          <span>All Categories</span>
-        </button>
-        @for (cat of categories(); track cat._id) {
-          <button class="filter-option" [class.active]="selectedCategory() === cat._id" (click)="selectCategory(cat._id)">
-            <span>{{ cat.name }}</span>
-          </button>
-        }
-      </div>
-
-      <!-- Price filter -->
-      <div class="filter-group">
-        <h4 class="filter-group__title">PRICE RANGE</h4>
-        <div class="filter-price-slider">
-          <div class="filter-price-display">
-            <span class="filter-price-value">₹{{ priceRangeModel.value }}</span>
-          </div>
-          <input
-            type="range"
-            class="filter-price-range"
-            [(ngModel)]="priceRangeModel.value"
-            [ngModelOptions]="{ updateOn: 'change' }"
-            (ngModelChange)="onPriceRangeChange()"
-            [max]="getMaxPriceValue()"
-            min="0"
-            step="200"
-            [style.--price-percent]="(priceRangeModel.value / getMaxPriceValue()) * 100 + '%'"
-          />
-        </div>
-      </div>
-
-      <!-- Tags filter -->
-      @if (allTags().length > 0) {
-        <div class="filter-group">
-          <h4 class="filter-group__title">TAGS</h4>
-          <div class="filter-tags">
-            @for (tag of allTags(); track tag) {
-              <button class="filter-tag" [class.active]="selectedTags().includes(tag)" (click)="toggleTag(tag)">{{ tag }}</button>
+  <!-- Main Content -->
+  <div class="products-main">
+    <div class="products-container">
+      <!-- Left Sidebar -->
+      <aside class="products-sidebar" [class.open]="filterOpen()">
+        <div class="sidebar-sticky">
+          <div class="sidebar-header">
+            <h2 class="sidebar-title">Filters</h2>
+            @if (isFiltered()) {
+              <button class="sidebar-clear" (click)="clearFilters()">Clear all</button>
             }
           </div>
-        </div>
-      }
-    </aside>
 
-    <!-- Mobile backdrop -->
-    @if (filterOpen()) {
-      <div class="products__backdrop" (click)="filterOpen.set(false)"></div>
-    }
-
-    <!-- Product Grid -->
-    <main class="products__main">
-      <!-- Loader removed -->
-      @if (false) {
-        <div class="products__loading">
-          <div class="products__spinner"></div>
-        </div>
-      } @else if (products().length === 0) {
-        <div class="products__empty">
-          <div class="products__empty-icon">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <!-- Region Filter -->
+          <div class="filter-group">
+            <h3 class="filter-title">REGION</h3>
+            <div class="filter-options">
+              @for (region of ['Assam', 'Darjeeling', 'Nilgiri', 'Dooars']; track region) {
+                <label class="filter-label">
+                  <input
+                    type="checkbox"
+                    class="filter-checkbox"
+                    [checked]="selectedRegion() === region"
+                    (change)="selectRegion(selectedRegion() === region ? null : region)"
+                  />
+                  <span class="filter-text">{{ region }}</span>
+                </label>
+              }
+            </div>
           </div>
-          <h2 class="products__empty-title">NO PRODUCTS FOUND</h2>
-          <p class="products__empty-sub">Try adjusting your filters or browse all products.</p>
-          @if (isFiltered()) {
-            <button class="products__empty-btn" (click)="clearFilters()">CLEAR FILTERS</button>
-          }
+
+          <!-- Type Filter (Categories) -->
+          <div class="filter-group">
+            <h3 class="filter-title">TYPE</h3>
+            <div class="filter-options">
+              @for (cat of categories(); track cat._id) {
+                <label class="filter-label">
+                  <input
+                    type="checkbox"
+                    class="filter-checkbox"
+                    [checked]="selectedCategory() === cat._id"
+                    (change)="selectCategory(selectedCategory() === cat._id ? null : cat._id)"
+                  />
+                  <span class="filter-text">{{ cat.name }}</span>
+                </label>
+              }
+            </div>
+          </div>
+
+          <!-- Best Taken For Filter -->
+          <div class="filter-group">
+            <h3 class="filter-title">BEST TAKEN FOR</h3>
+            <div class="filter-options">
+              @for (time of ['Morning', 'Noon', 'Evening']; track time) {
+                <label class="filter-label">
+                  <input
+                    type="checkbox"
+                    class="filter-checkbox"
+                    [checked]="selectedBestTakenFor() === time"
+                    (change)="selectBestTakenFor(selectedBestTakenFor() === time ? null : time)"
+                  />
+                  <span class="filter-text">{{ time }}</span>
+                </label>
+              }
+            </div>
+          </div>
+
+          <!-- Weight Filter -->
+          <div class="filter-group">
+            <h3 class="filter-title">WEIGHT</h3>
+            <div class="weight-buttons">
+              <button class="weight-btn" [class.active]="selectedWeight() === '500g'" (click)="selectWeight('500g')">500g</button>
+              <button class="weight-btn" [class.active]="selectedWeight() === '1kg'" (click)="selectWeight('1kg')">1kg</button>
+            </div>
+          </div>
+
+          <!-- Price Range Filter -->
+          <div class="filter-group">
+            <h3 class="filter-title">PRICE RANGE</h3>
+            <div class="price-filter">
+              <input
+                type="range"
+                class="price-slider"
+                [(ngModel)]="priceRangeModel.value"
+                [ngModelOptions]="{ updateOn: 'change' }"
+                (ngModelChange)="onPriceRangeChange()"
+                [max]="getMaxPriceValue()"
+                min="0"
+                step="50"
+              />
+              <div class="price-display">
+                <span class="price-min">₹0</span>
+                <span class="price-max">₹{{ getMaxPriceValue() }}</span>
+              </div>
+            </div>
+          </div>
         </div>
-      } @else {
-        <div class="products__grid">
-          @for (p of products(); track p._id) {
-            <app-product-card
-              [product]="p"
-              [isHovering]="isHovering(p._id)"
-              [isWishlisted]="isWishlisted(p._id)"
-              [getRating]="getRating"
-              [getReviewCount]="getReviewCount"
-              (imageHover)="setHovering(p._id, $event)"
-              (toggleWishlistClick)="toggleWishlist($event, p._id)"
-              (addToCartClick)="addToCart($event, p._id)"
-              (buyNowClick)="buyNow(p, $event)"
-              (cardClick)="goToProduct(p)"
-            />
-          }
+      </aside>
+
+      <!-- Mobile Backdrop -->
+      @if (filterOpen()) {
+        <div class="sidebar-backdrop" (click)="filterOpen.set(false)"></div>
+      }
+
+      <!-- Right Content -->
+      <main class="products-content">
+        <!-- Top Bar -->
+        <div class="products-topbar">
+          <p class="products-count">{{ totalProducts() }} Products</p>
+          <select class="sort-select" [ngModel]="sortBy()" (ngModelChange)="onSort($event)">
+            <option value="createdAt:desc">Sort by: Featured</option>
+            <option value="basePrice:asc">Price: Low to High</option>
+            <option value="basePrice:desc">Price: High to Low</option>
+            <option value="name:asc">Name A-Z</option>
+          </select>
         </div>
 
-        <!-- Pagination -->
-        @if (totalPages() > 1) {
-          <div class="products__pagination">
-            <button class="page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-            @for (p of pageNumbers(); track p) {
-              <button class="page-btn" [class.active]="p === currentPage()" (click)="goToPage(p)">{{ p }}</button>
+        <!-- Product Grid -->
+        @if (products().length === 0) {
+          <div class="products-empty">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <h2 class="empty-title">NO PRODUCTS FOUND</h2>
+            <p class="empty-text">Try adjusting your filters or browse all products.</p>
+            @if (isFiltered()) {
+              <button class="empty-btn" (click)="clearFilters()">CLEAR FILTERS</button>
             }
-            <button class="page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
           </div>
+        } @else {
+          <div class="products-grid">
+            @for (p of products(); track p._id) {
+              <app-product-card
+                [product]="p"
+                [isHovering]="isHovering(p._id)"
+                [isWishlisted]="isWishlisted(p._id)"
+                [getRating]="getRating"
+                [getReviewCount]="getReviewCount"
+                (imageHover)="setHovering(p._id, $event)"
+                (toggleWishlistClick)="toggleWishlist($event, p._id)"
+                (addToCartClick)="addToCart($event, p._id)"
+                (buyNowClick)="buyNow(p, $event)"
+                (cardClick)="goToProduct(p)"
+              />
+            }
+          </div>
+
+          <!-- Pagination -->
+          @if (totalPages() > 1) {
+            <div class="pagination">
+              <button class="page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              @for (p of pageNumbers(); track p) {
+                <button class="page-btn" [class.active]="p === currentPage()" (click)="goToPage(p)">{{ p }}</button>
+              }
+              <button class="page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          }
         }
-      }
-    </main>
+      </main>
+    </div>
   </div>
 </div>

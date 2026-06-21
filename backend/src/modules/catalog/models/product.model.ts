@@ -2,6 +2,8 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 import { IProductVariantDoc } from './product-variant.model';
 
 export type ProductStatus = 'draft' | 'active' | 'archived';
+export type ProductRegion = 'Assam' | 'Darjeeling' | 'Nilgiri' | 'Dooars';
+export type ProductBestTakenFor = 'Morning' | 'Noon' | 'Evening';
 
 export interface IProductDoc extends Document {
   name: string;
@@ -16,6 +18,8 @@ export interface IProductDoc extends Document {
   reflectedImage: string; // Image shown on hover in featured products
   attributes: Map<string, string>;
   tags: string[];
+  region?: ProductRegion;
+  bestTakenFor?: ProductBestTakenFor;
   status: ProductStatus;
   isFeatured: boolean;
   stock: number;
@@ -40,6 +44,14 @@ const productSchema = new Schema<IProductDoc>(
     reflectedImage: { type: String, required: true },
     attributes: { type: Map, of: String, default: {} },
     tags: [{ type: String, trim: true, lowercase: true }],
+    region: {
+      type: String,
+      enum: ['Assam', 'Darjeeling', 'Nilgiri', 'Dooars'],
+    },
+    bestTakenFor: {
+      type: String,
+      enum: ['Morning', 'Noon', 'Evening'],
+    },
     status: {
       type: String,
       enum: ['draft', 'active', 'archived'],

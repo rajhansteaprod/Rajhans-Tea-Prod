@@ -15,6 +15,9 @@ interface ProductListOptions {
   priceMin?: number;
   priceMax?: number;
   tags?: string[];
+  region?: string;
+  bestTakenFor?: string;
+  weight?: string;
 }
 
 export class ProductRepository extends BaseRepository<IProductDoc> {
@@ -85,11 +88,52 @@ export class ProductRepository extends BaseRepository<IProductDoc> {
       if (options.priceMax !== undefined) (filter.basePrice as Record<string, number>).$lte = options.priceMax;
     }
 
-    if (options.tags && options.tags.length > 0) {
-      // Filter products that have any of the selected tags
-      filter.tags = { $in: options.tags.map((t) => t.toLowerCase().trim()) };
+    if (options.tags) {
+      // Handle both array and comma-separated string from query params
+      let tagArray: string[] = [];
+      if (Array.isArray(options.tags)) {
+        tagArray = options.tags;
+      } else if (typeof options.tags === 'string') {
+        tagArray = (options.tags as string).split(',');
+      }
+
+      if (tagArray.length > 0) {
+        filter.tags = { $in: tagArray.map((t) => t.toLowerCase().trim()) };
+      }
     }
 
+    if (options.region) {
+      filter.region = options.region;
+    }
+
+    if (options.bestTakenFor) {
+      filter.bestTakenFor = options.bestTakenFor;
+    }
+
+    // If weight filter, fetch all and filter in memory (can't easily do in MongoDB without aggregation)
+    if (options.weight) {
+      const allProducts = await this.model
+        .find(filter)
+        .populate('category', 'name slug')
+        .populate('collections', 'name slug')
+        .populate('variants')
+        .sort({ [sortBy]: sortOrder })
+        .exec();
+
+      // Filter by weight (check variant names)
+      const filteredProducts = allProducts.filter((product: any) => {
+        if (!product.variants || product.variants.length === 0) return false;
+        return product.variants.some((variant: any) =>
+          variant.name.toLowerCase().includes(options.weight!.toLowerCase())
+        );
+      });
+
+      const total = filteredProducts.length;
+      const paginatedProducts = filteredProducts.slice(skip, skip + limit);
+      return { products: paginatedProducts, total };
+    }
+
+    // Normal query without weight filter
     const [products, total] = await Promise.all([
       this.model
         .find(filter)

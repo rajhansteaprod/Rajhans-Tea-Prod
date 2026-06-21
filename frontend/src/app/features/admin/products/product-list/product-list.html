@@ -246,6 +246,27 @@
                 (ngModelChange)="form.update(f=>({...f,tags:$event}))"
                 placeholder="cotton, organic, summer" />
             </div>
+            <div class="form-field">
+              <label class="form-label">Region</label>
+              <select class="form-input" [ngModel]="form().region"
+                (ngModelChange)="form.update(f=>({...f,region:$event}))">
+                <option [value]="undefined">Select region</option>
+                <option value="Assam">Assam</option>
+                <option value="Darjeeling">Darjeeling</option>
+                <option value="Nilgiri">Nilgiri</option>
+                <option value="Dooars">Dooars</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Best Taken For</label>
+              <select class="form-input" [ngModel]="form().bestTakenFor"
+                (ngModelChange)="form.update(f=>({...f,bestTakenFor:$event}))">
+                <option [value]="undefined">Select time</option>
+                <option value="Morning">Morning (Strong)</option>
+                <option value="Noon">Noon (Balanced)</option>
+                <option value="Evening">Evening (Aromatic)</option>
+              </select>
+            </div>
             <div class="form-field span-2">
               <label class="form-label">Collections</label>
               <div class="collection-picker">

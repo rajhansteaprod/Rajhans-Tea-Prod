@@ -21,6 +21,9 @@ interface ProductListQuery {
   priceMin?: number;
   priceMax?: number;
   tags?: string[];
+  region?: string;
+  bestTakenFor?: string;
+  weight?: string;
 }
 
 export class ProductService {
@@ -54,6 +57,9 @@ export class ProductService {
       priceMin: query.priceMin,
       priceMax: query.priceMax,
       tags: query.tags,
+      region: query.region,
+      bestTakenFor: query.bestTakenFor,
+      weight: query.weight,
     });
 
     return {
@@ -78,6 +84,9 @@ export class ProductService {
       priceMin: query.priceMin,
       priceMax: query.priceMax,
       tags: query.tags,
+      region: query.region,
+      bestTakenFor: query.bestTakenFor,
+      weight: query.weight,
     });
 
     // Fetch variants for products that have them
@@ -128,6 +137,8 @@ export class ProductService {
     reflectedImage: string;
     attributes?: Record<string, string>;
     tags?: string[];
+    region?: string;
+    bestTakenFor?: string;
     status?: ProductStatus;
     isFeatured?: boolean;
     stock?: number;
@@ -163,6 +174,8 @@ export class ProductService {
       reflectedImage: data.reflectedImage,
       attributes: attributesMap as never,
       tags: (data.tags ?? []).map((t) => t.toLowerCase().trim()),
+      region: data.region as any,
+      bestTakenFor: data.bestTakenFor as any,
       status: data.status ?? 'draft',
       isFeatured: data.isFeatured ?? false,
       stock: data.stock ?? 0,
@@ -188,6 +201,8 @@ export class ProductService {
       reflectedImage?: string;
       attributes?: Record<string, string>;
       tags?: string[];
+      region?: string;
+      bestTakenFor?: string;
       status?: ProductStatus;
       isFeatured?: boolean;
       stock?: number;
@@ -234,6 +249,8 @@ export class ProductService {
     if (data.tags !== undefined) {
       update.tags = data.tags.map((t) => t.toLowerCase().trim());
     }
+    if (data.region !== undefined) update.region = data.region;
+    if (data.bestTakenFor !== undefined) update.bestTakenFor = data.bestTakenFor;
     if (data.status !== undefined) update.status = data.status;
     if (data.isFeatured !== undefined) update.isFeatured = data.isFeatured;
     if (data.stock !== undefined) update.stock = data.stock;

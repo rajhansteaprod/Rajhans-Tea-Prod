@@ -23,6 +23,8 @@ interface ProductForm {
   reflectedImage: string;
   attributes: AttributeEntry[];
   tags: string;
+  region?: 'Assam' | 'Darjeeling' | 'Nilgiri' | 'Dooars';
+  bestTakenFor?: 'Morning' | 'Noon' | 'Evening';
   status: 'draft' | 'active' | 'archived';
   isFeatured: boolean;
   stock: number;
@@ -44,6 +46,7 @@ const emptyForm = (): ProductForm => ({
   name: '', description: '', shortDescription: '',
   categoryId: '', collectionIds: [], basePrice: '', discountedPrice: '',
   images: [], reflectedImage: '', attributes: [], tags: '',
+  region: undefined, bestTakenFor: undefined,
   status: 'draft', isFeatured: false,
   stock: 0, trackInventory: false, ratingOneLiner: '',
 });
@@ -137,6 +140,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
   // --- Form ---
 
   openCreate() {
+    this.loadMeta(); // Reload categories, collections
     this.editingId.set(null);
     this.form.set(emptyForm());
     this.formError.set(null);
@@ -157,6 +161,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
       reflectedImage:   product.reflectedImage ?? '',
       attributes:       Object.entries(product.attributes).map(([key, value]) => ({ key, value })),
       tags:             product.tags.join(', '),
+      region:           (product as any).region ?? undefined,
+      bestTakenFor:     (product as any).bestTakenFor ?? undefined,
       status:           product.status ?? 'draft',
       isFeatured:       product.isFeatured ?? false,
       stock:            product.stock ?? 0,
@@ -291,6 +297,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
       reflectedImage:   f.reflectedImage,
       attributes:       attrsRecord,
       tags,
+      region:           f.region || undefined,
+      bestTakenFor:     f.bestTakenFor || undefined,
       status:           f.status,
       isFeatured:       f.isFeatured,
       stock:            Number(f.stock) || 0,

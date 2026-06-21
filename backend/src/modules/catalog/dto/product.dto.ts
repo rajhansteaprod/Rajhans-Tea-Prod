@@ -32,6 +32,8 @@ export interface ProductAdminView {
   reflectedImage?: string;
   attributes: Record<string, string>;
   tags: string[];
+  region?: string;
+  bestTakenFor?: string;
   status: ProductStatus;
   isFeatured: boolean;
   stock: number;
@@ -59,6 +61,8 @@ export interface ProductPublicView {
   reflectedImage?: string;
   attributes: Record<string, string>;
   tags: string[];
+  region?: string;
+  bestTakenFor?: string;
   isFeatured: boolean;
   inStock: boolean;
   hasVariants: boolean;
@@ -129,6 +133,8 @@ export class ProductDTO {
       reflectedImage: product.reflectedImage,
       attributes: attributesToRecord(product.attributes),
       tags: product.tags ?? [],
+      region: product.region,
+      bestTakenFor: product.bestTakenFor,
       status: product.status,
       isFeatured: product.isFeatured,
       stock: product.stock ?? 0,
@@ -156,6 +162,8 @@ export class ProductDTO {
       reflectedImage: product.reflectedImage,
       attributes: attributesToRecord(product.attributes),
       tags: product.tags ?? [],
+      region: product.region,
+      bestTakenFor: product.bestTakenFor,
       isFeatured: product.isFeatured,
       inStock: (product.stock ?? 0) > 0,
       hasVariants: product.hasVariants ?? false,
