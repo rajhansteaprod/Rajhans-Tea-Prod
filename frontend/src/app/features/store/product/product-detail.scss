@@ -283,12 +283,12 @@
 
 .pd__section-label {
   font-family: $font-family-body;
-  font-size: $font-size-sm;
+  font-size: $font-size-xs;
   font-weight: $font-weight-medium;
-  letter-spacing: 0;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: $color-mono-dark;
-  margin: 0 0 $space-lg 0;
+  color: #6b7280;
+  margin: 0 0 $space-md 0;
   line-height: 1.4;
 }
 
@@ -302,19 +302,19 @@
 }
 
 .pd__variant-list {
-  display: flex;
-  gap: $space-sm;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-md;
 }
 
 .pd__variant-btn {
-  padding: $space-sm $space-lg;
-  border: 2px solid #d1d5db;
-  border-radius: 0;
-  background: #ffffff;
+  padding: $space-md;
+  border: 2px solid $color-mono-dark;
+  border-radius: 2px;
+  background: transparent;
   font-family: $font-family-body;
   font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-medium;
   color: $color-mono-dark;
   cursor: pointer;
   transition: all $transition-fast;
@@ -324,15 +324,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
 
   &:hover {
-    border-color: #9ca3af;
+    background: rgba($color-mono-dark, 0.05);
   }
 
   &.active {
-    border-color: $color-mono-dark;
-    background: #ffffff;
-    color: $color-mono-dark;
+    border-color: #b45309;
+    background: rgba(180, 83, 9, 0.1);
+    color: #b45309;
+    font-weight: $font-weight-semibold;
   }
 }
 
