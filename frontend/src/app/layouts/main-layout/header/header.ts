@@ -14,10 +14,11 @@ import { AuthService } from '../../../core/services/auth.service';
 import { CartStore } from '../../../core/services/cart.store';
 import { CatalogService, Product, Category, Collection } from '../../../core/services/catalog.service';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { LogoComponent } from '../../../shared/components/logo/logo.component';
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ButtonComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ButtonComponent, LogoComponent],
   templateUrl: './header.html',
   styleUrls: ['./header.scss'],
 })
