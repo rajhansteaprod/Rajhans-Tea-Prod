@@ -35,14 +35,14 @@ export function app(): express.Express {
     changeOrigin: true,
     ws: true,
     logLevel: 'debug',
-  }));
+  }) as any);
 
   // Proxy uploaded files to backend
   server.use('/uploads', createProxyMiddleware({
     target: API_URL,
     changeOrigin: true,
     logLevel: 'debug',
-  }));
+  }) as any);
 
   // Parse JSON bodies ONLY for non-API routes
   server.use(express.json({ limit: '50mb' }));
