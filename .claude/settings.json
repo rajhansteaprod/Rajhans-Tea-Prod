@@ -1,6 +1,8 @@
 {
   "permissions": {
     "allow": [
+      "node (*)",
+      "",
       "Bash (*)",
       "Bash(docker compose:*)",
       "Bash(npm audit:*)",

@@ -170,6 +170,185 @@
         </div>
       </div>
 
+      <!-- Middle section -->
+      <div class="pd__tabs-section">
+        <div class="pd__tabs-nav-wrapper">
+          <nav class="pd__tabs-nav">
+            <button
+              class="pd__tab-btn"
+              [class.active]="activeTab() === 'description'"
+              (click)="activeTab.set('description')"
+            >
+              Description
+            </button>
+            <button
+              class="pd__tab-btn"
+              [class.active]="activeTab() === 'brewing'"
+              (click)="activeTab.set('brewing')"
+            >
+              Brewing Guide
+            </button>
+            <button
+              class="pd__tab-btn"
+              [class.active]="activeTab() === 'sourcing'"
+              (click)="activeTab.set('sourcing')"
+            >
+              Sourcing Info
+            </button>
+            <button
+              class="pd__tab-btn"
+              [class.active]="activeTab() === 'reviews'"
+              (click)="activeTab.set('reviews')"
+            >
+              Reviews
+            </button>
+          </nav>
+        </div>
+
+        <div class="pd__tabs-content">
+          <!-- Description Tab -->
+          @if (activeTab() === 'description') {
+            <div class="pd__tab-pane">
+              <p>{{ product()?.description }}</p>
+            </div>
+          }
+
+          <!-- Brewing Guide Tab -->
+          @if (activeTab() === 'brewing') {
+            <div class="pd__tab-pane">
+              <p>Brewing guide content coming soon...</p>
+            </div>
+          }
+
+          <!-- Sourcing Info Tab -->
+          @if (activeTab() === 'sourcing') {
+            <div class="pd__tab-pane">
+              <p>Sourcing information coming soon...</p>
+            </div>
+          }
+
+          <!-- Reviews Tab -->
+          @if (activeTab() === 'reviews') {
+            <div class="pd__tab-pane">
+              <!-- Reviews List - FIRST -->
+              <div class="pd__reviews-section">
+                <h3 class="pd__reviews-title">Customer Reviews ({{ reviews().length }})</h3>
+                @if (reviewsLoading()) {
+                  <p>Loading reviews...</p>
+                } @else if (reviews().length === 0) {
+                  <p>No reviews yet. Be the first to review!</p>
+                } @else {
+                  <div class="pd__reviews-list">
+                  @for (review of reviews(); track review._id) {
+                    <div class="pd__review-card">
+                      <div class="pd__review-header">
+                        <div class="pd__review-rating">
+                          @for (i of [1, 2, 3, 4, 5]; track i) {
+                            <svg width="16" height="16" viewBox="0 0 24 24" [class.filled]="i <= review.rating" fill="currentColor">
+                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                          }
+                        </div>
+                        @if (review.isVerifiedPurchase) {
+                          <span class="pd__review-badge">Verified Purchase</span>
+                        }
+                      </div>
+                      <h4 class="pd__review-title">{{ review.title }}</h4>
+                      <p class="pd__review-body">{{ review.body }}</p>
+                      @if (review.images?.length) {
+                        <div class="pd__review-images">
+                          @for (img of review.images; track img) {
+                            <img [src]="img" [alt]="review.title" class="pd__review-img"/>
+                          }
+                        </div>
+                      }
+                      <div class="pd__review-footer">
+                        <span class="pd__review-date">{{ review.createdAt | date: 'MMM dd, yyyy' }}</span>
+                        @if (review.adminReply) {
+                          <div class="pd__admin-reply">
+                            <p class="pd__admin-reply-label">Admin Reply:</p>
+                            <p class="pd__admin-reply-text">{{ review.adminReply.body }}</p>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+                }
+              </div>
+
+              <div class="pd__reviews-divider"></div>
+
+              <!-- Review Form - SECOND -->
+              <div class="pd__review-form-section">
+                <h3 class="pd__review-form-title">Share Your Review</h3>
+
+                @if (isLoggedIn()) {
+                  <form class="pd__review-form" (ngSubmit)="submitReview()">
+                  <!-- Rating selector -->
+                  <div class="pd__form-group">
+                    <label class="pd__form-label">Rating</label>
+                    <div class="pd__rating-selector">
+                      @for (i of [1, 2, 3, 4, 5]; track i) {
+                        <button
+                          type="button"
+                          class="pd__rating-star"
+                          [class.active]="reviewRating() >= i"
+                          (click)="reviewRating.set(i)"
+                        >
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                          </svg>
+                        </button>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Title -->
+                  <div class="pd__form-group">
+                    <label class="pd__form-label">Review Title</label>
+                    <input
+                      type="text"
+                      class="pd__form-input"
+                      [(ngModel)]="reviewTitle"
+                      name="title"
+                      placeholder="Summarize your review"
+                      maxlength="200"
+                      required
+                    />
+                  </div>
+
+                  <!-- Body -->
+                  <div class="pd__form-group">
+                    <label class="pd__form-label">Your Review</label>
+                    <textarea
+                      class="pd__form-textarea"
+                      [(ngModel)]="reviewBody"
+                      name="body"
+                      placeholder="Share your detailed experience with this product"
+                      rows="5"
+                      maxlength="5000"
+                      required
+                    ></textarea>
+                  </div>
+
+                  <!-- Submit button -->
+                  <button type="submit" class="pd__review-submit-btn" [disabled]="submittingReview()">
+                    {{ submittingReview() ? 'Submitting...' : 'Submit Review' }}
+                  </button>
+                </form>
+                } @else {
+                  <div class="pd__login-prompt">
+                    <p>Sign in to share your review and help other customers</p>
+                    <a href="/auth/login" class="pd__login-btn">Sign In</a>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
       <!-- Related products: You might also like -->
       @if (relatedProducts().length > 0) {
         <div class="pd__recos">

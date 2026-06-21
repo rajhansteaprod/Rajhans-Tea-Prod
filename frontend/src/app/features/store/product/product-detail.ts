@@ -1,15 +1,17 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { CatalogService, Product, ProductVariant } from '../../../core/services/catalog.service';
 import { CartStore } from '../../../core/services/cart.store';
-import { ReviewStore, RatingSummary } from '../../../core/services/review.store';
+import { ReviewStore, RatingSummary, Review } from '../../../core/services/review.store';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './product-detail.html',
   styleUrls: ['./product-detail.scss'],
 })
@@ -17,10 +19,13 @@ export class ProductDetailComponent implements OnInit {
   private readonly catalog = inject(CatalogService);
   private readonly cartStore = inject(CartStore);
   private readonly reviewStore = inject(ReviewStore);
+  private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly meta = inject(Meta);
   private readonly titleService = inject(Title);
+
+  readonly isLoggedIn = this.authService.isLoggedIn;
 
   // ─ State signals ─
   readonly product = signal<Product | null>(null);
@@ -33,6 +38,13 @@ export class ProductDetailComponent implements OnInit {
   readonly zoomActive = signal(false);
   readonly zoomPos = signal('0% 0%');
   readonly hoveredProductId = signal<string | null>(null);
+  readonly activeTab = signal<'description' | 'brewing' | 'sourcing' | 'reviews'>('description');
+  readonly reviews = signal<Review[]>([]);
+  readonly reviewsLoading = signal(false);
+  readonly reviewRating = signal(5);
+  reviewTitle = '';
+  reviewBody = '';
+  readonly submittingReview = signal(false);
 
   // ─ Computed ─
   readonly effectivePrice = computed(() => {
@@ -77,6 +89,16 @@ export class ProductDetailComponent implements OnInit {
             next: (r) => this.ratingSummary.set(r.data),
           });
 
+          // Load reviews
+          this.reviewsLoading.set(true);
+          this.reviewStore.getProductReviews(res.data._id).subscribe({
+            next: (r) => {
+              this.reviews.set(r.data);
+              this.reviewsLoading.set(false);
+            },
+            error: () => this.reviewsLoading.set(false),
+          });
+
           // Load related products
           this.catalog
             .getProductsPublic({ categoryId: res.data.category._id, limit: 9 })
@@ -90,6 +112,30 @@ export class ProductDetailComponent implements OnInit {
         },
         error: () => this.loading.set(false),
       });
+    });
+  }
+
+  submitReview(): void {
+    if (!this.product() || !this.reviewTitle.trim() || !this.reviewBody.trim()) {
+      return;
+    }
+
+    this.submittingReview.set(true);
+    const reviewData = {
+      rating: this.reviewRating(),
+      title: this.reviewTitle.trim(),
+      body: this.reviewBody.trim(),
+    };
+
+    this.reviewStore.submitReview(this.product()!._id, reviewData).subscribe({
+      next: (res) => {
+        this.reviewTitle = '';
+        this.reviewBody = '';
+        this.reviewRating.set(5);
+        this.submittingReview.set(false);
+        this.reviews.update(reviews => [res.data, ...reviews]);
+      },
+      error: () => this.submittingReview.set(false),
     });
   }
 
