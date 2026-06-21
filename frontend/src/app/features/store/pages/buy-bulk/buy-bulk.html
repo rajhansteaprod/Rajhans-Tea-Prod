@@ -1,0 +1,213 @@
+<div class="buy-bulk">
+  <!-- Hero Section -->
+  <section class="buy-bulk__hero">
+    <img src="/static/bulk-hero.png" alt="Restaurant and hotel tea service" class="buy-bulk__hero-image" />
+    <div class="buy-bulk__hero-overlay"></div>
+    <div class="buy-bulk__hero-content">
+      <p class="buy-bulk__hero-label">For Businesses</p>
+      <h1 class="buy-bulk__hero-title">Running a restaurant,<br>hotel,<br>or a chain of outlets?</h1>
+      <p class="buy-bulk__hero-text">Your guests deserve the same quality tea you'd serve at home — maybe better. Rajhans Tea supplies directly to restaurants, hotels, cloud kitchens, café chains, and institutional buyers across India.</p>
+      <p class="buy-bulk__hero-text">No lock-ins. No minimum order headache. And before you commit to anything — <strong class="buy-bulk__hero-text-strong">we'll send you a free sample</strong>, so you can taste it yourself and decide.</p>
+    </div>
+    <div class="buy-bulk__hero-banner">
+      <p class="buy-bulk__hero-banner-text">Not sure which blend suits your kitchen? Try it first — we offer free samples, no strings attached.</p>
+      <a href="#bulk-form" class="buy-bulk__hero-banner-link">Request a free sample →</a>
+    </div>
+  </section>
+
+  <!-- What to Expect Section -->
+  <section class="buy-bulk__expectations">
+    <div class="buy-bulk__container">
+      <div class="buy-bulk__expectations-header">
+        <p class="buy-bulk__label">What to Expect</p>
+        <h2 class="buy-bulk__section-title">Simple, direct, and made for businesses that care about what they serve.</h2>
+      </div>
+      <div class="buy-bulk__expectations-grid">
+        <div class="buy-bulk__expectation-card">
+          <h3 class="buy-bulk__expectation-title">Direct sourcing, honest pricing</h3>
+          <p class="buy-bulk__expectation-text">Because we source directly from Assam gardens, we can offer competitive bulk pricing without compromising on quality. You get a better product for less than what most distributors charge.</p>
+        </div>
+        <div class="buy-bulk__expectation-card">
+          <h3 class="buy-bulk__expectation-title">Free sampling before any commitment</h3>
+          <p class="buy-bulk__expectation-text">We know switching tea suppliers is a decision, not an impulse. So we'll send you samples of any of our blends, completely free. Taste it. Let your team taste it. Then decide.</p>
+        </div>
+        <div class="buy-bulk__expectation-card">
+          <h3 class="buy-bulk__expectation-title">Flexible quantities, regular supply</h3>
+          <p class="buy-bulk__expectation-text">Whether you need 10 kg a month or 500 kg, we'll find a supply schedule that works for your operation. We work on recurring orders so you never have to think about it twice.</p>
+        </div>
+        <div class="buy-bulk__expectation-card">
+          <h3 class="buy-bulk__expectation-title">Custom packaging on request</h3>
+          <p class="buy-bulk__expectation-text">Larger orders can carry your branding. We handle the packaging customisation in-house, so there's no coordination headache between multiple vendors.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="buy-bulk__divider"></div>
+
+  <!-- Bulk Enquiry Section -->
+  <section id="bulk-form" class="buy-bulk__bulk-enquiry">
+    <div class="buy-bulk__container">
+      <div class="buy-bulk__enquiry-layout">
+        <div class="buy-bulk__enquiry-intro">
+          <p class="buy-bulk__label">Get in Touch</p>
+          <h2 class="buy-bulk__section-title">Tell us a little about your business.</h2>
+          <p class="buy-bulk__intro-text">Fill this in and our team will reach out within one working day. We'll understand your requirements, suggest the right blend, and send across a sample before anything else.</p>
+          <p class="buy-bulk__intro-text">You can also reach us directly at <a href="mailto:bulk@rajhanstea.com" class="buy-bulk__link">bulk@rajhanstea.com</a> or call us at <a href="tel:+919999999999" class="buy-bulk__link">+91 99999 99999</a>.</p>
+        </div>
+        <form [formGroup]="bulkForm" (ngSubmit)="submitBulkEnquiry()" class="buy-bulk__form">
+          @if (bulkSuccess()) {
+            <div class="buy-bulk__message buy-bulk__message--success">
+              ✓ Thank you! Your enquiry has been received. Our team will contact you within 24 hours.
+            </div>
+          }
+          @if (bulkError()) {
+            <div class="buy-bulk__message buy-bulk__message--error">
+              {{ bulkError() }}
+            </div>
+          }
+          <div class="buy-bulk__form-row">
+            <div class="buy-bulk__form-group">
+              <label class="buy-bulk__form-label">Your name</label>
+              <input type="text" placeholder="Arjun Mehta" formControlName="fullName" class="buy-bulk__form-input" />
+            </div>
+            <div class="buy-bulk__form-group">
+              <label class="buy-bulk__form-label">Business name</label>
+              <input type="text" placeholder="The Grand Hotel" formControlName="businessName" class="buy-bulk__form-input" />
+            </div>
+          </div>
+          <div class="buy-bulk__form-row">
+            <div class="buy-bulk__form-group">
+              <label class="buy-bulk__form-label">Type of business</label>
+              <input type="text" placeholder="Hotel / Restaurant / Café / Other" formControlName="businessType" class="buy-bulk__form-input" />
+            </div>
+            <div class="buy-bulk__form-group">
+              <label class="buy-bulk__form-label">City</label>
+              <input type="text" placeholder="Mumbai" formControlName="city" class="buy-bulk__form-input" />
+            </div>
+          </div>
+          <div class="buy-bulk__form-row">
+            <div class="buy-bulk__form-group">
+              <label class="buy-bulk__form-label">Phone number</label>
+              <input type="tel" placeholder="+91 98765 43210" formControlName="mobileNumber" class="buy-bulk__form-input" />
+            </div>
+            <div class="buy-bulk__form-group">
+              <label class="buy-bulk__form-label">Email address</label>
+              <input type="email" placeholder="arjun@thegrandhotel.com" formControlName="emailAddress" class="buy-bulk__form-input" />
+            </div>
+          </div>
+          <div class="buy-bulk__form-row">
+            <div class="buy-bulk__form-group buy-bulk__form-group--full">
+              <label class="buy-bulk__form-label">Approximate monthly requirement</label>
+              <input type="text" placeholder="e.g. 50 kg per month, or I'm not sure yet" formControlName="monthlyRequirement" class="buy-bulk__form-input" />
+            </div>
+          </div>
+          <div class="buy-bulk__form-row">
+            <div class="buy-bulk__form-group buy-bulk__form-group--full">
+              <label class="buy-bulk__form-label">Anything else you'd like us to know</label>
+              <textarea rows="4" placeholder="Which teas are you interested in? Any specific requirements?" formControlName="additionalInfo" class="buy-bulk__form-textarea"></textarea>
+            </div>
+          </div>
+          <div class="buy-bulk__form-submit">
+            <button type="submit" [disabled]="bulkSubmitting() || !bulkForm.valid" class="buy-bulk__form-button">
+              {{ bulkSubmitting() ? 'Sending...' : 'Send Enquiry' }}
+            </button>
+            <p class="buy-bulk__form-note">We'll also arrange a free sample dispatch as part of this conversation.</p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Corporate Gifting Section -->
+  <section class="buy-bulk__gifting-banner">
+    <div class="buy-bulk__gifting-image">
+      <img src="/static/gifting.png" alt="Elegant wrapped gift box" />
+    </div>
+    <div class="buy-bulk__gifting-content">
+      <p class="buy-bulk__label buy-bulk__label--white">Corporate Gifting</p>
+      <h2 class="buy-bulk__gifting-title">Give something people will actually use — and remember you for.</h2>
+      <p class="buy-bulk__gifting-text">A well-curated tea hamper says something that a generic gift doesn't: that you thought about it. Rajhans Tea gift sets are popular with companies gifting clients, partners, and employees — during Diwali, year-end, product launches, or simply as a thank-you.</p>
+      <p class="buy-bulk__gifting-text">We handle everything — selection, packaging, personalised cards, and delivery to multiple addresses if needed. Orders can be as small as 10 sets or as large as several thousand.</p>
+      <div class="buy-bulk__gifting-divider"></div>
+      <ul class="buy-bulk__gifting-features">
+        <li class="buy-bulk__gifting-feature">Custom branding and personalised message cards</li>
+        <li class="buy-bulk__gifting-feature">Flexible hamper curation — single blend or multi-variety</li>
+        <li class="buy-bulk__gifting-feature">Pan-India delivery to individual recipient addresses</li>
+        <li class="buy-bulk__gifting-feature">Turnaround of 5–7 days for most orders</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Gifting Enquiry Section -->
+  <section class="buy-bulk__gifting-enquiry">
+    <div class="buy-bulk__container">
+      <div class="buy-bulk__enquiry-layout">
+        <div class="buy-bulk__enquiry-intro">
+          <p class="buy-bulk__label">Gifting Enquiry</p>
+          <h2 class="buy-bulk__section-title">Plan your corporate gift order.</h2>
+          <p class="buy-bulk__intro-text">Share the details below and our gifting team will come back to you with a curated proposal, pricing, and timeline. For urgent orders, call us directly at <a href="tel:+919999999999" class="buy-bulk__link">+91 99999 99999</a> or write to <a href="mailto:gifting@rajhanstea.com" class="buy-bulk__link">gifting@rajhanstea.com</a>.</p>
+        </div>
+        <form [formGroup]="giftingForm" (ngSubmit)="submitGiftingEnquiry()" class="buy-bulk__form">
+          @if (giftingSuccess()) {
+            <div class="buy-bulk__message buy-bulk__message--success">
+              ✓ Thank you! Your enquiry has been received. Our gifting team will contact you within 24 hours.
+            </div>
+          }
+          @if (giftingError()) {
+            <div class="buy-bulk__message buy-bulk__message--error">
+              {{ giftingError() }}
+            </div>
+          }
+          <div class="buy-bulk__form-row">
+            <div class="buy-bulk__form-group">
+              <label class="buy-bulk__form-label">Your name</label>
+              <input type="text" placeholder="Priya Kapoor" formControlName="fullName" class="buy-bulk__form-input" />
+            </div>
+            <div class="buy-bulk__form-group">
+              <label class="buy-bulk__form-label">Company name</label>
+              <input type="text" placeholder="Infosys / HDFC / Any Company" formControlName="companyName" class="buy-bulk__form-input" />
+            </div>
+          </div>
+          <div class="buy-bulk__form-row">
+            <div class="buy-bulk__form-group">
+              <label class="buy-bulk__form-label">Phone number</label>
+              <input type="tel" placeholder="+91 98765 43210" formControlName="mobileNumber" class="buy-bulk__form-input" />
+            </div>
+            <div class="buy-bulk__form-group">
+              <label class="buy-bulk__form-label">Email address</label>
+              <input type="email" placeholder="priya@company.com" formControlName="emailAddress" class="buy-bulk__form-input" />
+            </div>
+          </div>
+          <div class="buy-bulk__form-row">
+            <div class="buy-bulk__form-group">
+              <label class="buy-bulk__form-label">Occasion</label>
+              <input type="text" placeholder="Diwali / Year-end / Employee gifting" formControlName="occasion" class="buy-bulk__form-input" />
+            </div>
+            <div class="buy-bulk__form-group">
+              <label class="buy-bulk__form-label">Number of sets needed</label>
+              <input type="text" placeholder="e.g. 200 gift sets" formControlName="numberOfSets" class="buy-bulk__form-input" />
+            </div>
+          </div>
+          <div class="buy-bulk__form-row">
+            <div class="buy-bulk__form-group buy-bulk__form-group--full">
+              <label class="buy-bulk__form-label">Budget per set (approximate)</label>
+              <input type="text" placeholder="e.g. ₹500–₹800 per set" formControlName="budgetPerSet" class="buy-bulk__form-input" />
+            </div>
+          </div>
+          <div class="buy-bulk__form-row">
+            <div class="buy-bulk__form-group buy-bulk__form-group--full">
+              <label class="buy-bulk__form-label">Any specific requirements</label>
+              <textarea rows="4" placeholder="Custom branding, specific blends, delivery timeline, multiple addresses, etc." formControlName="specialRequirements" class="buy-bulk__form-textarea"></textarea>
+            </div>
+          </div>
+          <div class="buy-bulk__form-submit buy-bulk__form-submit--no-note">
+            <button type="submit" [disabled]="giftingSubmitting() || !giftingForm.valid" class="buy-bulk__form-button">
+              {{ giftingSubmitting() ? 'Sending...' : 'Send Enquiry' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>

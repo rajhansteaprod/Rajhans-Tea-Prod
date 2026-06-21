@@ -57,6 +57,11 @@ export const routes: Routes = [
           import('./features/store/contact/contact-page').then((m) => m.ContactPageComponent),
       },
       {
+        path: 'buy-in-bulk',
+        loadComponent: () =>
+          import('./features/store/pages/buy-bulk/buy-bulk').then((m) => m.BuyBulkComponent),
+      },
+      {
         path: 'page/track-order',
         loadComponent: () =>
           import('./features/store/pages/track-order/track-order').then((m) => m.TrackOrderComponent),

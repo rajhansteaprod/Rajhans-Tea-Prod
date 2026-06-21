@@ -1,0 +1,126 @@
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
+
+@Component({
+  selector: 'app-buy-bulk',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  templateUrl: './buy-bulk.html',
+  styleUrls: ['./buy-bulk.scss'],
+})
+export class BuyBulkComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly http = inject(HttpClient);
+
+  bulkForm!: FormGroup;
+  giftingForm!: FormGroup;
+
+  bulkSubmitting = signal(false);
+  giftingSubmitting = signal(false);
+  bulkSuccess = signal(false);
+  giftingSuccess = signal(false);
+  bulkError = signal('');
+  giftingError = signal('');
+
+  ngOnInit() {
+    this.initForms();
+  }
+
+  private initForms() {
+    this.bulkForm = this.fb.group({
+      fullName: ['', [Validators.required, Validators.minLength(2)]],
+      businessName: ['', [Validators.required]],
+      businessType: ['', [Validators.required]],
+      city: ['', [Validators.required]],
+      mobileNumber: ['', [Validators.required, Validators.pattern(/^\+?[\d\s]{10,}$/)]],
+      emailAddress: ['', [Validators.required, Validators.email]],
+      monthlyRequirement: ['', [Validators.required]],
+      additionalInfo: [''],
+    });
+
+    this.giftingForm = this.fb.group({
+      fullName: ['', [Validators.required, Validators.minLength(2)]],
+      companyName: ['', [Validators.required]],
+      mobileNumber: ['', [Validators.required, Validators.pattern(/^\+?[\d\s]{10,}$/)]],
+      emailAddress: ['', [Validators.required, Validators.email]],
+      occasion: ['', [Validators.required]],
+      numberOfSets: ['', [Validators.required]],
+      budgetPerSet: ['', [Validators.required]],
+      specialRequirements: [''],
+    });
+  }
+
+  submitBulkEnquiry() {
+    if (!this.bulkForm.valid) {
+      return;
+    }
+
+    this.bulkSubmitting.set(true);
+    this.bulkError.set('');
+
+    const formData = this.bulkForm.getRawValue();
+    const payload = {
+      fullName: formData.fullName,
+      mobileNumber: formData.mobileNumber.replace(/\D/g, '').slice(-10),
+      emailAddress: formData.emailAddress,
+      reasonToContact: 'bulk' as const,
+      companyName: formData.businessName,
+      address: `${formData.businessType}, ${formData.city}`,
+      message: `Monthly Requirement: ${formData.monthlyRequirement}\n\n${formData.additionalInfo}`,
+    };
+
+    this.http.post(
+      `${environment.apiUrl}/contact/submit`,
+      payload
+    ).subscribe({
+      next: () => {
+        this.bulkSuccess.set(true);
+        this.bulkForm.reset();
+        this.bulkSubmitting.set(false);
+        setTimeout(() => this.bulkSuccess.set(false), 4000);
+      },
+      error: (err) => {
+        this.bulkError.set(err?.error?.message || 'Failed to submit form');
+        this.bulkSubmitting.set(false);
+      },
+    });
+  }
+
+  submitGiftingEnquiry() {
+    if (!this.giftingForm.valid) {
+      return;
+    }
+
+    this.giftingSubmitting.set(true);
+    this.giftingError.set('');
+
+    const formData = this.giftingForm.getRawValue();
+    const payload = {
+      fullName: formData.fullName,
+      mobileNumber: formData.mobileNumber.replace(/\D/g, '').slice(-10),
+      emailAddress: formData.emailAddress,
+      reasonToContact: 'gifting' as const,
+      companyName: formData.companyName,
+      message: `Occasion: ${formData.occasion}\nNumber of Sets: ${formData.numberOfSets}\nBudget per Set: ${formData.budgetPerSet}\n\n${formData.specialRequirements}`,
+    };
+
+    this.http.post(
+      `${environment.apiUrl}/contact/submit`,
+      payload
+    ).subscribe({
+      next: () => {
+        this.giftingSuccess.set(true);
+        this.giftingForm.reset();
+        this.giftingSubmitting.set(false);
+        setTimeout(() => this.giftingSuccess.set(false), 4000);
+      },
+      error: (err) => {
+        this.giftingError.set(err?.error?.message || 'Failed to submit form');
+        this.giftingSubmitting.set(false);
+      },
+    });
+  }
+}

@@ -1,0 +1,615 @@
+// ═══════════════════════════════════════
+// BUY IN BULK PAGE
+// ═══════════════════════════════════════
+
+.buy-bulk {
+  background: #faf8f5;
+  color: #2d1810;
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+}
+
+.buy-bulk__container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+
+  @media (min-width: 640px) {
+    padding: 0 40px;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 0 64px;
+  }
+}
+
+.buy-bulk__label {
+  color: #e87e3e;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0;
+
+  &--white {
+    color: #e87e3e;
+  }
+}
+
+// ═══════════════════════════════════════
+// HERO SECTION
+// ═══════════════════════════════════════
+
+.buy-bulk__hero {
+  position: relative;
+  width: 100%;
+  height: 80vh;
+  min-height: 560px;
+  overflow: hidden;
+}
+
+.buy-bulk__hero-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.buy-bulk__hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 14, 9, 0.6);
+}
+
+.buy-bulk__hero-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 32px;
+  max-width: 700px;
+
+  @media (min-width: 640px) {
+    padding: 56px;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 80px;
+  }
+}
+
+.buy-bulk__hero-label {
+  color: #e87e3e;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.buy-bulk__hero-title {
+  font-size: 36px;
+  font-weight: 900;
+  color: white;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-family: var(--font-serif, Georgia, serif);
+  margin: 0 0 24px 0;
+
+  @media (min-width: 640px) {
+    font-size: 48px;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: 64px;
+  }
+}
+
+.buy-bulk__hero-text {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+  max-width: 700px;
+
+  @media (min-width: 640px) {
+    font-size: 18px;
+  }
+
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+}
+
+.buy-bulk__hero-text-strong {
+  color: white;
+  font-weight: 600;
+}
+
+.buy-bulk__hero-banner {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #c96a1e;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  gap: 32px;
+
+  @media (min-width: 640px) {
+    padding: 16px 56px;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 16px 80px;
+  }
+}
+
+.buy-bulk__hero-banner-text {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+  flex: 1;
+
+  @media (min-width: 640px) {
+    font-size: 16px;
+  }
+}
+
+.buy-bulk__hero-banner-link {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-offset: 4px;
+  white-space: nowrap;
+  margin-left: 32px;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #fae8d8;
+  }
+}
+
+// ═══════════════════════════════════════
+// EXPECTATIONS SECTION
+// ═══════════════════════════════════════
+
+.buy-bulk__expectations {
+  padding: 80px 0;
+  background: #faf8f5;
+
+  @media (min-width: 1024px) {
+    padding: 96px 0;
+  }
+}
+
+.buy-bulk__expectations-header {
+  margin-bottom: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.buy-bulk__section-title {
+  font-size: 32px;
+  font-weight: 900;
+  color: #1a0e09;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-family: var(--font-serif, Georgia, serif);
+  margin: 0;
+  max-width: 600px;
+
+  @media (min-width: 640px) {
+    font-size: 48px;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: 56px;
+  }
+}
+
+.buy-bulk__expectations-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+  }
+}
+
+.buy-bulk__expectation-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.buy-bulk__expectation-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a0e09;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.buy-bulk__expectation-text {
+  font-size: 16px;
+  color: #6b4f3a;
+  line-height: 1.6;
+  margin: 0;
+}
+
+// ═══════════════════════════════════════
+// DIVIDER
+// ═══════════════════════════════════════
+
+.buy-bulk__divider {
+  border-top: 1px solid #e8ddd5;
+  margin: 0 24px;
+
+  @media (min-width: 640px) {
+    margin: 0 40px;
+  }
+
+  @media (min-width: 1024px) {
+    margin: 0 64px;
+  }
+}
+
+// ═══════════════════════════════════════
+// BULK ENQUIRY SECTION
+// ═══════════════════════════════════════
+
+.buy-bulk__bulk-enquiry {
+  padding: 80px 0;
+  background: #faf8f5;
+
+  @media (min-width: 1024px) {
+    padding: 96px 0;
+  }
+}
+
+.buy-bulk__enquiry-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 64px;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 1fr 1.5fr;
+    gap: 80px;
+    align-items: start;
+  }
+}
+
+.buy-bulk__enquiry-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-top: 8px;
+
+  @media (min-width: 1024px) {
+    padding-top: 8px;
+  }
+}
+
+.buy-bulk__intro-text {
+  font-size: 16px;
+  color: #4a3728;
+  line-height: 1.6;
+  margin: 0;
+
+  @media (min-width: 640px) {
+    font-size: 18px;
+  }
+}
+
+.buy-bulk__link {
+  color: #e87e3e;
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ═══════════════════════════════════════
+// FORM STYLES
+// ═══════════════════════════════════════
+
+.buy-bulk__form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.buy-bulk__form-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.buy-bulk__form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &--full {
+    @media (min-width: 640px) {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+.buy-bulk__form-label {
+  color: #1a0e09;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.buy-bulk__form-input {
+  width: 100%;
+  border: 1px solid #d9ccc0;
+  background: white;
+  padding: 12px 16px;
+  color: #1a0e09;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+
+  &::placeholder {
+    color: #b8a99a;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #e87e3e;
+  }
+}
+
+.buy-bulk__form-textarea {
+  width: 100%;
+  border: 1px solid #d9ccc0;
+  background: white;
+  padding: 12px 16px;
+  color: #1a0e09;
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  transition: border-color 0.2s ease;
+
+  &::placeholder {
+    color: #b8a99a;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #e87e3e;
+  }
+}
+
+.buy-bulk__form-submit {
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &--no-note {
+    padding-top: 8px;
+  }
+}
+
+.buy-bulk__form-button {
+  padding: 16px 40px;
+  background: #2d1810;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  width: fit-content;
+
+  &:hover {
+    background: #1a0e09;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.buy-bulk__form-note {
+  color: #9b8070;
+  font-size: 12px;
+  margin: 0;
+}
+
+// ═══════════════════════════════════════
+// GIFTING BANNER SECTION
+// ═══════════════════════════════════════
+
+.buy-bulk__gifting-banner {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 580px;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.buy-bulk__gifting-image {
+  position: relative;
+  min-height: 400px;
+  overflow: hidden;
+
+  @media (min-width: 1024px) {
+    min-height: 0;
+  }
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+}
+
+.buy-bulk__gifting-content {
+  background: #2d1810;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 64px 40px;
+  gap: 28px;
+
+  @media (min-width: 1024px) {
+    padding: 80px 64px;
+  }
+}
+
+.buy-bulk__gifting-title {
+  font-size: 32px;
+  font-weight: 900;
+  color: white;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-family: var(--font-serif, Georgia, serif);
+  margin: 0;
+
+  @media (min-width: 640px) {
+    font-size: 40px;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: 48px;
+  }
+}
+
+.buy-bulk__gifting-text {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 500px;
+
+  @media (min-width: 640px) {
+    font-size: 18px;
+    line-height: 1.85;
+  }
+
+  &:first-of-type {
+    margin-top: 0;
+  }
+}
+
+.buy-bulk__gifting-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  height: 0;
+}
+
+.buy-bulk__gifting-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.buy-bulk__gifting-feature {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  line-height: 1.6;
+  display: flex;
+  gap: 12px;
+
+  &::before {
+    content: '—';
+    color: rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+  }
+}
+
+// ═══════════════════════════════════════
+// GIFTING ENQUIRY SECTION
+// ═══════════════════════════════════════
+
+.buy-bulk__gifting-enquiry {
+  padding: 80px 0;
+  background: #faf8f5;
+
+  @media (min-width: 1024px) {
+    padding: 96px 0;
+  }
+}
+
+// ═══════════════════════════════════════
+// MESSAGE STYLES
+// ═══════════════════════════════════════
+
+.buy-bulk__message {
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  animation: slideDown 0.3s ease;
+
+  &--success {
+    background: #d4edda;
+    color: #2d7a3d;
+    border: 1px solid #c3e6cb;
+  }
+
+  &--error {
+    background: #f8d7da;
+    color: #842029;
+    border: 1px solid #f5c2c7;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ═══════════════════════════════════════
+// BUTTON DISABLED STATE
+// ═══════════════════════════════════════
+
+.buy-bulk__form-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
