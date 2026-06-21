@@ -156,16 +156,20 @@
 
         
 
-          <!-- Quantity + Action Buttons -->
-          <button class="pd__buy-now" (click)="buyNow()">BUY NOW</button>
-          <div class="pd__purchase-row">
+          <!-- Quantity Control -->
+          <div class="pd__qty-section">
+            <label class="pd__qty-label">Quantity</label>
             <div class="pd__qty-control">
-              <button (click)="decrementQty()">−</button>
-              <span>{{ quantity() }}</span>
-              <button (click)="incrementQty()">+</button>
+              <button (click)="decrementQty()" class="pd__qty-btn">−</button>
+              <span class="pd__qty-value">{{ quantity() }}</span>
+              <button (click)="incrementQty()" class="pd__qty-btn">+</button>
             </div>
+          </div>
 
+          <!-- Action Buttons -->
+          <div class="pd__button-group">
             <button class="pd__add-to-cart" (click)="addToCart()">ADD TO CART</button>
+            <button class="pd__buy-now" (click)="buyNow()">BUY NOW</button>
           </div>
         </div>
       </div>

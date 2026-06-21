@@ -259,20 +259,24 @@
 }
 
 .pd__tag {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: $space-md;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #e8670a;
+  color: white;
   font-family: $font-family-body;
-  font-size: $font-size-sm;
-  color: rgba($color-mono-dark, 0.7);
+  font-size: 12px;
+  font-weight: 500;
   line-height: 1.5;
+  border-radius: 4px;
+  white-space: nowrap;
 
   svg {
     width: 16px;
     height: 16px;
-    color: $color-mono-dark;
+    color: white;
     flex-shrink: 0;
-    margin-top: 2px;
   }
 }
 
@@ -437,21 +441,24 @@
   margin: 0;
 }
 
-// Quantity + Action Buttons
-.pd__purchase-row {
-  display: flex;
-  gap: $space-md;
+// Quantity Section
+.pd__qty-section {
   margin-top: $space-xl;
-  align-items: stretch;
-
-  @include respond-to(md) {
-    gap: $space-sm;
-    flex-wrap: wrap;
-  }
+  margin-bottom: $space-lg;
 
   @include respond-to(sm) {
-    flex-direction: column;
+    margin-bottom: $space-md;
   }
+}
+
+.pd__qty-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba($color-mono-dark, 0.7);
+  margin-bottom: $space-md;
 }
 
 .pd__qty-control {
@@ -461,61 +468,72 @@
   border-radius: 0;
   overflow: hidden;
   background: #fafafa;
+  width: fit-content;
+}
 
-  button {
-    width: 44px;
-    height: 52px;
-    border: none;
-    background: transparent;
-    font-family: $font-family-heading;
-    font-size: $font-size-lg;
-    font-weight: $font-weight-medium;
-    color: $color-mono-dark;
-    cursor: pointer;
-    transition: all $transition-fast;
+.pd__qty-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  font-family: $font-family-heading;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+  color: $color-mono-dark;
+  cursor: pointer;
+  transition: all $transition-fast;
 
-    &:hover {
-      background: rgba($color-mono-dark, 0.08);
-    }
-
-    &:active {
-      background: rgba($color-mono-dark, 0.12);
-    }
+  &:hover {
+    background: rgba($color-mono-dark, 0.08);
   }
 
-  span {
-    min-width: 44px;
-    text-align: center;
-    font-family: $font-family-heading;
-    font-weight: $font-weight-medium;
-    color: $color-mono-dark;
-    padding: 0 $space-sm;
-    border-left: 1px solid rgba($color-mono-dark, 0.15);
-    border-right: 1px solid rgba($color-mono-dark, 0.15);
-    font-size: $font-size-md;
+  &:active {
+    background: rgba($color-mono-dark, 0.12);
   }
 }
 
-// Primary Button: Buy Now
-.pd__buy-now {
-  flex: 1;
-  height: 52px;
-  padding: $space-md;
-  background: $color-mono-dark;
-  color: $color-mono-light;
-  border: 2px solid $color-mono-dark;
+.pd__qty-value {
+  min-width: 44px;
+  text-align: center;
+  font-family: $font-family-heading;
+  font-weight: $font-weight-medium;
+  color: $color-mono-dark;
+  padding: 0 $space-sm;
+  border-left: 1px solid rgba($color-mono-dark, 0.15);
+  border-right: 1px solid rgba($color-mono-dark, 0.15);
+  font-size: $font-size-md;
+}
+
+// Button Group: Add to Cart + Buy Now
+.pd__button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: $space-lg;
+
+  @include respond-to(sm) {
+    flex-direction: column;
+    gap: $space-md;
+  }
+}
+
+// Secondary Button: Add to Cart (3/4 width)
+.pd__add-to-cart {
+  flex: 3;
+  padding: 16px 24px;
+  background: #2d1810;
+  color: white;
+  border: none;
   border-radius: 0;
   font-family: $font-family-heading;
   font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
+  font-weight: 500;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all $transition-fast;
-  width:100%;
+  transition: background-color $transition-fast;
 
   &:hover {
-    background: rgba($color-mono-dark, 0.9);
+    background: #1f110b;
   }
 
   &:active {
@@ -527,25 +545,24 @@
   }
 }
 
-// Secondary Button: Add to Cart
-.pd__add-to-cart {
+// Primary Button: Buy Now (1/4 width)
+.pd__buy-now {
   flex: 1;
-  height: 52px;
-  padding: $space-md;
-  background: #ffffff;
-  color: $color-mono-dark;
-  border: 2px solid $color-mono-dark;
+  padding: 16px 24px;
+  background: #c9a962;
+  color: white;
+  border: none;
   border-radius: 0;
   font-family: $font-family-heading;
   font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
+  font-weight: 500;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all $transition-fast;
+  transition: background-color $transition-fast;
 
   &:hover {
-    background: rgba($color-mono-dark, 0.05);
+    background: #b89952;
   }
 
   &:active {
