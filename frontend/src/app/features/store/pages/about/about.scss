@@ -82,15 +82,20 @@
 // ═══════════════════════════════════════
 
 .about-section {
-  margin-top: 80px ;
-
+  margin-top: 40px ;
+  
   @media (min-width: 1024px) {
-    margin-top:80px;  
+    margin-top:80px;
+     
   }
 
   &--light {
     background: #faf8f5;
     color: #2d1810;
+    margin-bottom:20px;
+    @media(min-width:1024px){
+      margin-bottom:40px;
+    }
   }
 
   &--dark {
