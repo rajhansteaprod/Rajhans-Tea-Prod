@@ -1,32 +1,24 @@
-<section class="our-gardens">
-  <div class="our-gardens__container">
-    <!-- Intro Grid -->
-    <div class="our-gardens__intro-grid">
+<section class="gardens-section">
+  <div class="container">
+    <div class="header-grid">
       <div>
-        <p class="our-gardens__label">OUR GARDENS</p>
-        <h2 class="our-gardens__title">
-          From four corners of<br />
-          India — to your kettle.
-        </h2>
+        <p class="label">Our Gardens</p>
+        <h2 class="heading">From four corners of<br>India — to your kettle.</h2>
       </div>
-
-      <div class="our-gardens__intro-text-wrapper">
-        <p class="our-gardens__intro-text">
-          Every leaf in a Rajhans pack has a postcode. We source directly from gardens we've worked with for decades. Assam, Darjeeling, Nilgiri's blue mountains and Dooars' lush valleys — each region tells its story through flavour.
-        </p>
+      <div class="description-box">
+        <p class="description">Every leaf in a Rajhans pack has a postcode. We source directly from gardens we've worked with for decades. Assam, Darjeeling, Nilgiri's blue mountains and Dooars' lush valleys — each region tells its story through flavour.</p>
       </div>
     </div>
 
-    <!-- Gardens Grid -->
-    <div class="our-gardens__grid">
-      @for (garden of gardens; track garden.id) {
-        <div class="our-gardens__card">
-          <img class="our-gardens__image" [src]="garden.image" [alt]="garden.title" />
-          <div class="our-gardens__overlay"></div>
-          <div class="our-gardens__content">
-            <h3 class="our-gardens__card-title">{{ garden.title }}</h3>
-            <p class="our-gardens__card-description">{{ garden.description }}</p>
-            <button class="our-gardens__button">Explore {{ garden.title }} →</button>
+    <div class="cards-grid">
+      @for (garden of gardens; track garden.title) {
+        <div class="card group">
+          <img [src]="garden.image" [alt]="garden.title + ' tea gardens'" class="card-image" />
+          <div class="overlay"></div>
+          <div class="card-content">
+            <h3 class="card-title">{{ garden.title }}</h3>
+            <p class="card-description">{{ garden.description }}</p>
+            <button class="card-button">{{ garden.buttonText }}</button>
           </div>
         </div>
       }

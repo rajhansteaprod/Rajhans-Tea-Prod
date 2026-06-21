@@ -18,44 +18,44 @@ interface FAQItem {
 export class FAQComponent {
   faqs: FAQItem[] = [
     {
-      id: 'sourcing',
+      id: '0',
       question: 'Where does Rajhans Tea source its tea from?',
       answer: 'We source directly from small-scale tea gardens in Assam, Darjeeling, Nilgiri, and Dooars. Every pack comes with full traceability so you know exactly which garden your tea came from.',
-      isOpen: true,
+      isOpen: false,
     },
     {
-      id: 'difference',
+      id: '1',
       question: 'What makes Rajhans Tea different from other brands?',
-      answer: 'We focus on quality over quantity. Our teas are sourced directly from gardens, hand-picked and processed with care. We maintain strict quality standards and offer complete traceability for every pack.',
+      answer: 'We cut out middlemen and auction houses, working directly with farmers. This means fresher tea, fair prices for farmers, and complete transparency for you. We also never use artificial flavours, colours, or blending tricks.',
       isOpen: false,
     },
     {
-      id: 'freshness',
+      id: '2',
       question: 'How do I know my tea is fresh?',
-      answer: 'Each pack has a date of packing printed on it. We recommend consuming within 6-12 months for optimal flavor. Store in an airtight container away from sunlight for best results.',
+      answer: 'All our tea is nitrogen-flushed and foil-sealed within 48 hours of processing at the garden. Each pack shows the packing date and batch number for full traceability.',
       isOpen: false,
     },
     {
-      id: 'varieties',
-      question: 'What\'s the difference between Royal, Premium, and Rajdoot?',
-      answer: 'Royal is our premium offering with the finest leaves. Premium is our standard quality with excellent flavor. Rajdoot is our value offering with bold, consistent taste. All maintain our quality standards.',
+      id: '3',
+      question: "What's the difference between Royal, Premium, and Rajdoot?",
+      answer: 'Royal is our single-estate, hand-picked grade for special occasions. Premium is our carefully blended estate tea for daily use. Rajdoot is our bold CTC blend perfect for kadak chai. All three are honest grades with no marketing fluff.',
       isOpen: false,
     },
     {
-      id: 'shipping',
+      id: '4',
       question: 'Do you ship across India?',
-      answer: 'Yes, we ship across all of India. Standard delivery takes 5-7 business days. We offer free shipping on orders above ₹500. Track your order using the tracking number sent to your email.',
+      answer: 'Yes! We deliver to 500+ cities across India. Orders are typically delivered within 3-5 business days. Free shipping on orders above ₹500.',
       isOpen: false,
     },
     {
-      id: 'bulk',
+      id: '5',
       question: 'Can I order in bulk for my business?',
-      answer: 'Absolutely! We offer bulk orders and special pricing for businesses. Contact our B2B team at business@rajhanstea.com or call us for a custom quote based on your requirements.',
+      answer: 'Absolutely! We offer special bulk pricing for hotels, restaurants, cafes, and corporate gifting. Visit our Buy in Bulk page or contact us at giftings@rajhanstea.com for a custom quote.',
       isOpen: false,
     },
   ];
 
-  toggleFAQ(faq: FAQItem): void {
+  toggle(faq: FAQItem): void {
     faq.isOpen = !faq.isOpen;
   }
 }
