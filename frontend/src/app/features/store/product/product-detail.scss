@@ -132,9 +132,9 @@
 // ═══════════════════════════════════════
 
 .pd__name {
-  font-family: $font-family-heading;
+    font-family: $font-heading;
   font-size: clamp(28px, 4vw, 40px);
-  font-weight: $font-weight-medium;
+  font-weight: 700;
   color: $color-mono-dark;
   margin: 0 0 $space-md 0;
   line-height: 1.25;
@@ -564,11 +564,11 @@
 .pd__tabs-section {
   max-width: 1400px;
   margin: 0 auto;
-  padding: $space-section clamp($space-lg, 5vw, $space-xxxl);
+  padding: 32px 0px clamp(24px, 5vw, 64px);
   border-top: 1px solid rgba($color-mono-dark, 0.1);
 
   @include respond-to(md) {
-    padding: $space-xxl clamp($space-lg, 5vw, $space-xxxl);
+    padding: 6px 0px clamp(24px, 5vw, 64px)
   }
 }
 
@@ -635,6 +635,45 @@
       margin-bottom: 0;
     }
   }
+}
+
+.pd__tab-pane--list {
+  max-width: 800px;
+}
+
+.pd__tab-heading {
+  font-family: $font-heading;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-mono-dark;
+  margin: 0 0 $space-lg 0;
+  line-height: 1.4;
+}
+
+.pd__tab-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+}
+
+.pd__tab-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-md;
+  font-family: $font-family-body;
+  font-size: $font-size-md;
+  line-height: 1.6;
+  color: rgba($color-mono-dark, 0.65);
+}
+
+.pd__tab-bullet {
+  color: #b45309;
+  font-weight: $font-weight-bold;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 // Reviews list
@@ -960,12 +999,22 @@
 // ═══════════════════════════════════════
 
 .pd__recos {
-  margin-top: $space-section;
-  padding-top: $space-section;
+  padding-top: 20px;
+}
+
+.pd__recos-label {
+  font-family: $font-family-body;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: #b45309;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 $space-md 0;
+  text-align: center;
 }
 
 .pd__recos-title {
-  font-family: $font-family-heading;
+  font-family: $font-heading;
   font-size: clamp(24px, 4vw, 32px);
   font-weight: $font-weight-medium;
   color: $color-mono-dark;

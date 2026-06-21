@@ -46,6 +46,22 @@ export class ProductDetailComponent implements OnInit {
   reviewBody = '';
   readonly submittingReview = signal(false);
 
+  readonly brewingGuide = signal<string[]>([
+    'Use 1 teaspoon (2g) of tea per 200ml of water',
+    'Water temperature: 90-95°C (just off the boil)',
+    'Steep for 3-4 minutes for optimal flavor',
+    'Can be re-steeped 2-3 times with excellent results',
+  ]);
+
+  readonly sourcingInfo = signal<string[]>([
+    'Sourced from the finest gardens in India\'s tea regions',
+    'Direct partnerships with ethical and sustainable tea farms',
+    'Each batch tested for quality, flavor, and purity',
+    'Freshly dried and packaged within weeks of harvest',
+    'Fair trade practices ensure farmer communities thrive',
+    'Commitment to organic and eco-friendly farming methods',
+  ]);
+
   // ─ Computed ─
   readonly effectivePrice = computed(() => {
     const variant = this.selectedVariant();

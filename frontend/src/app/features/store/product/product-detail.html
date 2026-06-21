@@ -215,15 +215,31 @@
 
           <!-- Brewing Guide Tab -->
           @if (activeTab() === 'brewing') {
-            <div class="pd__tab-pane">
-              <p>Brewing guide content coming soon...</p>
+            <div class="pd__tab-pane pd__tab-pane--list">
+              <h3 class="pd__tab-heading">How to Brew the Perfect Cup</h3>
+              <ul class="pd__tab-list">
+                @for (item of brewingGuide(); track $index) {
+                  <li class="pd__tab-list-item">
+                    <span class="pd__tab-bullet">•</span>
+                    <span>{{ item }}</span>
+                  </li>
+                }
+              </ul>
             </div>
           }
 
           <!-- Sourcing Info Tab -->
           @if (activeTab() === 'sourcing') {
-            <div class="pd__tab-pane">
-              <p>Sourcing information coming soon...</p>
+            <div class="pd__tab-pane pd__tab-pane--list">
+              <h3 class="pd__tab-heading">Our Sourcing Philosophy</h3>
+              <ul class="pd__tab-list">
+                @for (item of sourcingInfo(); track $index) {
+                  <li class="pd__tab-list-item">
+                    <span class="pd__tab-bullet">•</span>
+                    <span>{{ item }}</span>
+                  </li>
+                }
+              </ul>
             </div>
           }
 
@@ -352,7 +368,8 @@
       <!-- Related products: You might also like -->
       @if (relatedProducts().length > 0) {
         <div class="pd__recos">
-          <h2 class="pd__recos-title">You might also like</h2>
+          <p class="pd__recos-label">You might also like</p>
+          <h2 class="pd__recos-title">More from this category.</h2>
           <div class="pd__recos-grid">
             @for (p of relatedProducts(); track p._id) {
               <div class="card" (click)="goToProduct(p)">
