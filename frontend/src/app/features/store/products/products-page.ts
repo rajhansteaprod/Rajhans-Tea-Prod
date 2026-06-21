@@ -30,7 +30,7 @@ export class ProductsPageComponent implements OnInit {
   readonly totalProducts = signal(0);
   readonly currentPage = signal(1);
   readonly totalPages = signal(1);
-  readonly filterOpen = signal(false);
+  readonly filterOpen = signal<string | null>(null);
   readonly hoveredProductId = signal<string | null>(null);
 
   // Filters
@@ -125,21 +125,27 @@ export class ProductsPageComponent implements OnInit {
 
   selectCategory(catId: string | null): void {
     this.selectedCategory.set(catId);
+    this.filterOpen.set(null);
     this.currentPage.set(1);
     this.loadProducts();
-    this.filterOpen.set(false);
   }
 
   selectRegion(region: string | null): void {
     this.selectedRegion.set(region);
+    this.filterOpen.set(null);
     this.currentPage.set(1);
     this.loadProducts();
   }
 
   selectBestTakenFor(time: string | null): void {
     this.selectedBestTakenFor.set(time);
+    this.filterOpen.set(null);
     this.currentPage.set(1);
     this.loadProducts();
+  }
+
+  toggleFilterDropdown(filterName: string): void {
+    this.filterOpen.set(this.filterOpen() === filterName ? null : filterName);
   }
 
   applyPriceFilter(): void {
@@ -171,8 +177,13 @@ export class ProductsPageComponent implements OnInit {
     this.loadProducts();
   }
 
-  selectWeight(weight: string): void {
-    this.selectedWeight.set(this.selectedWeight() === weight ? null : weight);
+  selectWeight(weight: string | null): void {
+    if (weight === null) {
+      this.selectedWeight.set(null);
+    } else {
+      this.selectedWeight.set(this.selectedWeight() === weight ? null : weight);
+    }
+    this.filterOpen.set(null);
     this.currentPage.set(1);
     this.loadProducts();
   }
@@ -186,7 +197,7 @@ export class ProductsPageComponent implements OnInit {
     this.priceRangeModel.value = this.maxPrice();
     this.currentPage.set(1);
     this.loadProducts();
-    this.filterOpen.set(false);
+    this.filterOpen.set(null);
   }
 
   onSort(value: string): void {
