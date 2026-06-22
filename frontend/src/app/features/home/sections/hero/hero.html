@@ -17,7 +17,7 @@
           <div class="hero__overlay-content">
             <h1 class="hero__h1">{{ slides()[activeSlide()].title }}</h1>
             <p class="hero__sub">{{ slides()[activeSlide()].subtitle }}</p>
-            <div class="hero__actions">
+            <div class="hero__actions"  *ngIf="slides()[activeSlide()].ctaText">
               <a [routerLink]="slides()[activeSlide()].ctaLink" class="hero__cta">{{ slides()[activeSlide()].ctaText }} &rarr;</a>
             </div>
           </div>
