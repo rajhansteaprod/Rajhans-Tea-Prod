@@ -1,7 +1,7 @@
 import pino from 'pino';
 import path from 'path';
 
-const logsDir = path.join(process.cwd(), 'logs');
+const logsDir = path.join(process.cwd(), 'logs', 'shipmentlogs');
 
 export const shipmentLogger = pino({
   level: 'debug',
@@ -9,14 +9,12 @@ export const shipmentLogger = pino({
   transport: {
     targets: [
       {
-        target: 'pino-pretty',
+        target: 'pino-roll',
         options: {
-          destination: path.join(logsDir, 'shipment.log'),
+          file: path.join(logsDir, 'shipment'),
           mkdir: true,
-          translateTime: 'SYS:standard',
-          ignore: 'pid,hostname',
-          singleLine: false,
-          colorize: false,
+          frequency: 'daily',
+          size: '10m',
         },
       },
     ],

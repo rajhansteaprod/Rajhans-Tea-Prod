@@ -2,7 +2,7 @@ import pino from 'pino';
 import path from 'path';
 import { config } from '../config';
 
-const logsDir = path.join(process.cwd(), 'logs');
+const logsDir = path.join(process.cwd(), 'logs', 'logs');
 
 export const logger = pino({
   level: config.log.level,
@@ -15,16 +15,16 @@ export const logger = pino({
           colorize: true,
           translateTime: 'SYS:standard',
           ignore: 'pid,hostname',
+          singleLine: true,
         },
       }] : []),
       {
-        target: 'pino-pretty',
+        target: 'pino-roll',
         options: {
-          destination: path.join(logsDir, 'app.log'),
+          file: path.join(logsDir, 'app'),
           mkdir: true,
-          translateTime: 'SYS:standard',
-          ignore: 'pid,hostname',
-          singleLine: false,
+          frequency: 'daily',
+          size: '10m',
         },
       },
     ],
