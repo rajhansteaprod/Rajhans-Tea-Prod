@@ -477,20 +477,24 @@
 .about-satisfaction-grid {
   display: grid;
   grid-template-columns: 1fr;
-  min-height: 560px;
+  min-height: auto;
 
   @media (min-width: 1024px) {
     grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 64px;
   }
 }
 
 .about-satisfaction__image {
   position: relative;
-  min-height: 400px;
+  width: 100%;
+  aspect-ratio: 2 / 1;
   overflow: hidden;
+  min-height: auto;
 
   @media (min-width: 1024px) {
-    min-height: 0;
+    min-height: auto;
   }
 }
 
@@ -498,11 +502,11 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 64px 40px;
-  gap: 32px;
+  padding: 40px 24px;
+  gap: 24px;
 
   @media (min-width: 1024px) {
-    padding: 80px 64px;
+    padding: 40px 0;
   }
 }
 
