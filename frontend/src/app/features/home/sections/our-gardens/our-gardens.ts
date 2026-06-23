@@ -26,7 +26,7 @@ export class OurGardensComponent {
     {
       title: 'Darjeeling',
       description: "Delicate, floral, prestigious. Himalayan slopes produce India's champagne of teas.",
-      image: 'https://images.unsplash.com/photo-1619581073186-5b4ae1b0caad?w=600&h=800&fit=crop',
+      image: '/static/darjeeling-gardens.png',
       buttonText: 'Explore Darjeeling →',
     },
     {
