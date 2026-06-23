@@ -38,7 +38,7 @@ export class OurGardensComponent {
     {
       title: 'Dooars',
       description: "Full-bodied, smooth, balanced. The foothills' secret for an all-day brew.",
-      image: 'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=600&h=800&fit=crop',
+      image: '/static/dooars-gardens.png',
       buttonText: 'Explore Dooars →',
     },
   ];
