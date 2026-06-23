@@ -7,7 +7,7 @@ import { Component, Input, signal, effect } from '@angular/core';
   styleUrls: ['./boring-banner.component.scss'],
 })
 export class BoringBannerComponent {
-  @Input() desktopImage = '/static/Carousel Images/Boring Tea.jpg';
+  @Input() desktopImage = '/static/Carousel Images/Boring Tea.png';
   @Input() mobileImage: string | null = null;
 
   isMobile = signal(false);
