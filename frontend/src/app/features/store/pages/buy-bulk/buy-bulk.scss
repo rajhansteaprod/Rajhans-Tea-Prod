@@ -63,21 +63,37 @@
   background: rgba(26, 14, 9, 0.6);
 }
 
-.buy-bulk__hero-content {
+.buy-bulk__hero-container {
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 32px;
-  max-width: 700px;
+  align-items: center;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+  pointer-events: none;
+  padding: 0 24px;
 
   @media (min-width: 640px) {
-    padding: 56px;
+    padding: 0 40px;
   }
 
   @media (min-width: 1024px) {
-    padding: 80px;
+    padding: 0 64px;
+  }
+}
+
+.buy-bulk__hero-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 750px;
+  pointer-events: auto;
+  width: 100%;
+  padding-bottom: 60px;
+
+  @media (min-width: 640px) {
+    padding-bottom: 80px;
   }
 }
 
@@ -94,26 +110,28 @@
   font-size: 36px;
   font-weight: 900;
   color: white;
-  line-height: 1.1;
+  line-height: 1.25;
   letter-spacing: -0.02em;
   font-family: var(--font-serif, Georgia, serif);
   margin: 0 0 24px 0;
 
   @media (min-width: 640px) {
     font-size: 48px;
+    line-height: 1.2;
   }
 
   @media (min-width: 1024px) {
-    font-size: 64px;
+    font-size: 60px;
+    line-height: 1.15;
   }
 }
 
 .buy-bulk__hero-text {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 16px;
   line-height: 1.6;
   margin: 0 0 16px 0;
-  max-width: 700px;
+  max-width: 650px;
 
   @media (min-width: 640px) {
     font-size: 18px;
@@ -135,18 +153,25 @@
   left: 0;
   right: 0;
   background: #c96a1e;
+  padding: 16px 0;
+}
+
+.buy-bulk__hero-banner-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 32px;
   gap: 32px;
+  padding: 0 24px;
 
   @media (min-width: 640px) {
-    padding: 16px 56px;
+    padding: 0 40px;
   }
 
   @media (min-width: 1024px) {
-    padding: 16px 80px;
+    padding: 0 64px;
   }
 }
 
