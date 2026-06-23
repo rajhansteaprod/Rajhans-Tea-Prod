@@ -12,17 +12,25 @@
       </div>
 
       <!-- Text overlay -->
-      <div class="hero__overlay" [class]="'hero__overlay--' + slides()[activeSlide()].textAlign">
-        <div class="hero__overlay-container">
-          <div class="hero__overlay-content">
-            <h1 class="hero__h1">{{ slides()[activeSlide()].title }}</h1>
-            <p class="hero__sub">{{ slides()[activeSlide()].subtitle }}</p>
-            <div class="hero__actions"  *ngIf="slides()[activeSlide()].ctaText">
-              <a [routerLink]="slides()[activeSlide()].ctaLink" class="hero__cta">{{ slides()[activeSlide()].ctaText }} &rarr;</a>
+      @if (slides()[activeSlide()].title || slides()[activeSlide()].subtitle || slides()[activeSlide()].ctaText) {
+        <div class="hero__overlay" [class]="'hero__overlay--' + slides()[activeSlide()].textAlign">
+          <div class="hero__overlay-container">
+            <div class="hero__overlay-content">
+              @if (slides()[activeSlide()].title) {
+                <h1 class="hero__h1">{{ slides()[activeSlide()].title }}</h1>
+              }
+              @if (slides()[activeSlide()].subtitle) {
+                <p class="hero__sub">{{ slides()[activeSlide()].subtitle }}</p>
+              }
+              @if (slides()[activeSlide()].ctaText) {
+                <div class="hero__actions">
+                  <a [routerLink]="slides()[activeSlide()].ctaLink" class="hero__cta">{{ slides()[activeSlide()].ctaText }} &rarr;</a>
+                </div>
+              }
             </div>
           </div>
         </div>
-      </div>
+      }
 
       <!-- LEFT ARROW BUTTON -->
       @if (slides().length > 1) {

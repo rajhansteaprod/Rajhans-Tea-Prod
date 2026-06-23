@@ -84,7 +84,7 @@
             <div class="edit-panel">
               <div class="form-grid">
                 <div class="form-field">
-                  <label class="form-label">Title *</label>
+                  <label class="form-label">Title</label>
                   <input class="form-input" type="text" [ngModel]="editForm().title"
                     (ngModelChange)="updateForm('title', $event)" placeholder="e.g. Premium CTC Tea" />
                 </div>
@@ -209,7 +209,7 @@
       <div class="modal-body">
         <div class="form-grid">
           <div class="form-field full-width">
-            <label class="form-label">Title *</label>
+            <label class="form-label">Title</label>
             <input class="form-input" type="text" [ngModel]="createForm().title"
               (ngModelChange)="updateForm('title', $event)" placeholder="e.g. Premium CTC Tea" />
           </div>
@@ -308,7 +308,7 @@
       }
       <div class="modal-footer">
         <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
-        <button class="btn-save" (click)="saveCreate()" [disabled]="saving() || !createForm().title">
+        <button class="btn-save" (click)="saveCreate()" [disabled]="saving()">
           {{ saving() ? 'Creating…' : 'Create Slide' }}
         </button>
       </div>

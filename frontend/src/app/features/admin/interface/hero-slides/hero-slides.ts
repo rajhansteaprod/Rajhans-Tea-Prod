@@ -13,7 +13,7 @@ interface SlideForm {
 }
 
 const emptyForm = (): SlideForm => ({
-  title: '', subtitle: '', ctaText: 'Explore', ctaLink: '/products', textAlign: 'center', isActive: true,
+  title: '', subtitle: '', ctaText: '', ctaLink: '', textAlign: 'center', isActive: true,
 });
 
 @Component({
@@ -100,7 +100,6 @@ export class HeroSlidesComponent implements OnInit {
 
   saveCreate() {
     const f = this.createForm();
-    if (!f.title.trim()) { this.formError.set('Title is required'); return; }
     if (!this.createDesktopFile) { this.formError.set('Desktop image is required'); return; }
     if (!this.createMobileFile) { this.formError.set('Mobile image is required'); return; }
 

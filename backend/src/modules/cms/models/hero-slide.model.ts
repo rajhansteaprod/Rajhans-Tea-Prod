@@ -16,10 +16,10 @@ export interface IHeroSlideDoc extends Document {
 
 const heroSlideSchema = new Schema<IHeroSlideDoc>(
   {
-    title: { type: String, required: true, trim: true },
+    title: { type: String, default: '', trim: true },
     subtitle: { type: String, default: '', trim: true },
-    ctaText: { type: String, default: 'Explore', trim: true },
-    ctaLink: { type: String, default: '/products', trim: true },
+    ctaText: { type: String, default: '', trim: true },
+    ctaLink: { type: String, default: '', trim: true },
     desktopImage: { type: String, required: true },
     mobileImage: { type: String, required: true },
     textAlign: { type: String, enum: ['left', 'center', 'right'], default: 'center' },
