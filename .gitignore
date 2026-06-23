@@ -44,5 +44,4 @@ firebase-service-account.json
 firebase-service-account.json/
 *-firebase-adminsdk-*.json
 
-# Uploads
-uploads/
+ 
