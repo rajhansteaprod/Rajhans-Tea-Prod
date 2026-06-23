@@ -48,7 +48,7 @@
 }
 
 .catalog__title {
-  @include mega-headline(clamp($font-size-display, 8vw, $font-size-mega));
+  @include mega-headline(clamp(36px, 8vw, $font-size-mega));
   color: #000;
   margin: 0 0 $space-md;
 }
