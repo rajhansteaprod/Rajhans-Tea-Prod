@@ -72,6 +72,11 @@ export const routes: Routes = [
           import('./features/store/pages/static-page').then((m) => m.StaticPageComponent),
       },
       {
+        path: 'error',
+        loadComponent: () =>
+          import('./features/store/pages/error-page/error-page').then((m) => m.ErrorPageComponent),
+      },
+      {
         path: 'wishlist',
         loadComponent: () =>
           import('./features/store/wishlist/wishlist-page').then((m) => m.WishlistPageComponent),
@@ -154,7 +159,7 @@ export const routes: Routes = [
   {
     path:'404',
         loadComponent: () =>
-          import('./features/store/pages/static-page').then((m) => m.StaticPageComponent),
+          import('./features/store/pages/error-page/error-page').then((m) => m.ErrorPageComponent),
   },
   {
     path: '**',

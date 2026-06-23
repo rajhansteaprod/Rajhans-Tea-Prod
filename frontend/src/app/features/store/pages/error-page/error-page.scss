@@ -1,0 +1,385 @@
+.tea-404 {
+
+  position: relative;
+
+  min-height: 100vh;
+
+  overflow: hidden;
+
+
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+
+
+  padding: 40px 20px;
+
+
+
+  background:
+
+    radial-gradient(circle at top right,
+
+      rgba(179, 92, 62, 0.08),
+
+      transparent 35%),
+
+    linear-gradient(
+
+      180deg,
+
+      #fffdf9 0%,
+
+      #f8f4ef 100%
+
+    );
+
+}
+
+
+
+.tea-404__content {
+
+  max-width: 650px;
+
+  text-align: center;
+
+  position: relative;
+
+  z-index: 2;
+
+}
+
+
+
+.tea-404__cup {
+
+  font-size: 90px;
+
+  line-height: 1;
+
+  margin-bottom: 20px;
+
+
+
+  animation: floatCup 4s ease-in-out infinite;
+
+}
+
+
+
+.tea-404__code {
+
+  font-size: clamp(90px, 16vw, 180px);
+
+  font-weight: 900;
+
+  line-height: 0.9;
+
+  letter-spacing: -6px;
+
+
+
+  color: #b35c3e;
+
+
+
+  margin-bottom: 20px;
+
+}
+
+
+
+.tea-404__title {
+
+  font-size: clamp(32px, 5vw, 58px);
+
+  line-height: 1.05;
+
+  font-weight: 800;
+
+
+
+  color: #1f1f1f;
+
+
+
+  margin: 0 0 20px;
+
+}
+
+
+
+.tea-404__subtitle {
+
+  max-width: 520px;
+
+
+
+  margin: 0 auto 40px;
+
+
+
+  font-size: 18px;
+
+  line-height: 1.8;
+
+
+
+  color: #666;
+
+}
+
+
+
+.tea-404__actions {
+
+  display: flex;
+
+  justify-content: center;
+
+  gap: 16px;
+
+  flex-wrap: wrap;
+
+}
+
+
+
+.tea-404__btn {
+
+  padding: 16px 30px;
+
+  border-radius: 999px;
+
+
+
+  text-decoration: none;
+
+  font-weight: 700;
+
+
+
+  transition: all 0.25s ease;
+
+}
+
+
+
+.tea-404__btn--primary {
+
+  background: #b35c3e;
+
+  color: #fff;
+
+
+
+  &:hover {
+
+    transform: translateY(-3px);
+
+    box-shadow: 0 12px 30px rgba(179, 92, 62, 0.25);
+
+  }
+
+}
+
+
+
+.tea-404__btn--secondary {
+
+  background: #fff;
+
+  color: #222;
+
+  border: 1px solid #e7e2db;
+
+
+
+  &:hover {
+
+    transform: translateY(-3px);
+
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+
+  }
+
+}
+
+
+
+/* Steam Animation */
+
+
+
+.tea-404__steam {
+
+  position: absolute;
+
+  bottom: 35%;
+
+  width: 12px;
+
+  height: 120px;
+
+
+
+  border-radius: 50%;
+
+
+
+  background: linear-gradient(
+
+    to top,
+
+    rgba(255,255,255,0),
+
+    rgba(179,92,62,0.15)
+
+  );
+
+
+
+  filter: blur(10px);
+
+
+
+  animation: steam 5s infinite linear;
+
+}
+
+
+
+.steam-1 {
+
+  left: 48%;
+
+}
+
+
+
+.steam-2 {
+
+  left: 52%;
+
+  animation-delay: 1.5s;
+
+}
+
+
+
+.steam-3 {
+
+  left: 56%;
+
+  animation-delay: 3s;
+
+}
+
+
+
+@keyframes steam {
+
+  0% {
+
+    opacity: 0;
+
+    transform: translateY(30px) translateX(0);
+
+  }
+
+
+
+  20% {
+
+    opacity: 1;
+
+  }
+
+
+
+  100% {
+
+    opacity: 0;
+
+    transform: translateY(-180px) translateX(30px);
+
+  }
+
+}
+
+
+
+@keyframes floatCup {
+
+  0%,100% {
+
+    transform: translateY(0);
+
+  }
+
+
+
+  50% {
+
+    transform: translateY(-12px);
+
+  }
+
+}
+
+
+
+/* Mobile */
+
+
+
+@media (max-width: 768px) {
+
+  .tea-404 {
+
+    min-height: 85vh;
+
+  }
+
+
+
+  .tea-404__cup {
+
+    font-size: 70px;
+
+  }
+
+
+
+  .tea-404__subtitle {
+
+    font-size: 16px;
+
+    line-height: 1.7;
+
+  }
+
+
+
+  .tea-404__actions {
+
+    flex-direction: column;
+
+    width: 100%;
+
+  }
+
+
+
+  .tea-404__btn {
+
+    width: 100%;
+
+  }
+
+}
