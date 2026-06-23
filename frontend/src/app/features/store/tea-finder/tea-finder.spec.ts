@@ -1,13 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TeaFinderComponent } from './tea-finder';
+import { CartStore } from '../../../core/services/cart.store';
 
 describe('TeaFinderComponent', () => {
   let component: TeaFinderComponent;
   let fixture: ComponentFixture<TeaFinderComponent>;
+  let mockCartStore: jasmine.SpyObj<CartStore>;
 
   beforeEach(async () => {
+    mockCartStore = jasmine.createSpyObj('CartStore', ['addItem']);
+
     await TestBed.configureTestingModule({
       imports: [TeaFinderComponent],
+      providers: [
+        { provide: CartStore, useValue: mockCartStore }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(TeaFinderComponent);
@@ -19,35 +26,40 @@ describe('TeaFinderComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should have 4 questions', () => {
-    expect(component.questions.length).toBe(4);
+  it('should have 4 steps', () => {
+    expect(component.steps.length).toBe(4);
   });
 
-  it('should select answer', () => {
-    component.selectAnswer('flavor', 'Strong & Bold');
-    expect(component.selectedAnswers()['flavor']).toBe('Strong & Bold');
+  it('should select an option', () => {
+    component.selectOption('Kadak / Strong');
+    expect(component.selectedOptions()[0]).toBe('Kadak / Strong');
   });
 
   it('should navigate to next step', () => {
     expect(component.currentStep()).toBe(0);
-    component.nextStep();
+    component.goNext();
     expect(component.currentStep()).toBe(1);
   });
 
-  it('should get recommendations', () => {
-    component.selectAnswer('flavor', 'Strong & Bold');
-    component.selectAnswer('caffeine', 'High Caffeine');
-    component.selectAnswer('time', 'Any Time');
-    component.selectAnswer('occasion', 'Daily Routine');
-    component.getRecommendations();
-    expect(component.recommendedTeas().length).toBeGreaterThan(0);
+  it('should get recommendation and set products', () => {
+    component.selectOption('Kadak / Strong');
+    component.selectOption('Morning — First Cup');
+    component.selectOption('More Milk, Less Water');
+    component.selectOption('Under ₹300');
+    
+    component.getRecommendation();
+    
+    expect(component.recommendedProduct().name).toBe('Rajhans Roykan CTC');
+    expect(component.showResults()).toBeTrue();
   });
 
   it('should reset quiz', () => {
-    component.selectAnswer('flavor', 'Strong & Bold');
-    component.nextStep();
-    component.resetQuiz();
+    component.selectOption('Kadak / Strong');
+    component.goNext();
+    component.retakeQuiz();
     expect(component.currentStep()).toBe(0);
-    expect(component.selectedAnswers()).toEqual({});
+    expect(component.selectedOptions()).toEqual({});
+    expect(component.showResults()).toBeFalse();
   });
 });
+

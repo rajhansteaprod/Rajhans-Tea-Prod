@@ -8,8 +8,10 @@
 // ═══════════════════════════════════════
 
 .featured {
-  background: $color-mono-light;
+  background: #f9fafb;
   width: 100%;
+  padding: 64px 0; // py-16 is 64px
+  border-bottom: 1px solid #ffedd5; // border-b border-orange-100
 }
 
 .featured__container {

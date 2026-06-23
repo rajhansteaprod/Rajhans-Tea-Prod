@@ -10,9 +10,14 @@
             (change)="selectCurrentAddress(address, i)"
           />
           <div class="saved-addresses__card-content">
-            <span class="saved-addresses__label">{{ address.label }}</span>
+            <div class="saved-addresses__label-row">
+              <span class="saved-addresses__label">{{ address.label }}</span>
+              @if (address.isDefault) {
+                <span class="saved-addresses__default-badge">DEFAULT</span>
+              }
+            </div>
             <p class="saved-addresses__address-full">
-              {{ address.address }} • {{ address.city }},near {{ address.landmark }}, {{ address.state }} - {{ address.pinCode }}
+              {{ address.address }} • {{ address.city }}, near {{ address.landmark }}, {{ address.state }} - {{ address.pinCode }}
             </p>
           </div>
         </div>
@@ -20,3 +25,4 @@
     </div>
   }
 </div>
+

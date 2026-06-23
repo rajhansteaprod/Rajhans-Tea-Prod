@@ -7,13 +7,20 @@
 // ═══════════════════════════════════════════
 
 .checkout {
-  @include content-container(1200px);
-  padding-top: $space-xxl;
-  padding-bottom: $space-section-sm;
+  max-width: 80rem; // max-w-7xl (1280px)
+  margin-left: auto;
+  margin-right: auto;
+  padding: 40px 16px; // py-10 px-4
+  min-height: 60vh;
+  background-color: #ffffff;
 
-  @include respond-to(md) {
-    padding-top: 0;
-    padding-bottom: 102px;
+  @media (min-width: 640px) {
+    padding-left: 24px; // sm:px-6
+    padding-right: 24px;
+  }
+  @media (min-width: 1024px) {
+    padding-left: 32px; // lg:px-8
+    padding-right: 32px;
   }
 }
 
@@ -22,8 +29,8 @@
   display: none;
   align-items: center;
   justify-content: flex-start;
-  padding-top:16px;
-  padding-bottom:32px;
+  padding-top: 16px;
+  padding-bottom: 32px;
   background: white;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   position: sticky;
@@ -44,22 +51,31 @@
 
 // ═══ Step Indicator ═══
 .checkout__steps {
+  max-width: 42rem; // max-w-2xl
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 64px; // mb-16
+  position: relative;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: $space-xxl;
-  gap: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  z-index: 10;
 
   @media (max-width: 768px) {
-    margin-bottom: $space-lg;
+    margin-bottom: 32px;
     padding: 0 16px;
   }
 }
 
 .checkout__step {
-  @include flex-column;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: $space-xs;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: default;
 
   @media (max-width: 768px) {
     gap: 4px;
@@ -68,119 +84,85 @@
 
 // Step icon styling
 .checkout__step-icon {
-  width: 24px;
-  height: 24px;
-  color: #000000;
-  transition: color $transition-normal;
+  width: 16px; // w-4
+  height: 16px; // h-4
+  color: #6b7280; // text-gray-500
+  transition: color 0.2s ease;
 
   .checkout__step.active & {
-    color: #000000;
+    color: #ffffff;
   }
 
-  .checkout__step.done & {
-    color: #000000;
-  }
-
-  @media (max-width: 480px) {
-    width: 16px;
-    height: 16px;
+  .checkout__step.done:not(.active) & {
+    color: #6b7280;
   }
 }
 
 .checkout__step-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 0;
-  border: 2px solid $color-border;
-  background: $color-bg-tertiary;
-  @include flex-center;
-  font-family: $font-family-nav;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: $color-text-tertiary;
-  transition: all $transition-normal;
+  width: 40px; // w-10
+  height: 40px; // h-10
+  border-radius: 9999px;
+  border: 2px solid #d1d5db; // border-gray-300
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 
   .checkout__step.active & {
-    border-color: $color-text-primary;
-    background: $color-text-primary;
-    color: $color-text-inverse;
+    border-color: #030712; // border-gray-950
+    background: #030712; // bg-gray-950
   }
 
-  .checkout__step.done & {
-    border-color: #000000;
-    background: #000000;
-    color: $color-text-inverse;
+  .checkout__step.done:not(.active) & {
+    border-color: #d1d5db;
+    background: #ffffff;
   }
 
   @media (max-width: 768px) {
-    width: 32px;
-    height: 32px;
-    font-size: 11px;
-    border-width: 1.5px;
-  }
-
-  @media (max-width: 480px) {
-    width: 28px;
-    height: 28px;
-    font-size: 10px;
+    width: 36px;
+    height: 36px;
   }
 }
 
-// Step label: default black
+// Step label
 .checkout__step-label {
-  font-family: $font-family-nav;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
+  font-family: "Inter", sans-serif !important;
+  font-size: 10px !important; // text-[10px]
+  font-weight: 700 !important; // font-bold
   white-space: nowrap;
-  letter-spacing: $letter-spacing-wide;
+  letter-spacing: 0.1em !important; // tracking-widest
   text-transform: uppercase;
+  color: #9ca3af; // text-gray-400
+  margin-top: 8px; // mt-2
 
-  // Default: black
-  color: #000000;
-
-  @media (max-width: 768px) {
-    font-size: 10px;
-    letter-spacing: 0;
+  .checkout__step.active & {
+    color: #030712 !important; // text-gray-950
   }
 
-  @media (max-width: 480px) {
+  .checkout__step.done:not(.active) & {
+    color: #9ca3af;
+  }
+
+  @media (max-width: 768px) {
     font-size: 9px;
   }
 }
 
-// Active step: black
-.checkout__step.active .checkout__step-label {
-  color: #000000;
-  font-weight: $font-weight-medium;
-}
-
-// Done step: black
-.checkout__step.done .checkout__step-label {
-  color: #000000;
-}
-
 .checkout__step-line {
   flex: 1;
-  height: 2px;
-  background: #000000;
-  min-width: 60px;
-  max-width: 120px;
-  margin: auto 0;
-  transition: background $transition-normal;
+  height: 2px; // h-0.5
+  background: #cbd5e1; // bg-gray-250
+  margin: 20px 16px 0; // 20px aligns perfectly with center of 40px circles
+  transition: background-color 0.3s ease;
 
   &.done {
-    background: #000000;
+    background: #030712; // bg-gray-950
   }
 
   @media (max-width: 768px) {
     min-width: 40px;
-    max-width: 80px;
-    height: 1.5px;
-  }
-
-  @media (max-width: 480px) {
-    min-width: 24px;
-    max-width: 50px;
+    margin: 18px 8px 0; // 18px aligns with center of 36px circles on mobile
   }
 }
 

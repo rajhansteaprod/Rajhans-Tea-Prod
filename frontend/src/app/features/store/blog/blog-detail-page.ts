@@ -69,4 +69,11 @@ export class BlogDetailPageComponent implements OnInit {
       day: 'numeric',
     });
   }
+
+  getImageUrl(imagePath: string): string {
+    if (!imagePath) return 'https://images.unsplash.com/photo-1563789031959-4c02bcb41319?w=800&h=600&fit=crop';
+    if (imagePath.startsWith('http')) return imagePath;
+    const base = environment.apiUrl.replace('/api', '');
+    return `${base}${imagePath}`;
+  }
 }

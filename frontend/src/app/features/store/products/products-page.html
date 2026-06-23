@@ -13,15 +13,13 @@
   <!-- Main Content -->
   <div class="products-main">
     <div class="products-container">
-      <!-- Left Sidebar -->
+      <!-- Left Sidebar / Filters -->
       <aside class="products-sidebar" [class.open]="filterOpen()">
         <div class="sidebar-sticky">
           <div class="sidebar-header">
-            <h2 class="sidebar-title">Filters</h2>
+            <h2 class="sidebar-title filter-title">Filters</h2>
             <div class="sidebar-actions">
-              @if (isFiltered()) {
-                <button class="sidebar-clear" (click)="clearFilters()">Clear all</button>
-              }
+              <button class="sidebar-clear clear-all" (click)="clearFilters()">Clear all</button>
               <button class="sidebar-close" (click)="filterOpen.set(null)" aria-label="Close filters">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               </button>
@@ -30,7 +28,7 @@
 
           <!-- Region Filter -->
           <div class="filter-group">
-            <h3 class="filter-title">REGION</h3>
+            <h3 class="filter-section-heading">REGION</h3>
             <div class="filter-options">
               @for (region of ['Assam', 'Darjeeling', 'Nilgiri', 'Dooars']; track region) {
                 <label class="filter-label">
@@ -40,7 +38,7 @@
                     [checked]="selectedRegion() === region"
                     (change)="selectRegion(selectedRegion() === region ? null : region)"
                   />
-                  <span class="filter-text">{{ region }}</span>
+                  <span class="filter-text filter-option">{{ region }}</span>
                 </label>
               }
             </div>
@@ -48,7 +46,7 @@
 
           <!-- Type Filter (Categories) -->
           <div class="filter-group">
-            <h3 class="filter-title">TYPE</h3>
+            <h3 class="filter-section-heading">TYPE</h3>
             <div class="filter-options">
               @for (cat of categories(); track cat._id) {
                 <label class="filter-label">
@@ -58,7 +56,7 @@
                     [checked]="selectedCategory() === cat._id"
                     (change)="selectCategory(selectedCategory() === cat._id ? null : cat._id)"
                   />
-                  <span class="filter-text">{{ cat.name }}</span>
+                  <span class="filter-text filter-option">{{ cat.name }}</span>
                 </label>
               }
             </div>
@@ -66,7 +64,7 @@
 
           <!-- Best Taken For Filter -->
           <div class="filter-group">
-            <h3 class="filter-title">BEST TAKEN FOR</h3>
+            <h3 class="filter-section-heading">BEST TAKEN FOR</h3>
             <div class="filter-options">
               @for (time of ['Morning', 'Noon', 'Evening']; track time) {
                 <label class="filter-label">
@@ -76,7 +74,7 @@
                     [checked]="selectedBestTakenFor() === time"
                     (change)="selectBestTakenFor(selectedBestTakenFor() === time ? null : time)"
                   />
-                  <span class="filter-text">{{ time }}</span>
+                  <span class="filter-text filter-option">{{ time }}</span>
                 </label>
               }
             </div>
@@ -84,8 +82,9 @@
 
           <!-- Weight Filter -->
           <div class="filter-group">
-            <h3 class="filter-title">WEIGHT</h3>
+            <h3 class="filter-section-heading">WEIGHT</h3>
             <div class="weight-buttons">
+              <button class="weight-btn" [class.active]="selectedWeight() === '250g'" (click)="selectWeight('250g')">250g</button>
               <button class="weight-btn" [class.active]="selectedWeight() === '500g'" (click)="selectWeight('500g')">500g</button>
               <button class="weight-btn" [class.active]="selectedWeight() === '1kg'" (click)="selectWeight('1kg')">1kg</button>
             </div>
@@ -93,7 +92,7 @@
 
           <!-- Price Range Filter -->
           <div class="filter-group">
-            <h3 class="filter-title">PRICE RANGE</h3>
+            <h3 class="filter-section-heading">PRICE RANGE</h3>
             <div class="price-filter">
               <input
                 type="range"
@@ -106,20 +105,19 @@
                 step="50"
               />
               <div class="price-display">
-                <span class="price-min">₹0</span>
-                <span class="price-max">₹{{ getMaxPriceValue() }}</span>
+                <span>₹0</span>
+                <span>₹{{ getMaxPriceValue() }}</span>
               </div>
             </div>
           </div>
         </div>
       </aside>
 
-
-      <!-- Right Content -->
+      <!-- Right Content (Products list) -->
       <main class="products-content">
         <!-- Top Bar -->
         <div class="products-topbar">
-          <p class="products-count">{{ totalProducts() }} Products</p>
+          <p class="products-count">{{ totalProducts() }} {{ totalProducts() === 1 ? 'Product' : 'Products' }}</p>
           <select class="sort-select" [ngModel]="sortBy()" (ngModelChange)="onSort($event)">
             <option value="createdAt:desc">Sort by: Featured</option>
             <option value="basePrice:asc">Price: Low to High</option>
@@ -176,7 +174,6 @@
 
     <!-- Mobile Bottom Filter Strip -->
     <div class="mobile-filter-strip">
-      <!-- Filter Header -->
       <div class="filter-strip-header">
         <div class="filter-label">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
@@ -184,7 +181,6 @@
         </div>
       </div>
 
-      <!-- Filter Buttons Scroll -->
       <div class="filter-strip-scroll">
         <!-- Region -->
         <div class="filter-dropdown">
@@ -249,4 +245,28 @@
       }
     </div>
   </div>
+
+  <!-- Marquee bar -->
+  <div class="marquee-footer">
+    <div class="marquee-track">
+      <span class="marquee-item">Freshly Sourced &amp; Packed<span class="marquee-dot">✦</span></span>
+      <span class="marquee-item">Zero Additives<span class="marquee-dot">✦</span></span>
+      <span class="marquee-item">No Added Flavours or Colors<span class="marquee-dot">✦</span></span>
+      <span class="marquee-item">Trusted by 50,000+ Families<span class="marquee-dot">✦</span></span>
+      <span class="marquee-item">Perfectly Blended CTC Tea<span class="marquee-dot">✦</span></span>
+      <span class="marquee-item">Hand-Picked Leaves<span class="marquee-dot">✦</span></span>
+      <span class="marquee-item">Sourced from India's Finest Tea Gardens<span class="marquee-dot">✦</span></span>
+      <span class="marquee-item">Naturally Processed<span class="marquee-dot">✦</span></span>
+      <!-- Repeated for smooth infinite marquee scroll -->
+      <span class="marquee-item">Freshly Sourced &amp; Packed<span class="marquee-dot">✦</span></span>
+      <span class="marquee-item">Zero Additives<span class="marquee-dot">✦</span></span>
+      <span class="marquee-item">No Added Flavours or Colors<span class="marquee-dot">✦</span></span>
+      <span class="marquee-item">Trusted by 50,000+ Families<span class="marquee-dot">✦</span></span>
+      <span class="marquee-item">Perfectly Blended CTC Tea<span class="marquee-dot">✦</span></span>
+      <span class="marquee-item">Hand-Picked Leaves<span class="marquee-dot">✦</span></span>
+      <span class="marquee-item">Sourced from India's Finest Tea Gardens<span class="marquee-dot">✦</span></span>
+      <span class="marquee-item">Naturally Processed<span class="marquee-dot">✦</span></span>
+    </div>
+  </div>
 </div>
+

@@ -3,7 +3,7 @@
 @use '../../../core/design-tokens/colors' as colors;
 
 // ═══════════════════════════════════════
-// CART SIDEBAR — barcoopbevy style
+// CART SIDEBAR — REDESIGNED STYLE
 // ═══════════════════════════════════════
 
 .backdrop {
@@ -48,33 +48,17 @@
 .drawer-header {
   @include flex-between;
   padding: $space-xl $space-xl;
-  border-bottom: 1px solid $color-border-light;
+  border-bottom: 1px solid #f3f4f6;
   flex-shrink: 0;
 }
 
 .drawer-title {
-  display: flex;
-  align-items: center;
-  gap: $space-sm;
-  font-family: $font-family-display;
-  font-size: $font-size-xl;
-  font-weight: $font-weight-medium;
-  color: $color-mono-dark;
-  letter-spacing: 0.04em;
+  font-family: "Cormorant Garamond", Georgia, serif !important;
+  font-size: 24px;
+  font-weight: 500;
+  color: #111111;
   margin: 0;
-}
-
-.count-badge {
-  background: #B65A3A;
-  color: $color-mono-light;
-  border-radius: 0;
-  font-family: $font-family-nav;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-medium;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 6px;
-  @include flex-center;
+  letter-spacing: 0.02em;
 }
 
 .close-btn {
@@ -84,13 +68,13 @@
   border-radius: 0;
   border: none;
   background: transparent;
-  color: $color-mono-dark;
+  color: #111111;
   cursor: pointer;
   transition: all $transition-fast;
 
   &:hover {
-    background: rgba($color-mono-dark, 0.04);
-    color: $color-mono-dark;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 50%;
   }
 }
 
@@ -99,6 +83,20 @@
   flex: 1;
   overflow-y: auto;
   padding: $space-lg $space-xl;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
+  }
 }
 
 .loading-state {
@@ -109,8 +107,8 @@
 .spinner {
   width: 24px;
   height: 24px;
-  border: 2px solid $color-border-light;
-  border-top-color: $color-bg-maroon;
+  border: 2px solid #f3f4f6;
+  border-top-color: #B65A3A;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -131,38 +129,38 @@
 .empty-icon {
   width: 72px;
   height: 72px;
-  border-radius: 0;
-  background: rgba($color-mono-dark, 0.04);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.04);
   @include flex-center;
-  color: rgba($color-mono-dark, 0.3);
+  color: rgba(0, 0, 0, 0.3);
   margin-bottom: $space-sm;
 }
 
 .empty-title {
-  font-family: $font-family-display;
-  font-size: $font-size-xl;
-  font-weight: $font-weight-medium;
-  color: $color-mono-dark;
+  font-family: "Cormorant Garamond", Georgia, serif !important;
+  font-size: 22px;
+  font-weight: 500;
+  color: #111111;
   margin: 0;
-  letter-spacing: 0.04em;
 }
 
 .empty-sub {
+  font-family: "Inter", sans-serif;
   font-size: $font-size-sm;
-  color: rgba($color-mono-dark, 0.6);
+  color: #666666;
   margin: 0;
 }
 
 .btn-shop {
   margin-top: $space-lg;
   padding: $space-md $space-xxl;
-  background: colors.$primary;
-  color: $color-mono-light;
+  background: #B65A3A;
+  color: white;
   border: none;
   border-radius: 0;
   font-size: 13px;
-  font-weight: $font-weight-medium;
-  font-family: $font-family-nav;
+  font-weight: 600;
+  font-family: "Inter", sans-serif;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
@@ -170,7 +168,7 @@
   transition: all $transition-fast;
 
   &:hover {
-    background: colors.$primary-hover;
+    background: #a04a2c;
     transform: translateY(-1px);
   }
 }
@@ -187,11 +185,11 @@
 
 .cart-item {
   display: grid;
-  grid-template-columns: 88px 1fr;
+  grid-template-columns: 80px 1fr;
   gap: $space-md;
   align-items: start;
   padding-bottom: $space-lg;
-  border-bottom: 1px solid $color-border-light;
+  border-bottom: 1px solid #f3f4f6;
 
   &:last-child {
     border-bottom: none;
@@ -200,12 +198,13 @@
 }
 
 .item-image {
-  width: 88px;
-  height: 88px;
+  width: 80px;
+  height: 80px;
   border-radius: 0;
   overflow: hidden;
-  background: $color-bg-secondary;
+  background: #f9f9f9;
   flex-shrink: 0;
+  border: 1px solid #f3f4f6;
 
   img {
     @include image-cover;
@@ -216,14 +215,13 @@
   width: 100%;
   height: 100%;
   @include flex-center;
-  color: $color-text-disabled;
+  color: #cccccc;
 }
 
 // Item details column
 .item-details {
   display: flex;
   flex-direction: column;
-  gap: $space-xxs;
   min-width: 0;
 }
 
@@ -235,109 +233,13 @@
 }
 
 .item-name {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  font-family: $font-family-display;
-  color: $color-mono-dark;
+  font-family: "Cormorant Garamond", Georgia, serif !important;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111111;
   margin: 0;
-  line-height: $line-height-tight;
-  letter-spacing: 0.02em;
-}
-
-.item-variant {
-  font-size: $font-size-xs;
-  color: rgba($color-mono-dark, 0.6);
-  margin: 0;
-  font-weight: $font-weight-regular;
-}
-
-.item-price {
-  font-size: $font-size-xs;
-  color: rgba($color-mono-dark, 0.6);
-  margin: 0;
-}
-
-.item-variants {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $space-xs;
-  margin: $space-xs 0;
-}
-
-.variant-btn {
-  flex: 0 1 auto;
-  padding: $space-xxs $space-xs;
-  font-family: $font-family-nav;
-  font-size: $font-size-xs;
-  color: $color-text-secondary;
-  background: $color-bg-secondary;
-  border: 1px solid $color-border-light;
-  border-radius: 0;
-  cursor: pointer;
-  transition: all $transition-fast;
-  white-space: nowrap;
-
-  &:hover {
-    border-color: $color-text-secondary;
-    background: $color-bg-primary;
-  }
-
-  &--active {
-    background: $color-text-primary;
-    color: $color-text-inverse;
-    border-color: $color-text-primary;
-  }
-}
-
-.qty-row {
-  @include flex-between;
-  margin-top: $space-xs;
-}
-
-.qty-controls {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  border: 1px solid $color-mono-dark;
-  border-radius: 0;
-  overflow: hidden;
-}
-
-.qty-btn {
-  width: 30px;
-  height: 30px;
-  @include flex-center;
-  border: none;
-  background: transparent;
-  color: rgba($color-mono-dark, 0.6);
-  cursor: pointer;
-  transition: all $transition-fast;
-
-  &:hover {
-    background: rgba($color-mono-dark, 0.04);
-    color: $color-mono-dark;
-  }
-
-  &:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
-}
-
-.qty-value {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  font-family: $font-family-nav;
-  color: $color-mono-dark;
-  min-width: 24px;
-  text-align: center;
-}
-
-.item-line-total {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  font-family: $font-family-nav;
-  color: $color-mono-dark;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
 }
 
 .remove-btn {
@@ -347,118 +249,221 @@
   border-radius: 0;
   border: none;
   background: transparent;
-  color: $color-mono-dark;
+  color: #9ca3af;
   cursor: pointer;
   flex-shrink: 0;
   transition: all $transition-fast;
 
   &:hover {
-    opacity: 0.6;
+    color: #ef4444;
   }
+}
+
+.item-variant {
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  color: #6b7280;
+  margin: 3px 0 8px 0;
+  font-weight: 400;
+}
+
+.item-price-qty-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.item-unit-price {
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111111;
+}
+
+.qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.qty-btn {
+  width: 28px;
+  height: 28px;
+  @include flex-center;
+  border: none;
+  background: transparent;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: #f9fafb;
+    color: #111111;
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+}
+
+.qty-value {
+  font-size: 13px;
+  font-weight: 500;
+  font-family: "Inter", sans-serif;
+  color: #111111;
+  min-width: 20px;
+  text-align: center;
 }
 
 // ── Footer ──
 .drawer-footer {
   padding: $space-xl;
-  border-top: 1px solid $color-border-light;
+  border-top: 1px solid #f3f4f6;
   flex-shrink: 0;
+  background: #ffffff;
 }
 
-.subtotal-row {
-  @include flex-between;
-  margin-bottom: $space-xs;
+// Free Shipping Progress Bar
+.shipping-bar-container {
+  margin-bottom: 20px;
+  padding-bottom: 4px;
 }
 
-.subtotal-label {
+.shipping-bar-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.shipping-status-text {
+  font-family: "Inter", sans-serif;
   font-size: 12px;
-  font-family: $font-family-nav;
-  font-weight: $font-weight-medium;
-  color: rgba($color-mono-dark, 0.6);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  color: #d8421f;
+  font-weight: 500;
+
+  strong {
+    font-weight: 700;
+  }
 }
 
-.subtotal-value {
-  font-family: $font-family-nav;
-  font-size: $font-size-xl;
-  font-weight: $font-weight-medium;
-  color: $color-mono-dark;
+.shipping-status-percent {
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #d8421f;
 }
 
-.tax-note {
-  font-size: $font-size-xs;
-  color: rgba($color-mono-dark, 0.5);
-  margin: 0 0 $space-lg;
+.shipping-bar-track {
+  height: 4px;
+  background-color: #f3f4f6;
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
 }
 
+.shipping-bar-fill {
+  height: 100%;
+  background-color: #d8421f;
+  border-radius: 2px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Price Breakdown Table
+.price-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.breakdown-label {
+  font-weight: 400;
+}
+
+.breakdown-value {
+  font-weight: 500;
+  color: #111111;
+}
+
+.total-row {
+  border-top: 1px dashed #e5e7eb;
+  padding-top: 12px;
+  margin-top: 4px;
+  color: #111111;
+  font-size: 16px;
+
+  .breakdown-label {
+    font-weight: 700;
+    color: #111111;
+  }
+
+  .breakdown-value {
+    font-weight: 700;
+    font-size: 18px;
+    color: #111111;
+  }
+}
+
+// Action Buttons
 .btn-checkout {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: $space-md $space-lg;
-  background: colors.$primary;
-  color: $color-mono-light;
+  padding: 16px;
+  background: #251713; // Premium dark brown-black brand color
+  color: white;
   border: none;
   border-radius: 0;
-  font-size: 14px;
-  font-weight: $font-weight-medium;
-  font-family: $font-family-nav;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: "Inter", sans-serif;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  text-decoration: none;
-  transition: all $transition-fast;
+  transition: all 0.2s ease;
+  margin-bottom: 12px;
 
   &:hover {
-    background: colors.$primary-hover;
-    transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(colors.$primary, 0.25);
+    background: #150d0b;
   }
 }
 
 .btn-continue {
   display: block;
   width: 100%;
-  margin-top: $space-sm;
-  padding: $space-sm $space-lg;
-  background: transparent;
-  color: rgba($color-mono-dark, 0.6);
-  border: 1px solid rgba($color-mono-dark, 0.2);
+  padding: 16px;
+  background: white;
+  color: #251713;
+  border: 1px solid #d1d5db;
   border-radius: 0;
   font-size: 13px;
-  font-weight: $font-weight-medium;
-  font-family: $font-family-nav;
-  letter-spacing: 0.06em;
+  font-weight: 600;
+  font-family: "Inter", sans-serif;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
   text-align: center;
-  transition: all $transition-fast;
+  transition: all 0.2s ease;
 
   &:hover {
-    border-color: $color-mono-dark;
-    color: $color-mono-dark;
-  }
-}
-
-.btn-clear {
-  display: block;
-  width: 100%;
-  margin-top: $space-sm;
-  padding: $space-xs;
-  background: transparent;
-  color: colors.$error;
-  border: none;
-  font-size: $font-size-xs;
-  font-family: $font-family-nav;
-  font-weight: $font-weight-medium;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: pointer;
-  text-align: center;
-  transition: opacity $transition-fast;
-
-  &:hover {
-    opacity: 0.7;
+    border-color: #251713;
+    background: #fbfbfb;
   }
 }

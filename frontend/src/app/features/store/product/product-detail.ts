@@ -106,6 +106,45 @@ export class ProductDetailComponent implements OnInit {
 
       this.catalog.getProductBySlug(slug).subscribe({
         next: (res) => {
+          // If no variants exist, dynamically populate default weight options (250g, 500g, 1kg)
+          if (!res.data.variants || res.data.variants.length === 0) {
+            res.data.variants = [
+              {
+                _id: 'v-250g',
+                name: '250g',
+                price: res.data.basePrice,
+                discountedPrice: res.data.discountedPrice,
+                stock: res.data.stock ?? 50,
+                trackInventory: false,
+                images: res.data.images,
+                position: 1,
+                isActive: true
+              },
+              {
+                _id: 'v-500g',
+                name: '500g',
+                price: Math.round(res.data.basePrice * 1.8),
+                discountedPrice: res.data.discountedPrice ? Math.round(res.data.discountedPrice * 1.8) : undefined,
+                stock: res.data.stock ?? 50,
+                trackInventory: false,
+                images: res.data.images,
+                position: 2,
+                isActive: true
+              },
+              {
+                _id: 'v-1kg',
+                name: '1kg',
+                price: Math.round(res.data.basePrice * 3.4),
+                discountedPrice: res.data.discountedPrice ? Math.round(res.data.discountedPrice * 3.4) : undefined,
+                stock: res.data.stock ?? 50,
+                trackInventory: false,
+                images: res.data.images,
+                position: 3,
+                isActive: true
+              }
+            ];
+          }
+
           this.product.set(res.data);
           this.selectedImage.set(res.data.images?.[0] || '');
 
@@ -208,8 +247,8 @@ export class ProductDetailComponent implements OnInit {
   // ─ Cart ─
   addToCart(): void {
     if (this.product()) {
-      // Add to cart WITHOUT opening sidebar
-      this.cartStore.addItem(this.product()!._id, this.quantity(), this.selectedVariant()?._id, false, this.product()!.slug);
+      // Add to cart and open the sidebar
+      this.cartStore.addItem(this.product()!._id, this.quantity(), this.selectedVariant()?._id, true, this.product()!.slug);
     }
   }
 

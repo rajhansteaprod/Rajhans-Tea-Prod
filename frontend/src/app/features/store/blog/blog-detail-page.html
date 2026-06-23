@@ -19,7 +19,7 @@
       <!-- Hero Image -->
       @if (blog()!.coverImage) {
         <div class="blog-hero-image">
-          <img [src]="blog()!.coverImage" [alt]="blog()!.title" />
+          <img [src]="getImageUrl(blog()!.coverImage)" [alt]="blog()!.title" />
         </div>
       }
 

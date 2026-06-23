@@ -11,6 +11,7 @@ interface Blog {
   title: string;
   slug: string;
   excerpt: string;
+  content?: string;
   coverImage: string;
   author: { firstName: string; lastName: string };
   tags: string[];
@@ -51,7 +52,13 @@ export class BlogListPageComponent implements OnInit {
 
   searchQuery = signal('');
   selectedTag = signal<string | null>(null);
-  availableTags = signal<string[]>([]);
+
+  readonly categories = [
+    { name: 'Brewing Guide', tag: 'brewing' },
+    { name: 'Our Story', tag: 'story' },
+    { name: 'Tea Culture', tag: 'recipes' },
+    { name: 'Wellness', tag: 'health' }
+  ];
 
   ngOnInit() {
     this.titleService.setTitle('Blog — Rajhans Tea');
@@ -81,7 +88,6 @@ export class BlogListPageComponent implements OnInit {
       next: (res) => {
         this.blogs.set(res.data);
         this.totalPages.set(res.meta.totalPages);
-        this.extractTags();
         this.loading.set(false);
       },
       error: () => {
@@ -89,14 +95,6 @@ export class BlogListPageComponent implements OnInit {
         this.loading.set(false);
       },
     });
-  }
-
-  extractTags() {
-    const tags = new Set<string>();
-    this.blogs().forEach((blog) => {
-      blog.tags.forEach((tag) => tags.add(tag));
-    });
-    this.availableTags.set(Array.from(tags));
   }
 
   filterByTag(tag: string) {
@@ -120,4 +118,27 @@ export class BlogListPageComponent implements OnInit {
       day: 'numeric',
     });
   }
+
+  getDisplayCategory(tags: string[]): string {
+    if (!tags || tags.length === 0) return 'TEA CULTURE';
+    const tag = tags[0].toLowerCase();
+    if (tag.includes('brew') || tag.includes('guide')) return 'BREWING GUIDE';
+    if (tag.includes('story') || tag.includes('process') || tag.includes('garden')) return 'OUR STORY';
+    if (tag.includes('health') || tag.includes('benefit') || tag.includes('well') || tag.includes('science')) return 'WELLNESS';
+    return 'TEA CULTURE';
+  }
+
+  getReadTime(content?: string): string {
+    const words = content ? content.split(/\s+/).length : 100;
+    const mins = Math.max(3, Math.ceil(words / 150));
+    return `${mins} min read`;
+  }
+
+  getImageUrl(imagePath: string): string {
+    if (!imagePath) return 'https://images.unsplash.com/photo-1563789031959-4c02bcb41319?w=800&h=600&fit=crop';
+    if (imagePath.startsWith('http')) return imagePath;
+    const base = environment.apiUrl.replace('/api', '');
+    return `${base}${imagePath}`;
+  }
 }
+

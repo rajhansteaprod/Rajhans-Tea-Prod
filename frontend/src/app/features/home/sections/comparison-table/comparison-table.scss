@@ -28,7 +28,7 @@
 }
 
 .comparison__heading {
-  font-family: $font-heading;
+  font-family: 'Cormorant Garamond', serif !important;
   font-size: 32px;
   font-weight: 700;
   color: #111827;
@@ -41,12 +41,12 @@
 }
 
 .comparison__vs {
-  color: #b35c3e;
+  color: #f97316; // orange-500
 }
 
 .comparison__subtitle {
-  font-family: $font-family;
-  font-size: 18px;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 16px;
   font-weight: 400;
   color: #4b5563;
   margin: 0;
@@ -55,26 +55,19 @@
 .comparison__table-wrapper {
   max-width: 1024px;
   margin: 0 auto;
-  padding: 8px 16px;
+  overflow: hidden;
   overflow-x: auto;
   border-radius: 16px;
-  border: 1px solid #f3f4f6;
+  border: 1px solid #e5e7eb;
   background: white;
-  padding-inline: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-
-  @media (min-width: 640px) {
-    padding: 4px 24px;
-  }
-
-  @media (min-width: 1024px) {
-    padding: 4px 32px;
-  }
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.02), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+  padding: 0;
 }
 
 .comparison__table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   table-layout: auto;
   min-width: 700px;
 }
@@ -82,30 +75,30 @@
 .comparison__th {
   padding: 24px;
   text-align: center;
-  font-family: $font-family;
+  font-family: 'Inter', sans-serif !important;
   font-size: 16px;
   font-weight: 700;
-  color: #1f2937;
-  border-bottom: 1px solid #f3f4f6;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
   background: #ffffff;
 
   &--key {
     text-align: center;
-    width: 33.333%;
+    width: 32%;
+    padding-left: 32px;
   }
 
   &--rajhans {
-    width: 33.333%;
-    border-top: 1px solid #b35c3e;
-    border-left: 1px solid #b35c3e;
-    border-right: 1px solid #b35c3e;
-    background: rgba(#b35c3e, 0.05);
-    border-radius: 16px 0 0 0;
+    width: 36%;
+    border-top: 1.5px solid #f97316 !important;
+    border-left: 1.5px solid #f97316 !important;
+    border-right: 1.5px solid #f97316 !important;
+    background-color: #fffdfa !important; // light orange highlight tint
   }
 
   &--others {
-    width: 33.333%;
-    background: white;
+    width: 32%;
+    padding-right: 32px;
   }
 }
 
@@ -121,67 +114,69 @@
   width: 32px;
   height: 32px;
   flex-shrink: 0;
+
+  &--rajhans {
+    color: #f97316; // orange
+  }
+
+  &--others {
+    color: #9ca3af; // gray
+  }
 }
 
 .comparison__column-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
-  color: #374151;
+  color: #111827;
 
   .comparison__th--rajhans & {
-    color: #b35c3e;
+    color: #f97316;
   }
 
   .comparison__th--others & {
-    color: #9ca3af;
+    color: #4b5563;
   }
 }
 
 .comparison__row {
-  border-bottom: 1px solid #f3f4f6;
   transition: background-color 0.2s ease;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.02);
-  }
-
-  &--last {
-    border-bottom: none;
-
-    .comparison__td--rajhans {
-      border-radius: 0 0 0 16px;
-    }
+    background: rgba(0, 0, 0, 0.01);
   }
 }
 
 .comparison__td {
-  padding: 24px;
+  padding: 20px 24px;
   text-align: left;
   vertical-align: middle;
+  border-bottom: 1px solid #e5e7eb;
 
   &--key {
     background: transparent;
-    width: 33.333%;
+    width: 32%;
+    padding-left: 32px;
   }
 
   &--rajhans {
-    background: rgba(#b35c3e, 0.05);
-    border-left: 1px solid #b35c3e;
-    border-right: 1px solid #b35c3e;
-    width: 33.333%;
-  }
-
-  .comparison__row--last &--rajhans {
-    border-bottom: 1px solid #b35c3e;
+    background-color: #fffdfa !important; // light orange highlight tint
+    border-left: 1.5px solid #f97316 !important;
+    border-right: 1.5px solid #f97316 !important;
+    width: 36%;
   }
 
   &--others {
     background: white;
-    width: 33.333%;
+    width: 32%;
+    padding-right: 32px;
   }
 
-  .comparison__row--last &--others {
-    border-radius: 0 0 16px 0;
+  .comparison__row--last & {
+    border-bottom: none;
+
+    &.comparison__td--rajhans {
+      border-bottom: 1.5px solid #f97316 !important;
+    }
   }
 }
 
@@ -200,9 +195,9 @@
 }
 
 .comparison__feature-name {
-  font-family: $font-family;
+  font-family: 'Inter', sans-serif !important;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: #111827;
   line-height: 1.4;
 }
@@ -219,30 +214,33 @@
   flex-shrink: 0;
   width: 20px;
   height: 20px;
+  margin-top: 2px;
 }
 
 .comparison__benefit {
-  font-family: $font-family;
+  font-family: 'Inter', sans-serif !important;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: #111827;
   margin: 0;
   line-height: 1.4;
 
   &--negative {
     color: #4b5563;
+    font-weight: 500;
   }
 }
 
 .comparison__subtext {
-  font-family: $font-family;
+  font-family: 'Inter', sans-serif !important;
   font-size: 12px;
   font-weight: 400;
   color: #6b7280;
-  margin: 4px 0 0 0;
+  margin: 2px 0 0 0;
   line-height: 1.4;
 
   &--negative {
     color: #9ca3af;
   }
 }
+

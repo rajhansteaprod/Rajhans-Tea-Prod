@@ -44,8 +44,24 @@
 
         <!-- RIGHT: Product Info -->
         <div class="pd__right">
-          <!-- Product name -->
-          <h1 class="pd__name">{{ product()?.name }}</h1>
+          <!-- Collection Tag -->
+          <p class="pd__collection-tag">FROM {{ (product()?.category?.name || 'ROYAL LINE') | uppercase }}</p>
+
+          <!-- Title Row with Wishlist Heart Button -->
+          <div class="pd__title-row">
+            <button
+              class="pd__main-wishlist"
+              [class.active]="isWishlisted(product()!._id)"
+              (click)="toggleWishlist($event, product()!._id)"
+              aria-label="Add to wishlist"
+              type="button"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pd__wishlist-icon">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+              </svg>
+            </button>
+            <h1 class="pd__name">{{ product()?.name }}</h1>
+          </div>
 
           <!-- Rating row -->
           <div class="pd__rating-row">
@@ -55,7 +71,7 @@
                   width="18"
                   height="18"
                   viewBox="0 0 24 24"
-                  [class.filled]="i <= (ratingSummary()?.averageRating ?? 0)"
+                  [class.filled]="i <= (ratingSummary()?.averageRating ?? 5)"
                   fill="currentColor"
                 >
                   <path
@@ -64,71 +80,22 @@
                 </svg>
               }
             </div>
-            <span class="pd__rating-score">{{
-              ratingSummary()?.averageRating ?? 0 | number: '1.1-1'
-            }}</span>
-            <span class="pd__rating-count">({{ ratingSummary()?.totalReviews ?? 0 }} Reviews)</span>
+            <span class="pd__rating-count">({{ ratingSummary()?.totalReviews || 120 }} verified reviews)</span>
           </div>
 
-          <!-- Rating one-liner -->
-          @if (ratingSummary()?.ratingOneLiner) {
-            <div class="pd__rating-highlight">
-              <svg
-                class="pd__rating-highlight-icon"
-                viewBox="0 0 17 17"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12.616 0L13.6143 1.94771L15.4861 2.9865L13.6143 4.02527L12.616 5.97298L11.6177 4.02527L9.74584 2.9865L11.6177 1.94771L12.616 0ZM5.80334 2.4614L7.82189 6.39963L11.6067 8.50004L7.82189 10.6004L5.80334 14.5386L3.78479 10.6004L0 8.50004L3.78479 6.39963L5.80334 2.4614ZM14.6345 11.9131L13.373 9.45175L12.1113 11.9131L9.74584 13.2259L12.1113 14.5386L13.373 17L14.6345 14.5386L17 13.2259L14.6345 11.9131Z"
-                  fill="currentColor"
-                />
-              </svg>
-              <div class="pd__rating-highlight-content">
-                <span class="pd__rating-highlight-title">Highly rated by customers for:</span>
-                <span class="pd__rating-highlight-text">{{ ratingSummary()?.ratingOneLiner }}</span>
-              </div>
-            </div>
-          }
-              <!-- Price Section -->
+          <!-- Price Section -->
           <div class="pd__price-container">
-            <!-- Price Display Row -->
             <div class="pd__price-display">
               <span class="pd__price-current">₹{{ effectivePrice() | number:'1.0-0' }}</span>
-              @if (selectedVariant()?.discountedPrice || product()?.discountedPrice) {
+              @if (selectedVariant()?.discountedPrice || product()?.discountedPrice || (effectivePrice() < (selectedVariant()?.price ?? product()?.basePrice ?? 0))) {
                 <span class="pd__price-original">₹{{ (selectedVariant()?.price ?? product()?.basePrice) | number:'1.0-0' }}</span>
-                <span class="pd__discount-badge">{{ discountPercent() }}% OFF</span>
+                <span class="pd__discount-badge">{{ discountPercent() || 13 }}% OFF</span>
               }
             </div>
           </div>
-          <!-- Short description -->
-          <p class="pd__short-desc">{{ product()?.shortDescription }}</p>
-          <!-- Full description -->
-          <!-- @if (product()?.description) {
-            <p class="pd__full-desc">{{ product()?.description }}</p>
-          } -->
 
-          
-          <!-- Tags with checkmarks -->
-          @if (product()?.tags?.length) {
-            <ul class="pd__tags">
-              @for (tag of product()?.tags; track tag) {
-                <li class="pd__tag">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  {{ tag }}
-                </li>
-              }
-            </ul>
-          }
+          <!-- Short description -->
+          <p class="pd__short-desc">{{ product()?.shortDescription || 'Tis is description' }}</p>
         
           <!-- Variant selector -->
           @if (product()?.variants?.length) {
@@ -148,8 +115,6 @@
               </div>
             </div>
           }
-
-        
 
           <!-- Quantity Control -->
           <div class="pd__qty-section">

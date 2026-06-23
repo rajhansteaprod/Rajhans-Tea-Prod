@@ -4,7 +4,7 @@
 .why-choose {
   position: relative;
   width: 100%;
-  background: #f5f2eb;
+  background: #ffffff; // white background matching the image
   overflow: hidden;
 
   @media (min-width: 993px) {
@@ -15,11 +15,15 @@
 .why-choose__bg {
   position: absolute;
   inset: 0;
-  background-image: url('/uploads/why-choose-rajhans.png');
+  background-image: url('/static/Banner Rajdoot 2.png');
   background-size: cover;
-  background-position: right;
+  background-position: right -120px center; // shifts the image to the right on desktop
   background-repeat: no-repeat;
   opacity: 1;
+
+  @include respond-to(lg) {
+    background-position: right -60px center;
+  }
 
   @include respond-to(md) {
     background-position: center;

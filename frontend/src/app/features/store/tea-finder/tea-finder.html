@@ -11,142 +11,171 @@
 <div class="container">
   <!-- Results Section -->
   @if (showResults()) {
-    <div class="card results-card">
-      <div class="inner">
-        <div class="results-header">
-          <span class="results-badge">Your Perfect Match Found</span>
-          <h2 class="results-title">Introducing Your Match</h2>
+    <div class="results-container">
+      <div class="results-heading">
+        <span class="results-subtitle-top">YOUR PERFECT MATCH</span>
+        <h1 class="results-title">We found your chai.</h1>
+      </div>
+
+      <!-- AI Recommendation Banner -->
+      <div class="ai-recommendation-box">
+        <h4 class="ai-header">✦ AI RECOMMENDATION</h4>
+        <p class="ai-text">{{ aiRecommendationText() }}</p>
+      </div>
+
+      <!-- Product Card -->
+      <div class="product-recommendation-card">
+        <div class="product-image-container">
+          <img [src]="recommendedProduct().image" [alt]="recommendedProduct().name" class="recommendation-img">
         </div>
 
-        <div class="product-card">
-          <div class="product-image">
-            <img [src]="recommendedProduct().image" [alt]="recommendedProduct().name">
+        <div class="product-info-container">
+          <div>
+            <span class="recommended-pill">RECOMMENDED FOR YOU</span>
+            <h2 class="recommended-title">{{ recommendedProduct().name }}</h2>
+            <p class="recommended-desc">{{ recommendedProduct().description }}</p>
           </div>
 
-          <div class="product-details">
-            <div class="product-info">
-              <span class="recommended-badge">Recommended</span>
-              <h3 class="product-name">{{ recommendedProduct().name }}</h3>
-              <p class="product-desc">{{ recommendedProduct().description }}</p>
-
-              <div class="product-price">
-                <span class="price">₹{{ recommendedProduct().price }}</span>
+          <div class="price-and-actions">
+            <div class="product-price">
+              <span class="price">₹{{ recommendedProduct().price }}</span>
+              @if (recommendedProduct().originalPrice > recommendedProduct().price) {
                 <span class="original-price">₹{{ recommendedProduct().originalPrice }}</span>
-              </div>
+              }
             </div>
 
             <div class="product-actions">
-              <button class="btn-add-cart">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>
+              <button class="btn-add-cart" (click)="addToCart()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="cart-icon"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>
                 ADD TO CART
               </button>
               <a [routerLink]="'/product/' + recommendedProduct().slug" class="btn-view-details">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="info-icon"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
                 VIEW DETAILS
               </a>
             </div>
           </div>
         </div>
-
-        <button class="btn-retake" (click)="retakeQuiz()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
-          Take the quiz again
-        </button>
       </div>
+
+      <!-- Choices Summary Row -->
+      <div class="choices-summary-grid">
+        <div class="choice-summary-item">
+          <span class="label">STRENGTH</span>
+          <span class="val">{{ selectedOptions()[0] }}</span>
+        </div>
+        <div class="choice-summary-item">
+          <span class="label">TIME</span>
+          <span class="val">{{ selectedOptions()[1] }}</span>
+        </div>
+        <div class="choice-summary-item">
+          <span class="label">MILK</span>
+          <span class="val">{{ selectedOptions()[2] }}</span>
+        </div>
+        <div class="choice-summary-item">
+          <span class="label">BUDGET</span>
+          <span class="val">{{ selectedOptions()[3] }}</span>
+        </div>
+      </div>
+
+      <!-- Retake Quiz Trigger -->
+      <button class="btn-retake-link" (click)="retakeQuiz()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="retake-icon"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
+        Retake the quiz
+      </button>
     </div>
   } @else {
     <!-- Quiz Section -->
     <div class="card">
-    <div class="inner">
+      <div class="inner">
+        <!-- Topbar -->
+        <div class="topbar">
+          <span class="brand">TEA FINDER</span>
+          <span class="step">STEP {{ currentStep() + 1 }} OF {{ steps.length }}</span>
+        </div>
 
-      <!-- Topbar -->
-      <div class="topbar">
-        <span>Tea Matchmaker Quiz</span>
-        <span>Step {{ currentStep() + 1 }} of {{ steps.length }}</span>
-      </div>
+        <!-- Progress Bar -->
+        <div class="progress">
+          <div class="progress-bar" [style.width.%]="getProgressPercentage()"></div>
+        </div>
 
-      <!-- Progress Bar -->
-      <div class="progress">
-        <div class="progress-bar" [style.width.%]="getProgressPercentage()"></div>
-      </div>
+        <!-- Title & Subtitle -->
+        <h2 class="title">{{ steps[currentStep()].title }}</h2>
+        <p class="subtitle">{{ steps[currentStep()].subtitle }}</p>
 
-      <!-- Title & Subtitle -->
-      <h2 class="title">{{ steps[currentStep()].title }}</h2>
-      <p class="subtitle">{{ steps[currentStep()].subtitle }}</p>
+        <!-- Options Grid -->
+        <div class="grid" [ngClass]="'grid-options-' + steps[currentStep()].options.length">
+          @for (option of steps[currentStep()].options; track option.title) {
+            <button
+              type="button"
+              class="option"
+              [class.selected]="isSelected(option.title)"
+              (click)="selectOption(option.title)"
+            >
+              <div [ngClass]="isSelected(option.title) ? 'icon-selected' : 'icon'">
+                @switch (option.icon) {
+                  @case ('sunrise') {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"></path><path d="m4.93 10.93 1.41 1.41"></path><path d="M2 18h2"></path><path d="M20 18h2"></path><path d="m19.07 10.93-1.41 1.41"></path><path d="M22 22H2"></path><path d="m8 6 4-4 4 4"></path><path d="M16 18a4 4 0 0 0-8 0"></path></svg>
+                  }
+                  @case ('sunset') {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10V2"></path><path d="m4.93 10.93 1.41 1.41"></path><path d="M2 18h2"></path><path d="M20 18h2"></path><path d="m19.07 10.93-1.41 1.41"></path><path d="M22 22H2"></path><path d="m16 6-4 4-4-4"></path><path d="M16 18a4 4 0 0 0-8 0"></path></svg>
+                  }
+                  @case ('coffee') {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2"></path><path d="M14 2v2"></path><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path><path d="M6 2v2"></path></svg>
+                  }
+                  @case ('sparkles') {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path><path d="M4 17v2"></path><path d="M5 18H3"></path></svg>
+                  }
+                  @case ('flame') {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>
+                  }
+                  @default {
+                    <span>{{ option.icon }}</span>
+                  }
+                }
+              </div>
+              <h4>{{ option.title }}</h4>
+              <p>{{ option.description }}</p>
+            </button>
+          }
+        </div>
 
-      <!-- Options Grid -->
-      <div class="grid">
-        @for (option of steps[currentStep()].options; track option.title) {
+        <!-- Footer Buttons -->
+        <div class="footer">
           <button
             type="button"
-            class="option"
-            [class.selected]="isSelected(option.title)"
-            (click)="selectOption(option.title)"
+            class="btn btn-back"
+            (click)="goBack()"
+            [disabled]="currentStep() === 0"
           >
-            <div [ngClass]="isSelected(option.title) ? 'icon-selected' : 'icon'">
-              @switch (option.icon) {
-                @case ('sunrise') {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"></path><path d="m4.93 10.93 1.41 1.41"></path><path d="M2 18h2"></path><path d="M20 18h2"></path><path d="m19.07 10.93-1.41 1.41"></path><path d="M22 22H2"></path><path d="m8 6 4-4 4 4"></path><path d="M16 18a4 4 0 0 0-8 0"></path></svg>
-                }
-                @case ('sunset') {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10V2"></path><path d="m4.93 10.93 1.41 1.41"></path><path d="M2 18h2"></path><path d="M20 18h2"></path><path d="m19.07 10.93-1.41 1.41"></path><path d="M22 22H2"></path><path d="m16 6-4 4-4-4"></path><path d="M16 18a4 4 0 0 0-8 0"></path></svg>
-                }
-                @case ('coffee') {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2"></path><path d="M14 2v2"></path><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path><path d="M6 2v2"></path></svg>
-                }
-                @case ('sparkles') {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path><path d="M4 17v2"></path><path d="M5 18H3"></path></svg>
-                }
-                @case ('flame') {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>
-                }
-                @default {
-                  <span>{{ option.icon }}</span>
-                }
-              }
-            </div>
-            <h4>{{ option.title }}</h4>
-            <p>{{ option.description }}</p>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+            BACK
           </button>
-        }
+
+          <!-- NEXT/CONTINUE only shown if an option is selected -->
+          @if (canGoNext()) {
+            @if (currentStep() === steps.length - 1) {
+              <button
+                type="button"
+                class="btn btn-next"
+                (click)="getRecommendation()"
+              >
+                GET RECOMMENDATION
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="btn btn-next"
+                (click)="goNext()"
+              >
+                NEXT
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+              </button>
+            }
+          }
+        </div>
       </div>
-
-      <!-- Footer Buttons -->
-      <div class="footer">
-        <button
-          type="button"
-          class="btn btn-back"
-          (click)="goBack()"
-          [disabled]="currentStep() === 0"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
-          BACK
-        </button>
-
-        @if (currentStep() === steps.length - 1) {
-          <button
-            type="button"
-            class="btn btn-next"
-            (click)="getRecommendation()"
-            [disabled]="!canGoNext()"
-          >
-            GET RECOMMENDATION
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-          </button>
-        } @else {
-          <button
-            type="button"
-            class="btn btn-next"
-            (click)="goNext()"
-            [disabled]="!canGoNext()"
-          >
-            CONTINUE
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-          </button>
-        }
-      </div>
-
-    </div>
     </div>
   }
 </div>

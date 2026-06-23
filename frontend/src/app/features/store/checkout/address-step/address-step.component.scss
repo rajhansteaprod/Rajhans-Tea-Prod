@@ -3,7 +3,7 @@
 .checkout__grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 48px;
+  gap: 32px;
   align-items: start;
 }
 
@@ -18,6 +18,8 @@
 
   .checkout__grid-right {
     grid-column: span 4;
+    position: sticky;
+    top: 24px;
   }
 }
 
@@ -28,13 +30,11 @@
 }
 
 .checkout__heading {
-  font-family: $font-family-display;
-  font-size: 14px;
+  font-family: "Cormorant Garamond", serif !important;
+  font-size: 28px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #1a1a1a;
-  margin-bottom: 16px;
+  color: #111827;
+  margin-bottom: 8px;
 }
 
 .checkout__address-list {
@@ -46,13 +46,15 @@
 .checkout__address-option {
   display: block;
   padding: 16px;
-  border: 1px solid #191919;
-  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
   cursor: pointer;
+  border-radius: 4px;
   transition: all 0.2s ease-in-out;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: #f9fafb;
+    border-color: #d8421f;
   }
 }
 
@@ -63,43 +65,50 @@
 }
 
 .checkout__radio {
-  accent-color: #191919;
+  accent-color: #d8421f;
   cursor: pointer;
   flex-shrink: 0;
+  width: 18px;
+  height: 18px;
 }
 
 .checkout__option-label {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  font-family: "Inter", sans-serif !important;
   font-size: 14px;
-  font-weight: 700;
-  color: #1a1a1a;
+  font-weight: 600;
+  color: #111827;
 }
 
 .checkout__icon-plus {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
+  color: #d8421f;
 }
 
 .checkout__form-section {
   padding: 24px;
-  border: 1px solid #d3d3d3;
-  background: rgba(0, 0, 0, 0.01);
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 4px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .checkout__section-heading {
-  font-family: $font-family-nav;
-  font-size: 11px;
-  font-weight: 700;
+  font-family: "Cormorant Garamond", serif !important;
+  font-size: 20px;
+  font-weight: 600;
+  color: #d8421f;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #999;
-  margin-bottom: 8px;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 8px;
 }
 
 .checkout__form-grid {
@@ -117,43 +126,47 @@
 .checkout__form-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .checkout__form-label {
-  font-family: $font-family-nav;
-  font-size: 11px;
-  font-weight: 700;
+  font-family: "Inter", sans-serif !important;
+  font-size: 12px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #595959;
+  color: #4b5563;
 }
 
 .checkout__form-input {
-  padding: 12px;
-  border: 1px solid #bfbfbf;
+  padding: 12px 14px;
+  border: 1px solid #d1d5db;
   background: white;
-  font-family: inherit;
+  font-family: "Inter", sans-serif !important;
   font-size: 14px;
-  color: #000;
-  border-radius: 0;
+  color: #111827;
+  border-radius: 4px;
+  transition: all 0.15s ease-in-out;
 
   &::placeholder {
-    color: #999;
+    color: #9ca3af;
   }
 
   &:focus {
     outline: none;
-    ring: 2px;
-    border-color: #191919;
+    border-color: #d8421f;
+    box-shadow: 0 0 0 3px rgba(216, 66, 31, 0.15);
   }
 
   &.error {
-    border-color: #d32f2f;
+    border-color: #ef4444;
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    }
   }
 
   &[readonly] {
-    background: hsl(0 0% 96%);
+    background: #f3f4f6;
     cursor: not-allowed;
   }
 }
@@ -161,25 +174,32 @@
 .checkout__form-textarea {
   resize: vertical;
   line-height: 1.5;
+  min-height: 80px;
 }
 
 .checkout__form-error {
+  font-family: "Inter", sans-serif !important;
   font-size: 11px;
-  color: #d32f2f;
-  font-weight: 600;
+  color: #ef4444;
+  font-weight: 500;
+  margin-top: 2px;
 }
 
 .checkout__alert {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   padding: 16px;
-  background: rgba(211, 47, 47, 0.05);
-  border: 1px solid #d32f2f;
-  margin-bottom: 24px;
-  color: #d32f2f;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  color: #b91c1c;
+  font-family: "Inter", sans-serif !important;
+  font-size: 14px;
 
   svg {
     flex-shrink: 0;
+    color: #ef4444;
   }
 }
 
@@ -192,28 +212,30 @@
   display: flex;
   gap: 16px;
   padding-top: 16px;
-  margin-top: 16px;
+  margin-top: 8px;
 }
 
 .checkout__btn-back {
   padding: 12px 24px;
-  border: 1px solid #bfbfbf;
+  border: 1px solid #d1d5db;
   background: white;
-  font-family: $font-family-nav;
-  font-size: 11px;
+  font-family: "Inter", sans-serif !important;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #595959;
+  color: #4b5563;
   cursor: pointer;
+  border-radius: 4px;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 6px;
-  border-radius: 0;
+  gap: 8px;
 
   &:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.02);
+    background: #f9fafb;
+    border-color: #9ca3af;
+    color: #111827;
   }
 
   &:disabled {
@@ -224,29 +246,33 @@
 
 .checkout__btn-submit {
   flex: 1;
-  padding: 12px 24px;
-  background: #b85a2e;
+  padding: 14px 28px;
+  background: #d8421f;
   color: white;
-  font-family: $font-family-nav;
-  font-size: 11px;
+  font-family: "Inter", sans-serif !important;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border: none;
   cursor: pointer;
+  border-radius: 4px;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  border-radius: 0;
+  gap: 8px;
 
   &:hover:not(:disabled) {
-    background: #a34e26;
+    background: #be3718;
+    box-shadow: 0 4px 12px rgba(216, 66, 31, 0.2);
   }
 
   &:disabled {
     opacity: 0.6;
+    background: #f3f4f6;
+    color: #9ca3af;
+    border: 1px solid #d1d5db;
     cursor: not-allowed;
   }
 }
@@ -259,19 +285,17 @@
 
 .checkout__price-card {
   background: white;
-  border: 1px solid #d3d3d3;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
   padding: 24px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .checkout__price-heading {
-  font-family: $font-family-nav;
-  font-size: 11px;
+  font-family: "Cormorant Garamond", serif !important;
+  font-size: 22px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #999;
-  border-bottom: 1px solid #f5f5f5;
+  color: #111827;
+  border-bottom: 1px solid #f3f4f6;
   padding-bottom: 12px;
   margin-bottom: 16px;
 }
@@ -286,24 +310,26 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-family: "Inter", sans-serif !important;
   font-size: 14px;
-  color: #666;
+  color: #4b5563;
 }
 
 .checkout__price-value {
   font-weight: 600;
-  color: #191919;
+  color: #111827;
 }
 
 .checkout__price-badge {
+  font-family: "Inter", sans-serif !important;
   font-weight: 700;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background: rgba(16, 185, 129, 0.1);
+  background: #ecfdf5;
   color: #10b981;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: 4px;
 }
 
 .checkout__price-total {
@@ -311,18 +337,21 @@
   justify-content: space-between;
   align-items: baseline;
   padding-top: 16px;
-  border-top: 1px solid #f5f5f5;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 6px;
 }
 
 .checkout__price-label {
+  font-family: "Inter", sans-serif !important;
   font-weight: 700;
-  color: #191919;
+  color: #111827;
 }
 
 .checkout__price-final {
-  font-size: 20px;
+  font-family: "Inter", sans-serif !important;
+  font-size: 22px;
   font-weight: 700;
-  color: #191919;
+  color: #d8421f;
 }
 
 .checkout__btn-spinner {
@@ -350,13 +379,15 @@
   top: 100%;
   left: 0;
   right: 0;
-  max-height: 240px;
+  max-height: 200px;
   overflow-y: auto;
   background: white;
-  border: 1px solid #bfbfbf;
+  border: 1px solid #d1d5db;
   border-top: none;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
   z-index: 10;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .checkout__suggestion-item {
@@ -364,7 +395,7 @@
   flex-direction: column;
   gap: 4px;
   width: 100%;
-  padding: 12px;
+  padding: 10px 14px;
   border: none;
   background: white;
   text-align: left;
@@ -372,25 +403,25 @@
   transition: background 0.2s ease;
 
   &:hover {
-    background: #fafafa;
+    background: #f9fafb;
   }
 
   &:active {
-    background: #f5f5f5;
+    background: #f3f4f6;
   }
 }
 
 .checkout__suggestion-pincode {
-  font-family: $font-family-nav;
+  font-family: "Inter", sans-serif !important;
   font-size: 14px;
   font-weight: 600;
-  color: #191919;
+  color: #111827;
 }
 
 .checkout__suggestion-details {
-  font-family: inherit;
+  font-family: "Inter", sans-serif !important;
   font-size: 11px;
-  color: #999;
+  color: #6b7280;
 }
 
 .checkout__bottom-footer {
@@ -405,10 +436,10 @@
     bottom: 60px !important;
     left: 0 !important;
     right: 0 !important;
-    padding: 8px 24px !important;
+    padding: 12px 24px !important;
     background: white !important;
-    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08) !important;
+    border-top: 1px solid #e5e7eb !important;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05) !important;
     z-index: 999999 !important;
     margin: 0 !important;
     visibility: visible !important;
@@ -422,10 +453,10 @@
   background: none !important;
   border: none !important;
   padding: 0 !important;
-  font-family: $font-family-nav;
+  font-family: "Inter", sans-serif !important;
   font-size: 11px !important;
   font-weight: 600;
-  color: #333 !important;
+  color: #4b5563 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em;
   text-decoration: underline !important;
@@ -444,21 +475,20 @@
   }
 
   &:hover {
-    color: #000 !important;
-  }
-
-  &:active {
-    color: #666 !important;
+    color: #111827 !important;
   }
 }
 
 .checkout__bottom-btn {
   flex-shrink: 0 !important;
   white-space: nowrap !important;
-  height: 36px !important;
+  height: 38px !important;
   min-width: auto !important;
+  font-family: "Inter", sans-serif !important;
   font-size: 12px !important;
+  font-weight: 600 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
 }
+
