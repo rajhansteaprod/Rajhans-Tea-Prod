@@ -152,6 +152,11 @@ export const routes: Routes = [
     loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
   },
   {
+    path:'404',
+        loadComponent: () =>
+          import('./features/store/pages/static-page').then((m) => m.StaticPageComponent),
+  },
+  {
     path: '**',
     redirectTo: '',
   },

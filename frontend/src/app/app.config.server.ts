@@ -10,13 +10,13 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { loadingInterceptor } from './core/interceptors/loading.interceptor';
 import { AuthService } from './core/services/auth.service';
-
+import { errorInterceptor } from './interceptors/error.interceptor';
 export const config: ApplicationConfig = {
   providers: [
     provideServerRendering(),
     provideAnimations(),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor, loadingInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, loadingInterceptor, errorInterceptor])),
     provideNzI18n(en_US),
     {
       provide: APP_INITIALIZER,

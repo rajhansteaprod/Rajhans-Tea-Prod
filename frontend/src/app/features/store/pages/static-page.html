@@ -1,19 +1,34 @@
-@if (page()) {
-  <div class="static-page">
-    <header class="static-page__hero">
-      <h1 class="static-page__title">{{ page().title }}</h1>
-    </header>
-    <div class="static-page__content" [innerHTML]="page().content"></div>
+<div class="tea-404">
+  <div class="tea-404__content">
+
+    <div class="tea-404__cup">
+      🍵
+    </div>
+
+    <div class="tea-404__code">404</div>
+
+    <h1 class="tea-404__title">
+      Oops! This Tea Has Gone Cold.
+    </h1>
+
+    <p class="tea-404__subtitle">
+      Looks like the page you're searching for has wandered off to the tea gardens.
+      Let's get you back to something fresh.
+    </p>
+
+    <div class="tea-404__actions">
+      <a routerLink="/" class="tea-404__btn tea-404__btn--primary">
+        Back To Home
+      </a>
+
+      <a routerLink="/products" class="tea-404__btn tea-404__btn--secondary">
+        Explore Teas
+      </a>
+    </div>
+
   </div>
-} @else if (notFound()) {
-  <div class="not-found">
-    <div class="not-found__code">404</div>
-    <h2 class="not-found__title">Page Not Found</h2>
-    <p class="not-found__sub">The page you're looking for doesn't exist or has been moved.</p>
-    <a routerLink="/" class="not-found__link">← Go Home</a>
-  </div>
-} @else {
-  <div class="loading">
-    <div class="spinner"></div>
-  </div>
-}
+
+  <div class="tea-404__steam steam-1"></div>
+  <div class="tea-404__steam steam-2"></div>
+  <div class="tea-404__steam steam-3"></div>
+</div>
