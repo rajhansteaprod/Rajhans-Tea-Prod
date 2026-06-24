@@ -1,13 +1,13 @@
 <div class="saved-addresses">
   @if (savedAddresses().length > 0) {
     <div class="saved-addresses__list">
-      @for (address of savedAddresses(); track $index; let i = $index) {
-        <div class="saved-addresses__card" [class.selected]="selectedAddressIndex() === i" (click)="selectCurrentAddress(address, i)">
+      @for (address of savedAddresses(); track address._id) {
+        <div class="saved-addresses__card" [class.selected]="selectedId() === address._id" (click)="selectCurrentAddress(address)">
           <input
             type="radio"
             class="saved-addresses__radio"
-            [checked]="selectedAddressIndex() === i"
-            (change)="selectCurrentAddress(address, i)"
+            [checked]="selectedId() === address._id"
+            (change)="selectCurrentAddress(address)"
           />
           <div class="saved-addresses__card-content">
             <div class="saved-addresses__label-row">

@@ -1,4 +1,4 @@
-import { Component, inject, signal, output, OnInit } from '@angular/core';
+import { Component, inject, signal, output, OnInit, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { CheckoutService, CheckoutAddress } from '../../../../core/services/checkout.service';
@@ -28,7 +28,7 @@ export class SavedAddressesComponent implements OnInit {
   private readonly apiUrl = `${environment.apiUrl}/auth/addresses`;
 
   readonly savedAddresses = signal<SavedAddress[]>([]);
-  readonly selectedAddressIndex = signal<number | null>(null);
+  readonly selectedId = input<string | null>(null);
 
   readonly selectAddress = output<CheckoutAddress>();
 
@@ -43,10 +43,21 @@ export class SavedAddressesComponent implements OnInit {
         next: (res) => {
           if (res.success) {
             this.savedAddresses.set(res.data);
-            // Auto-select and populate default address
-            const defaultIndex = res.data.findIndex(addr => addr.isDefault);
-            if (defaultIndex !== -1) {
-              this.selectCurrentAddress(res.data[defaultIndex], defaultIndex);
+            
+            // Check if there is already a selected address in checkout state, or default to the default address
+            const currentCheckoutAddress = this.checkoutService.getAddress();
+            const matchingAddress = res.data.find(addr => 
+              addr.pinCode === currentCheckoutAddress.pinCode && 
+              addr.address === currentCheckoutAddress.address
+            );
+
+            if (matchingAddress) {
+              this.selectCurrentAddress(matchingAddress);
+            } else {
+              const defaultAddress = res.data.find(addr => addr.isDefault);
+              if (defaultAddress) {
+                this.selectCurrentAddress(defaultAddress);
+              }
             }
           }
         },
@@ -56,9 +67,9 @@ export class SavedAddressesComponent implements OnInit {
       });
   }
 
-  selectCurrentAddress(address: SavedAddress, index: number) {
-    this.selectedAddressIndex.set(index);
+  selectCurrentAddress(address: SavedAddress) {
     const checkoutAddress: CheckoutAddress = {
+      _id: address._id,
       name: '', // User will fill name in form
       phone: '', // Phone not in saved address, user will fill in form
       pinCode: address.pinCode,

@@ -12,6 +12,7 @@ export interface CheckoutAddress {
   landmark?: string;
   city: string;
   state: string;
+  _id?: string;
 }
 
 export interface CheckoutState {

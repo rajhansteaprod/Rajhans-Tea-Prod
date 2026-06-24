@@ -3,10 +3,14 @@
     <form [formGroup]="form" class="checkout__form">
       <h2 class="checkout__heading">Select Shipping Address</h2>
 
+      @if (auth.isLoggedIn()) {
+        <app-saved-addresses [selectedId]="selectedAddressId()" (selectAddress)="onAddressSelected($event)"></app-saved-addresses>
+      }
+
       <div class="checkout__address-list">
-        <label class="checkout__address-option">
+        <label class="checkout__address-option" (click)="selectNewAddress()">
           <div class="checkout__option-content">
-            <input type="radio" name="addressSelection" class="checkout__radio" value="new" checked="" />
+            <input type="radio" name="addressSelection" class="checkout__radio" value="new" [checked]="selectedAddressId() === null" />
             <div class="checkout__option-label">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="checkout__icon-plus">
                 <path d="M5 12h14"></path>
