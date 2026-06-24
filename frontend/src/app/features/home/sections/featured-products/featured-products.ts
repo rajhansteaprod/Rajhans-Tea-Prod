@@ -23,12 +23,24 @@ export class FeaturedProductsComponent implements OnInit {
   readonly hoveringProducts = signal<Set<string>>(new Set());
 
   ngOnInit(): void {
-    this.catalog.getHomepageSections().subscribe({
+    this.catalog.getProductsPublic({ limit: 6 }).subscribe({
       next: (res) => {
-        this.sections.set(res.data || []);
+        if (res.success && res.data) {
+          this.sections.set([
+            {
+              title: 'Featured Products',
+              products: res.data,
+            }
+          ]);
+        } else {
+          this.sections.set([]);
+        }
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: () => {
+        this.sections.set([]);
+        this.loading.set(false);
+      },
     });
   }
 

@@ -13,7 +13,6 @@ adminRouter.get('/settings', ctrl.getSettings);
 adminRouter.put('/settings', ctrl.updateSettings);
 
 // Public routes
-router.get('/catalog/homepage-sections', ctrl.getHomepageSectionsPublic);
 
 router.use('/admin', adminRouter);
 
