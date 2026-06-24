@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 import { CatalogService, Product } from '../../../../core/services/catalog.service';
 import { CartStore } from '../../../../core/services/cart.store';
 import { ProductCardComponent } from '../../../../shared/components/product-card/product-card';
+import { ScrollRevealDirective } from '../../../../shared/directives/scroll-reveal.directive';
 
 @Component({
   selector: 'app-featured-products',
   standalone: true,
-  imports: [CommonModule, ProductCardComponent],
+  imports: [CommonModule, ProductCardComponent, ScrollRevealDirective],
   templateUrl: './featured-products.html',
   styleUrls: ['./featured-products.scss'],
 })

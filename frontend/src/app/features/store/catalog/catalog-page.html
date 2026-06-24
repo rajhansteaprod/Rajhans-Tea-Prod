@@ -21,8 +21,9 @@
       </div>
     } @else {
       <div class="catalog__grid">
-        @for (p of store.results(); track p._id) {
+        @for (p of store.results(); track p._id; let i = $index) {
           <app-product-card
+            [appScrollReveal]="i"
             [product]="p"
             [isHovering]="isHovering(p._id)"
             [isWishlisted]="isWishlisted(p._id)"

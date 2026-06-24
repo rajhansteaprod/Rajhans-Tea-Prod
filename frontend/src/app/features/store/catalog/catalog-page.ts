@@ -6,11 +6,12 @@ import { SearchStore } from '../../../core/services/search.store';
 import { CartStore } from '../../../core/services/cart.store';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { ScrollRevealDirective } from '../../../shared/directives/scroll-reveal.directive';
 
 @Component({
   selector: 'app-catalog-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ProductCardComponent, ButtonComponent],
+  imports: [CommonModule, RouterLink, ProductCardComponent, ButtonComponent, ScrollRevealDirective],
   templateUrl: './catalog-page.html',
   styleUrls: ['./catalog-page.scss'],
 })

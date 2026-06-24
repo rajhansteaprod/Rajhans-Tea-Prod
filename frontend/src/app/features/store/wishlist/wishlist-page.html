@@ -31,10 +31,11 @@
     </div>
   } @else {
     <div class="wishlist__grid">
-      @for (item of cart.wishlistItems(); track item.productId) {
+      @for (item of cart.wishlistItems(); track item.productId; let i = $index) {
         @let product = getProductBySlug(item.slug);
         @if (product) {
           <app-product-card
+            [appScrollReveal]="i"
             [product]="product"
             [isWishlisted]="true"
             (toggleWishlistClick)="onToggleWishlist(item.productId)"

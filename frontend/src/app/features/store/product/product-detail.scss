@@ -63,8 +63,8 @@
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  background: #fafafa;
-  cursor: crosshair;
+  background: #ffffff; // pure white background
+  cursor: pointer;
   overflow: hidden;
   border-radius: 0;
   margin-bottom: $space-xl;
@@ -78,14 +78,47 @@
   display: block;
 }
 
-.pd__zoom-lens {
+.pd__gallery-arrow {
   position: absolute;
-  inset: 0;
-  background-repeat: no-repeat;
-  background-size: 250%; // 2.5x magnification
-  z-index: 2;
-  pointer-events: none;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 5;
+  outline: none;
+  padding: 0;
+  
+  &:hover {
+    background: #ffffff;
+    color: #000000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &--prev {
+    left: 16px;
+  }
+
+  &--next {
+    right: 16px;
+  }
+
+  svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+  }
 }
+
+
 
 .pd__thumbs {
   display: flex;
@@ -109,7 +142,8 @@
   img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    padding: 4px;
     object-position: center;
     display: block;
   }
@@ -133,7 +167,7 @@
 // ═══════════════════════════════════════
 
 .pd__collection-tag {
-  font-family: "Inter", sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 12px;
   font-weight: 600;
   color: #d8421f;
@@ -193,7 +227,7 @@
 }
 
 .pd__name {
-  font-family: "Cormorant Garamond", Georgia, serif !important;
+  font-family: $font-family-heading !important;
   font-size: 38px;
   font-weight: 500;
   color: #111827;
@@ -225,14 +259,14 @@
 }
 
 .pd__rating-count {
-  font-family: "Inter", sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 14px;
   color: #4b5563;
 }
 
 // Short description
 .pd__short-desc {
-  font-family: "Inter", sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 16px;
   line-height: 1.6;
   color: #4b5563;
@@ -253,7 +287,7 @@
 }
 
 .pd__section-label {
-  font-family: "Inter", sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -272,7 +306,7 @@
   border: 1px solid #d1d5db;
   border-radius: 4px;
   background: #ffffff;
-  font-family: "Inter", sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 14px;
   font-weight: 500;
   color: #374151;
@@ -310,14 +344,14 @@
 }
 
 .pd__price-current {
-  font-family: "Inter", sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 32px;
   font-weight: 700;
   color: #111827;
 }
 
 .pd__price-original {
-  font-family: "Inter", sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 18px;
   color: #9ca3af;
   text-decoration: line-through;
@@ -326,7 +360,7 @@
 .pd__discount-badge {
   background: #f0fdf4;
   color: #16a34a;
-  font-family: "Inter", sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 12px;
   font-weight: 600;
   padding: 4px 8px;
@@ -343,7 +377,7 @@
 
 .pd__qty-label {
   display: block;
-  font-family: "Inter", sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
@@ -367,7 +401,7 @@
   height: 40px;
   border: none;
   background: transparent;
-  font-family: "Inter", sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 18px;
   font-weight: 500;
   color: #374151;
@@ -383,7 +417,7 @@
 }
 
 .pd__qty-value {
-  font-family: "Inter", sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 16px;
   font-weight: 500;
   color: #111827;
@@ -411,7 +445,7 @@
   background-color: #d8421f; // brand orange-red
   color: #ffffff;
   border: none;
-  font-family: "Inter", sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
@@ -437,7 +471,7 @@
   background-color: #c9ab6e; // gold
   color: #ffffff;
   border: none;
-  font-family: "Inter", sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
@@ -494,7 +528,7 @@
 
 .pd__tab-btn {
   padding-bottom: 12px;
-  font-family: "Inter", sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -972,7 +1006,7 @@
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  background: #fafafa;
+  background: #ffffff;
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -981,14 +1015,14 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   display: block;
+  background: #ffffff;
   transition: opacity $transition-normal ease;
 
   &--main {
     opacity: 1;
-    z-index: 2;
 
     &.card__image--hidden {
       opacity: 0;

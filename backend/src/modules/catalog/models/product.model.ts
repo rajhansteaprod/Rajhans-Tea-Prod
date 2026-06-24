@@ -15,7 +15,9 @@ export interface IProductDoc extends Document {
   basePrice: number;
   discountedPrice?: number; // Price after discount applied (if different from basePrice)
   images: string[];
-  reflectedImage: string; // Image shown on hover in featured products
+  primaryImage?: string;
+  imageAltText?: string;
+  reflectedImage?: string; // Image shown on hover in featured products
   attributes: Map<string, string>;
   tags: string[];
   region?: ProductRegion;
@@ -41,7 +43,9 @@ const productSchema = new Schema<IProductDoc>(
     basePrice: { type: Number, required: true, min: 0 },
     discountedPrice: { type: Number, min: 0 },
     images: [{ type: String }],
-    reflectedImage: { type: String, required: true },
+    primaryImage: { type: String },
+    imageAltText: { type: String },
+    reflectedImage: { type: String },
     attributes: { type: Map, of: String, default: {} },
     tags: [{ type: String, trim: true, lowercase: true }],
     region: {

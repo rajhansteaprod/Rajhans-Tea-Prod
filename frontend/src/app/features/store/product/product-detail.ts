@@ -35,8 +35,6 @@ export class ProductDetailComponent implements OnInit {
   readonly loading = signal(true);
   readonly relatedProducts = signal<Product[]>([]);
   readonly selectedVariant = signal<ProductVariant | undefined>(undefined);
-  readonly zoomActive = signal(false);
-  readonly zoomPos = signal('0% 0%');
   readonly hoveredProductId = signal<string | null>(null);
   readonly activeTab = signal<'description' | 'brewing' | 'sourcing' | 'reviews'>('description');
   readonly reviews = signal<Review[]>([]);
@@ -45,6 +43,27 @@ export class ProductDetailComponent implements OnInit {
   reviewTitle = '';
   reviewBody = '';
   readonly submittingReview = signal(false);
+
+  readonly orderedImages = computed(() => {
+    const prod = this.product();
+    if (!prod) return [];
+    
+    const defaultImg = prod.primaryImage || prod.images?.[0] || '';
+    const hoverImg = prod.reflectedImage || '';
+    
+    const result: string[] = [];
+    if (defaultImg) result.push(defaultImg);
+    if (hoverImg && !result.includes(hoverImg)) result.push(hoverImg);
+    
+    if (prod.images) {
+      for (const img of prod.images) {
+        if (img && !result.includes(img)) {
+          result.push(img);
+        }
+      }
+    }
+    return result;
+  });
 
   readonly brewingGuide = signal<string[]>([
     'Use 1 teaspoon (2g) of tea per 200ml of water',
@@ -146,7 +165,7 @@ export class ProductDetailComponent implements OnInit {
           }
 
           this.product.set(res.data);
-          this.selectedImage.set(res.data.images?.[0] || '');
+          this.selectedImage.set(this.orderedImages()[0] || '');
 
           // Set first variant if available
           if (res.data.variants?.length) {
@@ -215,12 +234,35 @@ export class ProductDetailComponent implements OnInit {
     });
   }
 
-  // ─ Image & zoom ─
-  onZoomMove(event: MouseEvent, el: HTMLElement): void {
+  // ─ Image navigation ─
+  onImageClick(event: MouseEvent, el: HTMLElement): void {
     const rect = el.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 100;
-    const y = ((event.clientY - rect.top) / rect.height) * 100;
-    this.zoomPos.set(`${x}% ${y}%`);
+    const clickX = event.clientX - rect.left;
+    if (clickX < rect.width / 2) {
+      this.prevImage();
+    } else {
+      this.nextImage();
+    }
+  }
+
+  prevImage(): void {
+    const imgs = this.orderedImages();
+    if (imgs.length <= 1) return;
+    const current = this.selectedImage();
+    let idx = imgs.indexOf(current);
+    if (idx === -1) idx = 0;
+    const prevIdx = (idx - 1 + imgs.length) % imgs.length;
+    this.selectedImage.set(imgs[prevIdx]);
+  }
+
+  nextImage(): void {
+    const imgs = this.orderedImages();
+    if (imgs.length <= 1) return;
+    const current = this.selectedImage();
+    let idx = imgs.indexOf(current);
+    if (idx === -1) idx = 0;
+    const nextIdx = (idx + 1) % imgs.length;
+    this.selectedImage.set(imgs[nextIdx]);
   }
 
   selectVariant(variant: ProductVariant): void {

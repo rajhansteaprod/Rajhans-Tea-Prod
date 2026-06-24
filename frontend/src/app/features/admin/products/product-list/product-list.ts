@@ -20,6 +20,8 @@ interface ProductForm {
   basePrice: number | '';
   discountedPrice: number | '';
   images: string[];
+  primaryImage?: string;
+  imageAltText?: string;
   reflectedImage: string;
   attributes: AttributeEntry[];
   tags: string;
@@ -45,7 +47,7 @@ interface VariantForm {
 const emptyForm = (): ProductForm => ({
   name: '', description: '', shortDescription: '',
   categoryId: '', collectionIds: [], basePrice: '', discountedPrice: '',
-  images: [], reflectedImage: '', attributes: [], tags: '',
+  images: [], primaryImage: '', imageAltText: '', reflectedImage: '', attributes: [], tags: '',
   region: undefined, bestTakenFor: undefined,
   status: 'draft', isFeatured: false,
   stock: 0, trackInventory: false, ratingOneLiner: '',
@@ -158,6 +160,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
       basePrice:        product.basePrice,
       discountedPrice:  product.discountedPrice ?? '',
       images:           [...product.images],
+      primaryImage:     (product as any).primaryImage ?? '',
+      imageAltText:     (product as any).imageAltText ?? '',
       reflectedImage:   product.reflectedImage ?? '',
       attributes:       Object.entries(product.attributes).map(([key, value]) => ({ key, value })),
       tags:             product.tags.join(', '),
@@ -223,46 +227,109 @@ export class ProductListComponent implements OnInit, OnDestroy {
     });
   }
 
-  onFileSelect(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    this.uploadingImage.set(true);
-    this.catalog.uploadImage(file).subscribe({
-      next: (res) => {
-        this.form.update((f) => ({ ...f, images: [...f.images, res.data.url] }));
-        this.uploadingImage.set(false);
-        (event.target as HTMLInputElement).value = '';
-      },
-      error: (err) => {
-        alert(err?.error?.message ?? 'Image upload failed');
-        this.uploadingImage.set(false);
-      },
+  // Drag and Drop state
+  private dragStartIndex: number | null = null;
+
+  onDragStart(event: DragEvent, index: number) {
+    this.dragStartIndex = index;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', index.toString());
+    }
+  }
+
+  onDrop(event: DragEvent, targetIndex: number) {
+    event.preventDefault();
+    if (this.dragStartIndex === null) return;
+    const sourceIndex = this.dragStartIndex;
+    this.dragStartIndex = null;
+    if (sourceIndex === targetIndex) return;
+
+    this.form.update((f) => {
+      const images = [...f.images];
+      const [moved] = images.splice(sourceIndex, 1);
+      images.splice(targetIndex, 0, moved);
+      return { ...f, images };
     });
+  }
+
+  moveImage(fromIndex: number, toIndex: number) {
+    if (toIndex < 0 || toIndex >= this.form().images.length) return;
+    this.form.update((f) => {
+      const images = [...f.images];
+      const [moved] = images.splice(fromIndex, 1);
+      images.splice(toIndex, 0, moved);
+      return { ...f, images };
+    });
+  }
+
+  setPrimaryImage(url: string) {
+    this.form.update((f) => ({ ...f, primaryImage: url }));
+  }
+
+  setHoverImage(url: string) {
+    this.form.update((f) => ({ ...f, reflectedImage: url }));
+  }
+
+  updateAltText(val: string) {
+    this.form.update((f) => ({ ...f, imageAltText: val }));
+  }
+
+  onFileSelect(event: Event) {
+    const files = (event.target as HTMLInputElement).files;
+    if (!files || files.length === 0) return;
+
+    if (this.form().images.length + files.length > 7) {
+      alert('Maximum of 7 images allowed per product.');
+      (event.target as HTMLInputElement).value = '';
+      return;
+    }
+
+    this.uploadingImage.set(true);
+    let uploadedCount = 0;
+    const totalToUpload = files.length;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      this.catalog.uploadImage(file).subscribe({
+        next: (res) => {
+          this.form.update((f) => {
+            const images = [...f.images, res.data.url];
+            const primaryImage = f.primaryImage || res.data.url;
+            return { ...f, images, primaryImage };
+          });
+          uploadedCount++;
+          if (uploadedCount === totalToUpload) {
+            this.uploadingImage.set(false);
+            (event.target as HTMLInputElement).value = '';
+          }
+        },
+        error: (err) => {
+          alert(err?.error?.message ?? `Upload failed for ${file.name}`);
+          uploadedCount++;
+          if (uploadedCount === totalToUpload) {
+            this.uploadingImage.set(false);
+            (event.target as HTMLInputElement).value = '';
+          }
+        },
+      });
+    }
   }
 
   removeImage(i: number) {
-    this.form.update((f) => ({ ...f, images: f.images.filter((_, idx) => idx !== i) }));
-  }
-
-  onReflectedImageSelect(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    this.uploadingImage.set(true);
-    this.catalog.uploadImage(file).subscribe({
-      next: (res) => {
-        this.form.update((f) => ({ ...f, reflectedImage: res.data.url }));
-        this.uploadingImage.set(false);
-        (event.target as HTMLInputElement).value = '';
-      },
-      error: (err) => {
-        alert(err?.error?.message ?? 'Image upload failed');
-        this.uploadingImage.set(false);
-      },
+    this.form.update((f) => {
+      const removedImage = f.images[i];
+      const images = f.images.filter((_, idx) => idx !== i);
+      let primaryImage = f.primaryImage;
+      if (primaryImage === removedImage) {
+        primaryImage = images[0] || '';
+      }
+      let reflectedImage = f.reflectedImage;
+      if (reflectedImage === removedImage) {
+        reflectedImage = '';
+      }
+      return { ...f, images, primaryImage, reflectedImage };
     });
-  }
-
-  removeReflectedImage() {
-    this.form.update((f) => ({ ...f, reflectedImage: '' }));
   }
 
   saveForm() {
@@ -276,7 +343,14 @@ export class ProductListComponent implements OnInit, OnDestroy {
       this.formError.set('Discounted price must be less than base price');
       return;
     }
-    if (!f.reflectedImage.trim()) { this.formError.set('Reflected image is required'); return; }
+    if (f.images.length === 0) {
+      this.formError.set('At least 1 product image is required');
+      return;
+    }
+    if (f.images.length > 7) {
+      this.formError.set('Maximum of 7 images allowed per product');
+      return;
+    }
 
     const attrsRecord: Record<string, string> = {};
     for (const { key, value } of f.attributes) {
@@ -284,6 +358,15 @@ export class ProductListComponent implements OnInit, OnDestroy {
     }
 
     const tags = f.tags.split(',').map((t) => t.trim()).filter(Boolean);
+
+    // Resolve primary image fallback
+    let primaryImage = f.primaryImage;
+    if (!primaryImage || !f.images.includes(primaryImage)) {
+      primaryImage = f.images[0] || '';
+    }
+
+    // Default reflectedImage to primaryImage for old DB schema compatibility or keep it if uploaded
+    const reflectedImage = f.reflectedImage || primaryImage;
 
     const payload = {
       name:             f.name,
@@ -294,7 +377,9 @@ export class ProductListComponent implements OnInit, OnDestroy {
       basePrice:        Number(f.basePrice),
       discountedPrice:  f.discountedPrice !== '' ? Number(f.discountedPrice) : undefined,
       images:           f.images,
-      reflectedImage:   f.reflectedImage,
+      primaryImage,
+      imageAltText:     f.imageAltText || f.name,
+      reflectedImage:   reflectedImage,
       attributes:       attrsRecord,
       tags,
       region:           f.region || undefined,

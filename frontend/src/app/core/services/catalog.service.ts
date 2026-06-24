@@ -88,6 +88,8 @@ export interface Product {
   basePrice: number;
   discountedPrice?: number;
   images: string[];
+  primaryImage?: string;
+  imageAltText?: string;
   reflectedImage?: string; // Image shown on hover in featured products
   attributes: Record<string, string>;
   tags: string[];
@@ -151,7 +153,9 @@ export interface CreateProductPayload {
   basePrice: number;
   discountedPrice?: number;
   images?: string[];
-  reflectedImage: string; // Mandatory: Image shown on hover in featured products
+  primaryImage?: string;
+  imageAltText?: string;
+  reflectedImage?: string; // Image shown on hover in featured products
   attributes?: Record<string, string>;
   tags?: string[];
   status?: 'draft' | 'active' | 'archived';

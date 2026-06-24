@@ -2,12 +2,13 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProductCardComponent } from '../product-card/product-card';
+import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive';
 import { Product } from '../../../core/services/catalog.service';
 
 @Component({
   selector: 'app-product-rail',
   standalone: true,
-  imports: [CommonModule, RouterLink, ProductCardComponent],
+  imports: [CommonModule, RouterLink, ProductCardComponent, ScrollRevealDirective],
   templateUrl: './product-rail.html',
   styleUrls: ['./product-rail.scss'],
 })

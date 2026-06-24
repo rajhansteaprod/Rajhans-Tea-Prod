@@ -29,6 +29,8 @@ export interface ProductAdminView {
   basePrice: number;
   discountedPrice?: number;
   images: string[];
+  primaryImage?: string;
+  imageAltText?: string;
   reflectedImage?: string;
   attributes: Record<string, string>;
   tags: string[];
@@ -58,6 +60,8 @@ export interface ProductPublicView {
   basePrice: number;
   discountedPrice?: number;
   images: string[];
+  primaryImage?: string;
+  imageAltText?: string;
   reflectedImage?: string;
   attributes: Record<string, string>;
   tags: string[];
@@ -130,7 +134,9 @@ export class ProductDTO {
       basePrice: product.basePrice,
       discountedPrice: product.discountedPrice,
       images: product.images ?? [],
-      reflectedImage: product.reflectedImage,
+      primaryImage: product.primaryImage || product.images?.[0] || '',
+      imageAltText: product.imageAltText || product.name,
+      reflectedImage: product.reflectedImage || product.primaryImage || product.images?.[0] || '',
       attributes: attributesToRecord(product.attributes),
       tags: product.tags ?? [],
       region: product.region,
@@ -159,7 +165,9 @@ export class ProductDTO {
       basePrice: product.basePrice,
       discountedPrice: product.discountedPrice,
       images: product.images ?? [],
-      reflectedImage: product.reflectedImage,
+      primaryImage: product.primaryImage || product.images?.[0] || '',
+      imageAltText: product.imageAltText || product.name,
+      reflectedImage: product.reflectedImage || product.primaryImage || product.images?.[0] || '',
       attributes: attributesToRecord(product.attributes),
       tags: product.tags ?? [],
       region: product.region,

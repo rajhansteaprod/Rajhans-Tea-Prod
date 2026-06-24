@@ -5,6 +5,7 @@ import { Title } from '@angular/platform-browser';
 import { CatalogService, Product, Category } from '../../../core/services/catalog.service';
 import { CartStore } from '../../../core/services/cart.store';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card';
+import { ScrollRevealDirective } from '../../../shared/directives/scroll-reveal.directive';
 
 // ─ NgModel for two-way binding ─
 class PriceFilter {
@@ -14,7 +15,7 @@ class PriceFilter {
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductCardComponent],
+  imports: [CommonModule, FormsModule, ProductCardComponent, ScrollRevealDirective],
   templateUrl: './products-page.html',
   styleUrls: ['./products-page.scss'],
 })

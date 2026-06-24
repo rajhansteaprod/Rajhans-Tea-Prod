@@ -1,3 +1,5 @@
+@use '../../../core/design-tokens/tokens' as *;
+
 :host {
   display: block;
 }
@@ -130,12 +132,12 @@
 
 .filter-title,
 .filter-section-heading {
-  font-family: "Cormorant Garamond", serif !important;
+  font-family: $font-family-heading !important;
 }
 
 .filter-option,
 .clear-all {
-  font-family: "Inter", sans-serif !important;
+  font-family: $font-family-body !important;
 }
 
 .sidebar-clear {

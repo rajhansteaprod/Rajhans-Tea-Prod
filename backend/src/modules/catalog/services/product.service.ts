@@ -134,7 +134,9 @@ export class ProductService {
     basePrice: number;
     discountedPrice?: number;
     images?: string[];
-    reflectedImage: string;
+    primaryImage?: string;
+    imageAltText?: string;
+    reflectedImage?: string;
     attributes?: Record<string, string>;
     tags?: string[];
     region?: string;
@@ -171,6 +173,8 @@ export class ProductService {
       basePrice: data.basePrice,
       discountedPrice: data.discountedPrice,
       images: data.images ?? [],
+      primaryImage: data.primaryImage,
+      imageAltText: data.imageAltText,
       reflectedImage: data.reflectedImage,
       attributes: attributesMap as never,
       tags: (data.tags ?? []).map((t) => t.toLowerCase().trim()),
@@ -198,6 +202,8 @@ export class ProductService {
       basePrice?: number;
       discountedPrice?: number;
       images?: string[];
+      primaryImage?: string;
+      imageAltText?: string;
       reflectedImage?: string;
       attributes?: Record<string, string>;
       tags?: string[];
@@ -242,6 +248,8 @@ export class ProductService {
     if (data.basePrice !== undefined) update.basePrice = data.basePrice;
     if (data.discountedPrice !== undefined) update.discountedPrice = data.discountedPrice;
     if (data.images !== undefined) update.images = data.images;
+    if (data.primaryImage !== undefined) update.primaryImage = data.primaryImage;
+    if (data.imageAltText !== undefined) update.imageAltText = data.imageAltText;
     if (data.reflectedImage !== undefined) update.reflectedImage = data.reflectedImage;
     if (data.attributes !== undefined) {
       update.attributes = new Map(Object.entries(data.attributes));

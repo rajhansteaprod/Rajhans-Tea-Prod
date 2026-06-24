@@ -30,56 +30,61 @@
 .product-card__image-container {
   position: relative;
   width: 100%;
-  height: 100%;
-  background: #ffffff;
+  aspect-ratio: 1 / 1; // Maintain 1:1 aspect ratio
+  background: #ffffff; // Pure white background
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 16px 12px 16px; // better spacing
+  padding: 16px;
   min-height: 0;
+  border-bottom: 1px solid #f3f4f6;
+  box-sizing: border-box;
 }
 
-// ── Circular Image Container (75% width, square aspect-ratio) ──
-.product-card__image-circle {
+// ── Image Wrapper ──
+.product-card__image-wrapper {
   position: relative;
-  width: 75%;
-  aspect-ratio: 1 / 1;
-  border-radius: 50%;
-  overflow: hidden;
+  width: 100%;
+  height: 100%;
   display: flex;
-  border: 1px solid rgba(229, 231, 235, 0.8);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  align-items: center;
+  justify-content: center;
   transition: transform 500ms cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 1;
 
   .product-card:hover & {
-    transform: scale(1.05);
+    transform: scale(1.03); // Subtle scale effect on card hover
   }
 }
 
-// ── Split circle image halves ──
-.product-card__image-half {
-  width: 50%;
-  height: 100%;
-  overflow: hidden;
-  position: relative;
-}
-
-.product-card__circle-image {
+// ── Image ──
+.product-card__image {
   position: absolute;
-  top: 0;
-  width: 200%;
+  width: 100%;
   height: 100%;
-  object-fit: cover;
-  max-width: none;
+  object-fit: contain; // Contain so packet is never cropped
+  transition: opacity 400ms ease-in-out;
+  display: block;
 
-  &--left {
-    left: 0;
+  &--primary {
+    opacity: 1;
+    z-index: 2;
   }
 
-  &--right {
-    right: 0;
+  &--secondary {
+    opacity: 0;
+    z-index: 1;
+  }
+
+  // Fade primary image when secondary exists on hover
+  .product-card:hover &--primary:not(:only-child) {
+    opacity: 0;
+  }
+
+  // Fade in secondary image on hover
+  .product-card:hover &--secondary {
+    opacity: 1;
+    z-index: 3;
   }
 }
 
@@ -96,7 +101,7 @@
   text-transform: uppercase;
   letter-spacing: 0.15em;
   z-index: 10;
-  font-family: 'Inter', sans-serif !important;
+  font-family: $font-family-body !important;
 }
 
 // ── Wishlist Heart Button (Top Right) ──
@@ -172,11 +177,11 @@
   gap: 4px;
 }
 
-// ── Product Name (Cormorant Garamond, Serif, Orange on card hover) ──
+// ── Product Name (Poppins, Medium, Orange on card hover) ──
 .product-card__name {
-  font-family: 'Cormorant Garamond', serif !important;
-  font-size: 14px;
-  font-weight: 700;
+  font-family: $font-family-heading !important;
+  font-size: 17px; // increased by 1 unit
+  font-weight: 500; // not bold (medium)
   color: #111827; // gray-900
   margin: 0 0 2px 0;
   line-height: 1.3;
@@ -187,13 +192,13 @@
   }
 
   @media (min-width: 768px) {
-    font-size: 16px;
+    font-size: 19px; // increased by 1 unit
   }
 }
 
 // ── Product Description (Inter, Sans-Serif) ──
 .product-card__description {
-  font-family: 'Inter', sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 10px;
   color: #6b7280; // gray-500
   margin: 0;
@@ -217,7 +222,7 @@
 }
 
 .product-card__tag-badge {
-  font-family: 'Inter', sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 9px;
   font-weight: 600;
   background-color: #fff7ed; // orange-50
@@ -264,7 +269,7 @@
 }
 
 .product-card__reviews {
-  font-family: 'Inter', sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 11px;
   color: #6b7280;
 }
@@ -279,7 +284,7 @@
 }
 
 .product-card__price-original {
-  font-family: 'Inter', sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 12px;
   color: #9ca3af; // gray-400
   text-decoration: line-through;
@@ -290,7 +295,7 @@
 }
 
 .product-card__price-current {
-  font-family: 'Inter', sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 16px;
   font-weight: 700;
   color: #030712; // gray-955 / almost pure black
@@ -302,7 +307,7 @@
 
 .product-card__price-discount {
   margin-left: auto;
-  font-family: 'Inter', sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -323,7 +328,7 @@
 }
 
 .product-card__variant-option {
-  font-family: 'Inter', sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 10px;
   font-weight: 500;
   color: #374151;
@@ -364,7 +369,7 @@
   background-color: #c2410c; // orange-700
   color: #ffffff;
   border: none;
-  font-family: 'Inter', sans-serif !important;
+  font-family: $font-family-body !important;
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;

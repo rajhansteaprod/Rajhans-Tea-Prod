@@ -12,8 +12,9 @@
 
       <!-- Product Grid -->
       <div class="featured__grid">
-        @for (product of products(); track product._id) {
+        @for (product of products(); track product._id; let i = $index) {
           <app-product-card
+            [appScrollReveal]="i"
             [product]="product"
             [isHovering]="isHovering(product._id)"
             [isWishlisted]="isWishlisted(product._id)"

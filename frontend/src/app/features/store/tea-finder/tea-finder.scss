@@ -1,3 +1,5 @@
+@use '../../../core/design-tokens/tokens' as *;
+
 /* BREADCRUMB */
 .breadcrumb-container {
   width: 100%;
@@ -120,7 +122,7 @@ body {
   font-weight: 400;
   margin-bottom: 8px;
   color: #111827;
-  font-family: Georgia, serif;
+  font-family: $font-family-heading;
 }
 
 .subtitle {
@@ -298,7 +300,7 @@ body {
   .results-title {
     font-size: 36px;
     font-weight: 400;
-    font-family: Georgia, serif;
+    font-family: $font-family-heading;
     color: #111827;
   }
 }
@@ -376,7 +378,7 @@ body {
 .recommended-title {
   font-size: 28px;
   font-weight: 400;
-  font-family: Georgia, serif;
+  font-family: $font-family-heading;
   color: #111827;
   margin-bottom: 12px;
 }

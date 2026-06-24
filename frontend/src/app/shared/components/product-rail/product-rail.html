@@ -7,9 +7,9 @@
       }
     </div>
     <div class="rail-scroll" #scrollContainer>
-      @for (p of products; track p._id) {
+      @for (p of products; track p._id; let i = $index) {
         <div class="rail-item">
-          <app-product-card [product]="p" />
+          <app-product-card [appScrollReveal]="i" [product]="p" />
         </div>
       }
     </div>

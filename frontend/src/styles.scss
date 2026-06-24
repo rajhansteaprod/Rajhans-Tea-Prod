@@ -114,3 +114,18 @@ img {
     flex-shrink: 0;
   }
 }
+
+// Scroll Reveal Animation classes
+.reveal-init {
+  opacity: 0 !important;
+  transform: translateY(24px) !important;
+  will-change: transform, opacity;
+}
+
+.reveal-active {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+
+

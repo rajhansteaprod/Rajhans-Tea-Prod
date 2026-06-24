@@ -307,60 +307,71 @@
                   Upload Product Images
                 }
                 <input type="file" accept="image/jpeg,image/png,image/webp" style="display:none"
-                  (change)="onFileSelect($event)" [disabled]="uploadingImage()" />
+                  (change)="onFileSelect($event)" multiple [disabled]="uploadingImage() || form().images.length >= 7" />
               </label>
-              <span class="upload-hint">JPEG, PNG, WebP · Max 5 MB</span>
+              <span class="upload-hint">JPEG, PNG, WebP · 1 to 7 images · Max 5 MB</span>
             </div>
+
+            <!-- Image Reordering, Primary Select, Alt Text & Deletion Grid -->
             @if (form().images.length > 0) {
-              <div class="image-grid">
-                @for (img of form().images; track img; let i = $index) {
-                  <div class="image-item">
-                    <img [src]="img" alt="Product image" />
-                    <button class="remove-img" (click)="removeImage(i)" title="Remove">×</button>
-                    @if (i === 0) { <span class="primary-badge">Main</span> }
-                  </div>
-                }
+              <div class="admin-image-gallery">
+                <div class="image-grid" (dragover)="$event.preventDefault()">
+                  @for (img of form().images; track img; let i = $index) {
+                    <div class="image-item" 
+                         draggable="true"
+                         (dragstart)="onDragStart($event, i)"
+                         (dragover)="$event.preventDefault()"
+                         (drop)="onDrop($event, i)"
+                         [class.is-primary]="form().primaryImage === img || (!form().primaryImage && i === 0)"
+                         [class.is-hover-img]="form().reflectedImage === img">
+                      <img [src]="img" alt="Product image" />
+                      
+                      <!-- Action overlay buttons -->
+                      <div class="image-actions">
+                        <button type="button" class="action-btn make-primary" 
+                                (click)="setPrimaryImage(img)" 
+                                [class.active]="form().primaryImage === img || (!form().primaryImage && i === 0)"
+                                title="Set as Default">
+                          Default
+                        </button>
+                        <button type="button" class="action-btn make-hover" 
+                                (click)="setHoverImage(img)" 
+                                [class.active]="form().reflectedImage === img"
+                                title="Set as Hover">
+                          Hover
+                        </button>
+                        <button type="button" class="action-btn move-up" (click)="moveImage(i, i - 1)" [disabled]="i === 0" title="Move Up">↑</button>
+                        <button type="button" class="action-btn move-down" (click)="moveImage(i, i + 1)" [disabled]="i === form().images.length - 1" title="Move Down">↓</button>
+                        <button type="button" class="action-btn delete" (click)="removeImage(i)" title="Delete">×</button>
+                      </div>
+                      
+                      <div class="image-badges">
+                        @if (form().primaryImage === img || (!form().primaryImage && i === 0)) {
+                          <span class="badge primary">Default</span>
+                        }
+                        @if (form().reflectedImage === img) {
+                          <span class="badge hover-badge">Hover</span>
+                        }
+                        <span class="badge number">#{{ i + 1 }}</span>
+                      </div>
+                    </div>
+                  }
+                </div>
               </div>
             }
           </div>
 
-          <!-- Reflected Image (Hover Image) *Mandatory* -->
-          <div class="image-upload-area" style="margin-top: 24px;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-              <h4 style="margin: 0; font-size: 14px; font-weight: 600;">Reflected Image (Hover) *</h4>
-              <span style="font-size: 12px; color: #999;">Image shown on hover in featured products</span>
-            </div>
-            <div class="upload-btn-wrap">
-              <label class="upload-btn" [class.loading]="uploadingImage()">
-                @if (uploadingImage()) {
-                  <div class="spinner-sm"></div> Uploading…
-                } @else {
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  </svg>
-                  Upload Reflected Image
-                }
-                <input type="file" accept="image/jpeg,image/png,image/webp" style="display:none"
-                  (change)="onReflectedImageSelect($event)" [disabled]="uploadingImage()" />
-              </label>
-              <span class="upload-hint">JPEG, PNG, WebP · Max 5 MB</span>
-            </div>
-            @if (form().reflectedImage) {
-              <div class="image-grid">
-                <div class="image-item">
-                  <img [src]="form().reflectedImage" alt="Reflected image" />
-                  <button class="remove-img" (click)="removeReflectedImage()" title="Remove">×</button>
-                  <span class="primary-badge">Reflected</span>
-                </div>
-              </div>
-            } @else {
-              <div style="padding: 12px; background: #f5f5f5; border-radius: 4px; font-size: 12px; color: #999; margin-top: 8px;">
-                No reflected image uploaded yet
-              </div>
-            }
+          <!-- SEO Alt Text Input -->
+          <div style="margin-top: 16px;">
+            <label class="form-label" for="imageAltText">Images Alt Text (for SEO)</label>
+            <input type="text" id="imageAltText" class="form-input" 
+                   [ngModel]="form().imageAltText" 
+                   (ngModelChange)="updateAltText($event)" 
+                   placeholder="Describe what is in the images (e.g. Rajhans Assam CTC Tea Packet)" />
           </div>
+
+          <!-- Hidden reflected image to preserve model validation values -->
+          <input type="hidden" [ngModel]="form().reflectedImage" />
         </div>
 
         <div class="form-section">
@@ -392,7 +403,7 @@
       <div class="modal-footer">
         <button class="btn-cancel" (click)="closeForm()">Cancel</button>
         <button class="btn-save" (click)="saveForm()"
-          [disabled]="saving() || !form().name || !form().categoryId || form().basePrice === '' || !form().reflectedImage">
+          [disabled]="saving() || !form().name || !form().categoryId || form().basePrice === '' || form().images.length === 0">
           {{ saving() ? (editingId() ? 'Saving…' : 'Creating…') : (editingId() ? 'Save Changes' : 'Create Product') }}
         </button>
       </div>

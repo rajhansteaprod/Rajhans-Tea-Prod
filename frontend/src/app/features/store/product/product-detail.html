@@ -9,9 +9,7 @@
           <div
             class="pd__zoom-wrap"
             #zoomEl
-            (mousemove)="onZoomMove($event, zoomEl)"
-            (mouseenter)="zoomActive.set(true)"
-            (mouseleave)="zoomActive.set(false)"
+            (click)="onImageClick($event, zoomEl)"
           >
             <img
               [src]="selectedImage()"
@@ -19,18 +17,21 @@
               [alt]="product()?.name"
               loading="lazy"
             />
-            @if (zoomActive()) {
-              <div
-                class="pd__zoom-lens"
-                [style.background-image]="'url(' + selectedImage() + ')'"
-                [style.background-position]="zoomPos()"
-              ></div>
+            
+            <!-- Left/Right navigation arrows -->
+            @if (orderedImages().length > 1) {
+              <button type="button" class="pd__gallery-arrow pd__gallery-arrow--prev" (click)="prevImage(); $event.stopPropagation()" aria-label="Previous image">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+              <button type="button" class="pd__gallery-arrow pd__gallery-arrow--next" (click)="nextImage(); $event.stopPropagation()" aria-label="Next image">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
             }
           </div>
 
           <!-- Thumbnails -->
           <div class="pd__thumbs">
-            @for (img of product()?.images; track img) {
+            @for (img of orderedImages(); track img) {
               <button
                 class="pd__thumb"
                 [class.active]="selectedImage() === img"
@@ -345,15 +346,15 @@
                 >
                   <!-- Main Image -->
                   <img
-                    [src]="p.images[0]"
+                    [src]="p.primaryImage || p.images[0]"
                     [alt]="p.name"
                     class="card__image card__image--main"
-                    [class.card__image--hidden]="isHovering(p._id)"
+                    [class.card__image--hidden]="isHovering(p._id) && p.reflectedImage && p.reflectedImage !== (p.primaryImage || p.images[0])"
                     loading="lazy"
                   />
 
                   <!-- Reflected Image (shown on hover) -->
-                  @if (p.reflectedImage) {
+                  @if (p.reflectedImage && p.reflectedImage !== (p.primaryImage || p.images[0])) {
                     <img
                       [src]="p.reflectedImage"
                       [alt]="p.name + ' reflection'"

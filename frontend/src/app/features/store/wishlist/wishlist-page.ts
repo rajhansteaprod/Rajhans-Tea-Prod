@@ -4,11 +4,12 @@ import { RouterLink } from '@angular/router';
 import { CartStore } from '../../../core/services/cart.store';
 import { CatalogService, Product } from '../../../core/services/catalog.service';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card';
+import { ScrollRevealDirective } from '../../../shared/directives/scroll-reveal.directive';
 
 @Component({
   selector: 'app-wishlist-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ProductCardComponent],
+  imports: [CommonModule, RouterLink, ProductCardComponent, ScrollRevealDirective],
   templateUrl: './wishlist-page.html',
   styleUrls: ['./wishlist-page.scss'],
 })
