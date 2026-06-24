@@ -9,15 +9,26 @@ export const logger = pino({
   timestamp: pino.stdTimeFunctions.isoTime,
   transport: {
     targets: [
-      ...(config.env === 'development' ? [{
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'SYS:standard',
-          ignore: 'pid,hostname',
-          singleLine: true,
-        },
-      }] : []),
+      ...(config.env === 'development'
+        ? [
+            {
+              target: 'pino-pretty',
+              options: {
+                colorize: true,
+                translateTime: 'SYS:standard',
+                ignore: 'pid,hostname',
+                singleLine: true,
+              },
+            },
+          ]
+        : [
+            {
+              target: 'pino/file',
+              options: {
+                destination: 1, // stdout
+              },
+            },
+          ]),
       {
         target: 'pino-roll',
         options: {

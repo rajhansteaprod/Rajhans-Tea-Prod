@@ -54,7 +54,7 @@ export function validateEnvironment(): void {
     // In production, fail fast. In development, warn but continue.
     if (process.env.NODE_ENV === 'production') {
       logger.fatal('Missing required environment variables — cannot start in production');
-      process.exit(1);
+      setTimeout(() => process.exit(1), 1000);
     } else {
       logger.warn('Missing required env vars — continuing in development mode');
     }

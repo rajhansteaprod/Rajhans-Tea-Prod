@@ -11,8 +11,9 @@ services:
     networks:
       - tea-network
     volumes:
-      - ./logs/logs:/app/logs/logs
-      - ./logs/shipmentlogs:/app/logs/shipmentlogs
+      - ./backend/logs/logs:/app/logs/logs
+      - ./backend/logs/shipmentlogs:/app/logs/shipmentlogs
+      - tea-uploads:/app/uploads
     logging:
       driver: "json-file"
       options:
@@ -49,7 +50,8 @@ services:
       - ./nginx.prod.conf:/etc/nginx/conf.d/default.conf
       - /etc/ssl/certs/self.crt:/etc/nginx/ssl/cert.crt
       - /etc/ssl/private/self.key:/etc/nginx/ssl/key.key
-      - ./logs/nginx:/var/log/nginx
+      - ./backend/logs/nginx:/var/log/nginx
+      - tea-uploads:/app/uploads:ro
     depends_on:
       - frontend
       - backend
@@ -84,3 +86,4 @@ networks:
 volumes:
   redis-data:
   logs:
+  tea-uploads:
