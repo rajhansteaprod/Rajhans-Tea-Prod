@@ -18,12 +18,30 @@ export class AdminSettingsComponent implements OnInit {
   readonly settings = signal<any>(null);
   readonly loyaltySettings = signal<any>(null);
   readonly referralSettings = signal<any>(null);
+  readonly allProducts = signal<any[]>([]);
   readonly saving = signal(false);
   readonly saved = signal(false);
 
   ngOnInit(): void {
     this.http.get<{ data: any }>(`${this.api}/admin/settings`).subscribe({
-      next: (res) => this.settings.set(res.data),
+      next: (res) => {
+        const data = res.data;
+        if (!data.homepageProductSections || data.homepageProductSections.length === 0) {
+          data.homepageProductSections = [
+            { title: 'Highest Demand Products', productIds: [] },
+            { title: 'Best Sellers', productIds: [] }
+          ];
+        } else if (data.homepageProductSections.length === 1) {
+          data.homepageProductSections.push({ title: 'Best Sellers', productIds: [] });
+        }
+        data.homepageProductSections.forEach((sec: any) => {
+          sec.productIds = (sec.productIds || []).map((p: any) => typeof p === 'object' ? p._id : p);
+        });
+        this.settings.set(data);
+      },
+    });
+    this.http.get<{ data: any[] }>(`${this.api}/admin/products?limit=200`).subscribe({
+      next: (res) => this.allProducts.set(res.data),
     });
     this.http.get<{ data: any }>(`${this.api}/admin/promotions/loyalty/settings`).subscribe({
       next: (res) => this.loyaltySettings.set(res.data),
@@ -53,5 +71,35 @@ export class AdminSettingsComponent implements OnInit {
     this.http.put(`${this.api}/admin/settings`, s).subscribe({ next: done, error: fail });
     this.http.put(`${this.api}/admin/promotions/loyalty/settings`, ls).subscribe({ next: done, error: fail });
     this.http.put(`${this.api}/admin/promotions/referral/settings`, rs).subscribe({ next: done, error: fail });
+  }
+
+  getProductById(id: string): any {
+    return this.allProducts().find((p) => p._id === id);
+  }
+
+  addProductToSection(section: any, prodId: string): void {
+    if (!prodId) return;
+    if (!section.productIds) section.productIds = [];
+    if (section.productIds.includes(prodId)) {
+      alert('Product is already in this section.');
+      return;
+    }
+    if (section.productIds.length >= 6) {
+      alert('Maximum of 6 products allowed per section.');
+      return;
+    }
+    section.productIds.push(prodId);
+  }
+
+  removeProductFromSection(section: any, index: number): void {
+    section.productIds.splice(index, 1);
+  }
+
+  moveProduct(section: any, index: number, dir: number): void {
+    const targetIdx = index + dir;
+    if (targetIdx < 0 || targetIdx >= section.productIds.length) return;
+    const temp = section.productIds[index];
+    section.productIds[index] = section.productIds[targetIdx];
+    section.productIds[targetIdx] = temp;
   }
 }

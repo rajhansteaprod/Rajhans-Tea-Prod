@@ -318,4 +318,8 @@ export class CatalogService {
   updateRatingOneLiner(productId: string, ratingOneLiner: string): Observable<ApiResponse<{ updated: boolean }>> {
     return this.http.patch<ApiResponse<{ updated: boolean }>>(`${this.adminUrl}/reviews/products/${productId}/rating-summary`, { ratingOneLiner });
   }
+
+  getHomepageSections(): Observable<ApiResponse<{ title: string; products: Product[] }[]>> {
+    return this.http.get<ApiResponse<{ title: string; products: Product[] }[]>>(`${this.publicUrl}/homepage-sections`);
+  }
 }

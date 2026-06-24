@@ -18,14 +18,14 @@ export class FeaturedProductsComponent implements OnInit {
   private router = inject(Router);
   readonly cart = inject(CartStore);
 
-  readonly products = signal<Product[]>([]);
+  readonly sections = signal<{ title: string; products: Product[] }[]>([]);
   readonly loading = signal(true);
   readonly hoveringProducts = signal<Set<string>>(new Set());
 
   ngOnInit(): void {
-    this.catalog.getProductsPublic({ isFeatured: true, limit: 12 }).subscribe({
+    this.catalog.getHomepageSections().subscribe({
       next: (res) => {
-        this.products.set(res.data);
+        this.sections.set(res.data || []);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),

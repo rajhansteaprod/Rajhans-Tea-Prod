@@ -1,5 +1,10 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 
+export interface IHomepageProductSection {
+  title: string;
+  productIds: Types.ObjectId[];
+}
+
 export interface IStoreSettingsDoc extends Document {
   storeName: string;
   contactEmail: string;
@@ -13,6 +18,7 @@ export interface IStoreSettingsDoc extends Document {
     reviewAutoApprove: boolean;
     guestCheckout: boolean;
   };
+  homepageProductSections?: IHomepageProductSection[];
   updatedBy: Types.ObjectId | null;
   updatedAt: Date;
 }
@@ -31,6 +37,12 @@ const storeSettingsSchema = new Schema<IStoreSettingsDoc>(
       reviewAutoApprove: { type: Boolean, default: true },
       guestCheckout: { type: Boolean, default: false },
     },
+    homepageProductSections: [
+      {
+        title: { type: String, default: '' },
+        productIds: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
+      },
+    ],
     updatedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   },
   { timestamps: true },

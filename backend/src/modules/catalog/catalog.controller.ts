@@ -5,6 +5,10 @@ import { ProductService } from './services/product.service';
 import { ProductVariantService } from './services/product-variant.service';
 import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../../utils/api-response';
 import { BadRequestError } from '../../utils/api-error';
+import { invalidateCache } from '../../middleware/cache-response.middleware';
+
+/** Flush all cached public catalog + homepage-sections responses */
+const invalidateCatalogCache = () => invalidateCache('*');
 
 const categoryService = new CategoryService();
 const collectionService = new CollectionService();
@@ -32,22 +36,26 @@ export const getCategoryBySlug = async (req: Request, res: Response) => {
 
 export const createCategory = async (req: Request, res: Response) => {
   const data = await categoryService.create(req.body);
+  await invalidateCatalogCache();
   sendCreated(res, data, 'Category created successfully');
 };
 
 export const updateCategory = async (req: Request, res: Response) => {
   const id = req.params['id'] as string;
   const data = await categoryService.update(id, req.body);
+  await invalidateCatalogCache();
   sendSuccess(res, data, 'Category updated successfully');
 };
 
 export const deleteCategory = async (req: Request, res: Response) => {
   await categoryService.delete(req.params['id'] as string);
+  await invalidateCatalogCache();
   sendNoContent(res);
 };
 
 export const deleteAllCategories = async (_req: Request, res: Response) => {
   const result = await categoryService.deleteAll();
+  await invalidateCatalogCache();
   sendSuccess(res, result, 'All categories deleted');
 };
 
@@ -72,17 +80,20 @@ export const getCollectionBySlug = async (req: Request, res: Response) => {
 
 export const createCollection = async (req: Request, res: Response) => {
   const data = await collectionService.create(req.body);
+  await invalidateCatalogCache();
   sendCreated(res, data, 'Collection created successfully');
 };
 
 export const updateCollection = async (req: Request, res: Response) => {
   const id = req.params['id'] as string;
   const data = await collectionService.update(id, req.body);
+  await invalidateCatalogCache();
   sendSuccess(res, data, 'Collection updated successfully');
 };
 
 export const deleteCollection = async (req: Request, res: Response) => {
   await collectionService.delete(req.params['id'] as string);
+  await invalidateCatalogCache();
   sendNoContent(res);
 };
 
@@ -112,17 +123,20 @@ export const getProductById = async (req: Request, res: Response) => {
 
 export const createProduct = async (req: Request, res: Response) => {
   const data = await productService.create(req.body);
+  await invalidateCatalogCache();
   sendCreated(res, data, 'Product created successfully');
 };
 
 export const updateProduct = async (req: Request, res: Response) => {
   const id = req.params['id'] as string;
   const data = await productService.update(id, req.body);
+  await invalidateCatalogCache();
   sendSuccess(res, data, 'Product updated successfully');
 };
 
 export const deleteProduct = async (req: Request, res: Response) => {
   await productService.delete(req.params['id'] as string);
+  await invalidateCatalogCache();
   sendNoContent(res);
 };
 
@@ -139,6 +153,7 @@ export const listVariants = async (req: Request, res: Response) => {
 export const createVariant = async (req: Request, res: Response) => {
   const productId = req.params['productId'] as string;
   const variant = await variantService.create(productId, req.body);
+  await invalidateCatalogCache();
   sendCreated(res, variant, 'Variant created successfully');
 };
 
@@ -151,12 +166,14 @@ export const getVariant = async (req: Request, res: Response) => {
 export const updateVariant = async (req: Request, res: Response) => {
   const variantId = req.params['variantId'] as string;
   const variant = await variantService.update(variantId, req.body);
+  await invalidateCatalogCache();
   sendSuccess(res, variant, 'Variant updated successfully');
 };
 
 export const deleteVariant = async (req: Request, res: Response) => {
   const variantId = req.params['variantId'] as string;
   await variantService.delete(variantId);
+  await invalidateCatalogCache();
   sendNoContent(res);
 };
 
@@ -167,6 +184,7 @@ export const reorderVariants = async (req: Request, res: Response) => {
     throw new BadRequestError('variantIds must be an array');
   }
   await variantService.reorderVariants(productId, variantIds);
+  await invalidateCatalogCache();
   sendSuccess(res, { reordered: true }, 'Variants reordered successfully');
 };
 

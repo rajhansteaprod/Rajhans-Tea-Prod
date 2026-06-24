@@ -173,7 +173,9 @@ export class ProductDTO {
       region: product.region,
       bestTakenFor: product.bestTakenFor,
       isFeatured: product.isFeatured,
-      inStock: (product.stock ?? 0) > 0,
+      inStock: product.hasVariants && variants
+        ? variants.some(v => v.isActive && v.stock > 0)
+        : (product.stock ?? 0) > 0,
       hasVariants: product.hasVariants ?? false,
       variants: variants ? this.variantsToView(variants) : undefined,
     };

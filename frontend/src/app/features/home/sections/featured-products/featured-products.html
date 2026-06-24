@@ -1,18 +1,18 @@
-@if (products().length > 0) {
-  <section class="featured">
+@for (section of sections(); track section.title; let secIdx = $index) {
+  <section class="featured" [style.marginTop]="secIdx > 0 ? '64px' : '0'">
     <div class="featured__container">
       <!-- Header -->
       <div class="featured__header">
         <div class="featured__header-left">
           <p class="featured__label">OUR TEAS</p>
-          <h2 class="featured__title">Highest Demand Products</h2>
+          <h2 class="featured__title">{{ section.title }}</h2>
         </div>
         <a class="featured__view-all" href="/products">View All →</a>
       </div>
 
       <!-- Product Grid -->
       <div class="featured__grid">
-        @for (product of products(); track product._id; let i = $index) {
+        @for (product of section.products; track product._id; let i = $index) {
           <app-product-card
             [appScrollReveal]="i"
             [product]="product"

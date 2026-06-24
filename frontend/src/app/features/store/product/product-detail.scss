@@ -253,7 +253,7 @@
     color: #d1d5db;
 
     &.filled {
-      color: #f97316;
+      color: #f97316 !important;
     }
   }
 }
@@ -640,7 +640,7 @@
     color: #e5e7eb;
 
     &.filled {
-      color: #fbbf24;
+      color: #f97316 !important;
     }
   }
 }
@@ -789,12 +789,12 @@
   }
 
   &:hover {
-    color: #fbbf24;
-    background: rgba(251, 191, 36, 0.1);
+    color: #f97316 !important;
+    background: rgba(249, 115, 22, 0.1) !important;
   }
 
   &.active {
-    color: #fbbf24;
+    color: #f97316 !important;
   }
 }
 
@@ -1129,7 +1129,7 @@
     transition: color $transition-fast;
 
     &.filled {
-      color: #fbbf24;
+      color: #f97316 !important;
     }
   }
 }

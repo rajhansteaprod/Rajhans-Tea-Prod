@@ -107,9 +107,6 @@
         <div class="search__grid">
           @for (product of store.results(); track product._id) {
             <div class="search__card">
-              @if (product.isFeatured) {
-                <span class="search__featured">Featured</span>
-              }
               <a class="search__card-image" [routerLink]="['/products', product._id]">
                 @if (product.images[0]) {
                   <img [src]="product.images[0]" [alt]="product.name" loading="lazy" />

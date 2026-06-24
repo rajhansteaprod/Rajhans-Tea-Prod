@@ -12,11 +12,6 @@
       }
     </div>
 
-    <!-- Featured Tag -->
-    @if (product.isFeatured) {
-      <span class="product-card__featured-tag">Featured</span>
-    }
-
     <!-- Wishlist Heart Button -->
     <button class="product-card__wishlist" [class.product-card__wishlist--active]="isWishlisted" (click)="onToggleWishlist($event); $event.stopPropagation()" aria-label="Add to wishlist" type="button">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="product-card__wishlist-icon">
