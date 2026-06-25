@@ -319,5 +319,39 @@ export class CatalogService {
     return this.http.patch<ApiResponse<{ updated: boolean }>>(`${this.adminUrl}/reviews/products/${productId}/rating-summary`, { ratingOneLiner });
   }
 
+  getHomepageSections(): Observable<ApiResponse<{ title: string; products: Product[] }[]>> {
+    return this.http.get<ApiResponse<{ title: string; products: Product[] }[]>>(`${this.publicUrl}/homepage-sections`);
+  }
 
+  // --- Homepage Sections (Admin CRUD) ---
+
+  getHomepageSectionsAdmin(): Observable<ApiResponse<HomepageSection[]>> {
+    return this.http.get<ApiResponse<HomepageSection[]>>(`${this.adminUrl}/homepage-sections`);
+  }
+
+  createHomepageSection(payload: Partial<HomepageSection>): Observable<ApiResponse<HomepageSection>> {
+    return this.http.post<ApiResponse<HomepageSection>>(`${this.adminUrl}/homepage-sections`, payload);
+  }
+
+  updateHomepageSection(id: string, payload: Partial<HomepageSection>): Observable<ApiResponse<HomepageSection>> {
+    return this.http.put<ApiResponse<HomepageSection>>(`${this.adminUrl}/homepage-sections/${id}`, payload);
+  }
+
+  deleteHomepageSection(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.adminUrl}/homepage-sections/${id}`);
+  }
+
+  reorderHomepageSections(sectionIds: string[]): Observable<ApiResponse<null>> {
+    return this.http.post<ApiResponse<null>>(`${this.adminUrl}/homepage-sections/reorder`, { sectionIds });
+  }
+}
+
+export interface HomepageSection {
+  _id: string;
+  title: string;
+  productIds: string[] | Product[];
+  sortOrder: number;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }

@@ -88,6 +88,11 @@ export const ADMIN_ROUTES: Routes = [
           import('./interface/hero-slides/hero-slides').then((m) => m.HeroSlidesComponent),
       },
       {
+        path: 'interface/homepage-sections',
+        loadComponent: () =>
+          import('./homepage-sections/homepage-sections').then((m) => m.HomepageSectionsComponent),
+      },
+      {
         path: 'promotions/coupons',
         loadComponent: () =>
           import('./promotions/coupons/coupon-list').then((m) => m.CouponListComponent),
