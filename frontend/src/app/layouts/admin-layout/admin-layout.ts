@@ -71,6 +71,7 @@ export class AdminLayoutComponent {
       collapsed: false,
       items: [
         { label: 'Hero Slides', icon: '<svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>', route: '/admin/interface/hero-slides' },
+        { label: 'Homepage Sections', icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="2"/><line x1="9" y1="21" x2="9" y2="9" stroke="currentColor" stroke-width="2"/></svg>', route: '/admin/interface/homepage-sections' },
       ],
     },
     {

@@ -1,5 +1,5 @@
 @for (section of sections(); track section.title; let secIdx = $index) {
-  <section class="featured" [style.marginTop]="secIdx > 0 ? '64px' : '0'">
+  <section class="featured" [style.paddingTop]="secIdx > 0 ? '0' : '64px'" [style.paddingBottom]="'64px'" [style.marginTop]="'0'">
     <div class="featured__container">
       <!-- Header -->
       <div class="featured__header">
