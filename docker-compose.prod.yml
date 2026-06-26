@@ -13,7 +13,7 @@ services:
     volumes:
       - ./backend/logs/logs:/app/logs/logs
       - ./backend/logs/shipmentlogs:/app/logs/shipmentlogs
-      - tea-uploads:/app/uploads
+      - ./backend/uploads:/app/uploads
     logging:
       driver: "json-file"
       options:
@@ -51,7 +51,7 @@ services:
       - /etc/ssl/certs/self.crt:/etc/nginx/ssl/cert.crt
       - /etc/ssl/private/self.key:/etc/nginx/ssl/key.key
       - ./backend/logs/nginx:/var/log/nginx
-      - tea-uploads:/app/uploads:ro
+      - ./backend/uploads:/app/uploads:ro
     depends_on:
       - frontend
       - backend
@@ -86,4 +86,3 @@ networks:
 volumes:
   redis-data:
   logs:
-  tea-uploads:
