@@ -115,6 +115,11 @@
           </div>
         </div>
 
+        <!-- Offers Section -->
+        <div class="checkout__offers-wrapper">
+          <app-offer-cards (offerSelected)="onOfferSelected($event)"></app-offer-cards>
+        </div>
+
         <!-- Mobile Price Breakdown (only visible on mobile) -->
         <div class="checkout__mobile-price-breakdown">
           <div class="checkout__mobile-price-row">

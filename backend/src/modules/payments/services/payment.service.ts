@@ -17,7 +17,7 @@ import {
 import { getPromotionsQueue, PromotionJobs } from '../../promotions/jobs/queues/promotions.queue';
 import { WalletService } from './wallet.service';
 import { LoyaltyService } from '../../promotions/services/loyalty.service';
-import { PromoCodeService } from '../../promo/services/promo.service';
+import { DiscountService } from '../../discounts/services/discount.service';
 import { BadRequestError, NotFoundError } from '../../../utils/api-error';
 import { IShippingAddress } from '../models/payment.model';
 import { StockReservation } from '../../cart/models/stock-reservation.model';
@@ -43,7 +43,7 @@ export interface VerifyPaymentResult {
 export class PaymentService {
   private paymentRepo = new PaymentRepository();
   private webhookEventRepo = new WebhookEventRepository();
-  private promoService = new PromoCodeService();
+  private discountService = new DiscountService();
   private checkoutService = new CheckoutService();
   private cartService = new CartService();
   private walletService = new WalletService();
@@ -124,22 +124,22 @@ export class PaymentService {
       itemCount: frozenPricing.items.reduce((s, i) => s + i.qty, 0),
     };
 
-    // Validate and calculate promo discount (if applicable)
-    let promoCodeId: any = null;
-    let promoDiscountPaise = 0;
+    // Validate and calculate discount (PromoCode OR Offer - ONLY ONE)
+    let discountId: any = null;
+    let discountPaise = 0;
+    let discountType: 'promo_code' | 'offer' | undefined = undefined;
 
-    if (promoCode) {
-      const validation = await this.promoService.validatePromoCode(promoCode);
-      if (!validation.valid) {
-        throw new BadRequestError(validation.error || 'Invalid promo code');
+    const appliedDiscount = await this.discountService.applyDiscount(summary.total, promoCode);
+
+    if (appliedDiscount.type) {
+      discountId = appliedDiscount.discountId;
+      discountPaise = Math.round(appliedDiscount.discountAmount * 100);
+      discountType = appliedDiscount.type;
+
+      // Record usage
+      if (discountId) {
+        await this.discountService.recordUsage(discountId);
       }
-
-      const discount = this.promoService.calculateDiscount(
-        validation.code!,
-        summary.total,
-      );
-      promoDiscountPaise = Math.round(discount.discountAmount * 100);
-      promoCodeId = validation.code!._id;
     }
 
     // Calculate loyalty discount (if applicable)
@@ -160,7 +160,7 @@ export class PaymentService {
 
     // Calculate wallet deduction (if applicable)
     // Total = summary - promo - loyalty
-    const totalPaise = Math.round(summary.total * 100) - promoDiscountPaise - loyaltyDiscountPaise;
+    const totalPaise = Math.round(summary.total * 100) - discountPaise - loyaltyDiscountPaise;
     let walletDeductPaise = 0;
 
     if (walletAmount > 0 && userId) {
@@ -193,13 +193,14 @@ export class PaymentService {
         sessionId,
         userId: userId ? (userId as never) : null,
         razorpayOrderId: `wallet_${idempotencyKey.slice(0, 20)}`,
-        amountPaise: totalPaise + promoDiscountPaise + loyaltyDiscountPaise,
+        amountPaise: totalPaise + discountPaise + loyaltyDiscountPaise,
         walletDeductPaise,
         loyaltyPointsUsed,
         loyaltyDiscountPaise,
         promoCode,
-        promoCodeId,
-        promoDiscountPaise,
+        discountId,
+        discountType,
+        discountPaise,
         currency: 'INR',
         status: 'captured',
         checkoutSnapshot: {
@@ -279,8 +280,9 @@ export class PaymentService {
       loyaltyPointsUsed,
       loyaltyDiscountPaise,
       promoCode,
-      promoCodeId,
-      promoDiscountPaise,
+      discountId,
+      discountType,
+      discountPaise,
       idempotencyKey,
       priceSnapshotId: frozenPricing.snapshotId as never, // Store reference to frozen price
     });

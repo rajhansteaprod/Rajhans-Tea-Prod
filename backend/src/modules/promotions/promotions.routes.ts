@@ -4,10 +4,6 @@ import { authorize } from '../../middleware/rbac.middleware';
 import { validate } from '../../middleware/validate.middleware';
 import * as ctrl from './promotions.controller';
 import {
-  validateCouponSchema,
-  createCouponSchema,
-  updateCouponSchema,
-  couponIdSchema,
   createCampaignSchema,
   loyaltySettingsSchema,
   referralSettingsSchema,
@@ -20,10 +16,6 @@ const router = Router();
 // ===========================================================================
 
 router.get('/promotions/campaigns/active', ctrl.getActiveCampaigns);
-router.post('/promotions/coupons/validate', validate(validateCouponSchema), ctrl.validateCoupon);
-
-// Simple coupon validation for checkout (no session required)
-router.post('/coupons/validate', ctrl.validateCouponSimple);
 
 // ===========================================================================
 // AUTHENTICATED
@@ -39,12 +31,6 @@ router.get('/promotions/referral/code', authenticate, ctrl.getReferralCode);
 const adminRouter = Router();
 adminRouter.use(authenticate);
 adminRouter.use(authorize('admin'));
-
-// Coupons
-adminRouter.get('/promotions/coupons', ctrl.adminListCoupons);
-adminRouter.post('/promotions/coupons', validate(createCouponSchema), ctrl.adminCreateCoupon);
-adminRouter.put('/promotions/coupons/:id', validate(updateCouponSchema), ctrl.adminUpdateCoupon);
-adminRouter.delete('/promotions/coupons/:id', validate(couponIdSchema), ctrl.adminDeleteCoupon);
 
 // Campaigns
 adminRouter.get('/promotions/campaigns', ctrl.adminListCampaigns);

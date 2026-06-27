@@ -3,23 +3,95 @@
     <form [formGroup]="form" class="checkout__form">
       <h2 class="checkout__heading">Select Shipping Address</h2>
 
-      @if (auth.isLoggedIn()) {
-        <app-saved-addresses [selectedId]="selectedAddressId()" (selectAddress)="onAddressSelected($event)"></app-saved-addresses>
-      }
+      <div class="checkout__addresses-section">
+        <div class="checkout__addresses-grid">
+          <!-- Saved Addresses -->
+          @if (savedAddresses().length > 0) {
+            @for (address of savedAddresses(); track address._id) {
+              <label
+                class="checkout__address-card"
+                [class.checkout__address-card--selected]="selectedAddressId() === address._id"
+                (click)="selectAddress(address)"
+                role="radio"
+                [attr.aria-checked]="selectedAddressId() === address._id"
+                [attr.aria-label]="'Select address: ' + address.address"
+                tabindex="0"
+                (keydown.enter)="selectAddress(address)"
+                (keydown.space)="$event.preventDefault(); selectAddress(address)"
+              >
+                <div class="checkout__address-card-header">
+                  <input
+                    type="radio"
+                    name="addressSelection"
+                    class="checkout__address-radio"
+                    [checked]="selectedAddressId() === address._id"
+                    (change)="selectAddress(address)"
+                  />
+                  <div class="checkout__address-badges">
+                    @if (address._id === savedAddresses()[0]._id) {
+                      <span class="checkout__badge checkout__badge--default">DEFAULT</span>
+                    }
+                  </div>
+                </div>
 
-      <div class="checkout__address-list">
-        <label class="checkout__address-option" (click)="selectNewAddress()">
-          <div class="checkout__option-content">
-            <input type="radio" name="addressSelection" class="checkout__radio" value="new" [checked]="selectedAddressId() === null" />
-            <div class="checkout__option-label">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="checkout__icon-plus">
-                <path d="M5 12h14"></path>
-                <path d="M12 5v14"></path>
-              </svg>
-              <span>Add a New Shipping Address</span>
+                <div class="checkout__address-card-body">
+                  <h4 class="checkout__address-title">{{ address.city }}, {{ address.state }}</h4>
+                  <p class="checkout__address-text">{{ address.address }}</p>
+                  @if (address.landmark) {
+                    <p class="checkout__address-meta">📍 {{ address.landmark }}</p>
+                  }
+                  <p class="checkout__address-meta">{{ address.pinCode }}</p>
+                </div>
+
+                @if (selectedAddressId() === address._id) {
+                  <div class="checkout__address-checkmark">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <path d="M20 6L9 17l-5-5"></path>
+                    </svg>
+                  </div>
+                }
+              </label>
+            }
+          }
+
+          <!-- Add New Address Card -->
+          <label
+            class="checkout__address-card checkout__address-card--add-new"
+            [class.checkout__address-card--selected]="selectedAddressId() === null"
+            (click)="selectNewAddress()"
+            role="radio"
+            [attr.aria-checked]="selectedAddressId() === null"
+            aria-label="Add a new shipping address"
+            tabindex="0"
+            (keydown.enter)="selectNewAddress()"
+            (keydown.space)="$event.preventDefault(); selectNewAddress()"
+          >
+            <div class="checkout__address-card-empty">
+              <input
+                type="radio"
+                name="addressSelection"
+                class="checkout__address-radio"
+                [checked]="selectedAddressId() === null"
+                (change)="selectNewAddress()"
+              />
+              <div class="checkout__add-new-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+              </div>
+              <span class="checkout__add-new-text">Add a New Shipping Address</span>
             </div>
-          </div>
-        </label>
+
+            @if (selectedAddressId() === null) {
+              <div class="checkout__address-checkmark">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <path d="M20 6L9 17l-5-5"></path>
+                </svg>
+              </div>
+            }
+          </label>
+        </div>
       </div>
 
       @if (submitError()) {
@@ -175,12 +247,16 @@
           type="submit"
           class="checkout__btn-submit"
           (click)="saveAddress()"
-          [disabled]="form.invalid || isSubmitting()"
+          [disabled]="isButtonDisabled()"
         >
           @if (isSubmitting()) {
             <span class="checkout__btn-spinner"></span>
           }
-          <span>Proceed to Payment</span>
+          @if (isNewAddress()) {
+            <span>SAVE ADDRESS & PROCEED TO PAYMENT</span>
+          } @else {
+            <span>PROCEED TO PAYMENT</span>
+          }
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="checkout__icon-arrow">
             <path d="M5 12h14"></path>
             <path d="m12 5 7 7-7 7"></path>
@@ -201,7 +277,7 @@
         @if (cartDiscount() > 0) {
           <div class="checkout__price-row">
             <span>Discount</span>
-            <span class="checkout__price-value" style="color: #10b981;">-₹{{ cartDiscount() | number: '1.0-0' }}</span>
+            <span class="checkout__price-value checkout__price-value--discount">-₹{{ cartDiscount() | number: '1.0-0' }}</span>
           </div>
         }
         @if (cartTax() > 0) {
@@ -236,10 +312,12 @@
     variant="primary"
     size="sm"
     (click)="saveAddress()"
-    [disabled]="form.invalid || isSubmitting()"
+    [disabled]="isButtonDisabled()"
   >
     @if (isSubmitting()) {
       SAVING...
+    } @else if (isNewAddress()) {
+      SAVE & NEXT
     } @else {
       NEXT
     }

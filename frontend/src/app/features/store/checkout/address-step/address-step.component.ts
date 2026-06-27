@@ -56,6 +56,19 @@ export class AddressStepComponent implements OnInit {
   readonly cartTax = this.checkoutService.cartTax;
   readonly cartTotal = this.checkoutService.cartTotal;
 
+  // Computed: true if adding new address, false if using saved address
+  readonly isNewAddress = computed(() => this.selectedAddressId() === null);
+
+  // Computed: button disabled state (prevents flicker by being strict)
+  readonly isButtonDisabled = computed(() => {
+    // Always disabled while submitting
+    if (this.isSubmitting()) return true;
+    // If new address: form must be valid
+    if (this.isNewAddress()) return this.form.invalid;
+    // If saved address: always enabled (it's already saved)
+    return false;
+  });
+
   private allPincodes: any[] = [];
 
   ngOnInit() {

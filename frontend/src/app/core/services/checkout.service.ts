@@ -31,6 +31,21 @@ export interface CheckoutSummary {
   promoError?: string;
 }
 
+export interface Offer {
+  _id: string;
+  code?: string;
+  title: string;
+  type: 'promo_code' | 'offer';
+  description?: string;
+  valueType: 'percentage' | 'fixed';
+  value: number;
+  maxCap?: number;
+  minOrderAmount: number;
+  validFrom: Date;
+  validUntil: Date;
+  isActive: boolean;
+}
+
 interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -58,6 +73,9 @@ export class CheckoutService {
   // State signals
   private cartItemsSignal = signal<CartItem[]>([]);
   private addressSignal = signal<CheckoutAddress>(emptyAddress());
+  private selectedOfferSignal = signal<Offer | null>(null);
+  private offersSignal = signal<Offer[]>([]);
+  private offersLoadingSignal = signal(false);
 
   // Backend pricing sync signals
   private summaryDataSignal = signal<CheckoutSummary | null>(null);
@@ -72,6 +90,9 @@ export class CheckoutService {
   readonly address = this.addressSignal.asReadonly();
   readonly summaryLoading = this.summaryLoadingSignal.asReadonly();
   readonly summaryError = this.summaryErrorSignal.asReadonly();
+  readonly selectedOffer = this.selectedOfferSignal.asReadonly();
+  readonly offers = this.offersSignal.asReadonly();
+  readonly offersLoading = this.offersLoadingSignal.asReadonly();
   // Computed values — prefer backend pricing if available, fallback to client calculation
   readonly cartSubtotal = computed(() => {
     const backendSummary = this.summaryDataSignal();
@@ -98,6 +119,48 @@ export class CheckoutService {
   });
 
   readonly isPricingFromBackend = computed(() => !!this.summaryDataSignal());
+
+  // Load eligible offers based on current cart total
+  async loadOffers(): Promise<Offer[]> {
+    const cartTotal = this.cartSubtotal();
+    if (cartTotal === 0) {
+      this.offersSignal.set([]);
+      return [];
+    }
+
+    this.offersLoadingSignal.set(true);
+    try {
+      const response = await this.http
+        .get<ApiResponse<Offer[]>>(`${this.api}/discounts/offers?cartTotal=${cartTotal}`)
+        .toPromise();
+
+      if (response?.data) {
+        this.offersSignal.set(response.data);
+        return response.data;
+      }
+    } catch (error) {
+      console.error('Failed to load offers:', error);
+      this.offersSignal.set([]);
+    } finally {
+      this.offersLoadingSignal.set(false);
+    }
+    return [];
+  }
+
+  // Select an offer (only one at a time)
+  selectOffer(offer: Offer) {
+    this.selectedOfferSignal.set(offer);
+  }
+
+  // Deselect current offer
+  deselectOffer() {
+    this.selectedOfferSignal.set(null);
+  }
+
+  // Get selected offer ID for API
+  getSelectedOfferId(): string | null {
+    return this.selectedOfferSignal()?._id ?? null;
+  }
 
   constructor() {
     // Load address from localStorage on init
@@ -196,6 +259,10 @@ export class CheckoutService {
           if (promoCode) {
             body['promoCode'] = promoCode.trim().toUpperCase();
           }
+          const selectedOfferId = this.getSelectedOfferId();
+          if (selectedOfferId) {
+            body['offerId'] = selectedOfferId;
+          }
 
           const response = await this.http
             .post<
@@ -246,6 +313,8 @@ export class CheckoutService {
   resetCheckout() {
     this.cartItemsSignal.set([]);
     this.addressSignal.set(emptyAddress());
+    this.selectedOfferSignal.set(null);
+    this.offersSignal.set([]);
     this.resetPricingCache();
   }
 

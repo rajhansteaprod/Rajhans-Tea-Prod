@@ -30,13 +30,16 @@ export class OrderRepository {
     query: { page?: number; limit?: number; status?: string } = {},
   ) {
     const { page, limit, skip } = parsePagination(query);
-    const filter: Record<string, unknown> = { userId: new Types.ObjectId(userId) };
+    const userObjectId = new Types.ObjectId(userId);
+    const filter: Record<string, unknown> = { userId: userObjectId };
     if (query.status) filter.status = query.status;
 
+    console.log(`[OrderRepo] Querying orders for userId: ${userId}, filter:`, filter);
     const [orders, total] = await Promise.all([
       Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
       Order.countDocuments(filter).exec(),
     ]);
+    console.log(`[OrderRepo] Found ${orders.length} orders out of ${total} total for userId: ${userId}`);
     return { orders, meta: buildPaginationMeta(page, limit, total) };
   }
 

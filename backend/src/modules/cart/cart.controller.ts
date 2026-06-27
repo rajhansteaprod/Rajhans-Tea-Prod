@@ -112,8 +112,8 @@ export const mergeWishlist = async (req: Request, res: Response) => {
 export const getCheckoutSummary = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
   const sessionId = typeof identifier === 'string' ? identifier : identifier.toString();
-  const { items, promoCode } = req.body as { items?: any[]; promoCode?: string };
-  const data = await checkoutService.getSummary(sessionId, items, promoCode);
+  const { items, promoCode, offerId } = req.body as { items?: any[]; promoCode?: string; offerId?: string };
+  const data = await checkoutService.getSummary(sessionId, items, promoCode, offerId);
   sendSuccess(res, data);
 };
 

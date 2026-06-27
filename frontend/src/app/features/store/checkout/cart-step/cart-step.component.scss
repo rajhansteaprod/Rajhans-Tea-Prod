@@ -618,6 +618,31 @@
   }
 }
 
+// ═══ Offers Section ═══
+.checkout__offers-wrapper {
+  margin-bottom: 24px;
+  padding: 0;
+
+  @media (max-width: 768px) {
+    margin-bottom: 12px;
+  }
+
+  ::ng-deep {
+    .offers-section {
+      margin-bottom: 0;
+    }
+
+    .offers-header {
+      padding: 0;
+      margin-bottom: 12px;
+    }
+
+    .offers-grid {
+      padding: 0;
+    }
+  }
+}
+
 // ═══ Mobile Bottom Footer ═══
 .checkout__bottom-footer {
   display: none;

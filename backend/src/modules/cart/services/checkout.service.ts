@@ -47,7 +47,7 @@ export class CheckoutService {
   // Loads cart, runs pricing engine on each item, returns full breakdown
   // ---------------------------------------------------------------------------
 
-  async getSummary(sessionId: string, providedItems?: any[], promoCode?: string): Promise<CheckoutSummary> {
+  async getSummary(sessionId: string, providedItems?: any[], promoCode?: string, offerId?: string): Promise<CheckoutSummary> {
     // Use provided items (from temporary cart) or fetch from session
     let cartItems = providedItems;
     let promoError: string | undefined;
@@ -108,6 +108,7 @@ export class CheckoutService {
           collectionIds,
           qty,
           promoCode,
+          offerId,
         });
 
         lineItems.push({
@@ -120,9 +121,9 @@ export class CheckoutService {
         });
       } catch (error: any) {
         // If promo code validation fails, capture error but continue with base price
-        if (promoCode && error.message?.includes('Invalid promo code')) {
+        if ((promoCode || offerId) && error.message?.includes('Invalid promo code')) {
           promoError = error.message;
-          // Calculate without promo code
+          // Calculate without promo code/offer
           const pricing = await this.pricingService.calculate({
             productId: product._id.toString(),
             basePrice: finalPrice,

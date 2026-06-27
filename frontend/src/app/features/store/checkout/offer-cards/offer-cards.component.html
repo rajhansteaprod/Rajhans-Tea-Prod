@@ -1,0 +1,128 @@
+<div class="offers-section">
+  <div class="offers-header">
+    <h3 class="offers-title">AVAILABLE OFFERS</h3>
+    <p class="offers-subtitle">Select one offer to apply to your cart</p>
+  </div>
+
+  <!-- Loading State -->
+  @if (showLoading()) {
+    <div class="offers-loading">
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-badge"></div>
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-text" style="width: 80%;"></div>
+        <div class="skeleton skeleton-text" style="width: 90%;"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-badge"></div>
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-text" style="width: 85%;"></div>
+        <div class="skeleton skeleton-text" style="width: 88%;"></div>
+      </div>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="offers-empty">
+      <div class="offers-empty-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 2L15.09 8.26H22L17.82 12.44L19.91 18.7L12 14.31L4.09 18.7L6.18 12.44L2 8.26H8.91L12 2Z"/>
+        </svg>
+      </div>
+      <p class="offers-empty-text">No special offers available for your cart</p>
+    </div>
+  }
+
+  <!-- Offers Grid -->
+  @if (!showLoading() && !isEmpty()) {
+    <div class="offers-grid">
+      @for (offer of offers(); track offer._id) {
+        <div
+          class="offer-card"
+          [class.offer-card--selected]="isSelected(offer._id)"
+          [class.offer-card--best]="isBestOffer(offer._id)"
+          (click)="toggleOffer(offer)"
+          role="radio"
+          [attr.aria-checked]="isSelected(offer._id)"
+          [attr.aria-label]="'Select offer: ' + offer.title"
+          tabindex="0"
+          (keydown.enter)="toggleOffer(offer)"
+          (keydown.space)="$event.preventDefault(); toggleOffer(offer)"
+        >
+          <!-- Best Offer Badge -->
+          @if (isBestOffer(offer._id)) {
+            <div class="offer-badge offer-badge--best">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L15.09 8.26H22L17.82 12.44L19.91 18.7L12 14.31L4.09 18.7L6.18 12.44L2 8.26H8.91L12 2Z"/>
+              </svg>
+              <span>BEST OFFER</span>
+            </div>
+          }
+
+          <!-- Selection Indicator -->
+          <div class="offer-selector">
+            <div class="offer-radio" [class.offer-radio--checked]="isSelected(offer._id)"></div>
+          </div>
+
+          <!-- Offer Content -->
+          <div class="offer-content">
+            <h4 class="offer-title">{{ offer.title }}</h4>
+
+            @if (offer.description) {
+              <p class="offer-description">{{ offer.description }}</p>
+            }
+
+            <div class="offer-meta">
+              @if (cartSubtotal() >= offer.minOrderAmount) {
+                <div class="offer-meta-row">
+                  <span class="offer-meta-label">Discount:</span>
+                  <span class="offer-meta-value">{{ getFormattedDiscount(offer) }}</span>
+                </div>
+                <div class="offer-meta-row">
+                  <span class="offer-meta-label">You save:</span>
+                  <span class="offer-meta-value offer-meta-value--savings">{{ getFormattedSavings(offer) }}</span>
+                </div>
+              } @else {
+                <div class="offer-meta-row offer-meta-row--inactive">
+                  <span class="offer-meta-label">Min order:</span>
+                  <span class="offer-meta-value">₹{{ offer.minOrderAmount }}</span>
+                </div>
+              }
+            </div>
+
+            <!-- Eligibility Info -->
+            @if (cartSubtotal() < offer.minOrderAmount) {
+              <div class="offer-eligibility">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>Minimum cart value ₹{{ offer.minOrderAmount }} required</span>
+              </div>
+            }
+
+            <!-- Expiry Info -->
+            @if (offer.validUntil) {
+              <div class="offer-expiry">
+                <span class="offer-expiry-label">Valid until:</span>
+                <span class="offer-expiry-date">{{ offer.validUntil | date: 'MMM dd, yyyy' }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Apply State -->
+          @if (isSelected(offer._id)) {
+            <div class="offer-applied">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 6L9 17l-5-5"></path>
+              </svg>
+              <span>APPLIED</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

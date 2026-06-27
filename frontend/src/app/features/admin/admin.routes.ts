@@ -95,7 +95,7 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: 'promotions/coupons',
         loadComponent: () =>
-          import('./promotions/coupons/coupon-list').then((m) => m.CouponListComponent),
+          import('./promotions/coupons/coupon-list').then((m) => m.DiscountListComponent),
       },
     ],
   },

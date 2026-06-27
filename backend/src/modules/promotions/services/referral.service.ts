@@ -1,13 +1,13 @@
 import crypto from 'crypto';
 import { ReferralRepository } from '../repositories/referral.repository';
-import { CouponRepository } from '../repositories/coupon.repository';
+import { DiscountService } from '../../discounts/services/discount.service';
 import { LoyaltyService } from './loyalty.service';
 import { WalletService } from '../../payments/services/wallet.service';
 // utils available if needed
 
 export class ReferralService {
   private repo = new ReferralRepository();
-  private couponRepo = new CouponRepository();
+  private discountService = new DiscountService();
   private loyaltyService = new LoyaltyService();
   private walletService = new WalletService();
 
@@ -55,21 +55,20 @@ export class ReferralService {
     // Don't allow self-referral
     if (referrerUserId === refereeUserId) return;
 
-    // Create auto-generated coupon for referee
-    const coupon = await this.couponRepo.create({
-      code: `WELCOME-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
-      description: `Referral welcome discount`,
-      discountType: 'fixed',
-      discountValue: settings.refereeCouponValue,
-      minOrderAmount: settings.refereeCouponMinOrder,
-      usageLimitTotal: 1,
-      usageLimitPerUser: 1,
-      validFrom: new Date(),
-      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-      scope: 'all',
-      isActive: true,
-      createdBy: referrerUserId as any,
-    });
+    // Create auto-generated promo code for referee
+    const discount = await this.discountService.createPromoCode(
+      {
+        code: `WELCOME-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
+        value: settings.refereeCouponValue,
+        valueType: 'fixed',
+        minOrderAmount: settings.refereeCouponMinOrder,
+        usageLimit: 1,
+        validFrom: new Date(),
+        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        description: `Referral welcome discount`,
+      },
+      referrerUserId,
+    );
 
     await this.repo.create({
       referrerUserId: referrerUserId as any,
@@ -83,7 +82,7 @@ export class ReferralService {
       },
       refereeReward: {
         type: 'coupon',
-        couponId: coupon._id,
+        couponId: discount._id,
         used: false,
       },
     });

@@ -1,5 +1,4 @@
 import { OrderRepository } from '../repositories/order.repository';
-import { WarehouseRepository } from '../repositories/warehouse.repository';
 import { InventoryService } from './inventory.service';
 import { getShippingProvider } from './shipping/shipping.factory';
 import { Payment } from '../../payments/models/payment.model';
@@ -22,29 +21,36 @@ const VALID_TRANSITIONS: Record<string, OrderStatus[]> = {
 
 export class OrderService {
   private orderRepo = new OrderRepository();
-  private warehouseRepo = new WarehouseRepository();
   private inventoryService = new InventoryService();
 
   // ─── Create order from captured payment ───────────────────────────────────
 
   async createFromPayment(paymentId: string): Promise<IOrderDoc> {
+    console.log(`[Order] ▶ Starting createFromPayment for paymentId: ${paymentId}`);
+
     // Idempotency — already created?
     const existing = await this.orderRepo.findByPaymentId(paymentId);
-    if (existing) return existing;
+    if (existing) {
+      console.log(`[Order] ✓ Order already exists for payment ${paymentId}, orderId: ${existing._id}`);
+      return existing;
+    }
 
     const payment = await Payment.findById(paymentId).exec();
-    if (!payment) throw new NotFoundError('Payment not found');
-    if (payment.status !== 'captured') throw new BadRequestError('Payment not captured');
-    if (!payment.userId) throw new BadRequestError('Payment has no userId');
+    if (!payment) {
+      console.log(`[Order] ❌ Payment not found for paymentId: ${paymentId}`);
+      throw new NotFoundError('Payment not found');
+    }
+    console.log(`[Order] ✓ Payment found - userId: ${payment.userId}, status: ${payment.status}`);
 
-    const warehouse = await this.warehouseRepo.findDefault();
-    if (!warehouse)
-      throw new BadRequestError(
-        'No default warehouse configured. Create one in Admin → Warehouses.',
-      );
+    if (payment.status !== 'captured') {
+      console.log(`[Order] ❌ Payment status not captured: ${payment.status}`);
+      throw new BadRequestError('Payment not captured');
+    }
 
     const orderNumber = await this.orderRepo.generateOrderNumber();
+    console.log(`[Order] ✓ Generated orderNumber: ${orderNumber}`);
     const snapshot = payment.checkoutSnapshot;
+    console.log(`[Order] ✓ Snapshot items count: ${snapshot.items.length}`);
 
     // Enrich items with product images
     const itemsWithImages = await Promise.all(
@@ -77,9 +83,11 @@ export class OrderService {
       }),
     );
 
+    console.log(`[Order] ▶ Creating order in database - orderNumber: ${orderNumber}, userId: ${payment.userId}`);
     const order = await this.orderRepo.create({
       orderNumber,
-      userId: payment.userId,
+      userId: payment.userId || undefined,
+      sessionId: payment.sessionId,
       paymentId: payment._id,
       items: itemsWithImages,
       subtotal: snapshot.subtotal,
@@ -97,7 +105,6 @@ export class OrderService {
         },
       ],
       shippingAddress: payment.shippingAddress,
-      warehouseId: warehouse._id,
       shiprocket: {
         orderId: null,
         shipmentId: null,
@@ -110,9 +117,12 @@ export class OrderService {
         pickupScheduledDate: null,
       },
     });
+    console.log(`[Order] ✅ Order created successfully - orderId: ${order._id}, orderNumber: ${order.orderNumber}`);
 
     // Deduct stock
+    console.log(`[Order] ▶ Deducting stock for orderId: ${order._id}`);
     await this.inventoryService.deductStock(order._id.toString());
+    console.log(`[Order] ✓ Stock deducted`);
 
     return order;
   }
@@ -126,14 +136,8 @@ export class OrderService {
       throw new BadRequestError('Order cannot be shipped in current status');
     }
 
-    const warehouse = await this.warehouseRepo.findById(order.warehouseId.toString());
-    if (!warehouse) throw new BadRequestError('Warehouse not found');
-    if (!warehouse.shiprocketPickupLocationId) {
-      throw new BadRequestError('Warehouse not configured with Shiprocket pickup location');
-    }
-
     const provider = getShippingProvider();
-    const pickupLocation = warehouse.shiprocketPickupLocationId;
+    const pickupLocation = '1';
 
     // Create shipping order in Shiprocket
     const shipment = await provider.createOrder(order, pickupLocation);
@@ -287,7 +291,7 @@ export class OrderService {
     const order = await this.orderRepo.findById(orderId);
     console.log("CHECK HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"+order);
     if (!order) throw new NotFoundError('Order not found');
-    if (order.userId._id.toString() !== userId) throw new ForbiddenError('Access denied');
+    if (!order.userId || order.userId.toString() !== userId) throw new ForbiddenError('Access denied');
     return order;
   }
 

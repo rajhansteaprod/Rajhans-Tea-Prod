@@ -1,4 +1,4 @@
-import { CouponService, CouponValidationResult } from './coupon.service';
+import { DiscountService } from '../../discounts/services/discount.service';
 import { LoyaltyService } from './loyalty.service';
 import { CheckoutSummary } from '../../cart/services/checkout.service';
 
@@ -23,7 +23,7 @@ export interface AdjustedSummary extends CheckoutSummary {
  * PricingEngine is NOT touched. This is a separate layer on top.
  */
 export class PromotionService {
-  private couponService = new CouponService();
+  private discountService = new DiscountService();
   private loyaltyService = new LoyaltyService();
 
   async applyOrderDiscounts(
@@ -33,23 +33,21 @@ export class PromotionService {
     let couponDiscount = 0;
     let couponId: string | null = null;
     let couponCode: string | null = null;
-    let couponValidation: CouponValidationResult | null = null;
 
     let loyaltyPointsRedeemed = 0;
     let loyaltyDiscount = 0;
 
-    // 1. Apply coupon (if provided)
+    // 1. Apply discount (if provided)
     if (options.couponCode) {
-      couponValidation = await this.couponService.validate(
+      const validation = await this.discountService.validatePromoCode(
         options.couponCode,
-        summary,
-        options.userId ?? null,
+        summary.total,
       );
 
-      if (couponValidation.valid) {
-        couponDiscount = couponValidation.discountAmount;
-        couponId = couponValidation.couponId;
-        couponCode = couponValidation.code;
+      if (validation.valid) {
+        couponDiscount = validation.discountAmount || 0;
+        couponId = validation.discountId || null;
+        couponCode = options.couponCode.toUpperCase();
       }
     }
 
@@ -85,9 +83,16 @@ export class PromotionService {
   }
 
   /**
-   * Validate coupon only (for UI preview, no side effects).
+   * Validate discount only (for UI preview, no side effects).
    */
-  async validateCoupon(code: string, summary: CheckoutSummary, userId: string | null) {
-    return this.couponService.validate(code, summary, userId);
+  async validateCoupon(code: string, summary: CheckoutSummary) {
+    const validation = await this.discountService.validatePromoCode(code, summary.total);
+    return {
+      valid: validation.valid,
+      couponId: validation.discountId || '',
+      code: code.toUpperCase(),
+      discountAmount: validation.discountAmount || 0,
+      message: validation.message || '',
+    };
   }
 }

@@ -1,0 +1,428 @@
+@use '../../../../core/design-tokens/tokens' as *;
+@use '../../../../core/design-tokens/mixins' as *;
+
+.offers-section {
+  margin-bottom: $space-lg;
+}
+
+.offers-header {
+  margin-bottom: $space-lg;
+  padding: 0 $space-md;
+
+  @media (max-width: 768px) {
+    padding: 0;
+  }
+}
+
+.offers-title {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+  color: $color-text-secondary;
+  margin: 0 0 $space-xs;
+}
+
+.offers-subtitle {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin: 0;
+}
+
+// ===== LOADING STATE =====
+.offers-loading {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: $space-md;
+  padding: 0 $space-md;
+
+  @media (max-width: 768px) {
+    padding: 0;
+  }
+}
+
+.skeleton-card {
+  padding: $space-md;
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border-light;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    $color-border-light 25%,
+    rgba(128, 128, 128, 0.1) 50%,
+    $color-border-light 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 2px;
+  height: 12px;
+
+  &.skeleton-badge {
+    height: 20px;
+    width: 80px;
+  }
+
+  &.skeleton-title {
+    height: 16px;
+    width: 60%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// ===== EMPTY STATE =====
+.offers-empty {
+  @include flex-column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-md;
+  padding: $space-xl;
+  background: $color-bg-tertiary;
+  border: 1px dashed $color-border-light;
+  border-radius: 0;
+  text-align: center;
+}
+
+.offers-empty-icon {
+  color: $color-text-tertiary;
+  opacity: 0.5;
+}
+
+.offers-empty-text {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin: 0;
+}
+
+// ===== OFFERS GRID =====
+.offers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: $space-md;
+  padding: 0 $space-md;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+}
+
+// ===== OFFER CARD =====
+.offer-card {
+  position: relative;
+  padding: $space-md;
+  background: $color-bg-tertiary;
+  border: 2px solid $color-border-light;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all $transition-normal;
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+  outline: none;
+
+  // Hover state
+  &:hover {
+    border-color: $color-primary;
+    box-shadow: $shadow-sm;
+
+    .offer-radio {
+      border-color: $color-primary;
+      background: rgba(204, 88, 3, 0.05);
+    }
+  }
+
+  // Focus state (keyboard)
+  &:focus-visible {
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba(204, 88, 3, 0.1);
+  }
+
+  // Selected state
+  &--selected {
+    border-color: $color-primary;
+    background: rgba(204, 88, 3, 0.02);
+    box-shadow: inset 0 0 0 1px $color-primary;
+
+    .offer-radio {
+      border-color: $color-primary;
+      background: $color-primary;
+
+      &::after {
+        opacity: 1;
+      }
+    }
+  }
+
+  // Best offer state
+  &--best {
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, $color-primary, rgba(204, 88, 3, 0.5));
+    }
+  }
+}
+
+// ===== BEST OFFER BADGE =====
+.offer-badge {
+  position: absolute;
+  top: $space-md;
+  right: $space-md;
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  padding: 4px $space-sm;
+  background: $color-primary;
+  color: $color-text-inverse;
+  border-radius: 0;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-tight;
+  animation: slideDown 0.3s ease-out;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  &--best {
+    background: linear-gradient(135deg, $color-primary, rgba(204, 88, 3, 0.8));
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// ===== OFFER SELECTOR (Radio) =====
+.offer-selector {
+  position: absolute;
+  top: $space-md;
+  left: $space-md;
+}
+
+.offer-radio {
+  width: 20px;
+  height: 20px;
+  border: 2px solid $color-border;
+  border-radius: 50%;
+  background: $color-bg-tertiary;
+  transition: all $transition-fast;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: $color-text-inverse;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity $transition-fast;
+  }
+}
+
+// ===== OFFER CONTENT =====
+.offer-content {
+  padding-top: $space-sm;
+  padding-left: 28px;
+  flex: 1;
+}
+
+.offer-title {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin: 0 0 $space-xs;
+  line-height: 1.3;
+}
+
+.offer-description {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin: 0 0 $space-sm;
+  line-height: 1.4;
+}
+
+// ===== OFFER META =====
+.offer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+  padding: $space-sm 0;
+  border-top: 1px solid $color-border-light;
+  border-bottom: 1px solid $color-border-light;
+  margin: $space-sm 0;
+}
+
+.offer-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: $font-size-xs;
+
+  &--inactive {
+    opacity: 0.6;
+  }
+}
+
+.offer-meta-label {
+  color: $color-text-tertiary;
+  font-weight: $font-weight-regular;
+}
+
+.offer-meta-value {
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+
+  &--savings {
+    color: $color-secondary;
+    font-weight: $font-weight-bold;
+  }
+}
+
+// ===== OFFER ELIGIBILITY =====
+.offer-eligibility {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  padding: $space-sm;
+  background: rgba(230, 126, 34, 0.08);
+  border-radius: 0;
+  font-size: 11px;
+  color: rgba(230, 126, 34, 0.8);
+  line-height: 1.3;
+
+  svg {
+    flex-shrink: 0;
+    color: #e67e22;
+  }
+}
+
+// ===== OFFER EXPIRY =====
+.offer-expiry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  padding-top: $space-sm;
+  color: $color-text-tertiary;
+}
+
+.offer-expiry-label {
+  font-weight: $font-weight-semibold;
+}
+
+.offer-expiry-date {
+  color: $color-text-primary;
+}
+
+// ===== APPLIED STATE =====
+.offer-applied {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-xs;
+  padding: 6px $space-sm;
+  background: rgba(87, 136, 108, 0.12);
+  color: $color-secondary;
+  border-radius: 0;
+  font-size: 11px;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-tight;
+  margin-top: $space-xs;
+  animation: slideUp 0.3s ease-out;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 3;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(4px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// ===== RESPONSIVE =====
+@media (max-width: 1024px) {
+  .offers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .offer-card {
+    padding: $space-sm;
+  }
+
+  .offer-content {
+    padding-left: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .offers-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .offer-card {
+    padding: $space-md;
+  }
+
+  .offer-title {
+    font-size: $font-size-xs;
+  }
+
+  .offer-description {
+    font-size: 11px;
+  }
+
+  .offer-badge {
+    top: $space-sm;
+    right: $space-sm;
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+
+  .offer-selector {
+    top: $space-sm;
+    left: $space-sm;
+  }
+}

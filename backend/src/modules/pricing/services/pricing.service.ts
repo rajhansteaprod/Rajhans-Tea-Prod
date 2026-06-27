@@ -1,7 +1,7 @@
 import { PricingRepository } from '../repositories/pricing.repository';
 import { IPriceRuleDoc } from '../models/price-rule.model';
 import { NotFoundError } from '../../../utils/api-error';
-import { PromoCodeService } from '../../promo/services/promo.service';
+import { DiscountService } from '../../discounts/services/discount.service';
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 
@@ -12,6 +12,7 @@ export interface PriceInput {
   collectionIds?: string[];
   qty?: number; // defaults to 1
   promoCode?: string; // optional promo code to apply
+  offerId?: string; // optional offer ID to apply
 }
 
 export interface PriceBreakdown {
@@ -34,7 +35,7 @@ export interface PriceBreakdown {
 
 export class PricingService {
   private repo = new PricingRepository();
-  private promoCodeService = new PromoCodeService();
+  private discountService = new DiscountService();
 
   /**
    * Core pricing calculation — clean orchestration layer.
@@ -56,11 +57,16 @@ export class PricingService {
       ? await this.validateAndApplyPromoCode(input.promoCode, basePriceResult)
       : null;
 
-    // Step 3: Apply offers (future enhancement)
-    // const offersResult = await this.applyOffers(basePriceResult, promoResult);
+    // Step 3: Apply offer if provided (when no promo code)
+    const offerResult = input.offerId && !input.promoCode
+      ? await this.validateAndApplyOffer(input.offerId, basePriceResult)
+      : null;
+
+    // Use either promo or offer result, but not both
+    const discountResult = promoResult || offerResult;
 
     // Step 4: Apply tax
-    const finalResult = await this.applyTax(input.categoryId, basePriceResult, promoResult, qty);
+    const finalResult = await this.applyTax(input.categoryId, basePriceResult, discountResult, qty);
 
     return finalResult;
   }
@@ -112,21 +118,72 @@ export class PricingService {
       return null;
     }
 
-    // Validate promo code
-    const validation = await this.promoCodeService.validatePromoCode(promoCode.trim());
-    if (!validation.valid) {
-      throw new Error(`Invalid promo code: ${validation.error}`);
-    }
-
-    // Calculate discount amount
-    const discountCalc = this.promoCodeService.calculateDiscount(
-      validation.code!,
+    // Validate promo code using unified discount service
+    const validation = await this.discountService.validatePromoCode(
+      promoCode.trim(),
       basePriceResult.priceAfterDiscount,
     );
 
+    if (!validation.valid) {
+      throw new Error(`Invalid promo code: ${validation.message}`);
+    }
+
     return {
       promoCode: promoCode.toUpperCase(),
-      promoDiscount: discountCalc.discountAmount,
+      promoDiscount: validation.discountAmount || 0,
+    };
+  }
+
+  /**
+   * Validate and apply offer discount.
+   * Returns discount if valid, null if invalid.
+   */
+  private async validateAndApplyOffer(
+    offerId: string,
+    basePriceResult: Awaited<ReturnType<typeof this.calculateBasePrice>>,
+  ): Promise<{ promoCode: string; promoDiscount: number } | null> {
+    if (!offerId || !offerId.trim()) {
+      return null;
+    }
+
+    // Get offer from discount service
+    const offer = await (this.discountService as any).repo.findById(offerId.trim());
+
+    if (!offer) {
+      throw new Error('Invalid offer ID');
+    }
+
+    // Check if offer is active and valid
+    const now = new Date();
+    if (!offer.isActive) {
+      throw new Error('This offer is not active');
+    }
+    if (now < offer.validFrom) {
+      throw new Error('This offer is not yet available');
+    }
+    if (now > offer.validUntil) {
+      throw new Error('This offer has expired');
+    }
+
+    // Check minimum order amount
+    if (basePriceResult.priceAfterDiscount < offer.minOrderAmount) {
+      throw new Error(`Minimum order amount ₹${offer.minOrderAmount} required`);
+    }
+
+    // Calculate discount amount
+    let discountAmount = 0;
+    if (offer.valueType === 'percentage') {
+      discountAmount = (basePriceResult.priceAfterDiscount * offer.value) / 100;
+      if (offer.maxCap) {
+        discountAmount = Math.min(discountAmount, offer.maxCap);
+      }
+    } else if (offer.valueType === 'fixed') {
+      discountAmount = Math.min(offer.value, basePriceResult.priceAfterDiscount);
+    }
+
+    return {
+      promoCode: offer.title,
+      promoDiscount: Math.round(discountAmount * 100) / 100,
     };
   }
 

@@ -1,6 +1,5 @@
 import { ShipmentRepository } from '../repositories/shipment.repository';
 import { OrderRepository } from '../repositories/order.repository';
-import { WarehouseRepository } from '../repositories/warehouse.repository';
 import { IShipmentDoc, ShipmentStatus } from '../models/shipment.model';
 import { NotFoundError } from '../../../utils/api-error';
 import { shipmentLogger } from '../../../utils/shipment-logger';
@@ -8,12 +7,10 @@ import { shipmentLogger } from '../../../utils/shipment-logger';
 export class ShipmentService {
   private shipmentRepo: ShipmentRepository;
   private orderRepo: OrderRepository;
-  private warehouseRepo: WarehouseRepository;
 
   constructor() {
     this.shipmentRepo = new ShipmentRepository();
     this.orderRepo = new OrderRepository();
-    this.warehouseRepo = new WarehouseRepository();
   }
 
   async createFromOrder(orderId: string): Promise<IShipmentDoc> {
@@ -34,13 +31,6 @@ export class ShipmentService {
     }
 
     try {
-      const warehouse = await this.warehouseRepo.findById(order.warehouseId.toString());
-      if (!warehouse) {
-        shipmentLogger.error({ orderId }, '❌ Warehouse not found');
-        throw new NotFoundError('Warehouse not found');
-      }
-      shipmentLogger.debug({ orderId, warehouseId: warehouse._id }, '✓ Warehouse found');
-
       shipmentLogger.debug({
         orderId,
         shiprocketOrderId: order.shiprocket.orderId,
@@ -51,7 +41,7 @@ export class ShipmentService {
       // Create Shipment document from Order shiprocket data
       const shipment = await this.shipmentRepo.create({
         orderId: order._id,
-        sessionId: order.userId.toString(),
+        sessionId: order.userId ? order.userId.toString() : (order.sessionId || ''),
         shiprocketOrderId: order.shiprocket.orderId,
         shiprocketShipmentId: order.shiprocket.shipmentId,
         awbCode: order.shiprocket.awbCode,
@@ -73,7 +63,7 @@ export class ShipmentService {
           {
             status: 'pending',
             timestamp: new Date(),
-            location: warehouse.address.city,
+            location: order.shippingAddress.city,
             note: 'Shipment created and pickup scheduled',
           },
         ],

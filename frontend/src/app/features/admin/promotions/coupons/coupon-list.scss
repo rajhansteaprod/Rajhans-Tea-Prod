@@ -1,12 +1,12 @@
 @use '../../../../core/design-tokens/tokens' as *;
 @use '../../../../core/design-tokens/mixins' as *;
 
-.coupon-container {
+.discount-container {
   max-width: 1200px;
 }
 
 // === Page Header ===
-.coupon-header {
+.discount-header {
   @include flex-between;
   align-items: flex-start;
   margin-bottom: $space-xl;
@@ -52,8 +52,40 @@
   &:hover { background: $color-primary-hover; }
 }
 
+// === Type Selector ===
+.type-selector {
+  display: flex;
+  gap: $space-md;
+  margin-bottom: $space-lg;
+  border-bottom: 2px solid $color-border-light;
+}
+
+.type-btn {
+  padding: $space-md $space-lg;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-tertiary;
+  border-bottom: 3px solid transparent;
+  transition: all $transition-fast;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+  margin-bottom: -2px;
+
+  &:hover {
+    color: $color-text-secondary;
+  }
+
+  &.active {
+    color: $color-primary;
+    border-bottom-color: $color-primary;
+  }
+}
+
 // === Form ===
-.coupon-form {
+.discount-form {
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
   border-radius: 0;
@@ -195,8 +227,29 @@
   color: $color-error;
 }
 
+// === Type Badge ===
+.type-badge {
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  padding: 3px $space-xs;
+  border-radius: 2px;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-wide;
+
+  &.promo {
+    background: rgba(52, 73, 94, 0.12);
+    color: #2c3e50;
+  }
+
+  &.offer {
+    background: rgba(230, 126, 34, 0.12);
+    color: #e67e22;
+  }
+}
+
 // === Table ===
-.coupons-table {
+.discounts-table {
   background: $color-bg-tertiary;
   border: 1px solid $color-border-light;
   border-radius: 0;

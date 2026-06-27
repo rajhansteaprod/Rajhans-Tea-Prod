@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { CouponListComponent } from './coupon-list';
+import { DiscountListComponent } from './coupon-list';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-describe('CouponListComponent', () => {
-  let component: CouponListComponent;
-  let fixture: ComponentFixture<CouponListComponent>;
+describe('DiscountListComponent', () => {
+  let component: DiscountListComponent;
+  let fixture: ComponentFixture<DiscountListComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CouponListComponent, CommonModule, FormsModule],
+      imports: [DiscountListComponent, CommonModule, FormsModule],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(CouponListComponent);
+    fixture = TestBed.createComponent(DiscountListComponent);
     component = fixture.componentInstance;
   });
 
@@ -20,8 +20,8 @@ describe('CouponListComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize with empty coupons array', () => {
-    expect(component.coupons()).toEqual([]);
+  it('should initialize with empty discounts array', () => {
+    expect(component.discounts()).toEqual([]);
   });
 
   it('should toggle form visibility', () => {
@@ -34,65 +34,64 @@ describe('CouponListComponent', () => {
 
   it('should reset form data when opening form', () => {
     component.openForm();
-    expect(component.formData().discountType).toBe('percentage');
-    expect(component.formData().scope).toBe('all');
+    expect(component.formData().valueType).toBe('percentage');
     expect(component.formData().isActive).toBe(true);
   });
 
-  it('should load coupons', () => {
+  it('should load discounts', () => {
     expect(component.isLoading()).toBeFalsy();
-    component.loadCoupons();
+    component.loadDiscounts();
     expect(component.isLoading()).toBeFalsy();
   });
 
-  it('should close form after saving coupon', () => {
+  it('should close form after saving discount', () => {
     component.openForm();
-    component.saveCoupon();
+    component.saveDiscount();
     expect(component.showForm()).toBeFalsy();
   });
 
-  it('should populate form when editing coupon', () => {
-    const testCoupon = {
+  it('should populate form when editing discount', () => {
+    const testDiscount = {
       _id: '1',
       code: 'TEST20',
-      description: 'Test coupon',
-      discountType: 'percentage' as const,
-      discountValue: 20,
+      title: 'Test Discount',
+      type: 'promo_code' as const,
+      description: 'Test discount',
+      valueType: 'percentage' as const,
+      value: 20,
       minOrderAmount: 100,
-      maxDiscountCap: 200,
-      usageLimitTotal: 100,
-      usageLimitPerUser: 2,
+      maxCap: 200,
+      usageLimit: 100,
       usedCount: 0,
       validFrom: new Date(),
       validUntil: new Date(),
-      scope: 'all' as const,
       isActive: true,
     };
 
-    component.editCoupon(testCoupon);
+    component.editDiscount(testDiscount);
     expect(component.showForm()).toBeTruthy();
     expect(component.formData().code).toBe('TEST20');
   });
 
-  it('should toggle coupon status', () => {
-    const testCoupon = {
+  it('should toggle discount status', () => {
+    const testDiscount = {
       _id: '1',
       code: 'TEST20',
-      description: 'Test coupon',
-      discountType: 'percentage' as const,
-      discountValue: 20,
+      title: 'Test Discount',
+      type: 'promo_code' as const,
+      description: 'Test discount',
+      valueType: 'percentage' as const,
+      value: 20,
       minOrderAmount: 100,
-      maxDiscountCap: 200,
-      usageLimitTotal: 100,
-      usageLimitPerUser: 2,
+      maxCap: 200,
+      usageLimit: 100,
       usedCount: 0,
       validFrom: new Date(),
       validUntil: new Date(),
-      scope: 'all' as const,
       isActive: true,
     };
 
-    component.toggleStatus(testCoupon);
-    expect(testCoupon.isActive).toBeFalsy();
+    component.toggleStatus(testDiscount);
+    expect(testDiscount.isActive).toBeFalsy();
   });
 });

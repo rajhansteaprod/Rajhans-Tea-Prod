@@ -1,29 +1,58 @@
-<div class="coupon-container">
-  <div class="coupon-header">
+<div class="discount-container">
+  <div class="discount-header">
     <div>
-      <h1 class="page-title">COUPONS</h1>
-      <p class="page-subtitle">Manage promotional coupons and discount codes</p>
+      <h1 class="page-title">DISCOUNTS</h1>
+      <p class="page-subtitle">Manage promo codes and promotional offers</p>
     </div>
     <button class="btn-primary" (click)="openForm()" *ngIf="!showForm()">
-      <span>+ Add Coupon</span>
+      <span>+ Add Discount</span>
     </button>
   </div>
 
   <!-- Add/Edit Form -->
-  <div class="coupon-form" *ngIf="showForm()">
+  <div class="discount-form" *ngIf="showForm()">
+    <!-- Type Selector -->
+    <div class="type-selector">
+      <button
+        [class.active]="discountType() === 'promo_code'"
+        (click)="discountType.set('promo_code')"
+        class="type-btn">
+        🔖 Promo Code
+      </button>
+      <button
+        [class.active]="discountType() === 'offer'"
+        (click)="discountType.set('offer')"
+        class="type-btn">
+        🎯 Offer
+      </button>
+    </div>
     <div class="form-header">
-      <h2>{{ formData()._id ? 'Edit' : 'Create' }} Coupon</h2>
+      <h2>{{ formData()._id ? 'Edit' : 'Create' }} {{ discountType() === 'promo_code' ? 'Promo Code' : 'Offer' }}</h2>
       <button class="btn-close" (click)="closeForm()">×</button>
     </div>
 
     <div class="form-grid">
-      <div class="form-group">
-        <label>Code</label>
+      <!-- Promo Code Field (only for promo codes) -->
+      <div class="form-group" *ngIf="discountType() === 'promo_code'">
+        <label>Promo Code *</label>
         <input
           type="text"
           [(ngModel)]="formData().code"
           placeholder="e.g., SUMMER20"
           class="form-input"
+          required
+        />
+      </div>
+
+      <!-- Title Field (only for offers) -->
+      <div class="form-group" *ngIf="discountType() === 'offer'">
+        <label>Title *</label>
+        <input
+          type="text"
+          [(ngModel)]="formData().title"
+          placeholder="e.g., Flash Sale: 50% Off"
+          class="form-input"
+          required
         />
       </div>
 
@@ -38,19 +67,30 @@
       </div>
 
       <div class="form-group">
-        <label>Discount Type</label>
-        <select [(ngModel)]="formData().discountType" class="form-select">
+        <label>Discount Type *</label>
+        <select [(ngModel)]="formData().valueType" class="form-select" required>
           <option value="percentage">Percentage</option>
           <option value="fixed">Fixed Amount</option>
         </select>
       </div>
 
       <div class="form-group">
-        <label>Discount Value</label>
+        <label>Discount Value *</label>
         <input
           type="number"
-          [(ngModel)]="formData().discountValue"
+          [(ngModel)]="formData().value"
           placeholder="20"
+          class="form-input"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Max Discount Cap (₹)</label>
+        <input
+          type="number"
+          [(ngModel)]="formData().maxCap"
+          placeholder="Optional"
           class="form-input"
         />
       </div>
@@ -65,61 +105,35 @@
         />
       </div>
 
-      <div class="form-group">
-        <label>Max Discount Cap (₹)</label>
+      <!-- Usage Limit (only for promo codes) -->
+      <div class="form-group" *ngIf="discountType() === 'promo_code'">
+        <label>Usage Limit (Total)</label>
         <input
           type="number"
-          [(ngModel)]="formData().maxDiscountCap"
+          [(ngModel)]="formData().usageLimit"
           placeholder="Optional"
           class="form-input"
         />
       </div>
 
       <div class="form-group">
-        <label>Valid From</label>
+        <label>Valid From *</label>
         <input
           type="date"
           [(ngModel)]="formData().validFrom"
           class="form-input"
+          required
         />
       </div>
 
       <div class="form-group">
-        <label>Valid Until</label>
+        <label>Valid Until *</label>
         <input
           type="date"
           [(ngModel)]="formData().validUntil"
           class="form-input"
+          required
         />
-      </div>
-
-      <div class="form-group">
-        <label>Usage Limit (Total)</label>
-        <input
-          type="number"
-          [(ngModel)]="formData().usageLimitTotal"
-          placeholder="Optional"
-          class="form-input"
-        />
-      </div>
-
-      <div class="form-group">
-        <label>Usage Per User</label>
-        <input
-          type="number"
-          [(ngModel)]="formData().usageLimitPerUser"
-          placeholder="1"
-          class="form-input"
-        />
-      </div>
-
-      <div class="form-group">
-        <label>Scope</label>
-        <select [(ngModel)]="formData().scope" class="form-select">
-          <option value="all">All Products</option>
-          <option value="products">Specific Products</option>
-          <option value="categories">Specific Categories</option>
-        </select>
       </div>
 
       <div class="form-group">
@@ -135,28 +149,29 @@
     </div>
 
     <div class="form-actions">
-      <button class="btn-primary" (click)="saveCoupon()">Save Coupon</button>
+      <button class="btn-primary" (click)="saveDiscount()">Save Discount</button>
       <button class="btn-secondary" (click)="closeForm()">Cancel</button>
     </div>
   </div>
 
   <!-- Loading State -->
   <div class="loading-state" *ngIf="isLoading()">
-    <p>Loading coupons...</p>
+    <p>Loading discounts...</p>
   </div>
 
   <!-- Error State -->
   <div class="error-state" *ngIf="error()">
     <div>{{ error() }}</div>
-   <div [innerHTML]="errorList()" class="c"></div>
+    <div [innerHTML]="errorList()" class="c"></div>
   </div>
 
-  <!-- Coupons Table -->
-  <div class="coupons-table" *ngIf="!isLoading() && !showForm()">
+  <!-- Discounts Table -->
+  <div class="discounts-table" *ngIf="!isLoading() && !showForm()">
     <table>
       <thead>
         <tr>
-          <th>Code</th>
+          <th>Code/Title</th>
+          <th>Type</th>
           <th>Discount</th>
           <th>Min Order</th>
           <th>Valid Until</th>
@@ -166,32 +181,38 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let coupon of coupons()">
-          <td class="code">{{ coupon.code }}</td>
+        <tr *ngFor="let discount of discounts()">
+          <td class="code">{{ discount.code || discount.title }}</td>
           <td>
-            {{ coupon.discountType === 'percentage' ? coupon.discountValue + '%' : '₹' + coupon.discountValue }}
+            <span class="type-badge" [class.promo]="discount.type === 'promo_code'" [class.offer]="discount.type === 'offer'">
+              {{ discount.type === 'promo_code' ? 'Promo' : 'Offer' }}
+            </span>
           </td>
-          <td>₹{{ coupon.minOrderAmount }}</td>
-          <td>{{ coupon.validUntil | date: 'MMM dd, yyyy' }}</td>
-          <td>{{ coupon.usedCount }}{{ coupon.usageLimitTotal ? ' / ' + coupon.usageLimitTotal : '' }}</td>
           <td>
-            <span class="status-badge" [class.active]="coupon.isActive" [class.inactive]="!coupon.isActive">
-              {{ coupon.isActive ? 'Active' : 'Inactive' }}
+            {{ discount.valueType === 'percentage' ? discount.value + '%' : '₹' + discount.value }}
+            <span *ngIf="discount.maxCap">(Max: ₹{{ discount.maxCap }})</span>
+          </td>
+          <td>₹{{ discount.minOrderAmount }}</td>
+          <td>{{ discount.validUntil | date: 'MMM dd, yyyy' }}</td>
+          <td>{{ discount.usedCount }}{{ discount.usageLimit ? ' / ' + discount.usageLimit : '' }}</td>
+          <td>
+            <span class="status-badge" [class.active]="discount.isActive" [class.inactive]="!discount.isActive">
+              {{ discount.isActive ? 'Active' : 'Inactive' }}
             </span>
           </td>
           <td class="actions">
-            <button class="btn-icon" (click)="editCoupon(coupon)" title="Edit">✎</button>
-            <button class="btn-icon" (click)="toggleStatus(coupon)" title="Toggle Status">◉</button>
-            <button class="btn-icon btn-danger" (click)="deleteCoupon(coupon._id!)" title="Delete">🗑</button>
+            <button class="btn-icon" (click)="editDiscount(discount)" title="Edit">✎</button>
+            <button class="btn-icon" (click)="toggleStatus(discount)" title="Toggle Status">◉</button>
+            <button class="btn-icon btn-danger" (click)="deleteDiscount(discount._id!)" title="Delete">🗑</button>
           </td>
         </tr>
       </tbody>
     </table>
 
     <!-- Empty State -->
-    <div class="empty-state" *ngIf="coupons().length === 0">
-      <p>No coupons yet</p>
-      <button class="btn-primary" (click)="openForm()">Create Your First Coupon</button>
+    <div class="empty-state" *ngIf="discounts().length === 0">
+      <p>No discounts yet</p>
+      <button class="btn-primary" (click)="openForm()">Create Your First Discount</button>
     </div>
   </div>
 </div>

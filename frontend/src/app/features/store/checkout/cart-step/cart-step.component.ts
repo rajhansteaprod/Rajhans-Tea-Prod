@@ -2,15 +2,16 @@ import { Component, inject, signal, computed, output, effect } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { CheckoutService } from '../../../../core/services/checkout.service';
+import { CheckoutService, Offer } from '../../../../core/services/checkout.service';
 import { CatalogService, Product } from '../../../../core/services/catalog.service';
 import { ButtonComponent } from '../../../../../shared/components/button/button.component';
 import { InputComponent } from '../../../../../shared/components/input/input.component';
+import { OfferCardsComponent } from '../offer-cards/offer-cards.component';
 
 @Component({
   selector: 'app-cart-step',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ButtonComponent, InputComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ButtonComponent, InputComponent, OfferCardsComponent],
   templateUrl: './cart-step.component.html',
   styleUrls: ['./cart-step.component.scss'],
 })
@@ -173,6 +174,14 @@ export class CartStepComponent {
       this.isValidatingPromo.set(false);
       console.error('Failed to remove promo code:', error);
     });
+  }
+
+  onOfferSelected(offer: Offer | null) {
+    // Offer selection is handled by CheckoutService
+    // Just reload summary when offer changes
+    if (offer) {
+      this.checkoutService.loadCheckoutSummary(true, this.promoCode());
+    }
   }
 
   async goNext() {

@@ -5,43 +5,42 @@ import { environment } from '../../../environments/environment';
 
 export interface PromoValidationResponse {
   valid: boolean;
-  code?: {
-    _id: string;
-    code: string;
-    discountType: 'percentage' | 'fixed';
-    discountValue: number;
-    minOrderAmount: number;
-    maxDiscount?: number;
-  };
-  error?: string;
+  discountAmount?: number;
+  message?: string;
 }
 
-export interface DiscountCalculationResponse {
-  valid: boolean;
-  discountAmount?: number;
-  finalAmount?: number;
-  error?: string;
+export interface AppliedDiscount {
+  type: 'promo_code' | 'offer' | null;
+  discountId?: string;
+  code?: string;
+  title?: string;
+  discountAmount: number;
+  finalAmount: number;
+  message: string;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class PromoCodeService {
-  private apiUrl = `${environment.apiUrl}/promo`;
+  private apiUrl = `${environment.apiUrl}/discounts`;
 
   constructor(private http: HttpClient) {}
 
-  validatePromoCode(code: string): Observable<PromoValidationResponse> {
-    return this.http.post<PromoValidationResponse>(`${this.apiUrl}/validate`, { code });
+  validatePromoCode(code: string, cartTotal: number): Observable<PromoValidationResponse> {
+    return this.http.post<PromoValidationResponse>(`${this.apiUrl}/validate-promo`, {
+      code,
+      cartTotal,
+    });
   }
 
-  calculateDiscount(
-    code: string,
-    orderAmount: number,
-  ): Observable<DiscountCalculationResponse> {
-    return this.http.post<DiscountCalculationResponse>(`${this.apiUrl}/calculate-discount`, {
-      code,
-      orderAmount,
+  applyDiscount(
+    cartTotal: number,
+    promoCode?: string,
+  ): Observable<AppliedDiscount> {
+    return this.http.post<AppliedDiscount>(`${this.apiUrl}/apply`, {
+      cartTotal,
+      promoCode,
     });
   }
 }

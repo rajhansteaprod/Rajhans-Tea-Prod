@@ -52,8 +52,10 @@ export interface IShiprocketInfo {
 
 export interface IOrderDoc extends Document {
   orderNumber: string;
-  userId: Types.ObjectId;
+  userId?: Types.ObjectId | null;
+  sessionId?: string;
   paymentId: Types.ObjectId;
+  warehouseId?: Types.ObjectId;
   items: IOrderItem[];
   subtotal: number;
   totalDiscount: number;
@@ -71,7 +73,6 @@ export interface IOrderDoc extends Document {
     state: string;
     pinCode: string;
   };
-  warehouseId: Types.ObjectId;
   shiprocket: IShiprocketInfo;
   cancellationReason: string | null;
   returnReason: string | null;
@@ -112,7 +113,8 @@ const statusHistorySchema = new Schema<IStatusHistoryEntry>(
 const orderSchema = new Schema<IOrderDoc>(
   {
     orderNumber: { type: String, required: true },
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    sessionId: { type: String, default: null },
     paymentId: { type: Schema.Types.ObjectId, ref: 'Payment', required: true },
     items: [orderItemSchema],
     subtotal: { type: Number, required: true },
@@ -145,7 +147,7 @@ const orderSchema = new Schema<IOrderDoc>(
       state: { type: String, required: true },
       pinCode: { type: String, required: true },
     },
-    warehouseId: { type: Schema.Types.ObjectId, ref: 'Warehouse', required: true },
+    warehouseId: { type: Schema.Types.ObjectId, ref: 'Warehouse', default: null },
     shiprocket: {
       orderId: { type: String, default: null },
       shipmentId: { type: Number, default: null },

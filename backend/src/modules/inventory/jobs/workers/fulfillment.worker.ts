@@ -16,6 +16,7 @@ export const startFulfillmentWorker = (): void => {
   worker = new Worker(
     'fulfillment',
     async (job: Job) => {
+      logger.info({ jobId: job.id, jobName: job.name, jobData: job.data }, '▶ Fulfillment job received');
       if (job.name === 'fulfillment:create-order') {
         const { paymentId } = job.data as { paymentId: string };
         logger.info({ paymentId, jobId: job.id }, 'Creating order from payment');
@@ -67,6 +68,11 @@ export const startFulfillmentWorker = (): void => {
           }
         }
         logger.info({ count: activeOrders.length, jobId: job.id }, 'Tracking sync complete');
+      }
+
+      if (job.name !== 'fulfillment:create-order' && job.name !== 'fulfillment:ship-order' && job.name !== 'fulfillment:sync-tracking') {
+        logger.error({ jobId: job.id, jobName: job.name }, '❌ Unknown fulfillment job name');
+        throw new Error(`Unknown fulfillment job: ${job.name}`);
       }
     },
     {
