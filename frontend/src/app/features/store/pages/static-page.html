@@ -1,19 +1,24 @@
-@if (page()) {
-  <div class="static-page">
-    <header class="static-page__hero">
-      <h1 class="static-page__title">{{ page().title }}</h1>
-    </header>
-    <div class="static-page__content" [innerHTML]="page().content"></div>
-  </div>
-} @else if (notFound()) {
-  <div class="not-found">
-    <div class="not-found__code">404</div>
-    <h2 class="not-found__title">Page Not Found</h2>
-    <p class="not-found__sub">The page you're looking for doesn't exist or has been moved.</p>
-    <a routerLink="/" class="not-found__link">← Go Home</a>
-  </div>
-} @else {
-  <div class="loading">
-    <div class="spinner"></div>
-  </div>
-}
+<div class="static-page">
+  @if (page()) {
+    <div class="static-page__container">
+      <!-- Header -->
+      <div class="static-page__header">
+        <h1 class="static-page__title">{{ page().title }}</h1>
+        <p class="static-page__date">Last Updated: {{ page().updatedAt | date: 'MMMM d, y' }}</p>
+      </div>
+
+      <!-- Content -->
+      <div class="static-page__content" [innerHTML]="page().content"></div>
+    </div>
+  }
+
+  @if (notFound()) {
+    <div class="static-page__container">
+      <div class="static-page__error">
+        <h1>Page Not Found</h1>
+        <p>The page you're looking for doesn't exist.</p>
+        <a href="/" class="static-page__link">Go back to home</a>
+      </div>
+    </div>
+  }
+</div>

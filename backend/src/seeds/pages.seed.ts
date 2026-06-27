@@ -39,7 +39,7 @@ export const pagesSeedData = [
   },
   {
     title: 'Terms & Conditions',
-    slug: 'terms-and-conditions',
+    slug: 'terms-conditions',
     metaTitle: 'Terms & Conditions — Rajhans Tea',
     metaDescription: 'Read our terms and conditions for using Rajhans Tea website and services.',
     content: `
@@ -95,7 +95,7 @@ export const pagesSeedData = [
   },
   {
     title: 'Return & Refund Policy',
-    slug: 'return-refund',
+    slug: 'return-refund-policy',
     metaTitle: 'Return & Refund Policy — Rajhans Tea',
     metaDescription: 'Understand our return and refund process for your purchases.',
     content: `
