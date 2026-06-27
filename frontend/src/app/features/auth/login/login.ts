@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { FirebaseService } from '../../../core/services/firebase.service';
 import { LogoComponent } from '../../../shared/components/logo/logo.component';
+import { LOGIN_HERO_IMAGE, LOGIN_HERO_TAGLINE } from './login.constants';
 
 @Component({
   selector: 'app-login',
@@ -16,6 +17,11 @@ import { LogoComponent } from '../../../shared/components/logo/logo.component';
 export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('phoneInput') phoneInputEl!: ElementRef<HTMLInputElement>;
 
+  // Hero image configuration
+  readonly heroImage = LOGIN_HERO_IMAGE;
+  readonly heroTagline = LOGIN_HERO_TAGLINE;
+
+  // Form state
   step = signal<'phone' | 'otp'>('phone');
   phone = signal('');
   otp = signal('');

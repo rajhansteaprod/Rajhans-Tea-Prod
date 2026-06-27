@@ -1,100 +1,87 @@
 <div class="login">
-  <!-- Left: Brand Panel -->
-  <div class="login__brand">
-    <div class="login__brand-top">
-      <app-logo></app-logo>
-    </div>
-    <div class="login__brand-content">
-      <h1 class="login__brand-headline">Welcome Back to the World of Fresh Indian Tea's!</h1>
-    </div>
-    <div class="login__brand-features">
-      <div class="login__feature-card">
-        <span class="login__feature-icon">⭐</span>
-        <p class="login__feature-text">Premium Quality Teas Direct from Source</p>
-      </div>
-      <div class="login__feature-card">
-        <span class="login__feature-icon">⭐</span>
-        <p class="login__feature-text">Shipped across India & 125+ countries</p>
-      </div>
-      <div class="login__feature-card">
-        <span class="login__feature-icon">⭐</span>
-        <p class="login__feature-text">Trusted by 10k+ tea lovers</p>
-      </div>
+  <!-- Left: Hero Image Section (Desktop only) -->
+  <div class="login__hero">
+    <img [src]="heroImage" [alt]="heroTagline" class="login__hero-image" />
+    <div class="login__hero-overlay"></div>
+    <div class="login__hero-content">
+      <div class="login__hero-tagline">{{ heroTagline }}</div>
     </div>
   </div>
 
-  <!-- Right: Auth Form -->
-  <div class="login__form-panel">
-    <!-- Logo for mobile (hidden on desktop) -->
+  <!-- Right: Login Card Section -->
+  <div class="login__card-wrapper">
+    <!-- Mobile Logo -->
     <div class="login__logo-mobile">
       <app-logo></app-logo>
     </div>
 
-    <div class="login__form-inner" [class.entered]="entered()">
-      <!-- Step dots -->
-      <div class="login__steps">
-        <div class="login__step-dot" [class.active]="true" [class.done]="step() === 'otp'"></div>
-        <div class="login__step-line" [class.active]="step() === 'otp'"></div>
-        <div class="login__step-dot" [class.active]="step() === 'otp'"></div>
-      </div>
-
-      <div class="login__header">
-        <h2 class="login__title">Login Now</h2>
-        <p class="login__subtitle">
+    <!-- Premium Login Card -->
+    <div class="login__card" [class.entered]="entered()">
+      <!-- Card Header -->
+      <div class="login__card-header">
+        <div class="login__logo-desktop">
+          <app-logo></app-logo>
+        </div>
+        <h1 class="login__card-title">Welcome back</h1>
+        <p class="login__card-subtitle">
           {{ step() === 'phone'
-            ? 'Enter Mobile Number'
-            : 'Enter the 6-digit code sent to +91 ' + phone() }}
+            ? 'Sign in to continue your journey'
+            : 'Verify your identity' }}
         </p>
       </div>
 
+      <!-- Error Message -->
       @if (error()) {
         <div class="login__error" (click)="error.set(null)">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="8" fill="#C0392B"/>
-            <path d="M5 5L11 11M11 5L5 11" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <svg class="login__error-icon" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="8" fill="#C0392B" />
+            <path d="M5 5L11 11M11 5L5 11" stroke="white" stroke-width="1.5" stroke-linecap="round" />
           </svg>
-          <span>{{ error() }}</span>
+          <span class="login__error-text">{{ error() }}</span>
         </div>
       }
 
       <!-- Phone Step -->
       @if (step() === 'phone') {
-        <div class="login__section">
-          <label class="login__label">MOBILE NUMBER</label>
-          <div class="login__phone-group">
-            <div class="login__country">
-              <svg class="login__flag" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
-                <rect width="900" height="200" fill="#FF9933"/>
-                <rect y="200" width="900" height="200" fill="#FFFFFF"/>
-                <rect y="400" width="900" height="200" fill="#138808"/>
-                <circle cx="450" cy="300" r="60" fill="#000080"/>
-                <circle cx="450" cy="300" r="50" fill="none" stroke="#000080" stroke-width="3"/>
-                <text x="450" y="310" text-anchor="middle" font-size="30" fill="#000080">⚙</text>
-              </svg>
-              <span>+91</span>
+        <div class="login__form-section">
+          <div class="login__form-group">
+            <label class="login__form-label">Phone number</label>
+            <div class="login__phone-input-group">
+              <div class="login__country-code">
+                <svg class="login__country-flag" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="900" height="200" fill="#FF9933" />
+                  <rect y="200" width="900" height="200" fill="#FFFFFF" />
+                  <rect y="400" width="900" height="200" fill="#138808" />
+                  <circle cx="450" cy="300" r="60" fill="#000080" />
+                  <circle cx="450" cy="300" r="50" fill="none" stroke="#000080" stroke-width="3" />
+                  <text x="450" y="310" text-anchor="middle" font-size="30" fill="#000080">⚙</text>
+                </svg>
+                <span class="login__country-code-text">+91</span>
+              </div>
+              <input
+                #phoneInput
+                type="tel"
+                class="login__phone-input"
+                placeholder="Enter your 10-digit number"
+                [value]="phone()"
+                (input)="onPhoneInput($event)"
+                maxlength="10"
+                (keyup.enter)="onSendOtp()"
+                autocomplete="tel"
+              />
             </div>
-            <input
-              #phoneInput
-              type="tel"
-              class="login__phone-input"
-              placeholder="Enter 10-digit number"
-              [value]="phone()"
-              (input)="onPhoneInput($event)"
-              maxlength="10"
-              (keyup.enter)="onSendOtp()"
-              autocomplete="tel"
-            />
           </div>
+
           <button
-            class="login__btn-submit"
+            class="login__primary-btn"
             [class.loading]="loading()"
             [disabled]="phone().length !== 10 || loading()"
             (click)="onSendOtp()"
           >
             @if (!loading()) {
-              <span>CONTINUE</span>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <span class="login__btn-text">Continue</span>
+              <svg class="login__btn-icon" viewBox="0 0 20 20" fill="none">
+                <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             } @else {
               <div class="login__spinner"></div>
@@ -105,15 +92,18 @@
 
       <!-- OTP Step -->
       @if (step() === 'otp') {
-        <div class="login__section">
-          <label class="login__label">VERIFICATION CODE</label>
+        <div class="login__form-section">
+          <p class="login__otp-hint">
+            Enter the 6-digit code sent to <strong>+91 {{ phone() }}</strong>
+          </p>
+
           <div class="login__otp-inputs">
             @for (i of otpSlots; track i) {
               <input
                 #otpInput
                 type="text"
                 inputmode="numeric"
-                class="otp-box"
+                class="login__otp-input"
                 maxlength="1"
                 [value]="otpDigits()[i]"
                 (input)="onOtpDigitInput($event, i)"
@@ -125,13 +115,13 @@
           </div>
 
           <button
-            class="login__btn-submit"
+            class="login__primary-btn"
             [class.loading]="loading()"
             [disabled]="otp().length !== 6 || loading()"
             (click)="onVerifyOtp()"
           >
             @if (!loading()) {
-              <span>VERIFY &amp; SIGN IN</span>
+              <span class="login__btn-text">Verify & Sign In</span>
             } @else {
               <div class="login__spinner"></div>
             }
@@ -139,23 +129,25 @@
 
           <div class="login__otp-actions">
             <button
-              class="login__link"
+              class="login__secondary-btn"
               [disabled]="resendCooldown() > 0"
               (click)="onSendOtp()"
             >
-              {{ resendCooldown() > 0 ? 'Resend in ' + resendCooldown() + 's' : 'RESEND CODE' }}
+              {{ resendCooldown() > 0 ? 'Resend in ' + resendCooldown() + 's' : 'Resend code' }}
             </button>
-            <button class="login__link" (click)="changePhone()">
-              CHANGE NUMBER
+            <button class="login__secondary-btn" (click)="changePhone()">
+              Change number
             </button>
           </div>
         </div>
       }
 
-      <p class="login__terms">
+      <!-- Terms & Privacy -->
+      <p class="login__legal">
         By continuing, you agree to our
-        <a routerLink="/page/terms-of-service" target="_blank">Terms of Service</a> &amp;
-        <a routerLink="/page/privacy-policy" target="_blank">Privacy Policy</a>
+        <a routerLink="/page/terms-conditions" target="_blank" class="login__legal-link">Terms of Service</a>
+        &amp;
+        <a routerLink="/page/privacy-policy" target="_blank" class="login__legal-link">Privacy Policy</a>
       </p>
     </div>
   </div>
