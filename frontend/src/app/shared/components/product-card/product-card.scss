@@ -38,7 +38,6 @@
   justify-content: center;
   padding: 16px;
   min-height: 0;
-  border-bottom: 1px solid #f3f4f6;
   box-sizing: border-box;
 }
 
@@ -228,7 +227,6 @@
   background-color: #fff7ed; // orange-50
   color: #7c2d12; // orange-850 equivalent / dark brown-orange
   padding: 2px 6px;
-  border: 1px solid rgba(254, 215, 170, 0.3); // orange-100/30
   text-transform: uppercase;
   letter-spacing: 0.08em;
   display: inline-block;
@@ -333,7 +331,6 @@
   font-weight: 500;
   color: #374151;
   background: #f9fafb;
-  border: 1px solid #e5e7eb;
   padding: 4px 10px;
   border-radius: 4px; // slightly rounder corners
   cursor: pointer;
@@ -341,13 +338,11 @@
 
   &:hover {
     background: #f3f4f6;
-    border-color: #cbd5e1;
   }
 
   &--active {
     background: #111827;
     color: #ffffff;
-    border-color: #111827;
   }
 }
 
@@ -393,7 +388,6 @@
 .product-card__cart-icon {
   width: 36px;
   height: 36px;
-  border: 1px solid #111827; // gray-900
   background-color: #ffffff;
   color: #111827;
   cursor: pointer;
