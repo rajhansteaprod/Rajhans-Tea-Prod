@@ -131,13 +131,23 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   onOtpPaste(event: ClipboardEvent): void {
     event.preventDefault();
     const pasted = event.clipboardData?.getData('text')?.replace(/\D/g, '').slice(0, 6) || '';
-    const digits = pasted.split('').concat(Array(6).fill('')).slice(0, 6);
+
+    if (!pasted.length) return;
+
+    // Fill digits from pasted content
+    const digits = [...this.otpDigits()];
+    for (let i = 0; i < pasted.length && i < 6; i++) {
+      digits[i] = pasted[i];
+    }
+
     this.otpDigits.set(digits);
     this.otp.set(digits.join(''));
 
+    // Focus the last filled input
     const lastFilledIndex = Math.min(pasted.length - 1, 5);
     this.focusOtpInput(lastFilledIndex);
 
+    // Auto-verify if all 6 digits are pasted
     if (pasted.length === 6) {
       setTimeout(() => this.onVerifyOtp(), 150);
     }
@@ -195,7 +205,7 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   private focusOtpInput(index: number): void {
     if (!this.otpInputElements.length) {
       this.otpInputElements = Array.from(
-        document.querySelectorAll('.otp-box'),
+        document.querySelectorAll('.login__otp-input'),
       ) as HTMLInputElement[];
     }
     this.otpInputElements[index]?.focus();
