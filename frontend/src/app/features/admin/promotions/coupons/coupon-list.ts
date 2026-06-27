@@ -34,6 +34,7 @@ export class CouponListComponent {
   coupons = signal<Coupon[]>([]);
   isLoading = signal(false);
   error = signal<string | null>(null);
+  errorList = signal<string | null>(null);
   showForm = signal(false);
 
   formData = signal<Partial<Coupon>>({
@@ -47,7 +48,7 @@ export class CouponListComponent {
   ngOnInit() {
     this.loadCoupons();
   }
-
+   
   loadCoupons() {
     this.isLoading.set(true);
     this.error.set(null);
@@ -58,6 +59,7 @@ export class CouponListComponent {
       },
       error: (err) => {
         this.error.set(err.error?.message || 'Failed to load coupons');
+        
         this.isLoading.set(false);
       },
     });
@@ -92,6 +94,9 @@ export class CouponListComponent {
       },
       error: (err) => {
         this.error.set(err.error?.message || 'Failed to save coupon');
+        this.errorList.set(err.error?.errors ? err.error.errors.map((e: any) => "For field "+e.field+": "+e.message+`
+        `).join('<br> ') : null);
+        console.log('Error loading coupons:', err);
       },
     });
   }

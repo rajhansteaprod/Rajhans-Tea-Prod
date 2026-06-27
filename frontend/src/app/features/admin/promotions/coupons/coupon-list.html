@@ -147,7 +147,8 @@
 
   <!-- Error State -->
   <div class="error-state" *ngIf="error()">
-    <p>{{ error() }}</p>
+    <div>{{ error() }}</div>
+   <div [innerHTML]="errorList()" class="c"></div>
   </div>
 
   <!-- Coupons Table -->

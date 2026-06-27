@@ -4,7 +4,8 @@ import { logger } from '../utils/logger';
 
 export const connectMongoDB = async (): Promise<void> => {
   const uri = config.env === 'development' ? config.mongo.testUri : config.mongo.uri;
-
+  logger.info(`Connecting to MongoDB at ${uri}...`);
+  console.log(`Connecting to MongoDB at ${uri}...`);
   try {
     await mongoose.connect(uri);
     logger.info(`MongoDB connected: ${mongoose.connection.host}`);

@@ -290,3 +290,9 @@ tbody tr:hover td { background: rgba(204, 88, 3, 0.02); }
 
   .btn-primary { margin-top: $space-md; }
 }
+.error-List{
+  text-align: center;
+  span{
+    color: $color-error;
+  }
+}

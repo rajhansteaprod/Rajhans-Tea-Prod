@@ -38,6 +38,7 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
       statusCode: StatusCodes.BAD_REQUEST,
       message: 'Validation failed',
       errors,
+       ...(config.env === 'development' && { stack: err.stack }),
     });
   }
 
