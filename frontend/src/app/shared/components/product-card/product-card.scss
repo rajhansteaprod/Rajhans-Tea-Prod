@@ -245,6 +245,7 @@
   gap: 8px;
   padding: 4px 0;
   width: 100%;
+  flex-wrap: wrap; // allow wrapping for smaller screens
 }
 
 .product-card__price-original {
@@ -281,6 +282,11 @@
   padding: 3px 8px;
   border-radius: 4px;
   display: inline-block;
+  max-width:80px;
+  @media(max-width:768px){
+    flex:1 0 100%;
+    margin-left:0;
+  }
 }
 
 // ── Product Variants (Inter, Sans-Serif) ──
