@@ -39,13 +39,30 @@ export const startFulfillmentWorker = (): void => {
 
         try {
           shipmentLogger.debug({ orderId }, '📤 Calling orderService.shipOrder()');
-          await orderService.shipOrder(orderId);
-          shipmentLogger.info({ orderId }, '✅ Order shipped successfully via Shiprocket');
+          const updatedOrder = await orderService.shipOrder(orderId);
+          shipmentLogger.info({
+            orderId,
+            orderStatus: updatedOrder.status,
+            shiprocketOrderId: updatedOrder.shiprocket.orderId,
+          }, '✅ Order processed with Shiprocket');
 
           // Create Shipment document for tracking
           shipmentLogger.debug({ orderId }, '📋 Creating shipment tracking document');
-          await shipmentService.createFromOrder(orderId);
-          shipmentLogger.info({ orderId }, '✅ Shipment tracking document created');
+          try {
+            await shipmentService.createFromOrder(orderId);
+            shipmentLogger.info({ orderId }, '✅ Shipment tracking document created');
+          } catch (shipmentErr) {
+            // Log shipment creation error but don't fail the job yet
+            // The shipment creation might fail if Shiprocket data isn't ready
+            // It will be retried on the next sync or when tracking is fetched
+            shipmentLogger.warn({
+              orderId,
+              jobId: job.id,
+              error: shipmentErr instanceof Error ? shipmentErr.message : String(shipmentErr),
+            }, '⚠️ Shipment creation failed (may retry on next sync)');
+            // Re-throw to let job retry
+            throw shipmentErr;
+          }
         } catch (err) {
           shipmentLogger.error({
             orderId,

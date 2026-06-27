@@ -1,273 +1,389 @@
 @use '../../core/design-tokens/tokens' as *;
 @use '../../core/design-tokens/mixins' as *;
 
-.account {
-  max-width: $max-width-wide;
-  margin: 0 auto;
-  padding: $space-xxl clamp($space-lg, 5vw, $space-xxxl);
+// ============================================
+// DASHBOARD: PREMIUM DESIGN SYSTEM
+// Apple × Stripe × Linear Quality
+// ============================================
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+// ── HEADER: Personalized Greeting ──
+.dashboard__header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #ffffff;
+  border-bottom: 1px solid rgba($color-mono-dark, 0.06);
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.95);
   padding-top: 120px;
+  padding-bottom: $space-lg;
+  padding-left: clamp($space-md, 4vw, $space-xxxl);
+  padding-right: clamp($space-md, 4vw, $space-xxxl);
 
   @include respond-to(md) {
-    padding-top: 90px;
+    padding-top: 100px;
+    padding-bottom: $space-md;
+    padding-left: $space-md;
+    padding-right: $space-md;
+  }
+
+  @include respond-to(sm) {
+    padding-top: 80px;
+    padding-bottom: $space-md;
     padding-left: $space-md;
     padding-right: $space-md;
   }
 }
 
-// ── Header ──
-.account__header {
+.dashboard__header-content {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: $space-xxl;
-  padding-bottom: $space-xl;
-  border-bottom: 1px solid rgba($color-mono-dark, 0.08);
-  gap: $space-lg;
-
-  @include respond-to(sm) {
-    flex-direction: column;
-  }
-}
-
-.account__title {
-  font-family: $font-family;
-  font-size: clamp(24px, 4vw, 32px);
-  font-weight: $font-weight-medium;
-  color: $color-mono-dark;
-  margin: 0 0 $space-xxs;
-}
-
-.account__subtitle {
-  font-family: $font-family;
-  font-size: $font-size-sm;
-  color: rgba($color-mono-dark, 0.5);
-  margin: 0;
-}
-
-.account__admin-btn {
-  font-family: $font-family;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  color: $color-mono-light;
-  background: $color-mono-dark;
-  padding: $space-sm $space-lg;
-  text-decoration: none;
-  letter-spacing: $letter-spacing-wide;
-  text-transform: uppercase;
-  white-space: nowrap;
-
-  &:hover {
-    background: rgba($color-mono-dark, 0.85);
-  }
-}
-
-// ── Mobile menu toggle ──
-.account__mobile-toggle {
-  display: none;
   align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  margin-bottom: $space-md;
-  border: 1px solid rgba($color-mono-dark, 0.1);
-  background: none;
-  font-family: $font-family;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: $color-mono-dark;
-  cursor: pointer;
-
-  @include respond-to(md) {
-    display: flex;
-  }
-}
-
-// ── Layout: sidebar + content ──
-.account__layout {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: $space-xxl;
-  align-items: flex-start;
-
-  @include respond-to(lg) {
-    grid-template-columns: 240px 1fr;
-    gap: $space-xl;
-  }
-
-  @include respond-to(md) {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-}
-
-// ── Sidebar ──
-.account__sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: $space-lg;
-  position: sticky;
-  top: 120px;
-
-  @include respond-to(md) {
-    position: static;
-    margin-bottom: $space-lg;
-    overflow: hidden;
-  }
-}
-
-.account__nav-scroll {
-  display: flex;
-  flex-direction: column;
-  gap: $space-md;
+  justify-content: space-between;
+  gap: $space-xl;
+  max-width: 1400px;
+  margin: 0 auto;
   width: 100%;
 
   @include respond-to(md) {
-    flex-direction: row;
-    gap: $space-sm;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-behavior: smooth;
-    scroll-snap-type: x mandatory;
-    padding-bottom: $space-xs;
-    -webkit-overflow-scrolling: touch;
-
-    &::-webkit-scrollbar {
-      height: 4px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: rgba($color-mono-dark, 0.04);
-      border-radius: 2px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: rgba($color-mono-dark, 0.15);
-      border-radius: 2px;
-
-      &:hover {
-        background: rgba($color-mono-dark, 0.25);
-      }
-    }
+    flex-direction: column;
+    align-items: stretch;
+    gap: $space-lg;
   }
 }
 
-.account__nav-item {
-  display: flex;
-  flex-direction: column;
+.dashboard__greeting {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard__title {
+  margin: 0 0 $space-xs 0;
+  font-family: $font-family;
+  font-size: clamp(24px, 5vw, 32px);
+  font-weight: 600;
+  color: $color-mono-dark;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.dashboard__subtitle {
+  margin: 0;
+  font-family: $font-family;
+  font-size: 14px;
+  color: rgba($color-mono-dark, 0.55);
+  font-weight: 400;
+  letter-spacing: 0.2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard__admin-link {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: $space-sm;
-  padding: $space-lg;
+  padding: 10px $space-lg;
   font-family: $font-family;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: rgba($color-mono-dark, 0.7);
-  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: $color-mono-dark;
+  background: rgba($color-mono-dark, 0.04);
   border: 1px solid rgba($color-mono-dark, 0.08);
-  background: rgba($color-mono-dark, 0.02);
-  cursor: pointer;
-  text-align: center;
-  
-  transition: all 150ms ease;
-  width: 100%;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 200ms ease;
+  white-space: nowrap;
+  height: 40px;
+  flex-shrink: 0;
 
-  ::ng-deep svg {
-    width: 24px;
-    height: 24px;
-    stroke: rgba($color-mono-dark, 0.5);
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    fill: none;
-  }
-
-  span {
-    line-height: 1.2;
+  svg {
+    width: 18px;
+    height: 18px;
+    stroke: rgba($color-mono-dark, 0.6);
+    transition: stroke 200ms ease;
+    flex-shrink: 0;
   }
 
   &:hover {
-    color: $color-mono-dark;
+    background: rgba($color-mono-dark, 0.08);
     border-color: rgba($color-mono-dark, 0.12);
-    background: rgba($color-mono-dark, 0.04);
 
-    ::ng-deep svg {
+    svg {
       stroke: $color-mono-dark;
     }
   }
 
-  &.active {
-    color: $color-mono-light;
-    border-color: $color-mono-dark;
-    background: $color-mono-dark;
-    font-weight: $font-weight-semibold;
+  &:focus-visible {
+    outline: 2px solid rgba($color-primary, 0.5);
+    outline-offset: 2px;
+  }
 
-    ::ng-deep svg {
-      stroke: $color-mono-light;
+  @include respond-to(md) {
+    align-self: stretch;
+    width: 100%;
+  }
+}
+
+// ── MAIN CONTAINER ──
+.dashboard__container {
+  display: grid;
+  grid-template-columns: 256px 1fr;
+  gap: $space-xxl;
+  flex: 1;
+  width: 100%;
+  padding: $space-xxl clamp($space-md, 4vw, $space-xxxl);
+  max-width: 100%;
+
+  @include respond-to(lg) {
+    gap: $space-xl;
+    padding: $space-xl clamp($space-md, 4vw, $space-xxxl);
+  }
+
+  @include respond-to(md) {
+    grid-template-columns: 1fr;
+    gap: $space-xl;
+    padding: $space-xl $space-md;
+  }
+
+  @include respond-to(sm) {
+    gap: $space-lg;
+    padding: $space-lg;
+  }
+}
+
+// ── SIDEBAR: Navigation ──
+.dashboard__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xl;
+
+  @include respond-to(md) {
+    gap: $space-lg;
+  }
+}
+
+.dashboard__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba($color-mono-dark, 0.01);
+  border: 1px solid rgba($color-mono-dark, 0.06);
+  border-radius: 12px;
+  padding: 8px;
+  position: sticky;
+  top: 180px;
+
+  @include respond-to(md) {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: $space-sm;
+    padding: $space-sm;
+    border-radius: 8px;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      height: 3px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba($color-mono-dark, 0.1);
+      border-radius: 2px;
     }
   }
 
-  // Mobile: pill buttons (text only)
+  @include respond-to(sm) {
+    flex-wrap: wrap;
+  }
+}
+
+.dashboard__nav-link {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  padding: 12px $space-md;
+  font-family: $font-family;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba($color-mono-dark, 0.65);
+  text-decoration: none;
+  border-radius: 8px;
+  border-left: 2px solid transparent;
+  position: relative;
+  transition: all 200ms ease;
+  cursor: pointer;
+  height: 44px;
+
   @include respond-to(md) {
-    flex-direction: row;
-    width: auto;
-    padding: 6px 16px;
-    gap: $space-xs;
-    font-size: 11px;
-    border-radius: 20px;
+    height: auto;
+    padding: 8px 14px;
+    gap: $space-sm;
+    font-size: 13px;
     flex-shrink: 0;
     white-space: nowrap;
-    scroll-snap-align: start;
+    border-left: none;
+  }
 
-    ::ng-deep svg {
-      display: none;
+  &:hover {
+    color: $color-mono-dark;
+    background: rgba($color-mono-dark, 0.04);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba($color-primary, 0.5);
+    outline-offset: -2px;
+  }
+
+  &.active {
+    color: $color-primary;
+    background: rgba($color-primary, 0.08);
+    border-left-color: $color-primary;
+    font-weight: 600;
+
+    @include respond-to(md) {
+      border-left: none;
+      background: rgba($color-primary, 0.12);
     }
 
-    span {
-      line-height: 1.3;
+    .dashboard__nav-indicator {
+      opacity: 1;
+      transform: scaleX(1);
     }
   }
 }
 
-.account__logout-bottom {
+.dashboard__nav-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: $space-xs;
-  padding: $space-sm $space-md;
-  font-family: $font-family;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: rgba($color-mono-dark, 0.4);
-  border: none;
-  background: none;
-  cursor: pointer;
-  text-align: center;
-  border-radius: 8px;
-  transition: all 150ms ease;
-  width: 100%;
-  margin-top: $space-xl;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 
-  ::ng-deep svg {
-    width: 18px;
-    height: 18px;
-    stroke: rgba($color-mono-dark, 0.3);
+  svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
     stroke-width: 1.5;
     stroke-linecap: round;
     stroke-linejoin: round;
     fill: none;
   }
 
-  &:hover {
-    color: $color-error;
-    background: rgba($color-error, 0.04);
+  @include respond-to(md) {
+    width: 16px;
+    height: 16px;
 
-    ::ng-deep svg {
-      stroke: $color-error;
+    svg {
+      width: 16px;
+      height: 16px;
     }
   }
 }
 
-// ── Content ──
-.account__content {
-  min-height: 400px;
+.dashboard__nav-label {
+  flex: 1;
+
+  @include respond-to(md) {
+    flex: initial;
+  }
+}
+
+.dashboard__nav-indicator {
+  width: 4px;
+  height: 4px;
+  background: $color-primary;
+  border-radius: 50%;
+  opacity: 0;
+  transform: scaleX(0);
+  transition: all 200ms ease;
+  margin-left: auto;
+
+  @include respond-to(md) {
+    display: none;
+  }
+}
+
+// ── LOGOUT BUTTON ──
+.dashboard__logout {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  width: 100%;
+  padding: 12px $space-md;
+  font-family: $font-family;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba($color-mono-dark, 0.5);
+  background: none;
+  border: 1px solid rgba($color-error, 0.12);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 200ms ease;
+  height: 44px;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    stroke: rgba($color-mono-dark, 0.4);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    transition: stroke 200ms ease;
+  }
+
+  &:hover {
+    color: $color-error;
+    background: rgba($color-error, 0.06);
+    border-color: rgba($color-error, 0.2);
+
+    svg {
+      stroke: $color-error;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba($color-error, 0.4);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    background: rgba($color-error, 0.1);
+  }
+
+  @include respond-to(md) {
+    align-self: flex-start;
+  }
+}
+
+// ── MAIN CONTENT AREA ──
+.dashboard__content {
+  min-height: 500px;
+  animation: fadeIn 300ms ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

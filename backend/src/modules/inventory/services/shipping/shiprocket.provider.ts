@@ -170,6 +170,15 @@ export class ShiprocketProvider implements ShippingProvider {
       weight: 0.5,
     });
 
+    shipmentLogger.debug({
+      orderId: order._id,
+      orderNumber: order.orderNumber,
+      responseKeys: Object.keys(data),
+      order_id: data.order_id,
+      shipment_id: data.shipment_id,
+      response: JSON.stringify(data),
+    }, '📦 Shiprocket createOrder response details');
+
     return {
       providerOrderId: data.order_id,
       shipmentId: data.shipment_id,

@@ -30,6 +30,17 @@ export class ShipmentService {
       return existing;
     }
 
+    // Validate that Shiprocket data exists
+    if (!order.shiprocket.orderId || !order.shiprocket.shipmentId) {
+      shipmentLogger.error({
+        orderId,
+        orderNumber: order.orderNumber,
+        shiprocketOrderId: order.shiprocket.orderId,
+        shiprocketShipmentId: order.shiprocket.shipmentId,
+      }, '❌ Cannot create shipment: Shiprocket orderId or shipmentId missing. Order not yet created in Shiprocket.');
+      throw new Error('Shiprocket data incomplete: orderId or shipmentId missing. Retry after Shiprocket order creation succeeds.');
+    }
+
     try {
       shipmentLogger.debug({
         orderId,
@@ -81,6 +92,7 @@ export class ShipmentService {
     } catch (error) {
       shipmentLogger.error({
         orderId,
+        orderNumber: order.orderNumber,
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       }, '❌ Failed to create shipment document');

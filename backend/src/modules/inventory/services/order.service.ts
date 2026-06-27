@@ -136,11 +136,37 @@ export class OrderService {
       throw new BadRequestError('Order cannot be shipped in current status');
     }
 
+    // Idempotency: if already created in Shiprocket, skip API call
+    if (order.shiprocket.orderId && order.shiprocket.shipmentId) {
+      shipmentLogger.info({
+        orderId,
+        shiprocketOrderId: order.shiprocket.orderId,
+        shiprocketShipmentId: order.shiprocket.shipmentId,
+      }, '✓ Order already created in Shiprocket, skipping API call');
+
+      // If status is still confirmed, update to In Progress
+      if (order.status === 'confirmed') {
+        return this.updateStatus(orderId, 'In Progress', 'Order already in Shiprocket', null);
+      }
+      return order;
+    }
+
     const provider = getShippingProvider();
     const pickupLocation = '1';
 
     // Create shipping order in Shiprocket
     const shipment = await provider.createOrder(order, pickupLocation);
+
+    // Validate response data
+    if (!shipment.providerOrderId || !shipment.shipmentId) {
+      shipmentLogger.error({
+        orderId,
+        providerOrderId: shipment.providerOrderId,
+        shipmentId: shipment.shipmentId,
+      }, '❌ Shiprocket response missing required fields');
+      throw new BadRequestError('Shiprocket API response invalid: missing orderId or shipmentId');
+    }
+
     await this.orderRepo.updateShiprocketInfo(orderId, {
       orderId: String(shipment.providerOrderId),
       shipmentId: shipment.shipmentId,
