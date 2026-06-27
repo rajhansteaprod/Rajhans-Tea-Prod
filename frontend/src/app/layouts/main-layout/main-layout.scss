@@ -14,7 +14,7 @@
 
   @include respond-to(md) {
     padding-top: calc(#{$announcement-bar-height} + #{$header-height-md});
-    padding-bottom: $bottom-nav-height; // bottom mobile nav (60px)
+    // bottom mobile nav (60px)
   }
 }
 
