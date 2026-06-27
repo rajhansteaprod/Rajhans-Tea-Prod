@@ -53,7 +53,14 @@ export class CartRepository {
       cart.items.push({ productId: pid, slug: slug || '', variantId: vid, qty, addedAt: new Date() });
     }
 
-    return cart.save();
+    await cart.save();
+
+    // Repopulate and return
+    const updatedCart = await Cart.findOne(filter)
+      .populate('items.productId', 'name slug images basePrice category collections status shortDescription description discountedPrice')
+      .populate('items.variantId', 'name price discountedPrice')
+      .exec();
+    return updatedCart as ICartDoc;
   }
 
   // Remove item for both guest and user
@@ -75,7 +82,14 @@ export class CartRepository {
       pullFilter.variantId = { $exists: false };
     }
 
-    return Cart.findOneAndUpdate(filter, { $pull: { items: pullFilter } }, { new: true }).exec();
+    await Cart.findOneAndUpdate(filter, { $pull: { items: pullFilter } }, { new: true }).exec();
+
+    // Repopulate and return
+    const updatedCart = await Cart.findOne(filter)
+      .populate('items.productId', 'name slug images basePrice category collections status shortDescription description discountedPrice')
+      .populate('items.variantId', 'name price discountedPrice')
+      .exec();
+    return updatedCart;
   }
 
   // Clear all items
@@ -137,7 +151,12 @@ export class CartRepository {
     // Delete guest cart
     await Cart.deleteOne({ guestSessionId }).exec();
 
-    return Cart.findById(userCart._id).exec();
+    // Repopulate and return
+    const mergedCart = await Cart.findById(userCart._id)
+      .populate('items.productId', 'name slug images basePrice category collections status shortDescription description discountedPrice')
+      .populate('items.variantId', 'name price discountedPrice')
+      .exec();
+    return mergedCart as ICartDoc;
   }
 
   // Delete old guest carts (called by background job)
