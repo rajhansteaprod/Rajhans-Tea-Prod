@@ -141,7 +141,7 @@
 
 .orders__table-header {
   display: grid;
-  grid-template-columns: 120px 100px 100px 80px 100px 120px 100px;
+  grid-template-columns: 120px 1fr 120px 100px 100px 120px 120px;
   gap: $space-lg;
   padding: $space-md $space-lg;
   background: rgba($color-mono-dark, 0.02);
@@ -178,7 +178,7 @@
 
 .orders__row-main {
   display: grid;
-  grid-template-columns: 120px 100px 100px 80px 100px 120px 100px;
+  grid-template-columns: 120px 1fr 120px 100px 100px 120px 120px;
   gap: $space-lg;
   padding: $space-md $space-lg;
   align-items: center;
@@ -234,6 +234,8 @@
   &--shipping {
     color: rgba($color-mono-dark, 0.6);
     font-size: $font-size-sm;
+    word-break: break-word;
+    line-height: 1.4;
 
     @include respond-to(lg) {
       &::before {

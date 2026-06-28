@@ -29,7 +29,7 @@
     <div class="bulk-actions">
       <span class="selection-info">{{ getSelectedCount() }} order(s) selected</span>
       <button class="btn-primary" (click)="openShipmentModal()" [disabled]="shipmentLoading()">
-        📦 Ship Selected
+        Ship Selected
       </button>
       <button class="btn-secondary" (click)="clearSelection()">Clear</button>
     </div>
@@ -95,7 +95,7 @@
                     title="Ship Now"
                     [disabled]="shipmentLoading()"
                   >
-                    📦
+                    Ship
                   </button>
                   <button
                     class="btn-sm"
@@ -103,7 +103,7 @@
                     [class.active]="isOrderSelected(order._id)"
                     title="Select for bulk ship"
                   >
-                    ✓
+                    Select
                   </button>
                 </div>
               </td>
@@ -139,7 +139,7 @@
     <div class="modal">
       <div class="modal-head">
         <h2>Ship {{ getSelectedCount() }} Order(s)</h2>
-        <button (click)="closeShipmentModal()">✕</button>
+        <button (click)="closeShipmentModal()" title="Close">×</button>
       </div>
       <div class="modal-body">
         <div class="form-section">
@@ -185,7 +185,7 @@
     <div class="modal">
       <div class="modal-head">
         <h2>Ship Order Now</h2>
-        <button (click)="closeSingleShipmentModal()">✕</button>
+        <button (click)="closeSingleShipmentModal()" title="Close">×</button>
       </div>
       <div class="modal-body">
         @if (shipmentError()) {

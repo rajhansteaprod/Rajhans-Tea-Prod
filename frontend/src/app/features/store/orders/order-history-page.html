@@ -46,12 +46,12 @@
             <div class="orders__col orders__col--order">
               <div class="orders__order-wrapper">
                 <div class="orders__order-item">{{ order.orderNumber }}</div>
-                <button (click)="openTracking(order)" class="orders__action-link orders__action-link--mobile">
+                <a [routerLink]="['/track-order']" [queryParams]="{ order: order.orderNumber }" class="orders__action-link orders__action-link--mobile">
                   Track my Order
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                     <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
-                </button>
+                </a>
               </div>
             </div>
             <div class="orders__col orders__col--shipping">{{ order.shippingAddress.street }}, {{ order.shippingAddress.city }}, {{ order.shippingAddress.state }} {{ order.shippingAddress.pincode }}</div>
@@ -64,12 +64,12 @@
               </div>
             </div>
             <div class="orders__col orders__col--actions">
-              <button (click)="openTracking(order)" class="orders__action-link">
+              <a [routerLink]="['/track-order']" [queryParams]="{ order: order.orderNumber }" class="orders__action-link">
                 Track my Order
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                   <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-              </button>
+              </a>
             </div>
           </div>
 

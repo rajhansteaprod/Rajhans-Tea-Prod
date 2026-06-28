@@ -139,13 +139,16 @@ export class ShiprocketProvider implements ShippingProvider {
     const firstName = sanitizeName(nameParts[0] || '');
     const lastName = sanitizeName(nameParts.slice(1).join(' ') || '');
 
+    // Use warehouse as default pickup location (most common active warehouse)
+    const activePickupLocation = pickupLocation || 'warehouse';
+
     const data = await this.request('POST', '/orders/create/adhoc', {
 
       // channel id not required for adhoc orders
       // channel_id: config.shipping.shiprocket.channelId,
       order_id: order.orderNumber,
       order_date: new Date(order.createdAt).toISOString().replace('T', ' ').slice(0, 19),
-      pickup_location: pickupLocation,
+      pickup_location: activePickupLocation,
       billing_customer_name: firstName || 'Customer',
       billing_last_name: lastName || '-',
       billing_address: addr.address,
@@ -169,6 +172,25 @@ export class ShiprocketProvider implements ShippingProvider {
       height: 10,
       weight: 0.5,
     });
+
+    // Check if response contains error about pickup location
+    if (data.message?.includes('Wrong Pickup location') || data.message?.includes('pickup location')) {
+      const availableLocations = data.data?.data || [];
+      shipmentLogger.error({
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        usedLocation: activePickupLocation,
+        availableLocations: availableLocations.map((loc: any) => ({
+          id: loc.id,
+          pickup_location: loc.pickup_location,
+          address: loc.address,
+          city: loc.city,
+          status: loc.status,
+        })),
+        errorMessage: data.message,
+      }, '❌ Shiprocket pickup location error - Available locations listed above');
+      throw new Error(`Invalid pickup location "${activePickupLocation}". Available locations: ${availableLocations.map((l: any) => `${l.pickup_location} (${l.address})`).join(', ')}`);
+    }
 
     shipmentLogger.debug({
       orderId: order._id,
@@ -202,16 +224,22 @@ export class ShiprocketProvider implements ShippingProvider {
     };
   }
 
-  async trackByOrderId(orderId: string): Promise<any> {
+  async trackByOrderId(orderIdOrNumber: string): Promise<any> {
     const channelId = config.shipping.shiprocket.channelId;
-    const path = `/courier/track?order_id=${orderId}&channel_id=${channelId}`;
+    // Can accept either order ID (numeric shiprocket ID) or order number (RJT_DQ_436916)
+    const path = `/courier/track?order_id=${orderIdOrNumber}&channel_id=${channelId}`;
     let data: any = {};
 
     try {
+      shipmentLogger.debug({
+        orderIdOrNumber,
+        path,
+      }, '📡 Requesting tracking from Shiprocket API');
+
       data = await this.request('GET', path);
     } catch (error) {
       shipmentLogger.error({
-        orderId,
+        orderIdOrNumber,
         path,
         error: error instanceof Error ? error.message : String(error),
       }, '❌ Failed to fetch tracking from Shiprocket');
@@ -220,30 +248,39 @@ export class ShiprocketProvider implements ShippingProvider {
 
     if (!data || !data.data || data.data.length === 0) {
       shipmentLogger.warn({
-        orderId,
-        fullResponse: JSON.stringify(data),
-        responseKeys: Object.keys(data),
+        orderIdOrNumber,
+        responseStatus: data?.status_code,
+        message: data?.message,
         dataField: data?.data,
-      }, '⚠️ No tracking data found - CHECK RESPONSE STRUCTURE');
+      }, '⚠️ No tracking data found for order');
       return null;
     }
 
     const tracking = data.data[0]; // First shipment for this order
 
-    shipmentLogger.debug({
-      orderId,
+    shipmentLogger.info({
+      orderIdOrNumber,
       status: tracking?.shipment_status,
       awb: tracking?.awb,
-    }, '✅ Tracking data retrieved');
+      courier: tracking?.courier_name,
+    }, '✅ Tracking data retrieved from Shiprocket');
+
+    shipmentLogger.debug({
+      fullTrackingData: tracking,
+      allActivities: tracking?.shipment_track_activities?.length || 0,
+    }, '🔍 Full Shiprocket tracking response');
 
     return {
-      currentStatus: tracking?.shipment_status || null,
+      currentStatus: tracking?.shipment_status || 'unknown',
       trackingUrl: tracking?.track_url || null,
       estimatedDelivery: tracking?.etd ? new Date(tracking.etd) : null,
+      awbCode: tracking?.awb || null,
+      courierName: tracking?.courier_name || null,
       activities: (tracking?.shipment_track_activities || []).map((a: any) => ({
         date: a.date,
         status: a.activity,
-        location: a.location || '',
+        location: a.location || 'N/A',
+        remark: a.remark || '',
       })),
     };
   }

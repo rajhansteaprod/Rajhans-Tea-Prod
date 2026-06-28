@@ -43,6 +43,22 @@ export const getOrderTracking = async (req: Request, res: Response) => {
   sendSuccess(res, tracking);
 };
 
+// Public endpoint: Track by order number (RJT_DQ_436916)
+export const trackOrderByNumber = async (req: Request, res: Response) => {
+  const orderNumber = req.params['orderNumber'] as string;
+
+  shipmentLogger.info({ orderNumber }, '▶ Public tracking request for order number');
+
+  if (!orderNumber || orderNumber.trim() === '') {
+    throw new BadRequestError('Order number is required');
+  }
+
+  const tracking = await orderService.getTrackingByOrderNumber(orderNumber);
+
+  shipmentLogger.info({ orderNumber }, '✅ Tracking data returned to customer');
+  sendSuccess(res, tracking, 'Order tracking information');
+};
+
 export const getShippingRates = async (req: Request, res: Response) => {
   const { pincode, weight } = req.query as { pincode: string; weight?: string };
   // Use default warehouse pincode as pickup

@@ -36,6 +36,12 @@ router.get(
 router.get('/shipping/rates', validate(shippingRateSchema), ctrl.getShippingRates);
 
 // ===========================================================================
+// PUBLIC — Order Tracking by Order Number (No Auth Required)
+// ===========================================================================
+
+router.get('/track/:orderNumber', ctrl.trackOrderByNumber);
+
+// ===========================================================================
 // SHIPROCKET WEBHOOK
 // ===========================================================================
 

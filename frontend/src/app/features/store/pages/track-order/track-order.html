@@ -1,84 +1,132 @@
-<div class="track-order-section">
-  <div class="container">
-    <div class="header">
-      <h1>Track Your Order</h1>
-      <p>Enter your tracking number to see the latest updates on your order</p>
-    </div>
+<div class="track-page">
 
-    <div class="search-box">
-      <div class="input-group">
+    <header class="hero">
+        <h1>Track your order</h1>
+        <p>Real-time shipment updates.</p>
+    </header>
+
+    <!-- Search Section -->
+    <section class="search-card">
         <input
-          type="text"
-          [(ngModel)]="trackingNumber"
-          (keyup.enter)="searchOrder()"
-          placeholder="Enter tracking number (e.g., RJ123456789)"
-          class="tracking-input"
-          [disabled]="isSearching()"
-        />
-        <button
-          (click)="searchOrder()"
-          [disabled]="isSearching()"
-          class="search-btn"
-        >
-          {{ isSearching() ? 'Searching...' : 'Track Order' }}
+            class="search-input"
+            [(ngModel)]="orderNumber"
+            (keyup.enter)="trackOrder()"
+            [disabled]="loading()"
+            placeholder="Please enter order number" />
+        <button class="track-btn" (click)="trackOrder()" [disabled]="loading()">
+            {{ loading() ? 'Tracking...' : 'Track' }}
         </button>
-      </div>
+    </section>
 
-      @if (errorMessage()) {
-        <div class="error-message">{{ errorMessage() }}</div>
-      }
-    </div>
-
-    @if (orderFound()) {
-      <div class="order-result">
-        <div class="result-header">
-          <h2>Order Details</h2>
-          <button (click)="reset()" class="reset-btn">Search Again</button>
+    <!-- Error Message -->
+    @if (error()) {
+        <div style="padding: 16px; background: #FDECEC; border: 1px solid #FECACA; color: #DC2626; margin-bottom: 24px;">
+            {{ error() }}
         </div>
-
-        <div class="order-card">
-          <div class="order-row">
-            <span class="label">Tracking Number:</span>
-            <span class="value">{{ orderFound().trackingNumber }}</span>
-          </div>
-          <div class="order-row">
-            <span class="label">Status:</span>
-            <span class="value status" [class]="orderFound().status.toLowerCase().replace(' ', '-')">
-              {{ orderFound().status }}
-            </span>
-          </div>
-          <div class="order-row">
-            <span class="label">Estimated Delivery:</span>
-            <span class="value">{{ orderFound().estimatedDelivery }}</span>
-          </div>
-          <div class="order-row last">
-            <span class="label">Last Update:</span>
-            <span class="value">{{ orderFound().lastUpdate }}</span>
-          </div>
-        </div>
-
-        <div class="info-box">
-          <p>Your order is on its way! We'll send you email updates as your package moves through our delivery network.</p>
-        </div>
-      </div>
     }
 
-    <div class="faq-section">
-      <h3>Frequently Asked Questions</h3>
-      <div class="faq-items">
-        <div class="faq-item">
-          <h4>How long does delivery take?</h4>
-          <p>Standard delivery takes 3-5 business days. Express delivery is available for select locations.</p>
+    <!-- Results -->
+    @if (tracking() && !loading()) {
+        <!-- Order Card -->
+        <section class="result-card">
+            <div class="order-top">
+                <div style="width: 100%; text-align: center;">
+                    <h2 style="margin-bottom: 16px;">{{ tracking()!.orderNumber }}</h2>
+                    <div style="margin-top: 12px;">
+                        <span style="font-size: 14px; color: #666; margin-right: 8px;">Current Status:</span>
+                        <span class="status-pill" [ngClass]="getStatusClass(tracking()!.status)">
+                            {{ getStatusLabel(tracking()!.status) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            @if (hasShiprocketData()) {
+                <div class="info-grid">
+                    @if (tracking()!.shiprocket?.awbCode) {
+                        <div class="info-box">
+                            <span>Tracking Number</span>
+                            <strong>{{ tracking()!.shiprocket!.awbCode }}</strong>
+                        </div>
+                    }
+                    @if (tracking()!.shiprocket?.courierName) {
+                        <div class="info-box">
+                            <span>Courier</span>
+                            <strong>{{ tracking()!.shiprocket!.courierName }}</strong>
+                        </div>
+                    }
+                    @if (tracking()!.shiprocket?.estimatedDelivery) {
+                        <div class="info-box">
+                            <span>Estimated Delivery</span>
+                            <strong>{{ getDeliveryEstimate() }}</strong>
+                        </div>
+                    }
+                </div>
+            }
+        </section>
+
+        <!-- Timeline Card -->
+        @if (getVisibleStatusHistory().length > 0) {
+            <section class="timeline-card">
+                <h3>Tracking History</h3>
+                <div class="timeline">
+                    @for (event of getVisibleStatusHistory(); let i = $index; track i) {
+                        <div class="step" [class.active]="i === 0">
+                            <div class="dot"></div>
+                            <div>
+                                <h4>{{ getStatusLabel(event.status) }}</h4>
+                                <span>{{ formatDate(event.timestamp) }}</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+
+        <!-- Activity Card -->
+        @if (tracking()?.shiprocket?.activities && (tracking()?.shiprocket?.activities?.length || 0) > 0) {
+            <section class="activity-card">
+                @for (activity of tracking()!.shiprocket!.activities; let i = $index; track i) {
+                    <div class="activity">
+                        <div class="activity-icon">—</div>
+                        <div>
+                            <h4>{{ activity.status }}</h4>
+                            <p>{{ activity.location }}</p>
+                            <span>{{ formatDate(activity.date) }}</span>
+                        </div>
+                    </div>
+                }
+            </section>
+        }
+
+    }
+
+    <!-- Loading State -->
+    @if (loading()) {
+        <div style="padding: 60px 24px; text-align: center;">
+            <div style="width: 50px; height: 50px; border: 4px solid #f0f0f0; border-top-color: #111; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;"></div>
+            <p>Fetching your order details...</p>
         </div>
-        <div class="faq-item">
-          <h4>Where can I find my tracking number?</h4>
-          <p>You'll receive your tracking number via email once your order is dispatched from our warehouse.</p>
+    }
+
+    <!-- Initial State -->
+    @if (!searched() && !loading()) {
+        <div style="padding: 60px 24px; text-align: center; color: #888;">
+            <p style="font-size: 18px;">Enter your order number to get real-time tracking updates</p>
         </div>
-        <div class="faq-item">
-          <h4>What if my order is delayed?</h4>
-          <p>Contact our support team at giftings@rajhanstea.com if your order is delayed beyond the estimated date.</p>
+    }
+
+    <!-- Not Found -->
+    @if (searched() && !tracking() && !loading()) {
+        <div style="padding: 60px 24px; text-align: center;">
+            <p style="font-size: 18px; color: #dc2626;">Order not found. Please check the order number.</p>
         </div>
-      </div>
-    </div>
-  </div>
+    }
+
 </div>
+
+<style>
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
