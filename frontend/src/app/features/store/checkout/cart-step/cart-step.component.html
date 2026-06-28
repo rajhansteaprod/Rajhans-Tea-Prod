@@ -1,282 +1,264 @@
 <div class="checkout__panel checkout__panel--bag">
   @if (isEmpty()) {
-    <div class="checkout__empty">
-      <p>Your cart is empty.</p>
-      <a routerLink="/products" class="checkout__link">BROWSE PRODUCTS</a>
+    <div class="checkout__empty-state">
+      <div class="checkout__empty-content">
+        <h2 class="checkout__empty-title">Your cart is empty</h2>
+        <p class="checkout__empty-text">Add some items to get started</p>
+        <a routerLink="/products" class="checkout__empty-link">Continue Shopping</a>
+      </div>
     </div>
   } @else {
     <div class="checkout__bag-container">
-      <!-- LEFT COLUMN: Products -->
+      <!-- LEFT COLUMN: Cart Items -->
       <div class="checkout__bag-left">
-        <!-- Items Header -->
+        <!-- Header -->
         <div class="checkout__cart-header">
-          <span class="checkout__items-label">
-            {{ cartItems().length }} ITEMS IN TOTAL
-          </span>
+          <h1 class="checkout__cart-title">Your Bag</h1>
+          <p class="checkout__cart-subtitle">{{ cartItems().length }} {{ cartItems().length === 1 ? 'item' : 'items' }}</p>
         </div>
 
-        <!-- Products Section -->
-        <div class="checkout__products-section">
-          <div class="checkout__products-list">
-            @for (item of cartItems(); track item.productId) {
-              <div class="checkout__product-card">
-                <!-- Left: Image -->
-                <div class="checkout__product-card-image">
-                  @if (item.image) {
-                    <img [src]="item.image" [alt]="item.name" />
-                  } @else {
-                    <div class="checkout__img-ph">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                        <rect
-                          x="3"
-                          y="3"
-                          width="18"
-                          height="18"
-                          rx="2"
-                          stroke="currentColor"
-                          stroke-width="1.5"
-                        />
-                      </svg>
-                    </div>
-                  }
-                </div>
+        <!-- Products List -->
+        <div class="checkout__products-list">
+          @for (item of cartItems(); track item.productId) {
+            <div class="checkout__product-card">
+              <!-- Image Section -->
+              <div class="checkout__product-card-image">
+                @if (item.image) {
+                  <img [src]="item.image" [alt]="item.name" />
+                } @else {
+                  <div class="checkout__img-placeholder">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                    </svg>
+                  </div>
+                }
+              </div>
 
-                <!-- Middle: Product Details -->
-                <div class="checkout__product-card-content">
-                  <p class="checkout__product-card-name">{{ item.name }}</p>
-
+              <!-- Content Section -->
+              <div class="checkout__product-card-content">
+                <!-- Name & Description -->
+                <div class="checkout__product-header">
+                  <h3 class="checkout__product-name">{{ item.name }}</h3>
                   @if (item.shortDescription) {
                     <a
                       [routerLink]="['/product', item.slug]"
-                      class="checkout__product-card-subdescription"
+                      class="checkout__product-description"
                     >
                       {{ item.shortDescription }}
                     </a>
                   }
+                </div>
 
-                  @if (item.variantName) {
-                    <span class="checkout__variant-display">{{ item.variantName }}</span>
-                  }
-
+                <!-- Variant & Quantity Controls -->
+                <div class="checkout__product-controls">
                   @if (getVariantsForProduct(item.productId).length > 0) {
-                    <div class="checkout__variant-selector">
-                      @for (variant of getVariantsForProduct(item.productId); track variant._id) {
-                        <button
-                          class="checkout__variant-btn"
-                          [class.checkout__variant-btn--active]="item.variantId === variant._id"
-                          (click)="changeVariant(item.slug, item.productId, item.variantId, variant._id)"
-                        >
-                          {{ variant.name }}
-                        </button>
+                    <div class="checkout__variant-group">
+                      @if (item.variantName) {
+                        <span class="checkout__variant-label">{{ item.variantName }}</span>
                       }
+                      <div class="checkout__variant-selector">
+                        @for (variant of getVariantsForProduct(item.productId); track variant._id) {
+                          <button
+                            class="checkout__variant-option"
+                            [class.checkout__variant-option--active]="item.variantId === variant._id"
+                            (click)="changeVariant(item.slug, item.productId, item.variantId, variant._id)"
+                            type="button"
+                          >
+                            {{ variant.name }}
+                          </button>
+                        }
+                      </div>
                     </div>
                   }
 
-                  <div class="checkout__qty-wrapper">
-                    <span class="checkout__qty-label">Qty:</span>
-                    <div class="checkout__qty-group">
-                      <button
-                        class="checkout__qty-btn-minus"
-                        (click)="updateQty(item.productId, item.qty - 1, item.variantId)"
-                        [disabled]="item.qty === 1"
-                      >
-                        −
-                      </button>
-                      <span class="checkout__qty-value">{{ item.qty }}</span>
-                      <button
-                        class="checkout__qty-btn-plus"
-                        (click)="updateQty(item.productId, item.qty + 1, item.variantId)"
-                        [disabled]="item.qty >= 10"
-                      >
-                        +
-                      </button>
-                    </div>
+                  <!-- Quantity Stepper -->
+                  <div class="checkout__quantity-control">
+                    <button
+                      class="checkout__qty-btn"
+                      (click)="updateQty(item.productId, item.qty - 1, item.variantId)"
+                      [disabled]="item.qty === 1"
+                      aria-label="Decrease quantity"
+                      type="button"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14" />
+                      </svg>
+                    </button>
+                    <span class="checkout__qty-display">{{ item.qty }}</span>
+                    <button
+                      class="checkout__qty-btn"
+                      (click)="updateQty(item.productId, item.qty + 1, item.variantId)"
+                      [disabled]="item.qty >= 10"
+                      aria-label="Increase quantity"
+                      type="button"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
+              </div>
 
-                <!-- Right: Price + Remove -->
-                <div class="checkout__product-card-right">
-                  <span class="checkout__product-price">
-                    ₹{{ item.variantId && item.variantPrice ? (item.variantPrice | number: '1.0-0') : (item.discountedPrice | number: '1.0-0') }}
-                  </span>
-                  <button
-                    class="checkout__remove-btn"
-                    (click)="removeItem(item.productId, item.variantId)"
-                    title="Remove"
-                    type="button"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
-                    </svg>
-                  </button>
-                </div>
+              <!-- Price & Remove -->
+              <div class="checkout__product-footer">
+                <span class="checkout__product-price">
+                  ₹{{ item.variantId && item.variantPrice ? (item.variantPrice | number: '1.0-0') : (item.discountedPrice | number: '1.0-0') }}
+                </span>
+                <button
+                  class="checkout__remove-action"
+                  (click)="removeItem(item.productId, item.variantId)"
+                  aria-label="Remove item"
+                  type="button"
+                  title="Remove"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h18M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6M10 11v6M14 11v6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Browse More Link -->
+        <div class="checkout__continue-shopping">
+          <a routerLink="/products" class="checkout__continue-link">← Continue Shopping</a>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Order Summary (Sticky) -->
+      <div class="checkout__bag-right">
+        <!-- Order Summary Card -->
+        <div class="checkout__summary-card">
+          <h2 class="checkout__summary-title">Order Summary</h2>
+
+          <!-- Price Breakdown -->
+          <div class="checkout__price-breakdown">
+            <div class="checkout__breakdown-row">
+              <span class="checkout__breakdown-label">Subtotal</span>
+              <span class="checkout__breakdown-value">₹{{ cartSubtotal() | number: '1.0-0' }}</span>
+            </div>
+
+            <div class="checkout__breakdown-row">
+              <span class="checkout__breakdown-label">Shipping</span>
+              <span class="checkout__breakdown-value checkout__breakdown-value--positive">FREE</span>
+            </div>
+
+            @if (cartDiscount() > 0) {
+              <div class="checkout__breakdown-row">
+                <span class="checkout__breakdown-label">Discount</span>
+                <span class="checkout__breakdown-value checkout__breakdown-value--positive">-₹{{ cartDiscount() | number: '1.0-0' }}</span>
               </div>
             }
-          </div>
-        </div>
 
-        <!-- Offers Section -->
-        <div class="checkout__offers-wrapper">
-          <app-offer-cards (offerSelected)="onOfferSelected($event)"></app-offer-cards>
-        </div>
+            <div class="checkout__breakdown-divider"></div>
 
-        <!-- Mobile Price Breakdown (only visible on mobile) -->
-        <div class="checkout__mobile-price-breakdown">
-          <div class="checkout__mobile-price-row">
-            <span>Subtotal</span>
-            <span>₹{{ cartSubtotal() | number: '1.0-0' }}</span>
+            <div class="checkout__breakdown-row checkout__breakdown-row--total">
+              <span class="checkout__breakdown-label">Total</span>
+              <span class="checkout__breakdown-value--total">₹{{ cartTotal() | number: '1.0-0' }}</span>
+            </div>
           </div>
-          @if (cartDiscount() > 0) {
-            <div class="checkout__mobile-price-row checkout__mobile-price-row--discount">
-              <span>Discount</span>
-              <span>-₹{{ cartDiscount() | number: '1.0-0' }}</span>
+
+          <!-- Offers Section (in right column as per design) -->
+          @if (true) {
+            <div class="checkout__offers-section">
+              <app-offer-cards (offerSelected)="onOfferSelected($event)"></app-offer-cards>
             </div>
           }
 
           <!-- Promo Code Section -->
-          <div class="checkout__mobile-promo">
-            <input
-              type="text"
-              class="checkout__mobile-promo-input"
-              [placeholder]="isPromoApplied() ? promoCode() : 'Apply promo code'"
-              [(ngModel)]="promoCode"
-              name="promoCode"
-              [disabled]="isValidatingPromo() || isPromoApplied()"
-            />
-            @if (isPromoApplied()) {
-              <button
-                class="checkout__mobile-promo-btn checkout__mobile-promo-btn--remove"
-                (click)="removePromo()"
-                [disabled]="isValidatingPromo()"
-              >
-                {{ isValidatingPromo() ? 'REMOVING...' : 'REMOVE' }}
-              </button>
-            } @else {
-              <button
-                class="checkout__mobile-promo-btn"
-                (click)="applyPromo()"
-                [disabled]="isValidatingPromo()"
-              >
-                {{ isValidatingPromo() ? 'CHECKING...' : 'APPLY' }}
-              </button>
+          <div class="checkout__promo-card">
+            <label class="checkout__promo-label">Promo Code</label>
+            <div class="checkout__promo-input-group">
+              <input
+                type="text"
+                class="checkout__promo-input"
+                [placeholder]="isPromoApplied() ? promoCode() : 'Enter code'"
+                [(ngModel)]="promoCode"
+                name="promoCode"
+                [disabled]="isValidatingPromo() || isPromoApplied()"
+              />
+              @if (isPromoApplied()) {
+                <button
+                  class="checkout__promo-action checkout__promo-action--remove"
+                  (click)="removePromo()"
+                  [disabled]="isValidatingPromo()"
+                  type="button"
+                >
+                  {{ isValidatingPromo() ? '…' : '✕' }}
+                </button>
+              } @else {
+                <button
+                  class="checkout__promo-action"
+                  (click)="applyPromo()"
+                  [disabled]="isValidatingPromo()"
+                  type="button"
+                >
+                  {{ isValidatingPromo() ? '…' : 'Apply' }}
+                </button>
+              }
+            </div>
+
+            @if (promoSuccess()) {
+              <p class="checkout__promo-message checkout__promo-message--success">{{ promoSuccess() }}</p>
+            }
+            @if (promoError()) {
+              <p class="checkout__promo-message checkout__promo-message--error">{{ promoError() }}</p>
             }
           </div>
 
-          @if (promoSuccess()) {
-            <div class="checkout__mobile-promo-success">{{ promoSuccess() }}</div>
-          }
-          @if (promoError()) {
-            <div class="checkout__mobile-promo-error">{{ promoError() }}</div>
-          }
-
-          <!-- Terms Below Promo -->
-          <p class="checkout__mobile-terms-text">
-            By placing your order, you agree to our
-            <a routerLink="/terms" class="checkout__link">Terms of Use</a> and
-            <a routerLink="/privacy" class="checkout__link">Privacy Policy</a>.
-          </p>
-        </div>
-      </div>
-
-      <!-- RIGHT COLUMN: Price Summary -->
-      <div class="checkout__bag-right">
-        <span class="checkout__price-heading">PRICE DETAILS</span>
-
-        <div class="checkout__price-row">
-          <span>Total Amount</span>
-          <span>₹{{ cartSubtotal() | number: '1.0-0' }}</span>
-        </div>
-
-        <div class="checkout__price-row">
-          <span>Shipping Fee</span>
-          <span class="checkout__price-badge">FREE</span>
-        </div>
-
-        @if (cartDiscount() > 0) {
-          <div class="checkout__price-row">
-            <span>Discount on MRP</span>
-            <span class="checkout__discount-price">-₹{{ cartDiscount() | number: '1.0-0' }}</span>
+          <!-- Trust Indicators -->
+          <div class="checkout__trust-section">
+            <div class="checkout__trust-item">
+              <svg class="checkout__trust-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+              </svg>
+              <span>Secure Checkout</span>
+            </div>
+            <div class="checkout__trust-item">
+              <svg class="checkout__trust-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+              </svg>
+              <span>Free Delivery</span>
+            </div>
           </div>
-        }
-
-        <div class="checkout__price-divider"></div>
-
-        <div class="checkout__promo-section">
-          <input
-            type="text"
-            class="checkout__promo-input"
-            [placeholder]="isPromoApplied() ? promoCode() : 'ENTER PROMO CODE'"
-            [(ngModel)]="promoCode"
-            name="promoCode"
-            [disabled]="isValidatingPromo() || isPromoApplied()"
-          />
-          @if (isPromoApplied()) {
-            <button
-              class="checkout__promo-btn checkout__promo-btn--remove"
-              (click)="removePromo()"
-              [disabled]="isValidatingPromo()"
-            >
-              {{ isValidatingPromo() ? '...' : 'REMOVE' }}
-            </button>
-          } @else {
-            <button
-              class="checkout__promo-btn"
-              (click)="applyPromo()"
-              [disabled]="isValidatingPromo()"
-            >
-              {{ isValidatingPromo() ? '...' : 'APPLY' }}
-            </button>
-          }
         </div>
 
-        @if (promoSuccess()) {
-          <div class="checkout__promo-success">{{ promoSuccess() }}</div>
-        }
-        @if (promoError()) {
-          <div class="checkout__promo-error">{{ promoError() }}</div>
-        }
-
-        <div class="checkout__price-divider"></div>
-
-        <div class="checkout__price-row checkout__price-total">
-          <span>Total Amount</span>
-          <span>₹{{ cartTotal() | number: '1.0-0' }}</span>
-        </div>
-
-        <div class="checkout__terms">
-          <p class="checkout__terms-text">
-            By placing your order, you agree to our <a routerLink="/terms" class="checkout__link">Terms of Use</a> and <a routerLink="/privacy" class="checkout__link">Privacy Policy</a>.
-          </p>
-        </div>
-
+        <!-- Checkout Button -->
         <app-button
-          class="checkout__btn-next"
+          class="checkout__btn-checkout"
           variant="primary"
           size="md"
           [fullWidth]="true"
           (click)="goNext()"
           [disabled]="!canProceed()"
         >
-          ADD ADDRESS &rarr;
+          Continue to Delivery
         </app-button>
+
+        <!-- Terms -->
+        <p class="checkout__summary-terms">
+          By continuing, you agree to our <a routerLink="/terms" class="checkout__terms-link">Terms of Use</a> and <a routerLink="/privacy" class="checkout__terms-link">Privacy Policy</a>.
+        </p>
       </div>
     </div>
-  }
-</div>
 
-<!-- Mobile Bottom Footer - Fixed outside panel -->
-<div class="checkout__bottom-footer">
-  <div class="checkout__bottom-left">
-    <span class="checkout__bottom-label">Total Amount:</span>
-    <span class="checkout__bottom-amount">₹{{ cartTotal() | number: '1.0-0' }}</span>
-  </div>
-  <app-button
-    class="checkout__bottom-btn"
-    variant="primary"
-    size="sm"
-    (click)="goNext()"
-    [disabled]="!canProceed()"
-  >
-    NEXT
-  </app-button>
+    <!-- Mobile Sticky Footer -->
+    <div class="checkout__mobile-footer">
+      <div class="checkout__mobile-footer-info">
+        <span class="checkout__mobile-footer-label">Total</span>
+        <span class="checkout__mobile-footer-amount">₹{{ cartTotal() | number: '1.0-0' }}</span>
+      </div>
+      <app-button
+        class="checkout__mobile-footer-btn"
+        variant="primary"
+        size="sm"
+        (click)="goNext()"
+        [disabled]="!canProceed()"
+      >
+        Continue
+      </app-button>
+    </div>
+  }
 </div>
