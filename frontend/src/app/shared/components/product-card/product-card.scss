@@ -3,13 +3,12 @@
 
 :host {
   display: block;
-  width: 100%;
 }
 
 .product-card {
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background-color: transparent;
   border-radius: 0;
   overflow: hidden;
   position: relative;
@@ -38,7 +37,7 @@
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  background-color: #ffffff;
+  background-color: transparent;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -70,50 +69,11 @@
   font-family: $font-family-body !important;
 }
 
-// ── Wishlist Heart Button (Top Right) ──
-.product-card__wishlist {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  color: #9ca3af; // gray-400
-  transition: transform 200ms ease, color 200ms ease;
-  z-index: 20;
-  cursor: pointer;
-  padding: 0;
-
-  &:hover {
-    transform: scale(1.05);
-    color: #ef4444; // red-500
-  }
-
-  &--active {
-    color: #ef4444; // red-500
-
-    .product-card__wishlist-icon {
-      fill: #ef4444;
-    }
-  }
-}
-
-.product-card__wishlist-icon {
-  width: 20px;
-  height: 20px;
-}
-
 // ── Content Section ──
 .product-card__content {
   padding: 16px;
   padding-top: 12px;
-  background: #ffffff;
+  background-color: transparent;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -159,6 +119,14 @@
   @media (min-width: 768px) {
     font-size: 19px; // increased by 1 unit
   }
+}
+
+.product-card__weight-text {
+  margin-top: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #D96A3A;
+  margin-bottom: 0;
 }
 
 // ── Product Description (Inter, Sans-Serif) ──
@@ -385,6 +353,116 @@
   @media (min-width: 768px) {
     width: 20px;
     height: 20px;
+  }
+}
+
+// ── Mobile/Desktop Visibility ──
+.mobile-only {
+  display: flex !important;
+  
+  @media (min-width: 768px) {
+    display: none !important;
+  }
+}
+
+.desktop-only {
+  display: none !important;
+  
+  @media (min-width: 768px) {
+    display: flex !important;
+  }
+}
+
+// ── Mobile Add to Cart Button ──
+.product-card__mobile-add-to-cart {
+  width: 100%;
+  height: 36px;
+  background-color: #c2410c; // Brand orange
+  color: #ffffff;
+  font-family: $font-family-body !important;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  border-radius: 0; // Sharp / pointed corners
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: background-color 300ms ease;
+
+  &:hover {
+    background-color: #9a3412; // Darker orange on hover
+  }
+}
+
+// ── Image Carousel & Badge Styles ──
+.product-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #000000;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 999px;
+  z-index: 2;
+  font-family: $font-family-body !important;
+}
+
+.product-image-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #222222;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  transition: background-color 0.2s, transform 0.2s;
+
+  &:hover {
+    background: #f0f0f0;
+    transform: translateY(-50%) scale(1.05);
+  }
+
+  &.left {
+    left: 14px;
+  }
+
+  &.right {
+    right: 14px;
+  }
+}
+
+.product-image-dots {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 7px;
+  z-index: 3;
+}
+
+.product-image-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #cfcfcf;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &.active {
+    background: #000000;
   }
 }
 

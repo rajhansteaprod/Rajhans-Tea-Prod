@@ -97,22 +97,116 @@
   }
 }
 
-// ── Product Grid ──
+// ── Product Grid (outer, desktop only) ──
 .featured__grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  // On mobile, this is just a passthrough container
+  width: 100%;
 
-  @media (min-width: 360px) {
-    gap: 16px;
+  @media (min-width: 768px) {
+    // On desktop, the grid lives here
+    .mobile-product-scroll {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      overflow-x: visible;
+
+      .scroll-card-wrap {
+        width: 100%;
+      }
+    }
   }
+}
 
-  @media (min-width: 640px) {
-    gap: 24px;
+// ── Mobile Horizontal Scroll Wrapper ──
+.mobile-product-scroll {
+  // Mobile: horizontal scroll row
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 12px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+  // Pull slightly outside container padding so cards reach the edges
+  margin-left: -16px;
+  margin-right: -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+
+  // Hide scrollbar visually
+  &::-webkit-scrollbar { display: none; }
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  .scroll-card-wrap {
+    // Each card wrapper is exactly 48% — so 2 are visible at once
+    flex: 0 0 calc(50% - 8px);
+    min-width: calc(50% - 8px);
+    max-width: calc(50% - 8px);
+    scroll-snap-align: start;
+    // Make the inner app-product-card fill the wrapper
+    app-product-card {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
   }
 
   @media (min-width: 768px) {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 32px;
+    // On desktop, undo all mobile-specific scroll styles
+    display: contents; // Let the parent .featured__grid > grid take over
+    overflow-x: visible;
+    gap: 0;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+
+    .scroll-card-wrap {
+      flex: none;
+      min-width: auto;
+      max-width: none;
+      scroll-snap-align: none;
+    }
   }
 }
+
+// ── ::ng-deep override — guarantees no wrapping regardless of encapsulation ──
+/* stylelint-disable */
+:host ::ng-deep {
+  @media (max-width: 767px) {
+    .mobile-product-scroll {
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      gap: 12px !important;
+      scroll-snap-type: x mandatory !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding-bottom: 12px !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    .mobile-product-scroll::-webkit-scrollbar {
+      display: none !important;
+    }
+
+    .scroll-card-wrap {
+      flex: 0 0 calc(50% - 8px) !important;
+      min-width: calc(50% - 8px) !important;
+      max-width: calc(50% - 8px) !important;
+      width: calc(50% - 8px) !important;
+      scroll-snap-align: start !important;
+      box-sizing: border-box !important;
+    }
+  }
+}
+/* stylelint-enable */

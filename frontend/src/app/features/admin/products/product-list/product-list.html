@@ -286,6 +286,22 @@
                 Featured product
               </label>
             </div>
+            
+            <div class="form-field span-2">
+              <label class="form-label">Card Badge</label>
+              <div style="display: flex; gap: 16px; align-items: center;">
+                <label class="toggle-label">
+                  <input type="checkbox" [ngModel]="form().showBadge"
+                    (ngModelChange)="form.update(f=>({...f,showBadge:$event}))" />
+                  Show Badge
+                </label>
+                @if (form().showBadge) {
+                  <input class="form-input" type="text" [ngModel]="form().badgeText"
+                    (ngModelChange)="form.update(f=>({...f,badgeText:$event}))"
+                    placeholder="e.g. Best Seller" style="max-width: 250px;" />
+                }
+              </div>
+            </div>
           </div>
         </div>
 

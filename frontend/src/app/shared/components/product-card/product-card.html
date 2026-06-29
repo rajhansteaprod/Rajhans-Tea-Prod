@@ -2,15 +2,31 @@
   <!-- Image Container (Large, Dominant) -->
   <div
     class="product-card__image-container"
-    [style.backgroundImage]="'url(' + (product.primaryImage || product.images[0]) + ')'"
-    [style.--secondary-image]="product.reflectedImage && product.reflectedImage !== (product.primaryImage || product.images[0]) ? 'url(' + product.reflectedImage + ')' : 'none'"
+    [style.backgroundImage]="'url(' + getImages()[currentImageIndex()] + ')'"
+    [style.--secondary-image]="getSecondaryImage()"
     (mouseenter)="onHover(true)"
     (mouseleave)="onHover(false)">
-    <button class="product-card__wishlist" [class.product-card__wishlist--active]="isWishlisted" (click)="onToggleWishlist($event); $event.stopPropagation()" aria-label="Add to wishlist" type="button">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="product-card__wishlist-icon">
-        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
-      </svg>
-    </button>
+    
+    @if (product.showBadge && product.badgeText) {
+      <div class="product-badge">{{ product.badgeText }}</div>
+    }
+
+
+
+    @if (getImages().length > 1) {
+      <button class="product-image-arrow left" (click)="prevImage($event)" aria-label="Previous image" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <button class="product-image-arrow right" (click)="nextImage($event)" aria-label="Next image" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+
+      <div class="product-image-dots" (click)="$event.stopPropagation()">
+        @for (img of getImages(); track img; let i = $index) {
+          <div class="product-image-dot" [class.active]="i === currentImageIndex()" (click)="setImage(i, $event)"></div>
+        }
+      </div>
+    }
   </div>
 
   <!-- Content Section -->
@@ -19,6 +35,7 @@
       <!-- Title & Description -->
       <div class="product-card__title-desc">
         <h3 class="product-card__name">{{ product.name }}</h3>
+        <p class="product-card__weight-text">500gm</p>
       </div>
 
       <!-- Badges/Tags -->
@@ -58,28 +75,25 @@
       </div>
     </div>
 
-    <!-- Variants as Compact Selector -->
-    @if (product.variants && product.variants.length > 0) {
-      <div class="product-card__variants">
-        @for (variant of product.variants; track variant._id) {
-          <button class="product-card__variant-option" [class.product-card__variant-option--active]="selectedVariantId() === variant._id" (click)="onVariantChange(variant._id); $event.stopPropagation()" type="button">
-            {{ variant.name }}
-          </button>
-        }
-      </div>
-    }
+
 
     <!-- Action Buttons -->
     <div class="product-card__actions-row">
-      <button class="product-card__primary-action" (click)="onBuyNow($event); $event.stopPropagation()">
+      <!-- Desktop Actions -->
+      <button class="product-card__primary-action desktop-only" (click)="onBuyNow($event)">
         BUY NOW
       </button>
-      <button class="product-card__cart-icon" (click)="onAddToCart($event); $event.stopPropagation()" aria-label="Add to cart" type="button">
+      <button class="product-card__cart-icon desktop-only" (click)="onAddToCart($event)" aria-label="Add to cart" type="button">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="product-card__cart-svg">
           <circle cx="8" cy="21" r="1"></circle>
           <circle cx="19" cy="21" r="1"></circle>
           <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
         </svg>
+      </button>
+
+      <!-- Mobile Action -->
+      <button class="product-card__mobile-add-to-cart mobile-only" (click)="onAddToCart($event)">
+        Add to Cart
       </button>
     </div>
   </div>

@@ -128,4 +128,218 @@ img {
 }
 
 
+// ═══════════════════════════════════════════════════════
+// GLOBAL: Mobile Product Horizontal Scroll
+// These are global (not component-scoped) so they always
+// apply regardless of Angular view encapsulation.
+// ═══════════════════════════════════════════════════════
+
+@media (max-width: 767px) {
+  // The scroll row wrapper — horizontal flex, no wrap
+  .mobile-product-scroll {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    gap: 12px !important;
+    scroll-snap-type: x mandatory !important;
+    scroll-padding: 0 !important; // Snaps to container edge
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 12px !important;
+    align-items: stretch !important; // All wrappers become the height of the tallest card
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .mobile-product-scroll::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  // Each card wrapper: mathematically calculated (calc((100% - 12px) / 2)) so exactly 2 cards fit
+  // in the available container width with a 12px gap, and the 3rd card is completely off-screen
+  .mobile-product-scroll .scroll-card-wrap {
+    flex: 0 0 calc((100% - 12px) / 2) !important;
+    min-width: calc((100% - 12px) / 2) !important;
+    max-width: calc((100% - 12px) / 2) !important;
+    width: calc((100% - 12px) / 2) !important;
+    scroll-snap-align: start !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  // Force the Angular host element to fill the card wrapper height
+  .mobile-product-scroll .scroll-card-wrap app-product-card {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+  }
+
+  // Override the fixed 560px height — let the row height dictate the card height
+  .mobile-product-scroll .scroll-card-wrap app-product-card .product-card {
+    height: 100% !important;
+    min-height: 0 !important;
+    justify-content: flex-start !important; // Don't use space-between — it misaligns
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  // Image: 1:1.4 aspect ratio so all card images are the same size and fit the packet design
+  .mobile-product-scroll .scroll-card-wrap app-product-card .product-card__image-container {
+    flex-shrink: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1.4 !important;
+  }
+
+  // Content: grows to fill available space
+  .mobile-product-scroll .scroll-card-wrap app-product-card .product-card__content {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    padding: 10px 0 0 0 !important; // Compact padding matching minimalist style
+  }
+
+  // Info group: grows to push button to bottom
+  .mobile-product-scroll .scroll-card-wrap app-product-card .product-card__info-group {
+    flex: 1 !important;
+    gap: 4px !important; // Tighter gap
+  }
+
+  // Title: compact font size, clamped to 2 lines for minimalist look
+  .mobile-product-scroll .scroll-card-wrap app-product-card .product-card__name {
+    font-size: 13px !important;
+    line-height: 1.3 !important;
+    font-weight: 500 !important;
+    margin-bottom: 2px !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    min-height: calc(1.3em * 2) !important; // Reserve exactly 2 lines
+  }
+
+  // Weight/subtext: smaller and grey to match minimalist style
+  .mobile-product-scroll .scroll-card-wrap app-product-card .product-card__weight-text {
+    font-size: 11px !important;
+    color: #6b7280 !important;
+    margin-bottom: 4px !important;
+  }
+
+  // Price layout: smaller and cleaner spacing
+  .mobile-product-scroll .scroll-card-wrap app-product-card .product-card__price-row {
+    gap: 6px !important;
+    padding: 2px 0 !important;
+  }
+
+  .mobile-product-scroll .scroll-card-wrap app-product-card .product-card__price-current {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+  }
+
+  .mobile-product-scroll .scroll-card-wrap app-product-card .product-card__price-original {
+    font-size: 11px !important;
+  }
+
+  .mobile-product-scroll .scroll-card-wrap app-product-card .product-card__price-discount {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+    margin-left: 0 !important;
+  }
+
+  // Ratings: smaller and cleaner spacing
+  .mobile-product-scroll .scroll-card-wrap app-product-card .product-card__rating {
+    font-size: 11px !important;
+    gap: 2px !important;
+  }
+
+  .mobile-product-scroll .scroll-card-wrap app-product-card .product-card__reviews {
+    font-size: 11px !important;
+  }
+
+  // Actions row: always pinned to the bottom of the card
+  .mobile-product-scroll .scroll-card-wrap app-product-card .product-card__actions-row {
+    margin-top: auto !important;
+    flex-shrink: 0 !important;
+    padding-top: 8px !important;
+  }
+
+  // Section title overrides for cleaner look on mobile
+  .featured__title {
+    font-size: 20px !important;
+  }
+
+  .featured__label {
+    font-size: 10px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .featured__header {
+    margin-bottom: 16px !important;
+  }
+
+  // Force container padding on mobile to ensure equal spacing from screen edges
+  .featured__container {
+    padding: 0 16px !important;
+    box-sizing: border-box !important;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// GLOBAL: Checkout & Promo CTA Styling (Orange & Sharp)
+// ═══════════════════════════════════════════════════════
+.checkout,
+app-cart-step,
+app-address-step,
+app-summary-step {
+  // Override custom app-button components inside checkout
+  .btn--primary,
+  .btn {
+    background-color: #c2410c !important;
+    border-color: #c2410c !important;
+    border-radius: 0 !important;
+
+    &:hover:not(.btn--disabled):not(:disabled) {
+      background-color: #9a3412 !important;
+      border-color: #9a3412 !important;
+    }
+
+    &:active:not(.btn--disabled):not(:disabled) {
+      background-color: #7c2d12 !important;
+      border-color: #7c2d12 !important;
+    }
+  }
+
+  // Override native HTML buttons (promo apply/submit buttons)
+  .checkout__promo-action,
+  .checkout__btn-submit,
+  button[type="submit"] {
+    background: #c2410c !important;
+    background-color: #c2410c !important;
+    border-color: #c2410c !important;
+    border-radius: 0 !important;
+    color: #ffffff !important;
+
+    &:hover:not(:disabled) {
+      background: #9a3412 !important;
+      background-color: #9a3412 !important;
+      border-color: #9a3412 !important;
+    }
+
+    &:active:not(:disabled) {
+      background: #7c2d12 !important;
+      background-color: #7c2d12 !important;
+      border-color: #7c2d12 !important;
+    }
+  }
+}
 

@@ -27,6 +27,9 @@ export class ProductCardComponent {
   // Variant selection
   selectedVariantId = signal<string | undefined>(undefined);
 
+  // Carousel state
+  currentImageIndex = signal<number>(0);
+
   ngOnInit(): void {
     // Default to first variant if available
     if (this.product.variants && this.product.variants.length > 0) {
@@ -58,15 +61,67 @@ export class ProductCardComponent {
     return undefined;
   }
 
+  getImages(): string[] {
+    const images = this.product.images && this.product.images.length > 0 ? [...this.product.images] : [];
+    if (this.product.primaryImage && !images.includes(this.product.primaryImage)) {
+      images.unshift(this.product.primaryImage);
+    } else if (this.product.primaryImage) {
+      const idx = images.indexOf(this.product.primaryImage);
+      if (idx > 0) {
+        images.splice(idx, 1);
+        images.unshift(this.product.primaryImage);
+      }
+    }
+    return images.length > 0 ? images : ['/static/placeholder.png'];
+  }
+
+  getSecondaryImage(): string {
+    const images = this.getImages();
+    const currentIndex = this.currentImageIndex();
+    
+    // If user has navigated the carousel, preserve the current image on hover
+    if (currentIndex > 0) {
+      return `url('${images[currentIndex]}')`;
+    }
+
+    // Default hover logic when looking at the primary cover image
+    if (this.product.reflectedImage && this.product.reflectedImage !== images[0]) {
+      return `url('${this.product.reflectedImage}')`;
+    } 
+    if (images.length > 1) {
+      return `url('${images[1]}')`;
+    }
+    
+    // Fallback: stay on the primary image
+    return `url('${images[0]}')`;
+  }
+
+  nextImage(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const images = this.getImages();
+    if (images.length <= 1) return;
+    this.currentImageIndex.update(i => (i + 1) % images.length);
+  }
+
+  prevImage(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const images = this.getImages();
+    if (images.length <= 1) return;
+    this.currentImageIndex.update(i => (i - 1 + images.length) % images.length);
+  }
+
+  setImage(index: number, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.currentImageIndex.set(index);
+  }
+
   onHover(isHovering: boolean): void {
     this.imageHover.emit(isHovering);
   }
 
-  onToggleWishlist(event: Event): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.toggleWishlistClick.emit(event);
-  }
 
   onAddToCart(event: Event): void {
     event.preventDefault();

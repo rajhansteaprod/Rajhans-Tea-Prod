@@ -53,17 +53,115 @@
 }
 
 .comparison__table-wrapper {
-  max-width: 1024px;
-  margin: 0 auto;
-  overflow: hidden;
-  overflow-x: auto;
-  border-radius: 16px;
-  border: 1px solid #e5e7eb;
-  background: white;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.02), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
-  padding-top: 10px;
-  padding-bottom: 10px;
+  display: none; // Hidden on mobile
+
+  @media (min-width: 768px) {
+    display: block; // Shown on desktop
+    max-width: 1024px;
+    margin: 0 auto;
+    overflow: hidden;
+    overflow-x: auto;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.02), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
 }
+
+.comparison__mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 16px;
+  max-width: 600px;
+  margin: 0 auto;
+
+  @media (min-width: 768px) {
+    display: none; // Hidden on desktop
+  }
+}
+
+.comparison__card {
+  background: #ffffff;
+  border: 1px solid #f0f3f6;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.comparison__card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.comparison__card-icon {
+  color: #f97316;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.comparison__card-title {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.comparison__card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comparison__card-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 8px;
+
+  &--rajhans {
+    background-color: #fffdfa;
+    border: 1px solid rgba(249, 115, 22, 0.15);
+  }
+
+  &--others {
+    background-color: #f9fafb;
+    border: 1px solid #f3f4f6;
+  }
+}
+
+.comparison__brand-badge {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+
+  .comparison__card-brand--rajhans & {
+    color: #f97316;
+  }
+
+  .comparison__card-brand--others & {
+    color: #6b7280;
+  }
+}
+
+.comparison__brand-benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
 
 .comparison__table {
   width: 100%;

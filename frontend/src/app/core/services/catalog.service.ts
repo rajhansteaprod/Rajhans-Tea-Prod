@@ -97,6 +97,8 @@ export interface Product {
   // Admin-only (present in /admin/products, absent in /catalog/products)
   status?: 'draft' | 'active' | 'archived';
   isFeatured?: boolean;
+  showBadge?: boolean;
+  badgeText?: string;
   stock?: number;
   trackInventory?: boolean;
   createdAt?: string;
@@ -159,6 +161,8 @@ export interface CreateProductPayload {
   attributes?: Record<string, string>;
   tags?: string[];
   status?: 'draft' | 'active' | 'archived';
+  showBadge?: boolean;
+  badgeText?: string;
   isFeatured?: boolean;
   stock?: number;
   trackInventory?: boolean;

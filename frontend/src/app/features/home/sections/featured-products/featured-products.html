@@ -12,21 +12,25 @@
 
       <!-- Product Grid -->
       <div class="featured__grid">
-        @for (product of section.products; track product._id; let i = $index) {
-          <app-product-card
-            [appScrollReveal]="i"
-            [product]="product"
-            [isHovering]="isHovering(product._id)"
-            [isWishlisted]="isWishlisted(product._id)"
-            [getRating]="getRating"
-            [getReviewCount]="getReviewCount"
-            (imageHover)="setHovering(product._id, $event)"
-            (toggleWishlistClick)="toggleWishlist(product, $event)"
-            (addToCartClick)="addToCart(product, $event)"
-            (buyNowClick)="buyNow(product, $event)"
-            (cardClick)="goToProduct(product)"
-          />
-        }
+        <div class="mobile-product-scroll">
+          @for (product of section.products; track product._id; let i = $index) {
+            <div class="scroll-card-wrap">
+              <app-product-card
+                [appScrollReveal]="i"
+                [product]="product"
+                [isHovering]="isHovering(product._id)"
+                [isWishlisted]="isWishlisted(product._id)"
+                [getRating]="getRating"
+                [getReviewCount]="getReviewCount"
+                (imageHover)="setHovering(product._id, $event)"
+                (toggleWishlistClick)="toggleWishlist(product, $event)"
+                (addToCartClick)="addToCart(product, $event)"
+                (buyNowClick)="buyNow(product, $event)"
+                (cardClick)="goToProduct(product)"
+              />
+            </div>
+          }
+        </div>
       </div>
     </div>
   </section>

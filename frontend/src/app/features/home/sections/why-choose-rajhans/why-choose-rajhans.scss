@@ -1,6 +1,15 @@
 @use '../../../../core/design-tokens/tokens' as *;
 @use '../../../../core/design-tokens/mixins' as *;
 
+// Hide this entire section on mobile — desktop unchanged
+:host {
+  display: block;
+
+  @media (max-width: 767px) {
+    display: none;
+  }
+}
+
 .why-choose {
   position: relative;
   width: 100%;

@@ -31,6 +31,8 @@ interface ProductForm {
   isFeatured: boolean;
   stock: number;
   trackInventory: boolean;
+  showBadge: boolean;
+  badgeText: string;
   ratingOneLiner: string; // Admin-editable: "Cleanser Effectiveness, Face Wash Effectiveness, ..."
 }
 
@@ -50,6 +52,7 @@ const emptyForm = (): ProductForm => ({
   images: [], primaryImage: '', imageAltText: '', reflectedImage: '', attributes: [], tags: '',
   region: undefined, bestTakenFor: undefined,
   status: 'draft', isFeatured: false,
+  showBadge: false, badgeText: '',
   stock: 0, trackInventory: false, ratingOneLiner: '',
 });
 
@@ -169,6 +172,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
       bestTakenFor:     (product as any).bestTakenFor ?? undefined,
       status:           product.status ?? 'draft',
       isFeatured:       product.isFeatured ?? false,
+      showBadge:        product.showBadge ?? false,
+      badgeText:        product.badgeText ?? '',
       stock:            product.stock ?? 0,
       trackInventory:   product.trackInventory ?? false,
       ratingOneLiner:   '',
@@ -386,6 +391,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
       bestTakenFor:     f.bestTakenFor || undefined,
       status:           f.status,
       isFeatured:       f.isFeatured,
+      showBadge:        f.showBadge,
+      badgeText:        f.badgeText,
       stock:            Number(f.stock) || 0,
       trackInventory:   f.trackInventory,
     };
