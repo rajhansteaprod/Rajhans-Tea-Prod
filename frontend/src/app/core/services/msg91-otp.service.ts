@@ -10,13 +10,23 @@ export class Msg91OtpService {
 
   constructor(private http: HttpClient) {}
 
+  private getHttpOptions() {
+    return {
+      withCredentials: true, // Send cookies with every request
+    };
+  }
+
   /**
    * Send OTP to phone number via backend
    * Backend will call MSG91 API to send the OTP
    */
   sendOtp(phone: string) {
     const payload = { phone };
-    return this.http.post<{ success: boolean; message: string }>(`${this.apiUrl}/send-otp`, payload);
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.apiUrl}/send-otp`,
+      payload,
+      this.getHttpOptions(),
+    );
   }
 
   /**
@@ -25,7 +35,11 @@ export class Msg91OtpService {
    */
   verifyOtp(phone: string, otp: string) {
     const payload = { phone, otp };
-    return this.http.post<any>(`${this.apiUrl}/verify-otp`, payload);
+    return this.http.post<any>(
+      `${this.apiUrl}/verify-otp`,
+      payload,
+      this.getHttpOptions(),
+    );
   }
 
   /**
@@ -34,6 +48,10 @@ export class Msg91OtpService {
    */
   resendOtp(phone: string) {
     const payload = { phone };
-    return this.http.post<{ success: boolean; message: string }>(`${this.apiUrl}/resend-otp`, payload);
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.apiUrl}/resend-otp`,
+      payload,
+      this.getHttpOptions(),
+    );
   }
 }

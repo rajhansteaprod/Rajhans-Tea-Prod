@@ -2,6 +2,7 @@ import axios from 'axios';
 import { config } from '../../config';
 import { BadRequestError, UnauthorizedError } from '../../utils/api-error';
 import { logger } from '../../utils/logger';
+import { isTestPhoneNumber, getTestOtp } from '../../config/test-bypass.config';
 
 const MSG91_OTP_URL = 'https://control.msg91.com/api/v5/otp';
 
@@ -14,6 +15,20 @@ export class OtpService {
     if (!phone || phone.length !== 10) {
       throw new BadRequestError('Phone number must be 10 digits');
     }
+
+    // ⚠️ DEV BYPASS - Remove this entire block before production
+    if (isTestPhoneNumber(phone)) {
+      const testOtp = getTestOtp(phone);
+      logger.warn(
+        { phone, otp: testOtp },
+        '🚨 DEV MODE: Using hardcoded OTP (remove before production)',
+      );
+      return {
+        success: true,
+        message: `OTP sent (TEST MODE) - Use: ${testOtp}`,
+      };
+    }
+    // ⚠️ END DEV BYPASS
 
     const authKey = config.communication.sms.msg91.authKey;
     const senderId = config.communication.sms.msg91.senderId;
@@ -96,6 +111,20 @@ export class OtpService {
     if (!otp || otp.length !== 6) {
       throw new BadRequestError('OTP must be 6 digits');
     }
+
+    // ⚠️ DEV BYPASS - Remove this entire block before production
+    if (isTestPhoneNumber(phone)) {
+      const expectedOtp = getTestOtp(phone);
+      if (otp === expectedOtp) {
+        logger.warn(
+          { phone, otp },
+          '🚨 DEV MODE: OTP verified using hardcoded test value (remove before production)',
+        );
+        return true;
+      }
+      throw new UnauthorizedError('Invalid OTP');
+    }
+    // ⚠️ END DEV BYPASS
 
     const authKey = config.communication.sms.msg91.authKey;
     if (!authKey) {

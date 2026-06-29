@@ -77,6 +77,15 @@ export class AuthService {
       );
   }
 
+  /** Handle OTP verification response - store user + access token */
+  handleOtpLoginResponse(res: VerifyTokenResponse): void {
+    this._user.set(res.data.user);
+    this._accessToken.set(res.data.tokens.accessToken);
+    this.platform.localStorage.setItem('user', JSON.stringify(res.data.user));
+    this.platform.localStorage.setItem('accessToken', res.data.tokens.accessToken);
+    console.log('✅ [OTP] User logged in and token stored');
+  }
+
   refreshToken(): Observable<RefreshResponse> {
     // refreshToken is sent automatically via httpOnly cookie (withCredentials: true)
     return this.http

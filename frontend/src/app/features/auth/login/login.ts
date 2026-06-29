@@ -156,6 +156,7 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
     this.msg91OtpService.verifyOtp(this.phone(), this.otp()).subscribe({
       next: (res) => {
         this.loading.set(false);
+        this.authService.handleOtpLoginResponse(res);
         const returnUrl = this.route.snapshot.queryParams['returnUrl'];
         if (returnUrl) {
           this.router.navigateByUrl(returnUrl);
