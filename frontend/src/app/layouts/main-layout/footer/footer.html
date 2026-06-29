@@ -63,9 +63,9 @@
       <div class="footer-column">
         <h3 class="column-title">COMPANY</h3>
         <ul class="link-list">
-          <li><a href="/page/about-us" class="link">About Us</a></li>
-          <li><a href="/page/privacy-policy" class="link">Privacy Policy</a></li>
-          <li><a href="/page/terms-conditions" class="link">Terms & Conditions</a></li>
+          <li><a [routerLink]="['/page/about-us']" class="link">About Us</a></li>
+          <li><a [routerLink]="['/page/privacy-policy']" class="link">Privacy Policy</a></li>
+          <li><a [routerLink]="['/page/terms-conditions']" class="link">Terms & Conditions</a></li>
         </ul>
       </div>
 
@@ -73,10 +73,10 @@
       <div class="footer-column">
         <h3 class="column-title">QUICK LINKS</h3>
         <ul class="link-list">
-          <li><a href="/page/faq" class="link">FAQs</a></li>
-          <li><a href="/page/shipping-policy" class="link">Shipping Policy</a></li>
-          <li><a href="/page/return-refund-policy" class="link">Return & Refund Policy</a></li>
-          <li><a href="/track-order" class="link">Track Order</a></li>
+          <li><a [routerLink]="['/']" fragment="faq-section" class="link">FAQs</a></li>
+          <li><a [routerLink]="['/page/shipping-policy']" class="link">Shipping Policy</a></li>
+          <li><a [routerLink]="['/page/return-refund-policy']" class="link">Return & Refund Policy</a></li>
+          <li><a [routerLink]="['/track-order']" class="link">Track Order</a></li>
           <li><a href="/contact?reason=bulk" class="link">Buy in Bulk</a></li>
         </ul>
       </div>
