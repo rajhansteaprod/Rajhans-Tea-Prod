@@ -1,14 +1,15 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-interface Testimonial {
-  productName: string;
-  quote: string;
-  image?: string;
-  userName: string;
-  userInitials: string;
-  userInitialsBg: string;
+interface Review {
+  customerName: string;
   date: string;
+  rating: number;
+  isVerifiedBuyer: boolean;
+  reviewTitle: string;
+  reviewText: string;
+  productName: string;
+  productImage: string;
 }
 
 @Component({
@@ -21,58 +22,86 @@ interface Testimonial {
 export class TestimonialsComponent {
   @ViewChild('scrollRow') scrollRow!: ElementRef<HTMLDivElement>;
 
-  testimonials: Testimonial[] = [
+  reviews: Review[] = [
     {
-      productName: 'Premium Assam CTC',
-      quote: "Best taste & Supreme Quality. We've been buying Rajhans Tea for over 3 years now and the consistency is remarkable. Every cup is perfect.",
-      
-      userName: 'Ashwin Maheshwari',
-      userInitials: 'AM',
-      userInitialsBg: '#fef3e8',
+      customerName: 'Ashwin Maheshwari',
       date: 'May 25, 2026',
+      rating: 5,
+      isVerifiedBuyer: true,
+      reviewTitle: 'Strong and kadak taste',
+      reviewText: "We've been buying Rajhans Tea for over 3 years now. The consistency is remarkable. It has a beautiful strong and kadak taste that is perfect for milk tea.",
+      productName: 'Rajhans Royal Tea',
+      productImage: 'https://images.unsplash.com/photo-1597481499750-3e6b22637e12?w=120&h=120&fit=crop'
     },
     {
-      productName: 'Royal Classic Leaf',
-      quote: 'The traceability feature gives me confidence about what I\'m drinking. Love the transparency!',
-      userName: 'Priya Sharma',
-      userInitials: 'PS',
-      userInitialsBg: '#fef3e8',
-      date: 'June 2, 2026',
+      customerName: 'Priya Sharma',
+      date: 'June 02, 2026',
+      rating: 5,
+      isVerifiedBuyer: true,
+      reviewTitle: 'Perfect colour in every cup',
+      reviewText: 'The liquor quality is outstanding! It gives a perfect deep golden colour to the tea in every single brew. Entire family is absolutely in love with it.',
+      productName: 'Rajhans Premium Tea',
+      productImage: 'https://images.unsplash.com/photo-1563822249548-9a72b6353cd1?w=120&h=120&fit=crop'
     },
     {
-      productName: 'Rajdoot Kadak Tea',
-      quote: 'Authentic Assam taste delivered right to my door. The quality is unmatched.',
-      image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=300&h=200&fit=crop',
-      userName: 'Rajesh Kumar',
-      userInitials: 'RK',
-      userInitialsBg: '#fef3e8',
+      customerName: 'Rajesh Kumar',
       date: 'May 18, 2026',
+      rating: 5,
+      isVerifiedBuyer: true,
+      reviewTitle: 'Fresh aroma, loved by family',
+      reviewText: 'As soon as you open the pack, a beautiful fresh aroma of tea gardens fills the kitchen. The quality is unmatched and loved by all.',
+      productName: 'Rajhans Rajdoot Tea',
+      productImage: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=120&h=120&fit=crop'
     },
     {
-      productName: 'Premium Assam CTC',
-      quote: 'Our hotel uses Rajhans for all our tea service. Guests love it and so do we!',
-      userName: 'Meera Patel',
-      userInitials: 'MP',
-      userInitialsBg: '#fef3e8',
-      date: 'June 1, 2026',
+      customerName: 'Meera Patel',
+      date: 'June 01, 2026',
+      rating: 5,
+      isVerifiedBuyer: true,
+      reviewTitle: 'Requires less tea per cup',
+      reviewText: 'This blend is highly concentrated in flavor. It requires less tea per cup compared to our regular chai brand, making it very economical.',
+      productName: 'Rajhans Royal Tea',
+      productImage: 'https://images.unsplash.com/photo-1597481499750-3e6b22637e12?w=120&h=120&fit=crop'
     },
+    {
+      customerName: 'Vikram Singh',
+      date: 'May 29, 2026',
+      rating: 5,
+      isVerifiedBuyer: true,
+      reviewTitle: 'Better than our regular chai brand',
+      reviewText: 'We switched from our regular well-known national chai brand last month and the difference is day and night. Rajhans is superior.',
+      productName: 'Rajhans Premium Tea',
+      productImage: 'https://images.unsplash.com/photo-1563822249548-9a72b6353cd1?w=120&h=120&fit=crop'
+    }
   ];
 
   scrollLeft(): void {
     if (this.scrollRow) {
-      this.scrollRow.nativeElement.scrollBy({
-        left: -320,
-        behavior: 'smooth',
-      });
+      const element = this.scrollRow.nativeElement;
+      const firstCard = element.querySelector('.review-card');
+      if (firstCard) {
+        const gap = element.clientWidth > 767 ? 24 : 16;
+        const scrollAmount = firstCard.clientWidth + gap;
+        element.scrollBy({
+          left: -scrollAmount,
+          behavior: 'smooth',
+        });
+      }
     }
   }
 
   scrollRight(): void {
     if (this.scrollRow) {
-      this.scrollRow.nativeElement.scrollBy({
-        left: 320,
-        behavior: 'smooth',
-      });
+      const element = this.scrollRow.nativeElement;
+      const firstCard = element.querySelector('.review-card');
+      if (firstCard) {
+        const gap = element.clientWidth > 767 ? 24 : 16;
+        const scrollAmount = firstCard.clientWidth + gap;
+        element.scrollBy({
+          left: scrollAmount,
+          behavior: 'smooth',
+        });
+      }
     }
   }
 }

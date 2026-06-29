@@ -71,11 +71,12 @@
 
 .cards-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
+  grid-template-columns: repeat(2, 1fr); // 2 columns in mobile view
+  gap: 12px; // tighter gap for mobile
 
   @media (min-width: 640px) {
     grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
   }
 
   @media (min-width: 1024px) {
@@ -85,9 +86,13 @@
 
 .card {
   position: relative;
-  height: 320px;
+  height: 220px; // shorter card on mobile so it looks balanced in 2-column layout
   overflow: hidden;
   cursor: pointer;
+
+  @media (min-width: 640px) {
+    height: 320px;
+  }
 }
 
 .card-image {
@@ -114,22 +119,37 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 24px;
+  padding: 12px; // tighter padding on mobile
   color: white;
   z-index: 10;
+
+  @media (min-width: 640px) {
+    padding: 24px;
+  }
 }
 
 .card-title {
-  font-size: 24px;
+  font-size: 16px; // scaled down title for 2-column layout on mobile
   font-weight: bold;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+
+  @media (min-width: 640px) {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
 }
 
 .card-description {
-  font-size: 14px;
+  font-size: 11px; // scaled down description for 2-column layout on mobile
   color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 16px;
-  line-height: 1.5;
+  margin-bottom: 8px;
+  line-height: 1.4;
+
+  @media (min-width: 640px) {
+    font-size: 14px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
 }
 
 .card-button {

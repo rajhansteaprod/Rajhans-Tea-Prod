@@ -4,7 +4,8 @@
 .comparison {
   width: 100%;
   background: #ffffff;
-  padding: 80px 0;
+  padding: 40px 16px; // Compact section padding on mobile
+  box-sizing: border-box;
 
   @media (min-width: 768px) {
     padding: 100px 0;
@@ -14,29 +15,27 @@
 .comparison__header {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0; // Reset padding on mobile (since parent .comparison has 16px padding)
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: 24px; // Compact margin on mobile
 
-  @media (min-width: 640px) {
-    padding: 0 24px;
-  }
-
-  @media (min-width: 1024px) {
+  @media (min-width: 768px) {
     padding: 0 32px;
+    margin-bottom: 48px;
   }
 }
 
 .comparison__heading {
   font-family: 'Cormorant Garamond', serif !important;
-  font-size: 32px;
+  font-size: 24px; // Compact heading on mobile
   font-weight: 700;
   color: #111827;
-  margin: 0 0 16px;
+  margin: 0 0 8px; // Compact gap on mobile
   line-height: 1.2;
 
   @media (min-width: 768px) {
     font-size: 48px;
+    margin: 0 0 16px;
   }
 }
 
@@ -46,122 +45,32 @@
 
 .comparison__subtitle {
   font-family: 'Inter', sans-serif !important;
-  font-size: 16px;
+  font-size: 14px; // Compact subtitle on mobile
   font-weight: 400;
   color: #4b5563;
   margin: 0;
+
+  @media (min-width: 768px) {
+    font-size: 16px;
+  }
 }
 
 .comparison__table-wrapper {
-  display: none; // Hidden on mobile
-
-  @media (min-width: 768px) {
-    display: block; // Shown on desktop
-    max-width: 1024px;
-    margin: 0 auto;
-    overflow: hidden;
-    overflow-x: auto;
-    border-radius: 16px;
-    border: 1px solid #e5e7eb;
-    background: white;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.02), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
-    padding-top: 10px;
-    padding-bottom: 10px;
-  }
-}
-
-.comparison__mobile-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 0 16px;
-  max-width: 600px;
+  max-width: 1024px;
   margin: 0 auto;
-
-  @media (min-width: 768px) {
-    display: none; // Hidden on desktop
-  }
-}
-
-.comparison__card {
-  background: #ffffff;
-  border: 1px solid #f0f3f6;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-}
-
-.comparison__card-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 14px;
+  overflow: hidden;
+  overflow-x: auto;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.02), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+  padding-top: 10px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #f3f4f6;
-}
 
-.comparison__card-icon {
-  color: #f97316;
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-}
-
-.comparison__card-title {
-  font-family: 'Inter', sans-serif !important;
-  font-size: 15px;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-}
-
-.comparison__card-body {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.comparison__card-brand {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  border-radius: 8px;
-
-  &--rajhans {
-    background-color: #fffdfa;
-    border: 1px solid rgba(249, 115, 22, 0.15);
-  }
-
-  &--others {
-    background-color: #f9fafb;
-    border: 1px solid #f3f4f6;
+  @media (max-width: 767px) {
+    display: none !important; // Hide desktop table wrapper on mobile
   }
 }
-
-.comparison__brand-badge {
-  font-family: 'Inter', sans-serif !important;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 2px;
-
-  .comparison__card-brand--rajhans & {
-    color: #f97316;
-  }
-
-  .comparison__card-brand--others & {
-    color: #6b7280;
-  }
-}
-
-.comparison__brand-benefit {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
 
 .comparison__table {
   width: 100%;
@@ -342,4 +251,125 @@
     color: #9ca3af;
   }
 }
+
+
+// ═══════════════════════════════════════════════════════
+// MOBILE-ONLY COMPARISON SCORECARD
+// ═══════════════════════════════════════════════════════
+.comparison__mobile-scorecard {
+  display: none; // Hidden on desktop
+
+  @media (max-width: 767px) {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+.scorecard-container {
+  background-color: #ffffff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.scorecard-header {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #E5E7EB;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 13px;
+  font-weight: 700;
+  box-sizing: border-box;
+}
+
+.header-col {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+
+  &--feature {
+    color: #6B7280;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &--rajhans {
+    color: #FF6A00;
+    justify-content: center;
+    background-color: #FFF7ED; // light orange highlight tint
+    border-radius: 4px;
+    padding: 6px 0;
+  }
+
+  &--others {
+    color: #6B7280;
+    justify-content: center;
+    padding: 6px 0;
+  }
+}
+
+.scorecard-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #F3F4F6;
+  box-sizing: border-box;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 2px;
+  }
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 13px;
+  box-sizing: border-box;
+
+  &--feature {
+    font-weight: 600;
+    color: #374151;
+  }
+
+  &--rajhans {
+    justify-content: center;
+    gap: 6px;
+    background-color: #FFF7ED; // light orange highlight tint
+    height: 100%;
+    padding: 8px 0;
+    border-radius: 4px;
+
+    .icon-check {
+      flex-shrink: 0;
+      color: #10B981;
+    }
+
+    .text-highlight {
+      color: #FF6A00;
+      font-weight: 600;
+    }
+  }
+
+  &--others {
+    justify-content: center;
+    gap: 6px;
+    color: #4B5563;
+    padding: 8px 0;
+
+    .icon-cross {
+      flex-shrink: 0;
+      color: #9CA3AF;
+    }
+  }
+}
+
 
