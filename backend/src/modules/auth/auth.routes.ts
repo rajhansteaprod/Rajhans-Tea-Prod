@@ -9,9 +9,13 @@ import {
   createAddressSchema,
   updateAddressSchema,
   addressIdParamSchema,
+  sendOtpSchema,
+  verifyOtpSchema,
+  resendOtpSchema,
 } from './auth.validator';
 import { revokeSessionSchema } from './session.validator';
 import * as authController from './auth.controller';
+import * as otpController from '../otp/otp.controller';
 import * as sessionController from './session.controller';
 
 const router = Router();
@@ -23,6 +27,27 @@ router.post(
   validate(firebaseTokenSchema),
   authController.verifyFirebaseToken,
 );
+
+// OTP-based authentication endpoints (MSG91)
+router.post(
+  '/auth/send-otp',
+  authRateLimiter,
+  validate(sendOtpSchema),
+  otpController.sendOtp,
+);
+router.post(
+  '/auth/verify-otp',
+  authRateLimiter,
+  validate(verifyOtpSchema),
+  otpController.verifyOtp,
+);
+router.post(
+  '/auth/resend-otp',
+  authRateLimiter,
+  validate(resendOtpSchema),
+  otpController.resendOtp,
+);
+
 router.post(
   '/auth/refresh-token',
   authRateLimiter,

@@ -13,17 +13,22 @@ import { ITokenPayload } from '../../../types/auth.types';
 import { getFirebaseAuth } from '../../../loaders';
 import { IDeviceInfo } from '../models/token.model';
 import { AuthDTO } from '../dto/auth.dto';
+import { OtpService } from '../../otp/otp.service';
+import { logger } from '../../../utils/logger';
 
 export class AuthService {
   private userRepo: UserRepository;
   private tokenRepo: TokenRepository;
+  private otpService: OtpService;
 
   constructor(
     userRepo: UserRepository = new UserRepository(),
     tokenRepo: TokenRepository = new TokenRepository(),
+    otpService: OtpService = new OtpService(),
   ) {
     this.userRepo = userRepo;
     this.tokenRepo = tokenRepo;
+    this.otpService = otpService;
   }
 
   /**
@@ -102,6 +107,53 @@ export class AuthService {
     );
 
     // AuthDTO.fromLogin shapes the response: minimal user embed + tokens + isNewUser flag
+    return AuthDTO.fromLogin(user, tokens, isNewUser);
+  }
+
+  /**
+   * Verify OTP and exchange for JWT access + refresh token pair.
+   * Creates a new user if this phone number hasn't been seen before.
+   * MSG91 OTP replacement for Firebase authentication.
+   *
+   * @param phone      - 10-digit phone number
+   * @param otp        - 6-digit OTP entered by user
+   * @param deviceInfo - Device/browser info extracted from the HTTP request
+   */
+  async verifyPhoneAndOtp(phone: string, otp: string, deviceInfo: IDeviceInfo) {
+    logger.info({ phone }, 'Auth: verifyPhoneAndOtp called');
+
+    await this.otpService.verifyOtp(phone, otp);
+    logger.info({ phone }, 'Auth: OTP verified successfully');
+
+    let user = await this.userRepo.findByPhone(phone);
+    let isNewUser = false;
+
+    if (!user) {
+      user = await this.userRepo.create({
+        phone: phone,
+        isPhoneVerified: true,
+      } as never);
+      isNewUser = true;
+      logger.info({ phone, userId: user._id }, 'Auth: New user created');
+    } else {
+      if (user.isBanned) {
+        logger.warn({ phone }, 'Auth: Banned user login attempt');
+        throw new ForbiddenError(
+          'Your account has been suspended. Contact support for assistance.',
+        );
+      }
+      if (!user.isPhoneVerified) {
+        await this.userRepo.updateById(user._id.toString(), { isPhoneVerified: true });
+      }
+      await this.userRepo.updateLastLogin(user._id.toString());
+      logger.info({ phone, userId: user._id }, 'Auth: Existing user login');
+    }
+
+    const tokens = await this.generateTokens(
+      { userId: user._id.toString(), role: user.role },
+      deviceInfo,
+    );
+
     return AuthDTO.fromLogin(user, tokens, isNewUser);
   }
 

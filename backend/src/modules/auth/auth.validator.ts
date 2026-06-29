@@ -6,6 +6,26 @@ export const firebaseTokenSchema = z.object({
   }),
 });
 
+// OTP send and verify schemas (MSG91-based authentication)
+export const sendOtpSchema = z.object({
+  body: z.object({
+    phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits'),
+  }),
+});
+
+export const verifyOtpSchema = z.object({
+  body: z.object({
+    phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits'),
+    otp: z.string().regex(/^\d{6}$/, 'OTP must be 6 digits'),
+  }),
+});
+
+export const resendOtpSchema = z.object({
+  body: z.object({
+    phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits'),
+  }),
+});
+
 // refreshToken comes from httpOnly cookie OR body (fallback)
 // Both are optional at validation level — controller checks for either
 export const refreshTokenSchema = z.object({

@@ -3,7 +3,7 @@ import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
-import { FirebaseService } from '../../../core/services/firebase.service';
+import { Msg91OtpService } from '../../../core/services/msg91-otp.service';
 import { LogoComponent } from '../../../shared/components/logo/logo.component';
 import { LOGIN_HERO_IMAGE, LOGIN_HERO_TAGLINE } from './login.constants';
 
@@ -39,15 +39,12 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
 
   constructor(
     private authService: AuthService,
-    private firebaseService: FirebaseService,
+    private msg91OtpService: Msg91OtpService,
     private router: Router,
     private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
-    // Initialize invisible reCAPTCHA - must be done before sendOtp() is called
-    this.firebaseService.initRecaptcha('recaptcha-container');
-
     setTimeout(() => this.entered.set(true), 100);
 
     if (this.route.snapshot.queryParamMap.get('reason') === 'banned') {
@@ -63,7 +60,6 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnDestroy(): void {
     this.clearCooldown();
-    this.firebaseService.cleanup();
   }
 
   particleX(i: number): string {
@@ -81,26 +77,24 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
     input.value = cleaned;
   }
 
-  async onSendOtp(): Promise<void> {
+  onSendOtp(): void {
     if (this.phone().length !== 10 || this.loading()) return;
 
     this.loading.set(true);
     this.error.set(null);
 
-    try {
-      // Firebase will use the reCAPTCHA verifier initialized in ngOnInit()
-      // On error, Firebase auto-reinitializes the verifier
-      await this.firebaseService.sendOtp(this.phone());
-      this.step.set('otp');
-      this.startCooldown(60);
-      // Focus first OTP input after transition
-      setTimeout(() => this.focusOtpInput(0), 100);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to send OTP';
-      this.error.set(msg);
-    } finally {
-      this.loading.set(false);
-    }
+    this.msg91OtpService.sendOtp(this.phone()).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.step.set('otp');
+        this.startCooldown(60);
+        setTimeout(() => this.focusOtpInput(0), 100);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.error.set(err.error?.message || 'Failed to send OTP');
+      },
+    });
   }
 
   onOtpDigitInput(event: Event, index: number): void {
@@ -153,43 +147,31 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  async onVerifyOtp(): Promise<void> {
+  onVerifyOtp(): void {
     if (this.otp().length !== 6 || this.loading()) return;
 
     this.loading.set(true);
     this.error.set(null);
 
-    try {
-      // Step 1: Verify OTP with Firebase → get ID token
-      const idToken = await this.firebaseService.verifyOtp(this.otp());
-
-      // Step 2: Send ID token to our backend → get JWT tokens
-      this.authService.verifyFirebaseToken(idToken).subscribe({
-        next: (res) => {
-          this.loading.set(false);
-          // Redirect to returnUrl (from auth guard) or default
-          const returnUrl = this.route.snapshot.queryParams['returnUrl'];
-          if (returnUrl) {
-            this.router.navigateByUrl(returnUrl);
-          } else {
-            const redirectTo = res.data.user.role === 'admin' ? '/dashboard' : '/';
-            this.router.navigate([redirectTo]);
-          }
-        },
-        error: (err) => {
-          this.loading.set(false);
-          this.error.set(err.error?.message || 'Authentication failed');
-        },
-      });
-    } catch (err: unknown) {
-      this.loading.set(false);
-      const msg = err instanceof Error ? err.message : 'Invalid OTP. Please try again.';
-      this.error.set(msg);
-      // Reset OTP fields
-      this.otpDigits.set(['', '', '', '', '', '']);
-      this.otp.set('');
-      this.focusOtpInput(0);
-    }
+    this.msg91OtpService.verifyOtp(this.phone(), this.otp()).subscribe({
+      next: (res) => {
+        this.loading.set(false);
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'];
+        if (returnUrl) {
+          this.router.navigateByUrl(returnUrl);
+        } else {
+          const redirectTo = res.data.user.role === 'admin' ? '/dashboard' : '/';
+          this.router.navigate([redirectTo]);
+        }
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.error.set(err.error?.message || 'Invalid OTP. Please try again.');
+        this.otpDigits.set(['', '', '', '', '', '']);
+        this.otp.set('');
+        this.focusOtpInput(0);
+      },
+    });
   }
 
   changePhone(): void {
