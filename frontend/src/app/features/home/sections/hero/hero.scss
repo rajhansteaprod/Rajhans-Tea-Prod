@@ -24,6 +24,12 @@
     height: calc(100vh - #{$announcement-bar-height} - #{$header-height-md} - #{$bottom-nav-height});
   }
 
+  @include respond-to(sm) {
+    height: auto;
+    aspect-ratio: 1 / 1.2;
+    max-height: 600px;
+  }
+
   &:active { cursor: grabbing; }
 }
 
@@ -64,6 +70,11 @@ picture {
     rgba(0, 0, 0, 0.4) 100%
   );
   pointer-events: none;
+
+  @include respond-to(sm) {
+    align-items: flex-start;
+    padding-top: 40px;
+  }
 }
 
 .hero__overlay > * {
