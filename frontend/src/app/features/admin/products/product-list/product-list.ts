@@ -284,8 +284,27 @@ export class ProductListComponent implements OnInit, OnDestroy {
     const files = (event.target as HTMLInputElement).files;
     if (!files || files.length === 0) return;
 
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+    const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
     if (this.form().images.length + files.length > 20) {
       alert('Maximum of 20 images allowed per product.');
+      (event.target as HTMLInputElement).value = '';
+      return;
+    }
+
+    const invalidFiles: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        invalidFiles.push(`${file.name} (invalid format)`);
+      } else if (file.size > MAX_FILE_SIZE) {
+        invalidFiles.push(`${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB exceeds 5MB limit)`);
+      }
+    }
+
+    if (invalidFiles.length > 0) {
+      alert(`Invalid files:\n\n${invalidFiles.join('\n')}\n\nOnly JPEG, PNG, and WebP images under 5MB are allowed.`);
       (event.target as HTMLInputElement).value = '';
       return;
     }

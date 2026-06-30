@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authenticate } from '../../middleware/auth.middleware';
 import { authorize } from '../../middleware/rbac.middleware';
 import { validate } from '../../middleware/validate.middleware';
-import { upload } from '../../middleware/upload.middleware';
+import { upload, uploadTimeoutMiddleware, uploadErrorHandler } from '../../middleware/upload.middleware';
 import { cacheResponse } from '../../middleware/cache-response.middleware';
 import * as catalog from './catalog.controller';
 import {
@@ -53,7 +53,7 @@ adminRouter.use(authenticate);
 adminRouter.use(authorize('admin'));
 
 // Image upload
-adminRouter.post('/uploads', upload.single('image'), catalog.uploadImage);
+adminRouter.post('/uploads', uploadTimeoutMiddleware, upload.single('image'), uploadErrorHandler, catalog.uploadImage);
 
 // Categories — admin CRUD
 adminRouter.get('/categories', validate(listCategoriesSchema), catalog.listCategories);

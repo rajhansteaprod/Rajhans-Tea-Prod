@@ -196,6 +196,9 @@ export const uploadImage = async (req: Request, res: Response) => {
   if (!req.file) {
     throw new BadRequestError('No file uploaded');
   }
+  if (!req.file.filename) {
+    throw new BadRequestError('Failed to process file upload');
+  }
   const url = `/uploads/${req.file.filename}`;
   sendSuccess(res, { url }, 'Image uploaded successfully');
 };
