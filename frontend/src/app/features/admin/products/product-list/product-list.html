@@ -323,9 +323,9 @@
                   Upload Product Images
                 }
                 <input type="file" accept="image/jpeg,image/png,image/webp" style="display:none"
-                  (change)="onFileSelect($event)" multiple [disabled]="uploadingImage() || form().images.length >= 7" />
+                  (change)="onFileSelect($event)" multiple [disabled]="uploadingImage() || form().images.length >= 20" />
               </label>
-              <span class="upload-hint">JPEG, PNG, WebP · 1 to 7 images · Max 5 MB</span>
+              <span class="upload-hint">JPEG, PNG, WebP · 1 to 20 images · Max 5 MB</span>
             </div>
 
             <!-- Image Reordering, Primary Select, Alt Text & Deletion Grid -->

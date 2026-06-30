@@ -284,8 +284,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
     const files = (event.target as HTMLInputElement).files;
     if (!files || files.length === 0) return;
 
-    if (this.form().images.length + files.length > 7) {
-      alert('Maximum of 7 images allowed per product.');
+    if (this.form().images.length + files.length > 20) {
+      alert('Maximum of 20 images allowed per product.');
       (event.target as HTMLInputElement).value = '';
       return;
     }
@@ -352,8 +352,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
       this.formError.set('At least 1 product image is required');
       return;
     }
-    if (f.images.length > 7) {
-      this.formError.set('Maximum of 7 images allowed per product');
+    if (f.images.length > 20) {
+      this.formError.set('Maximum of 20 images allowed per product');
       return;
     }
 
