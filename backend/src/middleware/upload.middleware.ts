@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Request, Response, NextFunction } from 'express';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
-const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
 const ALLOWED_MIME = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 const storage = multer.diskStorage({
@@ -46,7 +46,7 @@ export const uploadErrorHandler = (err: Error, _req: Request, res: Response, nex
       return res.status(400).json({
         success: false,
         statusCode: 400,
-        message: 'File size exceeds 5MB limit. Please upload a smaller image.',
+        message: 'File size exceeds 50MB limit. Please upload a smaller image.',
       });
     }
     if (err.code === 'LIMIT_UNEXPECTED_FILE') {
