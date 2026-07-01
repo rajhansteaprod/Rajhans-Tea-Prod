@@ -1,157 +1,27 @@
-<div class="login">
-  <!-- Left: Hero Image Section (Desktop only) -->
-  <div class="login__hero">
-    <img [src]="heroImage" [alt]="heroTagline" class="login__hero-image" />
-    <div class="login__hero-overlay"></div>
-    <div class="login__hero-content">
-      <div class="login__hero-tagline">{{ heroTagline }}</div>
+<div class="login-container">
+  <div class="login-card">
+    <h1 class="login-title">Sign In</h1>
+    <p class="login-subtitle">Complete verification in the popup to continue</p>
+
+    <!-- Loading state -->
+    <p class="success-message" *ngIf="isLoading">Signing you in...</p>
+
+    <!-- Error Message -->
+    <div class="error-banner" *ngIf="error">
+      <p>{{ error }}</p>
+      <button class="btn-close" (click)="clearError()">×</button>
     </div>
+
+    <!-- Reopen the MSG91 popup (e.g. if the user closed it) -->
+    <button class="btn-primary" (click)="openLogin()" [disabled]="isLoading">
+      Sign in with OTP
+    </button>
+
+    <!-- Terms -->
+    <p class="terms-text">
+      By continuing, you agree to our
+      <a href="/terms" target="_blank">Terms of Service</a> and
+      <a href="/privacy" target="_blank">Privacy Policy</a>
+    </p>
   </div>
-
-  <!-- Right: Login Card Section -->
-  <div class="login__card-wrapper">
-    <!-- Mobile Logo -->
-    <div class="login__logo-mobile">
-      <app-logo></app-logo>
-    </div>
-
-    <!-- Premium Login Card -->
-    <div class="login__card" [class.entered]="entered()">
-      <!-- Card Header -->
-      <div class="login__card-header">
-        <div class="login__logo-desktop">
-          <app-logo></app-logo>
-        </div>
-        <h1 class="login__card-title">Welcome back</h1>
-        <p class="login__card-subtitle">
-          {{ step() === 'phone'
-            ? 'Sign in to continue your journey'
-            : 'Verify your identity' }}
-        </p>
-      </div>
-
-      <!-- Error Message -->
-      @if (error()) {
-        <div class="login__error" (click)="error.set(null)">
-          <svg class="login__error-icon" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="8" fill="#C0392B" />
-            <path d="M5 5L11 11M11 5L5 11" stroke="white" stroke-width="1.5" stroke-linecap="round" />
-          </svg>
-          <span class="login__error-text">{{ error() }}</span>
-        </div>
-      }
-
-      <!-- Phone Step -->
-      @if (step() === 'phone') {
-        <div class="login__form-section">
-          <div class="login__form-group">
-            <label class="login__form-label">Phone number</label>
-            <div class="login__phone-input-group">
-              <div class="login__country-code">
-                <svg class="login__country-flag" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="900" height="200" fill="#FF9933" />
-                  <rect y="200" width="900" height="200" fill="#FFFFFF" />
-                  <rect y="400" width="900" height="200" fill="#138808" />
-                  <circle cx="450" cy="300" r="60" fill="#000080" />
-                  <circle cx="450" cy="300" r="50" fill="none" stroke="#000080" stroke-width="3" />
-                  <text x="450" y="310" text-anchor="middle" font-size="30" fill="#000080">⚙</text>
-                </svg>
-                <span class="login__country-code-text">+91</span>
-              </div>
-              <input
-                #phoneInput
-                type="tel"
-                class="login__phone-input"
-                placeholder="Enter your 10-digit number"
-                [value]="phone()"
-                (input)="onPhoneInput($event)"
-                maxlength="10"
-                (keyup.enter)="onSendOtp()"
-                autocomplete="tel"
-              />
-            </div>
-          </div>
-
-          <button
-            class="login__primary-btn"
-            [class.loading]="loading()"
-            [disabled]="phone().length !== 10 || loading()"
-            (click)="onSendOtp()"
-          >
-            @if (!loading()) {
-              <span class="login__btn-text">Continue</span>
-              <svg class="login__btn-icon" viewBox="0 0 20 20" fill="none">
-                <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            } @else {
-              <div class="login__spinner"></div>
-            }
-          </button>
-        </div>
-      }
-
-      <!-- OTP Step -->
-      @if (step() === 'otp') {
-        <div class="login__form-section">
-          <p class="login__otp-hint">
-            Enter the 6-digit code sent to <strong>+91 {{ phone() }}</strong>
-          </p>
-
-          <div class="login__otp-inputs">
-            @for (i of otpSlots; track i) {
-              <input
-                #otpInput
-                type="text"
-                inputmode="numeric"
-                class="login__otp-input"
-                maxlength="1"
-                [value]="otpDigits()[i]"
-                (input)="onOtpDigitInput($event, i)"
-                (keydown)="onOtpKeydown($event, i)"
-                (paste)="onOtpPaste($event)"
-                [class.filled]="otpDigits()[i]"
-              />
-            }
-          </div>
-
-          <button
-            class="login__primary-btn"
-            [class.loading]="loading()"
-            [disabled]="otp().length !== 6 || loading()"
-            (click)="onVerifyOtp()"
-          >
-            @if (!loading()) {
-              <span class="login__btn-text">Verify & Sign In</span>
-            } @else {
-              <div class="login__spinner"></div>
-            }
-          </button>
-
-          <div class="login__otp-actions">
-            <button
-              class="login__secondary-btn"
-              [disabled]="resendCooldown() > 0"
-              (click)="onSendOtp()"
-            >
-              {{ resendCooldown() > 0 ? 'Resend in ' + resendCooldown() + 's' : 'Resend code' }}
-            </button>
-            <button class="login__secondary-btn" (click)="changePhone()">
-              Change number
-            </button>
-          </div>
-        </div>
-      }
-
-      <!-- Terms & Privacy -->
-      <p class="login__legal">
-        By continuing, you agree to our
-        <a routerLink="/page/terms-conditions" target="_blank" class="login__legal-link">Terms of Service</a>
-        &amp;
-        <a routerLink="/page/privacy-policy" target="_blank" class="login__legal-link">Privacy Policy</a>
-      </p>
-    </div>
-  </div>
-
-  <!-- Invisible reCAPTCHA container -->
-  <div id="recaptcha-container"></div>
 </div>
