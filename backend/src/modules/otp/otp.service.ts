@@ -2,11 +2,59 @@ import axios from 'axios';
 import { config } from '../../config';
 import { BadRequestError, UnauthorizedError } from '../../utils/api-error';
 import { logger } from '../../utils/logger';
-import { isTestPhoneNumber, getTestOtp } from '../../config/test-bypass.config';
 
 const MSG91_OTP_URL = 'https://control.msg91.com/api/v5/otp';
+const MSG91_WIDGET_VERIFY_URL = 'https://control.msg91.com/api/v5/widget/verifyAccessToken';
 
 export class OtpService {
+  /**
+   * Verify an MSG91 OTP Widget access token server-side.
+   * Returns the verified mobile number (with country code) on success.
+   */
+  async verifyWidgetAccessToken(accessToken: string): Promise<string> {
+    if (!accessToken) {
+      throw new BadRequestError('Access token is required');
+    }
+
+    const authKey = config.communication.sms.msg91.authKey;
+    if (!authKey) {
+      logger.error('MSG91_AUTH_KEY not configured');
+      throw new Error('MSG91_AUTH_KEY not configured');
+    }
+
+    try {
+      logger.info('Widget Verify: Calling MSG91 verifyAccessToken API');
+
+      const response = await axios.post(MSG91_WIDGET_VERIFY_URL, null, {
+        params: { 'access-token': accessToken },
+        headers: { authkey: authKey },
+        timeout: 5000,
+      });
+
+      const responseData = response.data;
+      if (responseData.type !== 'success') {
+        logger.error({ responseData }, 'Widget Verify: MSG91 API returned error in body');
+        throw new UnauthorizedError('Invalid or expired MSG91 access token');
+      }
+
+      logger.info({ status: response.status }, 'Widget Verify: MSG91 API Success');
+      // On success, `message` holds the verified identifier (mobile number with country code)
+      return String(responseData.message);
+    } catch (error: any) {
+      if (error instanceof UnauthorizedError) throw error;
+
+      logger.error(
+        {
+          errorStatus: error.response?.status,
+          errorData: error.response?.data,
+          errorMessage: error.message,
+        },
+        'Widget Verify: MSG91 API Failed',
+      );
+      throw new UnauthorizedError('Invalid or expired MSG91 access token');
+    }
+  }
+
   /**
    * Send OTP to a phone number via MSG91 OTP service
    * MSG91 generates and manages the OTP
@@ -15,20 +63,6 @@ export class OtpService {
     if (!phone || phone.length !== 10) {
       throw new BadRequestError('Phone number must be 10 digits');
     }
-
-    // ⚠️ DEV BYPASS - Remove this entire block before production
-    if (isTestPhoneNumber(phone)) {
-      const testOtp = getTestOtp(phone);
-      logger.warn(
-        { phone, otp: testOtp },
-        '🚨 DEV MODE: Using hardcoded OTP (remove before production)',
-      );
-      return {
-        success: true,
-        message: `OTP sent (TEST MODE) - Use: ${testOtp}`,
-      };
-    }
-    // ⚠️ END DEV BYPASS
 
     const authKey = config.communication.sms.msg91.authKey;
     const senderId = config.communication.sms.msg91.senderId;
@@ -46,7 +80,6 @@ export class OtpService {
     try {
       const url = `${MSG91_OTP_URL}?authkey=${authKey}&mobile=91${phone}`;
       const requestBody = {
-        Param1: senderId,
         Param2: phone,
       };
 
@@ -112,20 +145,6 @@ export class OtpService {
       throw new BadRequestError('OTP must be 6 digits');
     }
 
-    // ⚠️ DEV BYPASS - Remove this entire block before production
-    if (isTestPhoneNumber(phone)) {
-      const expectedOtp = getTestOtp(phone);
-      if (otp === expectedOtp) {
-        logger.warn(
-          { phone, otp },
-          '🚨 DEV MODE: OTP verified using hardcoded test value (remove before production)',
-        );
-        return true;
-      }
-      throw new UnauthorizedError('Invalid OTP');
-    }
-    // ⚠️ END DEV BYPASS
-
     const authKey = config.communication.sms.msg91.authKey;
     if (!authKey) {
       logger.error('MSG91_AUTH_KEY not configured');
@@ -144,6 +163,16 @@ export class OtpService {
           timeout: 5000,
         },
       );
+
+      // MSG91 returns 200 even on errors - check response body, not just status
+      const responseData = response.data;
+      if (responseData.type === 'error' || !responseData.success) {
+        logger.error(
+          { phone, responseData },
+          'OTP Verify: MSG91 API returned error in body',
+        );
+        throw new UnauthorizedError('Invalid or expired OTP');
+      }
 
       logger.info({ status: response.status, phone }, 'OTP Verify: MSG91 API Success');
       return true;
