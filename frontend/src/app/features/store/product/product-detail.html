@@ -29,18 +29,29 @@
             }
           </div>
 
-          <!-- Thumbnails -->
-          <div class="pd__thumbs">
-            @for (img of orderedImages(); track img) {
-              <button
-                class="pd__thumb"
-                [class.active]="selectedImage() === img"
-                (click)="selectedImage.set(img)"
-              >
-                <img [src]="img" [alt]="product()?.name" loading="lazy" />
-              </button>
-            }
-          </div>
+            <!-- Thumbnails Gallery Wrapper -->
+            <div class="product-thumbnail-wrapper">
+              @if (orderedImages().length > 1) {
+                <button type="button" class="thumbnail-arrow left" (click)="thumbRow.scrollBy({ left: -160, behavior: 'smooth' })" aria-label="Scroll left">‹</button>
+              }
+
+              <div class="product-thumbnail-row" #thumbRow>
+                @for (img of orderedImages(); track img) {
+                  <button
+                    type="button"
+                    class="product-thumbnail"
+                    [class.active]="selectedImage() === img"
+                    (click)="selectedImage.set(img)"
+                  >
+                    <img [src]="img" [alt]="product()?.name" loading="lazy" />
+                  </button>
+                }
+              </div>
+
+              @if (orderedImages().length > 1) {
+                <button type="button" class="thumbnail-arrow right" (click)="thumbRow.scrollBy({ left: 160, behavior: 'smooth' })" aria-label="Scroll right">›</button>
+              }
+            </div>
         </div>
 
         <!-- RIGHT: Product Info -->

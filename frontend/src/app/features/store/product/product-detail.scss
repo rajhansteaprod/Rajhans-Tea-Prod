@@ -55,6 +55,10 @@
   }
 }
 
+.pd__left {
+  min-width: 0;
+}
+
 // ═══════════════════════════════════════
 // LEFT: Image Zoom + Thumbnails
 // ═══════════════════════════════════════
@@ -63,7 +67,7 @@
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  background: #ffffff; // pure white background
+  background: rgb(249, 250, 251); // soft gray background
   cursor: pointer;
   overflow: hidden;
   border-radius: 0;
@@ -120,24 +124,49 @@
 
 
 
-.pd__thumbs {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+// ── Thumbnails Horizontal Gallery ──
+.product-thumbnail-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
   margin-top: 16px;
+  box-sizing: border-box;
 }
 
-.pd__thumb {
-  width: 80px;
+.product-thumbnail-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 14px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scroll-behavior: smooth;
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE/Edge
+
+  padding: 4px 36px; // Space for the absolute arrows on the sides
+  box-sizing: border-box;
+}
+
+.product-thumbnail-row::-webkit-scrollbar {
+  display: none; // Chrome/Safari/Webkit
+}
+
+.product-thumbnail {
+  flex: 0 0 auto;
+  width: 80px; // Keep existing size
   height: 80px;
   border: 1px solid #e5e7eb;
   border-radius: 4px;
   overflow: hidden;
   cursor: pointer;
   padding: 0;
-  background: #ffffff;
+  background: rgb(249, 250, 251); // Keep the soft gray background
   transition: all 0.2s ease;
   flex-shrink: 0;
+  box-sizing: border-box;
 
   img {
     width: 100%;
@@ -153,12 +182,50 @@
   }
 
   &.active {
-    border: 2px solid #d8421f !important;
+    border: 2px solid #dc3b1f !important; // Keep active border color
   }
 
   @include respond-to(md) {
     width: 72px;
     height: 72px;
+  }
+}
+
+.thumbnail-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+
+  border: 1px solid #ddd;
+  background: #ffffff;
+  color: #111827;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 5;
+  padding: 0;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+  }
+
+  &.left {
+    left: 0;
+  }
+
+  &.right {
+    right: 0;
   }
 }
 

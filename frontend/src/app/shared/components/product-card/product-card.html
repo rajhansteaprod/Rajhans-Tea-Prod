@@ -13,20 +13,6 @@
 
 
 
-    @if (getImages().length > 1) {
-      <button class="product-image-arrow left" (click)="prevImage($event)" aria-label="Previous image" type="button">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="15 18 9 12 15 6"></polyline></svg>
-      </button>
-      <button class="product-image-arrow right" (click)="nextImage($event)" aria-label="Next image" type="button">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"></polyline></svg>
-      </button>
-
-      <div class="product-image-dots" (click)="$event.stopPropagation()">
-        @for (img of getImages(); track img; let i = $index) {
-          <div class="product-image-dot" [class.active]="i === currentImageIndex()" (click)="setImage(i, $event)"></div>
-        }
-      </div>
-    }
   </div>
 
   <!-- Content Section -->
