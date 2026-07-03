@@ -294,7 +294,11 @@ export class CartStore {
   // ─── Buy Now (Temporary Cart) ──────────────────────────────────────────────
 
   buyNowItem(product: Product, qty = 1, variant?: ProductVariant): void {
-    const basePrice = variant?.price ?? product.basePrice;
+    // Display-only estimate — the backend recalculates the authoritative
+    // price at checkout. Variant pricing takes precedence over product pricing.
+    const unitPrice = variant
+      ? (variant.discountedPrice ?? variant.price)
+      : (product.discountedPrice ?? product.basePrice);
     const image = variant?.images?.[0] ?? product.images?.[0] ?? '';
     const variantName = variant?.name;
 
@@ -305,10 +309,10 @@ export class CartStore {
       name: product.name,
       slug: product.slug,
       image,
-      basePrice,
-      discountedPrice: product.discountedPrice,
+      basePrice: unitPrice,
+      discountedPrice: variant ? variant.discountedPrice : product.discountedPrice,
       qty,
-      lineTotal: product!.discountedPrice? product!.discountedPrice * qty : basePrice * qty,
+      lineTotal: unitPrice * qty,
     };
 
     // Mark this as temporary cart for buy-now

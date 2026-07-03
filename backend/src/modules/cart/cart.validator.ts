@@ -25,6 +25,28 @@ export const removeItemSchema = z.object({
   }).optional(),
 });
 
+const checkoutItemSchema = z.object({
+  productId: objectId,
+  variantId: objectId.optional().nullable(),
+  qty: z.number({ coerce: true }).int().min(1).max(10),
+});
+
+export const checkoutSummarySchema = z.object({
+  body: z.object({
+    items: z.array(checkoutItemSchema).max(50).optional(),
+    promoCode: z.string().trim().max(50).optional(),
+    offerId: objectId.optional(),
+  }),
+});
+
+export const reserveStockSchema = z.object({
+  body: z
+    .object({
+      items: z.array(checkoutItemSchema).max(50).optional(),
+    })
+    .optional(),
+});
+
 export const mergeCartSchema = z.object({
   body: z.object({
     guestSessionId: z.string().min(1, 'guestSessionId is required'),

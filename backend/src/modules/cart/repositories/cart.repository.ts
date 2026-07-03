@@ -176,4 +176,19 @@ export class CartRepository {
       .populate('items.variantId', 'name price discountedPrice')
       .exec();
   }
+
+  /**
+   * Resolve a cart from a checkout session identifier without populating.
+   * Logged-in users use their userId (a valid ObjectId) as the session id;
+   * guests use a UUID stored in guestSessionId.
+   */
+  async findByIdentifierRaw(sessionId: string): Promise<ICartDoc | null> {
+    if (Types.ObjectId.isValid(sessionId)) {
+      const asObjectId = new Types.ObjectId(sessionId);
+      return Cart.findOne({
+        $or: [{ userId: asObjectId }, { guestSessionId: sessionId }],
+      }).exec();
+    }
+    return Cart.findOne({ guestSessionId: sessionId }).exec();
+  }
 }

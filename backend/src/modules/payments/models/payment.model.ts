@@ -10,6 +10,9 @@ export type PaymentStatus =
 
 export interface ICheckoutItem {
   productId: string;
+  variantId?: string | null;
+  variantName?: string | null;
+  sku?: string | null;
   name: string;
   qty: number;
   unitPrice: number;
@@ -72,6 +75,8 @@ export interface IPaymentDoc extends Document {
   // Compensation tracking
   walletDebitAttempts: number;
   walletDebitFailed: boolean;
+  // Coupon usage is recorded once, on capture (idempotency flag)
+  couponUsageRecorded: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -79,6 +84,9 @@ export interface IPaymentDoc extends Document {
 const checkoutItemSchema = new Schema<ICheckoutItem>(
   {
     productId: { type: String, required: true },
+    variantId: { type: String, default: null },
+    variantName: { type: String, default: null },
+    sku: { type: String, default: null },
     name: { type: String, required: true },
     qty: { type: Number, required: true },
     unitPrice: { type: Number, required: true },
@@ -147,6 +155,7 @@ const paymentSchema = new Schema<IPaymentDoc>(
     // Compensation tracking
     walletDebitAttempts: { type: Number, default: 0 },
     walletDebitFailed: { type: Boolean, default: false },
+    couponUsageRecorded: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

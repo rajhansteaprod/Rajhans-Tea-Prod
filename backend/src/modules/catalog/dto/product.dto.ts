@@ -38,6 +38,8 @@ export interface ProductAdminView {
   bestTakenFor?: string;
   status: ProductStatus;
   isFeatured: boolean;
+  showBadge: boolean;
+  badgeText?: string;
   stock: number;
   trackInventory: boolean;
   hasVariants: boolean;
@@ -68,6 +70,8 @@ export interface ProductPublicView {
   region?: string;
   bestTakenFor?: string;
   isFeatured: boolean;
+  showBadge: boolean;
+  badgeText?: string;
   inStock: boolean;
   hasVariants: boolean;
   variants?: ProductVariantView[];
@@ -143,6 +147,8 @@ export class ProductDTO {
       bestTakenFor: product.bestTakenFor,
       status: product.status,
       isFeatured: product.isFeatured,
+      showBadge: product.showBadge ?? false,
+      badgeText: product.badgeText,
       stock: product.stock ?? 0,
       trackInventory: product.trackInventory ?? false,
       hasVariants: product.hasVariants ?? false,
@@ -173,6 +179,8 @@ export class ProductDTO {
       region: product.region,
       bestTakenFor: product.bestTakenFor,
       isFeatured: product.isFeatured,
+      showBadge: product.showBadge ?? false,
+      badgeText: product.badgeText,
       inStock: product.hasVariants && variants
         ? variants.some(v => v.isActive && v.stock > 0)
         : (product.stock ?? 0) > 0,

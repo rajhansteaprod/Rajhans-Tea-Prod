@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { Product } from '../../catalog/models/product.model';
+import { ProductVariant } from '../../catalog/models/product-variant.model';
 import { StockMovementRepository } from '../repositories/stock-movement.repository';
 import { InventoryAlertRepository } from '../repositories/inventory-alert.repository';
 import { WarehouseRepository } from '../repositories/warehouse.repository';
@@ -24,24 +25,72 @@ export class InventoryService {
     if (!warehouse) return;
 
     for (const item of order.items) {
-      const product = await Product.findById(item.productId).exec();
-      if (!product) continue;
+      // Variant items deduct variant stock; simple items deduct product stock.
+      // Atomic $inc guarded by a stock filter — concurrent orders can never
+      // drive stock negative or lose updates (read-modify-write eliminated).
+      let previousStock: number;
+      let newStock: number;
 
-      const previousStock = product.stock;
-      const newStock = Math.max(0, previousStock - item.qty);
+      if (item.variantId) {
+        const variant = await ProductVariant.findOneAndUpdate(
+          { _id: item.variantId, stock: { $gte: item.qty } },
+          { $inc: { stock: -item.qty } },
+          { new: true },
+        ).exec();
 
-      await Product.findByIdAndUpdate(item.productId, { $set: { stock: newStock } }).exec();
+        if (variant) {
+          previousStock = variant.stock + item.qty;
+          newStock = variant.stock;
+        } else {
+          // Insufficient stock (oversell slipped through reservations) —
+          // clamp to zero and record the discrepancy loudly.
+          const drained = await ProductVariant.findByIdAndUpdate(
+            item.variantId,
+            { $set: { stock: 0 } },
+          ).exec();
+          if (!drained) continue;
+          previousStock = drained.stock;
+          newStock = 0;
+          console.error(
+            `[Inventory] OVERSELL: variant ${item.variantId} had ${drained.stock}, order ${order.orderNumber} needed ${item.qty}`,
+          );
+        }
+      } else {
+        const product = await Product.findOneAndUpdate(
+          { _id: item.productId, stock: { $gte: item.qty } },
+          { $inc: { stock: -item.qty } },
+          { new: true },
+        ).exec();
+
+        if (product) {
+          previousStock = product.stock + item.qty;
+          newStock = product.stock;
+        } else {
+          const drained = await Product.findByIdAndUpdate(
+            item.productId,
+            { $set: { stock: 0 } },
+          ).exec();
+          if (!drained) continue;
+          previousStock = drained.stock;
+          newStock = 0;
+          console.error(
+            `[Inventory] OVERSELL: product ${item.productId} had ${drained.stock}, order ${order.orderNumber} needed ${item.qty}`,
+          );
+        }
+      }
 
       await this.movementRepo.create({
         productId: new Types.ObjectId(item.productId),
         warehouseId: warehouse._id,
         type: 'purchase_deduction',
-        qty: -item.qty,
+        qty: -(previousStock - newStock),
         previousStock,
         newStock,
         referenceId: orderId,
         referenceType: 'order',
-        note: `Order ${order.orderNumber}`,
+        note: item.variantId
+          ? `Order ${order.orderNumber} (variant ${item.variantId})`
+          : `Order ${order.orderNumber}`,
       });
 
       // Check low stock
@@ -109,19 +158,34 @@ export class InventoryService {
 
   async restockFromReturn(
     orderId: string,
-    items: { productId: string; qty: number }[],
+    items: { productId: string; variantId?: string | null; qty: number }[],
   ): Promise<void> {
     const warehouse = await this.warehouseRepo.findDefault();
     if (!warehouse) return;
 
     for (const item of items) {
-      const product = await Product.findById(item.productId).exec();
-      if (!product) continue;
+      let previousStock: number;
+      let newStock: number;
 
-      const previousStock = product.stock;
-      const newStock = previousStock + item.qty;
-
-      await Product.findByIdAndUpdate(item.productId, { $inc: { stock: item.qty } }).exec();
+      if (item.variantId) {
+        const variant = await ProductVariant.findByIdAndUpdate(
+          item.variantId,
+          { $inc: { stock: item.qty } },
+          { new: true },
+        ).exec();
+        if (!variant) continue;
+        previousStock = variant.stock - item.qty;
+        newStock = variant.stock;
+      } else {
+        const product = await Product.findByIdAndUpdate(
+          item.productId,
+          { $inc: { stock: item.qty } },
+          { new: true },
+        ).exec();
+        if (!product) continue;
+        previousStock = product.stock - item.qty;
+        newStock = product.stock;
+      }
 
       await this.movementRepo.create({
         productId: new Types.ObjectId(item.productId),

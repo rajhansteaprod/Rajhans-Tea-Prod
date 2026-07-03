@@ -68,6 +68,8 @@ export class OrderService {
       snapshot.items.map(async (item) => {
         const enrichedItem: any = {
           productId: item.productId,
+          variantId: item.variantId ?? null,
+          variant: item.variantName ?? null,
           name: item.name,
           qty: item.qty,
           unitPrice: item.unitPrice,
@@ -76,18 +78,12 @@ export class OrderService {
         };
 
         try {
-          console.log(`[Order] Fetching product images for: ${item.productId}`);
           const product = await Product.findById(item.productId).select('images').lean<any>().exec();
-          console.log(`[Order] Product found:`, product);
-
           if (product?.images && product.images.length > 0) {
             enrichedItem.image = product.images[0];
-            console.log(`[Order] Image added:`, enrichedItem.image);
-          } else {
-            console.log(`[Order] No images found for product:`, item.productId);
           }
         } catch (err) {
-          console.log(`[Order] Error fetching product:`, err);
+          console.warn(`[Order] Failed to fetch image for product ${item.productId}:`, err);
         }
 
         return enrichedItem;
@@ -227,17 +223,10 @@ export class OrderService {
     );
 
     // Side effects
-    if (newStatus === 'cancelled') {
+    if (newStatus === 'cancelled' || newStatus === 'returned') {
       await this.inventoryService.restockFromReturn(
         orderId,
-        order.items.map((i) => ({ productId: i.productId, qty: i.qty })),
-      );
-    }
-
-    if (newStatus === 'returned') {
-      await this.inventoryService.restockFromReturn(
-        orderId,
-        order.items.map((i) => ({ productId: i.productId, qty: i.qty })),
+        order.items.map((i) => ({ productId: i.productId, variantId: i.variantId, qty: i.qty })),
       );
     }
 
@@ -439,7 +428,6 @@ export class OrderService {
 
   async getOrderForUser(orderId: string, userId: string) {
     const order = await this.orderRepo.findById(orderId);
-    console.log("CHECK HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"+order);
     if (!order) throw new NotFoundError('Order not found');
     if (!order.userId || order.userId.toString() !== userId) throw new ForbiddenError('Access denied');
     return order;

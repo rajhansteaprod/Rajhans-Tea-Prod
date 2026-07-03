@@ -71,7 +71,7 @@ export interface CreateVariantPayload {
   name: string;
   sku?: string;
   price: number;
-  discountedPrice?: number;
+  discountedPrice?: number | null; // null clears an existing discount
   stock: number;
   trackInventory?: boolean;
   isActive?: boolean;
@@ -93,6 +93,8 @@ export interface Product {
   reflectedImage?: string; // Image shown on hover in featured products
   attributes: Record<string, string>;
   tags: string[];
+  region?: 'Assam' | 'Darjeeling' | 'Nilgiri' | 'Dooars';
+  bestTakenFor?: 'Morning' | 'Noon' | 'Evening';
   variants?: ProductVariant[];
   // Admin-only (present in /admin/products, absent in /catalog/products)
   status?: 'draft' | 'active' | 'archived';
@@ -153,13 +155,15 @@ export interface CreateProductPayload {
   categoryId: string;
   collectionIds?: string[];
   basePrice: number;
-  discountedPrice?: number;
+  discountedPrice?: number | null; // null clears an existing discount
   images?: string[];
   primaryImage?: string;
   imageAltText?: string;
   reflectedImage?: string; // Image shown on hover in featured products
   attributes?: Record<string, string>;
   tags?: string[];
+  region?: 'Assam' | 'Darjeeling' | 'Nilgiri' | 'Dooars' | null; // null clears
+  bestTakenFor?: 'Morning' | 'Noon' | 'Evening' | null; // null clears
   status?: 'draft' | 'active' | 'archived';
   showBadge?: boolean;
   badgeText?: string;

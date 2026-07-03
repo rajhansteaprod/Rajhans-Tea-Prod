@@ -1,5 +1,4 @@
 import crypto from 'crypto';
-import { Types } from 'mongoose';
 import { config } from '../../../config';
 import { getRazorpayClient } from '../../../loaders/razorpay.loader';
 import { PaymentRepository } from '../repositories/payment.repository';
@@ -88,59 +87,24 @@ export class PaymentService {
         idempotencyKey = `${idempotencyKey}-${Date.now()}`;
       }
 
-      // OPTION A: Freeze prices (no recomputation)
-      // Pass items if provided (from temporary cart), else fetch from session
-      console.log('🛒 DEBUG: Creating order', {
-        sessionId,
-        userId,
-        providedItems: items?.length ?? 0,
-      });
-
-      const frozenPricing = await this.checkoutService.freezePrice(sessionId, items);
-      console.log('❄️ DEBUG: Price frozen', {
-        snapshotId: frozenPricing.snapshotId,
-        total: frozenPricing.total,
-        expiresAt: frozenPricing.expiresAt,
-      });
-
-      if (frozenPricing.items.length === 0) {
-        throw new BadRequestError('Cart is empty');
-      }
-
-      // Reserve stock (pass items so it uses provided items from frontend)
+      // Reserve stock FIRST — never freeze a price for items we cannot fulfil
       const stockResult = await this.checkoutService.reserveStock(sessionId, items);
       if (stockResult.issues.length > 0) {
         throw new BadRequestError('Some items are out of stock');
       }
 
-    // Create a summary-like object from frozen pricing for compatibility
-    const summary = {
-      sessionId,
-      items: frozenPricing.items,
-      subtotal: frozenPricing.items.reduce((s, i) => s + i.pricing.priceAfterDiscount * i.qty, 0),
-      totalDiscount: frozenPricing.items.reduce((s, i) => s + i.pricing.discountAmount * i.qty, 0),
-      totalTax: frozenPricing.items.reduce((s, i) => s + i.pricing.taxAmount * i.qty, 0),
-      total: frozenPricing.total,
-      itemCount: frozenPricing.items.reduce((s, i) => s + i.qty, 0),
-    };
+      // SINGLE SOURCE OF TRUTH: freeze the full pricing breakdown, coupon
+      // included. snapshot.total is the exact amount to collect (before
+      // wallet / loyalty payment methods).
+      const frozenPricing = await this.checkoutService.freezePrice(sessionId, items, promoCode);
+      const summary = frozenPricing.summary;
 
-    // Validate and calculate discount (PromoCode OR Offer - ONLY ONE)
-    let discountId: any = null;
-    let discountPaise = 0;
-    let discountType: 'promo_code' | 'offer' | undefined = undefined;
-
-    const appliedDiscount = await this.discountService.applyDiscount(summary.total, promoCode);
-
-    if (appliedDiscount.type) {
-      discountId = appliedDiscount.discountId;
-      discountPaise = Math.round(appliedDiscount.discountAmount * 100);
-      discountType = appliedDiscount.type;
-
-      // Record usage
-      if (discountId) {
-        await this.discountService.recordUsage(discountId);
-      }
-    }
+    // Coupon comes from the frozen summary — no recomputation, no drift.
+    // Usage is recorded on CAPTURE (not here), so abandoned payments don't
+    // burn coupon usage limits.
+    const discountId = summary.couponId;
+    const discountPaise = Math.round(summary.couponDiscount * 100);
+    const discountType = summary.couponType ?? undefined;
 
     // Calculate loyalty discount (if applicable)
     let loyaltyPointsUsed = 0;
@@ -158,9 +122,8 @@ export class PaymentService {
       }
     }
 
-    // Calculate wallet deduction (if applicable)
-    // Total = summary - promo - loyalty
-    const totalPaise = Math.round(summary.total * 100) - discountPaise - loyaltyDiscountPaise;
+    // Amount still to collect = frozen total (coupon already applied) - loyalty
+    const totalPaise = Math.round(summary.total * 100) - loyaltyDiscountPaise;
     let walletDeductPaise = 0;
 
     if (walletAmount > 0 && userId) {
@@ -193,49 +156,24 @@ export class PaymentService {
         sessionId,
         userId: userId ? (userId as never) : null,
         razorpayOrderId: `wallet_${idempotencyKey.slice(0, 20)}`,
-        amountPaise: totalPaise + discountPaise + loyaltyDiscountPaise,
+        amountPaise: totalPaise,
         walletDeductPaise,
         loyaltyPointsUsed,
         loyaltyDiscountPaise,
-        promoCode,
-        discountId,
+        promoCode: summary.couponCode ?? undefined,
+        discountId: discountId as never,
         discountType,
         discountPaise,
         currency: 'INR',
         status: 'captured',
-        checkoutSnapshot: {
-          items: summary.items.map((item) => ({
-            productId: item.productId,
-            name: item.name,
-            qty: item.qty,
-            unitPrice: item.pricing.unitPrice,
-            totalPrice: item.pricing.totalPrice,
-          })),
-          subtotal: summary.subtotal,
-          totalDiscount: summary.totalDiscount,
-          totalTax: summary.totalTax,
-          total: summary.total,
-        },
+        checkoutSnapshot: this.buildCheckoutSnapshot(summary),
         shippingAddress: address,
         idempotencyKey,
         priceSnapshotId: frozenPricing.snapshotId as never, // Store reference to frozen price
       });
 
-      if (userId) {
-        await this.cartService.clearCart(new Types.ObjectId(userId));
-      } else {
-        await this.cartService.clearCart(sessionId);
-      }
-      await getInvoiceQueue().add(
-        InvoiceJobs.GENERATE,
-        { paymentId: payment._id.toString() },
-        { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
-      );
-      await getFulfillmentQueue().add(
-        FulfillmentJobs.CREATE_ORDER,
-        { paymentId: payment._id.toString() },
-        { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
-      );
+      // Mark snapshot used + record coupon usage + clear cart + enqueue jobs
+      await this.runPostCaptureSideEffects(payment._id.toString(), { skipWalletDebit: true });
 
       return { paymentId: payment._id.toString(), paidViaWallet: true };
     }
@@ -262,25 +200,13 @@ export class PaymentService {
       amountPaise,
       currency: 'INR',
       status: 'created',
-      checkoutSnapshot: {
-        items: summary.items.map((item) => ({
-          productId: item.productId,
-          name: item.name,
-          qty: item.qty,
-          unitPrice: item.pricing.unitPrice,
-          totalPrice: item.pricing.totalPrice,
-        })),
-        subtotal: summary.subtotal,
-        totalDiscount: summary.totalDiscount,
-        totalTax: summary.totalTax,
-        total: summary.total,
-      },
+      checkoutSnapshot: this.buildCheckoutSnapshot(summary),
       shippingAddress: address,
       walletDeductPaise,
       loyaltyPointsUsed,
       loyaltyDiscountPaise,
-      promoCode,
-      discountId,
+      promoCode: summary.couponCode ?? undefined,
+      discountId: discountId as never,
       discountType,
       discountPaise,
       idempotencyKey,
@@ -335,54 +261,30 @@ export class PaymentService {
       };
     }
 
-    // CRITICAL: Prevent concurrent verification (webhook + client)
-    // Use pessimistic locking with 10-second lock window
-    const isLocked = payment.lockedUntil && new Date(payment.lockedUntil) > new Date();
-    if (isLocked) {
-      throw new BadRequestError('Payment verification in progress, please retry');
-    }
+    // 2. Verify signature
+    if (!this.isSignatureValid(`${razorpayOrderId}|${razorpayPaymentId}`, razorpaySignature)) {
+      // Query Razorpay before releasing stock — don't assume the payment
+      // failed just because the signature check failed.
+      const razorpay = getRazorpayClient();
+      let paymentCaptured = false;
+      try {
+        const rzpPayment = await razorpay.payments.fetch(razorpayPaymentId);
+        paymentCaptured = rzpPayment.status === 'captured';
+      } catch (err) {
+        // Can't reach Razorpay — be conservative, don't release stock
+        console.error('Failed to verify payment status with Razorpay:', err);
+        throw new BadRequestError('Cannot verify payment status. Please contact support.');
+      }
 
-    // Acquire lock
-    const lockUntil = new Date(Date.now() + 10000); // 10 second lock
-    await this.paymentRepo.updateFields(payment._id.toString(), {
-      lockedAt: new Date(),
-      lockedUntil: lockUntil,
-      verificationAttempts: (payment.verificationAttempts || 0) + 1,
-    });
-
-    try {
-      // 2. Verify signature
-      const expectedSignature = crypto
-        .createHmac('sha256', config.razorpay.keySecret)
-        .update(`${razorpayOrderId}|${razorpayPaymentId}`)
-        .digest('hex');
-
-      const isValid = crypto.timingSafeEqual(
-        Buffer.from(expectedSignature),
-        Buffer.from(razorpaySignature),
-      );
-
-      if (!isValid) {
-        // CRITICAL FIX: Query Razorpay before releasing stock
-        // Don't assume payment failed just because signature failed
-        const razorpay = getRazorpayClient();
-        let paymentCaptured = false;
-        try {
-          const rzpPayment = await razorpay.payments.fetch(razorpayPaymentId);
-          paymentCaptured = rzpPayment.status === 'captured';
-        } catch (err) {
-          // Can't reach Razorpay — be conservative, don't release stock
-          console.error('Failed to verify payment status with Razorpay:', err);
-          throw new BadRequestError(
-            'Cannot verify payment status. Please contact support.'
-          );
-        }
-
-        // Only release stock if Razorpay confirms it's NOT captured
-        if (!paymentCaptured) {
-          await this.paymentRepo.updateStatus(payment._id.toString(), 'failed');
+      if (!paymentCaptured) {
+        // Atomic transition — only the winner releases stock / reverts loyalty
+        const failed = await this.paymentRepo.transitionStatus(
+          payment._id.toString(),
+          ['created', 'authorized'],
+          'failed',
+        );
+        if (failed) {
           await this.releaseStockForPayment(payment.sessionId);
-          // Revert loyalty points if they were deducted during order creation
           if (payment.loyaltyPointsUsed > 0 && payment.userId) {
             await this.loyaltyService.revertRedemption(
               payment.userId.toString(),
@@ -390,123 +292,186 @@ export class PaymentService {
               payment._id.toString(),
             );
           }
-        } else {
-          // Razorpay shows captured but signature invalid — mark as suspicious
-          console.warn(
-            `Payment ${razorpayOrderId} shows captured on Razorpay but signature invalid`
-          );
-          await this.paymentRepo.updateFields(payment._id.toString(), {
-            lastVerificationError: 'Signature mismatch but Razorpay shows captured',
-          });
-          throw new BadRequestError('Signature verification failed - contact support');
         }
-
-        throw new BadRequestError('Payment signature verification failed');
+      } else {
+        console.warn(
+          `Payment ${razorpayOrderId} shows captured on Razorpay but signature invalid`,
+        );
+        await this.paymentRepo.updateFields(payment._id.toString(), {
+          lastVerificationError: 'Signature mismatch but Razorpay shows captured',
+        });
+        throw new BadRequestError('Signature verification failed - contact support');
       }
 
-      // 3. Mark as captured
-      await this.paymentRepo.updateStatus(payment._id.toString(), 'captured', {
+      throw new BadRequestError('Payment signature verification failed');
+    }
+
+    // 3. Atomic capture — exactly ONE caller (client verify, webhook, or
+    // retry) wins this transition and runs the side effects. Everyone else
+    // gets the idempotent "already captured" response.
+    const captured = await this.paymentRepo.transitionStatus(
+      payment._id.toString(),
+      ['created', 'authorized'],
+      'captured',
+      {
         razorpayPaymentId,
         razorpaySignature,
-      });
+        verificationAttempts: (payment.verificationAttempts || 0) + 1,
+      },
+    );
 
-      // 3b. Mark price snapshot as used (with error handling)
-      if (payment.priceSnapshotId) {
+    if (captured) {
+      await this.runPostCaptureSideEffects(payment._id.toString());
+    }
+
+    return {
+      paymentId: payment._id.toString(),
+      status: 'captured',
+      amountPaise: payment.amountPaise,
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // POST-CAPTURE SIDE EFFECTS (shared by verify, webhook, and wallet paths)
+  // Must be idempotent — may run after a retried capture.
+  // ---------------------------------------------------------------------------
+
+  private buildCheckoutSnapshot(summary: import('../../cart/services/checkout.service').CheckoutSummary) {
+    return {
+      items: summary.items.map((item) => ({
+        productId: item.productId,
+        variantId: item.variantId ?? null,
+        variantName: item.variantName ?? null,
+        sku: item.sku ?? null,
+        name: item.name,
+        qty: item.qty,
+        unitPrice: item.pricing.unitPrice,
+        totalPrice: item.pricing.totalPrice,
+      })),
+      subtotal: summary.subtotal,
+      totalDiscount: summary.totalDiscount + summary.couponDiscount,
+      totalTax: summary.totalTax,
+      total: summary.total,
+    };
+  }
+
+  private isSignatureValid(payload: string, signature: string): boolean {
+    const expected = crypto
+      .createHmac('sha256', config.razorpay.keySecret)
+      .update(payload)
+      .digest('hex');
+    const expectedBuf = Buffer.from(expected);
+    const givenBuf = Buffer.from(signature);
+    // timingSafeEqual throws on length mismatch — guard first
+    if (expectedBuf.length !== givenBuf.length) return false;
+    return crypto.timingSafeEqual(expectedBuf, givenBuf);
+  }
+
+  private async runPostCaptureSideEffects(
+    paymentId: string,
+    opts: { skipWalletDebit?: boolean } = {},
+  ): Promise<void> {
+    const payment = await this.paymentRepo.findById(paymentId);
+    if (!payment || payment.status !== 'captured') return;
+
+    // 1. Mark price snapshot as used
+    if (payment.priceSnapshotId) {
+      try {
+        const { PriceSnapshotRepository } = await import(
+          '../../cart/repositories/price-snapshot.repository'
+        );
+        await new PriceSnapshotRepository().markAsUsed(
+          payment.priceSnapshotId.toString(),
+          payment._id.toString(),
+        );
+      } catch (err) {
+        console.warn(`Failed to mark snapshot used for payment ${payment._id}`, err);
+      }
+    }
+
+    // 2. Record coupon usage exactly once — conditional update on the flag
+    // guarantees only one of the (verify | webhook | retry) callers records it
+    if (payment.discountId) {
+      const { Payment } = await import('../models/payment.model');
+      const marked = await Payment.findOneAndUpdate(
+        { _id: payment._id, couponUsageRecorded: { $ne: true } },
+        { $set: { couponUsageRecorded: true } },
+      ).exec();
+      if (marked) {
         try {
-          const snapshotRepo = new (require('../../cart/repositories/price-snapshot.repository').PriceSnapshotRepository)();
-          await snapshotRepo.markAsUsed(payment.priceSnapshotId.toString(), payment._id.toString());
+          await this.discountService.recordUsage(payment.discountId.toString());
         } catch (err) {
-          // Snapshot may have expired (15-min TTL) — log but don't fail
-          console.warn(
-            `Price snapshot ${payment.priceSnapshotId} may have expired for payment ${payment._id}`,
-            err
-          );
+          console.error(`Failed to record coupon usage for payment ${payment._id}:`, err);
         }
       }
+    }
 
-      // 4. Debit wallet NOW (Razorpay confirmed — safe to deduct)
-      // CRITICAL FIX: Wrap in try-catch with compensation
-      if (payment.walletDeductPaise > 0 && payment.userId) {
-        try {
-          await this.walletService.debit(
-            payment.userId.toString(),
-            payment.walletDeductPaise / 100,
-            'purchase',
-            payment._id.toString(),
-            `Order payment (wallet portion)`,
-            `wallet-debit-${payment.idempotencyKey}`,
-          );
-          // Mark attempt
-          await this.paymentRepo.updateFields(payment._id.toString(), {
-            walletDebitAttempts: (payment.walletDebitAttempts || 0) + 1,
-          });
-        } catch (walletErr) {
-          console.error(`Wallet debit failed for payment ${payment._id}:`, walletErr);
-          // Mark as failed but don't stop payment processing
-          await this.paymentRepo.updateFields(payment._id.toString(), {
-            walletDebitFailed: true,
-            walletDebitAttempts: (payment.walletDebitAttempts || 0) + 1,
-            lastVerificationError: `Wallet debit failed: ${(walletErr as Error).message}`,
-          });
-          // Queue compensation job to retry wallet debit with exponential backoff
-          await getPaymentQueue().add(
-            PaymentJobs.COMPENSATE_WALLET_DEBIT,
-            { paymentId: payment._id.toString() },
-            { delay: 5000, attempts: 5, backoff: { type: 'exponential', delay: 5000 } },
-          );
-        }
-      }
-
-      // 5. Clear cart (purchase complete) - handle both guest and user carts
-      if (payment.userId) {
-        await this.cartService.clearCart(payment.userId);
-      } else {
-        await this.cartService.clearCart(payment.sessionId);
-      }
-
-      // 6. Enqueue invoice generation
-      await getInvoiceQueue().add(
-        InvoiceJobs.GENERATE,
-        { paymentId: payment._id.toString() },
-        { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
-      );
-
-      // 7. Enqueue order creation (Inventory & Fulfillment)
-      await getFulfillmentQueue().add(
-        FulfillmentJobs.CREATE_ORDER,
-        { paymentId: payment._id.toString() },
-        { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
-      );
-
-      // 8. Enqueue loyalty earn + referral completion (Promotions)
-      if (payment.userId) {
-        await getPromotionsQueue().add(
-          PromotionJobs.EARN_LOYALTY,
-          {
-            userId: payment.userId.toString(),
-            orderTotal: payment.amountPaise / 100,
-            paymentId: payment._id.toString(),
-          },
-          { attempts: 3, backoff: { type: 'exponential', delay: 3000 } },
+    // 3. Debit wallet portion (skipped when already debited synchronously)
+    if (!opts.skipWalletDebit && payment.walletDeductPaise > 0 && payment.userId) {
+      try {
+        await this.walletService.debit(
+          payment.userId.toString(),
+          payment.walletDeductPaise / 100,
+          'purchase',
+          payment._id.toString(),
+          `Order payment (wallet portion)`,
+          `wallet-debit-${payment.idempotencyKey}`,
         );
-        await getPromotionsQueue().add(
-          PromotionJobs.COMPLETE_REFERRAL,
-          { refereeUserId: payment.userId.toString(), paymentId: payment._id.toString() },
-          { attempts: 2, backoff: { type: 'exponential', delay: 5000 } },
+        await this.paymentRepo.updateFields(payment._id.toString(), {
+          walletDebitAttempts: (payment.walletDebitAttempts || 0) + 1,
+        });
+      } catch (walletErr) {
+        console.error(`Wallet debit failed for payment ${payment._id}:`, walletErr);
+        await this.paymentRepo.updateFields(payment._id.toString(), {
+          walletDebitFailed: true,
+          walletDebitAttempts: (payment.walletDebitAttempts || 0) + 1,
+          lastVerificationError: `Wallet debit failed: ${(walletErr as Error).message}`,
+        });
+        await getPaymentQueue().add(
+          PaymentJobs.COMPENSATE_WALLET_DEBIT,
+          { paymentId: payment._id.toString() },
+          { delay: 5000, attempts: 5, backoff: { type: 'exponential', delay: 5000 } },
         );
       }
+    }
 
-      return {
-        paymentId: payment._id.toString(),
-        status: 'captured',
-        amountPaise: payment.amountPaise,
-      };
-    } finally {
-      // Release lock
-      await this.paymentRepo.updateFields(payment._id.toString(), {
-        lockedAt: null,
-        lockedUntil: null,
-      });
+    // 4. Clear cart (purchase complete) — both guest and user carts
+    if (payment.userId) {
+      await this.cartService.clearCart(payment.userId);
+    } else {
+      await this.cartService.clearCart(payment.sessionId);
+    }
+
+    // 5. Enqueue invoice generation
+    await getInvoiceQueue().add(
+      InvoiceJobs.GENERATE,
+      { paymentId: payment._id.toString() },
+      { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
+    );
+
+    // 6. Enqueue order creation (Inventory & Fulfillment) — idempotent
+    await getFulfillmentQueue().add(
+      FulfillmentJobs.CREATE_ORDER,
+      { paymentId: payment._id.toString() },
+      { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
+    );
+
+    // 7. Enqueue loyalty earn + referral completion (Promotions)
+    if (payment.userId) {
+      await getPromotionsQueue().add(
+        PromotionJobs.EARN_LOYALTY,
+        {
+          userId: payment.userId.toString(),
+          orderTotal: payment.amountPaise / 100,
+          paymentId: payment._id.toString(),
+        },
+        { attempts: 3, backoff: { type: 'exponential', delay: 3000 } },
+      );
+      await getPromotionsQueue().add(
+        PromotionJobs.COMPLETE_REFERRAL,
+        { refereeUserId: payment.userId.toString(), paymentId: payment._id.toString() },
+        { attempts: 2, backoff: { type: 'exponential', delay: 5000 } },
+      );
     }
   }
 
@@ -610,48 +575,46 @@ export class PaymentService {
         const rpOrderId = event.payload?.payment?.entity?.order_id;
         if (rpOrderId) {
           const payment = await this.paymentRepo.findByRazorpayOrderId(rpOrderId);
-          if (payment && payment.status === 'created') {
-            await this.paymentRepo.updateStatus(payment._id.toString(), 'captured', {
-              razorpayPaymentId: rpPaymentId,
-            });
-            if (payment.userId) {
-              await this.cartService.clearCart(payment.userId);
-            } else {
-              await this.cartService.clearCart(payment.sessionId);
+          if (payment) {
+            // Atomic transition — no-op when verifyPayment already captured it
+            const captured = await this.paymentRepo.transitionStatus(
+              payment._id.toString(),
+              ['created', 'authorized'],
+              'captured',
+              { razorpayPaymentId: rpPaymentId },
+            );
+            if (captured) {
+              // Full side effects (wallet debit, coupon usage, snapshot, cart,
+              // invoice, fulfillment, loyalty) — handles the case where the
+              // client never called verifyPayment
+              await this.runPostCaptureSideEffects(payment._id.toString());
             }
-            await getInvoiceQueue().add(
-              InvoiceJobs.GENERATE,
-              { paymentId: payment._id.toString() },
-              { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
-            );
-            // Enqueue order creation (safe because createFromPayment() is idempotent)
-            // This handles the case where the client never called verifyPayment
-            await getFulfillmentQueue().add(
-              FulfillmentJobs.CREATE_ORDER,
-              { paymentId: payment._id.toString() },
-              { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
-            );
           }
         }
       } else if (eventType === 'payment.failed') {
         const rpOrderId = event.payload?.payment?.entity?.order_id;
         if (rpOrderId) {
           const payment = await this.paymentRepo.findByRazorpayOrderId(rpOrderId);
-          if (payment && payment.status === 'created') {
-            // ✅ Revert loyalty points if they were deducted during order creation
-            if (payment.loyaltyPointsUsed > 0 && payment.userId) {
-              await this.loyaltyService.revertRedemption(
-                payment.userId.toString(),
-                payment.loyaltyPointsUsed,
-                payment._id.toString(),
-              );
+          if (payment) {
+            // Atomic transition — only the winner runs the failure cleanup
+            const failed = await this.paymentRepo.transitionStatus(
+              payment._id.toString(),
+              ['created'],
+              'failed',
+            );
+            if (failed) {
+              // Revert loyalty points if they were deducted during order creation
+              if (payment.loyaltyPointsUsed > 0 && payment.userId) {
+                await this.loyaltyService.revertRedemption(
+                  payment.userId.toString(),
+                  payment.loyaltyPointsUsed,
+                  payment._id.toString(),
+                );
+              }
+
+              // Release stock reservation
+              await this.releaseStockForPayment(payment.sessionId);
             }
-
-            // Release stock reservation
-            await this.releaseStockForPayment(payment.sessionId);
-
-            // Mark payment as failed
-            await this.paymentRepo.updateStatus(payment._id.toString(), 'failed');
           }
         }
       } else if (eventType === 'refund.created') {

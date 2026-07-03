@@ -19,6 +19,10 @@ import {
   updateProductSchema,
   productIdSchema,
   productSlugSchema,
+  createVariantSchema,
+  updateVariantSchema,
+  variantIdSchema,
+  reorderVariantsSchema,
 } from './catalog.validator';
 
 const router = Router();
@@ -76,12 +80,14 @@ adminRouter.put('/products/:id', validate(updateProductSchema), catalog.updatePr
 adminRouter.delete('/products/:id', validate(productIdSchema), catalog.deleteProduct);
 
 // Product Variants — admin CRUD
+// NOTE: /reorder must be registered BEFORE /:variantId or it would be
+// captured as a variantId and fail with an invalid-ID error.
 adminRouter.get('/products/:productId/variants', catalog.listVariants);
-adminRouter.post('/products/:productId/variants', catalog.createVariant);
-adminRouter.get('/products/:productId/variants/:variantId', catalog.getVariant);
-adminRouter.put('/products/:productId/variants/:variantId', catalog.updateVariant);
-adminRouter.delete('/products/:productId/variants/:variantId', catalog.deleteVariant);
-adminRouter.post('/products/:productId/variants/reorder', catalog.reorderVariants);
+adminRouter.post('/products/:productId/variants', validate(createVariantSchema), catalog.createVariant);
+adminRouter.post('/products/:productId/variants/reorder', validate(reorderVariantsSchema), catalog.reorderVariants);
+adminRouter.get('/products/:productId/variants/:variantId', validate(variantIdSchema), catalog.getVariant);
+adminRouter.put('/products/:productId/variants/:variantId', validate(updateVariantSchema), catalog.updateVariant);
+adminRouter.delete('/products/:productId/variants/:variantId', validate(variantIdSchema), catalog.deleteVariant);
 
 router.use('/admin', adminRouter);
 

@@ -27,7 +27,6 @@ export class SummaryStepComponent {
   // Signals
   readonly isPlacing = signal(false);
   readonly orderError = signal('');
-  readonly promoCode = signal('');
 
   // Get data from service
   readonly cartItems = this.checkoutService.cartItems;
@@ -65,11 +64,13 @@ export class SummaryStepComponent {
       // 2. Open Razorpay modal
       // 3. Verify payment signature (CRITICAL!)
       // 4. Update database
+      // The promo code the user applied in the cart step — the backend
+      // recalculates and freezes the exact same total before charging.
       const success = await this.payment.pay(
         this.address(),
         0, // walletAmount (can be added later)
         0, // loyaltyPoints (can be added later)
-        this.promoCode().trim(),
+        this.checkoutService.appliedPromoCode(),
         this.cartItems(), // Pass checkout items with updated quantities
       );
 

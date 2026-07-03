@@ -24,6 +24,8 @@ export interface IProductDoc extends Document {
   bestTakenFor?: ProductBestTakenFor;
   status: ProductStatus;
   isFeatured: boolean;
+  showBadge: boolean;
+  badgeText?: string;
   stock: number;
   trackInventory: boolean;
   hasVariants: boolean;
@@ -62,6 +64,8 @@ const productSchema = new Schema<IProductDoc>(
       default: 'draft',
     },
     isFeatured: { type: Boolean, default: false },
+    showBadge: { type: Boolean, default: false },
+    badgeText: { type: String, trim: true, maxlength: 50 },
     stock: { type: Number, default: 0, min: 0 },
     trackInventory: { type: Boolean, default: false },
     hasVariants: { type: Boolean, default: false },

@@ -127,6 +127,7 @@ const orderSchema = new Schema<IOrderDoc>(
       enum: [
         'confirmed',
         'processing',
+        'In Progress',
         'shipped',
         'in_transit',
         'out_for_delivery',

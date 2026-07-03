@@ -41,16 +41,16 @@ export const getCart = async (req: Request, res: Response) => {
 
 export const addItem = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
-  const { productId, variantId, qty, slug } = req.body as { productId: string; variantId?: string; qty: number; slug?: string };
-  const data = await cartService.addItem(identifier, productId, qty, variantId, slug);
+  const { productId, variantId, qty } = req.body as { productId: string; variantId?: string; qty: number };
+  const data = await cartService.addItem(identifier, productId, qty, variantId);
   sendSuccess(res, data, 'Item added to cart');
 };
 
 export const updateItem = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
   const productId = req.params['productId'] as string;
-  const { qty, variantId, slug } = req.body as { qty: number; variantId?: string; slug?: string };
-  const data = await cartService.addItem(identifier, productId, qty, variantId, slug);
+  const { qty, variantId } = req.body as { qty: number; variantId?: string };
+  const data = await cartService.addItem(identifier, productId, qty, variantId);
   sendSuccess(res, data, 'Cart updated');
 };
 
@@ -120,7 +120,8 @@ export const getCheckoutSummary = async (req: Request, res: Response) => {
 export const reserveStock = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
   const sessionId = typeof identifier === 'string' ? identifier : identifier.toString();
-  const result = await checkoutService.reserveStock(sessionId);
+  const { items } = (req.body ?? {}) as { items?: unknown[] };
+  const result = await checkoutService.reserveStock(sessionId, items);
   if (result.issues.length > 0) {
     res.status(409).json({
       success: false,
