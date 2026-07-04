@@ -69,7 +69,7 @@
     <!-- Action Buttons -->
     <div class="product-card__actions-row">
       <!-- Desktop Actions -->
-      <button class="product-card__primary-action desktop-only" (click)="onBuyNow($event)">
+      <button class="product-card__primary-action" (click)="onBuyNow($event)">
         BUY NOW
       </button>
       <button class="product-card__cart-icon desktop-only" (click)="onAddToCart($event)" aria-label="Add to cart" type="button">
@@ -81,9 +81,14 @@
       </button>
 
       <!-- Mobile Action -->
-      <button class="product-card__mobile-add-to-cart mobile-only" (click)="onAddToCart($event)">
-        Add to Cart
+        <button class="product-card__cart-icon mobile-only" (click)="onAddToCart($event)" aria-label="Add to cart" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="product-card__cart-svg">
+          <circle cx="8" cy="21" r="1"></circle>
+          <circle cx="19" cy="21" r="1"></circle>
+          <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+        </svg>
       </button>
+     
     </div>
   </div>
 </div>

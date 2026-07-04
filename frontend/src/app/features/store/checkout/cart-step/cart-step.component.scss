@@ -827,6 +827,7 @@
     border-top: 1px solid #ececec !important;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06) !important;
     z-index: 999 !important;
+    margin-bottom: 62px !important;
   }
 }
 
@@ -858,5 +859,11 @@
   ::ng-deep .btn {
     padding: 10px 20px !important;
     font-size: 12px !important;
+  }
+}
+
+.desktop-only{
+  @media (max-width: 768px) {
+    display: none !important;
   }
 }

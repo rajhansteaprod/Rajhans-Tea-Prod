@@ -256,7 +256,7 @@
 
         <!-- Checkout Button -->
         <app-button
-          class="checkout__btn-checkout"
+          class="checkout__btn-checkout desktop-only"
           variant="primary"
           size="md"
           [fullWidth]="true"
@@ -287,7 +287,7 @@
         (click)="goNext()"
         [disabled]="!canProceed()"
       >
-        Continue
+        Choose Address
       </app-button>
     </div>
   }

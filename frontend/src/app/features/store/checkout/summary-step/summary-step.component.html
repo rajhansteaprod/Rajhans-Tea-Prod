@@ -65,7 +65,7 @@
     </div>
 
     <!-- Payment Section -->
-    <div class="summary-panel">
+    <div class="summary-panel  desktop-only">
       <h3 class="summary-heading">Payment</h3>
       <p class="summary-payment-note">Secure payment via Razorpay</p>
 
@@ -96,5 +96,62 @@
         <span>BACK TO ADDRESS</span>
       </button>
     </div>
+  </div>
+</div>
+
+<div class="checkout__mobile-footer" style="padding:12px 16px;">
+  <div class="summary-panel" style="padding:12px; margin:0;">
+
+    <div style="display:flex;gap:14px;align-items:center">
+    <h3 class="summary-heading" style="margin:0 0 2px 0; font-size:16px;">
+      Payment
+    </h3>
+
+    <p class="summary-payment-note" style="margin:0 0 10px 0; font-size:12px;">
+      Secure payment <br>via Razorpay
+    </p>
+    </div>
+
+    @if (orderError()) {
+      <div class="summary-error" style="margin-bottom:10px;">
+        <p style="margin:0;">{{ orderError() }}</p>
+      </div>
+    }
+
+    <div
+      style="
+        display:flex;
+        align-items:center;
+        gap:12px;
+      "
+    >
+      <button
+        type="button"
+        class="summary-back-link"
+        (click)="goBack()"
+        style="
+          margin:0;
+          white-space:nowrap;
+          flex-shrink:0;
+        "
+      >
+        <span class="summary-back-arrow">←</span>
+        <span>BACK TO ADDRESS</span>
+      </button>
+
+      <app-button
+        type="button"
+        variant="primary"
+        size="md"
+        [fullWidth]="true"
+        (click)="placeOrder()"
+        [disabled]="isPlacing()"
+        [loading]="isPlacing()"
+        class="summary-pay-button"
+      >
+        PAY NOW
+      </app-button>
+    </div>
+
   </div>
 </div>
