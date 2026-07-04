@@ -133,6 +133,35 @@
         <div class="checkout__summary-card">
           <h2 class="checkout__summary-title">Order Summary</h2>
 
+          <!-- Your Order: product summary -->
+          <div class="checkout__order-items">
+            @for (item of cartItems(); track item.productId + (item.variantId || '')) {
+              <div class="checkout__order-item">
+                <div class="checkout__order-item-image">
+                  @if (item.image) {
+                    <img [src]="item.image" [alt]="item.name" />
+                  } @else {
+                    <div class="checkout__img-placeholder">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                      </svg>
+                    </div>
+                  }
+                </div>
+                <div class="checkout__order-item-info">
+                  <span class="checkout__order-item-name">{{ item.name }}</span>
+                  <span class="checkout__order-item-meta">
+                    Qty: {{ item.qty }}
+                    @if (item.variantName) { · {{ item.variantName }} }
+                  </span>
+                </div>
+                <span class="checkout__order-item-price">
+                  ₹{{ item.variantId && item.variantPrice ? (item.variantPrice | number: '1.0-0') : (item.discountedPrice | number: '1.0-0') }}
+                </span>
+              </div>
+            }
+          </div>
+
           <!-- Price Breakdown -->
           <div class="checkout__price-breakdown">
             <div class="checkout__breakdown-row">
@@ -145,36 +174,32 @@
               <span class="checkout__breakdown-value checkout__breakdown-value--positive">FREE</span>
             </div>
 
-            @if (cartDiscount() > 0) {
-              <div class="checkout__breakdown-row">
-                <span class="checkout__breakdown-label">Discount</span>
+            <div class="checkout__breakdown-row">
+              <span class="checkout__breakdown-label">Coupon Discount</span>
+              @if (cartDiscount() > 0) {
                 <span class="checkout__breakdown-value checkout__breakdown-value--positive">-₹{{ cartDiscount() | number: '1.0-0' }}</span>
-              </div>
-            }
+              } @else {
+                <span class="checkout__breakdown-value">₹0</span>
+              }
+            </div>
 
             <div class="checkout__breakdown-divider"></div>
 
             <div class="checkout__breakdown-row checkout__breakdown-row--total">
-              <span class="checkout__breakdown-label">Total</span>
+              <span class="checkout__breakdown-label">Total Payable</span>
               <span class="checkout__breakdown-value--total">₹{{ cartTotal() | number: '1.0-0' }}</span>
             </div>
+            <p class="checkout__breakdown-note">MRP inclusive of all taxes. No hidden charges.</p>
           </div>
-
-          <!-- Offers Section (in right column as per design) -->
-          @if (true) {
-            <div class="checkout__offers-section">
-              <app-offer-cards (offerSelected)="onOfferSelected($event)"></app-offer-cards>
-            </div>
-          }
 
           <!-- Promo Code Section -->
           <div class="checkout__promo-card">
-            <label class="checkout__promo-label">Promo Code</label>
             <div class="checkout__promo-input-group">
+              <span class="checkout__promo-icon">%</span>
               <input
                 type="text"
                 class="checkout__promo-input"
-                [placeholder]="isPromoApplied() ? promoCode() : 'Enter code'"
+                [placeholder]="isPromoApplied() ? promoCode() : 'Enter coupon code'"
                 [(ngModel)]="promoCode"
                 name="promoCode"
                 [disabled]="isValidatingPromo() || isPromoApplied()"
@@ -186,7 +211,7 @@
                   [disabled]="isValidatingPromo()"
                   type="button"
                 >
-                  {{ isValidatingPromo() ? '…' : '✕' }}
+                  {{ isValidatingPromo() ? '…' : 'Remove' }}
                 </button>
               } @else {
                 <button
@@ -206,24 +231,28 @@
             @if (promoError()) {
               <p class="checkout__promo-message checkout__promo-message--error">{{ promoError() }}</p>
             }
+
+            <button type="button" class="checkout__unlock-coupons" (click)="toggleOffers()">
+              View available coupons
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.checkout__unlock-coupons-icon--open]="showOffers()">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+            <p class="checkout__promo-subtext">Unlock extra offers on prepaid orders</p>
+
+            @if (showOffers()) {
+              <div class="checkout__offers-section">
+                <app-offer-cards (offerSelected)="onOfferSelected($event)"></app-offer-cards>
+              </div>
+            }
           </div>
 
-          <!-- Trust Indicators -->
-          <div class="checkout__trust-section">
-            <div class="checkout__trust-item">
-              <svg class="checkout__trust-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-              </svg>
-              <span>Secure Checkout</span>
-            </div>
-            <div class="checkout__trust-item">
-              <svg class="checkout__trust-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-              </svg>
-              <span>Free Delivery</span>
-            </div>
-          </div>
+          <!-- Accepted Payment Methods -->
+          <p class="checkout__payment-methods">Pay securely using UPI · Cards · Net Banking · Wallets · COD</p>
         </div>
+
+        <!-- No hidden charges reassurance -->
+        <p class="checkout__no-hidden-charges">No hidden charges. Free delivery included.</p>
 
         <!-- Checkout Button -->
         <app-button
@@ -238,8 +267,9 @@
         </app-button>
 
         <!-- Terms -->
+        <p class="checkout__summary-terms checkout__summary-terms--safe">Safe &amp; secure checkout powered by trusted payment partners.</p>
         <p class="checkout__summary-terms">
-          By continuing, you agree to our <a routerLink="/terms" class="checkout__terms-link">Terms of Use</a> and <a routerLink="/privacy" class="checkout__terms-link">Privacy Policy</a>.
+          By continuing, you agree to our <a routerLink="/page/terms-conditions" class="checkout__terms-link">Terms of Use</a> and <a routerLink="/page/privacy-policy" class="checkout__terms-link">Privacy Policy</a>.
         </p>
       </div>
     </div>

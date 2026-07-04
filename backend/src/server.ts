@@ -1,4 +1,5 @@
 import './types/express';
+import dns from 'dns';
 import http from 'http';
 import app from './app';
 import { config } from './config';
@@ -11,6 +12,11 @@ import { registerGlobalErrorHandlers } from './core/graceful-error-handler';
 import { validateEnvironment } from './core/env-validator';
 import { scheduleCartCleanup } from './modules/cart/jobs/cleanup.job';
 import { scheduleWebhookRetry } from './modules/payments/jobs/webhook-retry.job';
+
+// Force Node.js c-ares DNS to use Google DNS (IPv4 + IPv6)
+// Prevents local router DNS from blocking MongoDB Atlas SRV lookups
+dns.setServers(['8.8.8.8', '8.8.4.4', '2001:4860:4860::8888', '2001:4860:4860::8844']);
+
 
 const startServer = async () => {
   validateEnvironment();
