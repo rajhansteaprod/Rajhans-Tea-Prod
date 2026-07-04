@@ -4,12 +4,23 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   CatalogService, Product, Category, Collection,
-  CreateProductPayload, UpdateProductPayload, ProductVariant,
-  CreateVariantPayload, VariantOption,
+  CreateProductPayload, UpdateProductPayload,
+  InlineVariant, VariantOption,
 } from '../../../../core/services/catalog.service';
 import { ReviewStore } from '../../../../core/services/review.store';
 
 interface AttributeEntry { key: string; value: string; }
+
+// One editable variant row inside the product form. Per variant the admin gives
+// only the dictionary value + base price + discounted price + stock. `_id` is
+// present for variants that already exist (so the backend reconciles on save).
+interface VariantRow {
+  _id?: string;
+  optionValue: string;
+  price: number | '';
+  discountedPrice: number | '';
+  stock: number;
+}
 
 interface ProductForm {
   name: string;
@@ -31,21 +42,12 @@ interface ProductForm {
   isFeatured: boolean;
   stock: number;
   trackInventory: boolean;
-  hasVariants: boolean; // true → price/discount/stock are set per-variant, not here
+  hasVariants: boolean;   // true → price/discount/stock are set per-variant, not here
+  optionKey: string;      // which dictionary key this product's variants vary by
+  variants: VariantRow[]; // inline variant rows (only when hasVariants)
   showBadge: boolean;
   badgeText: string;
   ratingOneLiner: string; // Admin-editable: "Cleanser Effectiveness, Face Wash Effectiveness, ..."
-}
-
-interface VariantForm {
-  name: string;
-  optionValue: string; // chosen value from the product's option key (dictionary)
-  sku: string;
-  price: number | '';
-  discountedPrice: number | '';
-  stock: number;
-  trackInventory: boolean;
-  isActive: boolean;
 }
 
 const emptyForm = (): ProductForm => ({
@@ -55,12 +57,12 @@ const emptyForm = (): ProductForm => ({
   region: undefined, bestTakenFor: undefined,
   status: 'draft', isFeatured: false,
   showBadge: false, badgeText: '',
-  stock: 0, trackInventory: false, hasVariants: false, ratingOneLiner: '',
+  stock: 0, trackInventory: false, hasVariants: false, optionKey: '', variants: [],
+  ratingOneLiner: '',
 });
 
-const emptyVariantForm = (): VariantForm => ({
-  name: '', optionValue: '', sku: '', price: '', discountedPrice: '',
-  stock: 0, trackInventory: false, isActive: true,
+const emptyVariantRow = (): VariantRow => ({
+  optionValue: '', price: '', discountedPrice: '', stock: 0,
 });
 
 @Component({
@@ -89,23 +91,13 @@ export class ProductListComponent implements OnInit, OnDestroy {
   ratingSummarySaving = signal(false);
   ratingSummaryError = signal('');
 
-  // ── Variant Management ──
-  variantProduct      = signal<Product | null>(null);
-  variants            = signal<ProductVariant[]>([]);
-  variantLoading      = signal(false);
-  variantSaving       = signal(false);
-  variantError        = signal('');
-  showVariantForm     = signal(false);
-  editingVariantId    = signal<string | null>(null);
-  variantForm         = signal<VariantForm>(emptyVariantForm());
-
-  // Dictionary-driven variant options
+  // ── Dictionary-driven variant options (inline in the product form) ──
   variantOptions      = signal<VariantOption[]>([]);
-  variantOptionKey    = signal<string>(''); // the option key this product's variants use
+  variantsLoading     = signal(false); // fetching existing variants when opening edit
 
-  // Values available for the currently selected option key
+  // Values available for the option key currently chosen on the form
   readonly selectedKeyValues = computed(() => {
-    const key = this.variantOptionKey();
+    const key = this.form().optionKey;
     if (!key) return [];
     return this.variantOptions().find((o) => o.key === key)?.values ?? [];
   });
@@ -200,11 +192,37 @@ export class ProductListComponent implements OnInit, OnDestroy {
       stock:            product.stock ?? 0,
       trackInventory:   product.trackInventory ?? false,
       hasVariants:      product.hasVariants ?? false,
+      optionKey:        '',
+      variants:         [],
       ratingOneLiner:   '',
     });
     this.formError.set(null);
     this.ratingSummaryError.set('');
     this.showForm.set(true);
+
+    // Load existing variants into the form so they're editable inline.
+    if (product.hasVariants) {
+      this.variantsLoading.set(true);
+      this.catalog.getVariants(product._id).subscribe({
+        next: (res) => {
+          const variants = res.data || [];
+          const optionKey = variants.find((v) => v.optionKey)?.optionKey ?? '';
+          this.form.update((f) => ({
+            ...f,
+            optionKey,
+            variants: variants.map((v) => ({
+              _id: v._id,
+              optionValue: v.optionValue ?? v.name,
+              price: v.price,
+              discountedPrice: v.discountedPrice ?? '',
+              stock: v.stock,
+            })),
+          }));
+          this.variantsLoading.set(false);
+        },
+        error: () => this.variantsLoading.set(false),
+      });
+    }
 
     // Fetch rating summary to populate ratingOneLiner
     this.reviews.getRatingSummary(product._id).subscribe({
@@ -223,11 +241,43 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.formError.set(null);
   }
 
-  // Open the variant manager for the product currently being edited.
-  manageVariants() {
-    const id = this.editingId();
-    const product = this.products().find((p) => p._id === id);
-    if (product) this.openVariants(product);
+  // ── Inline variant rows ──
+  setOptionKey(key: string) {
+    // Changing the option key clears rows whose value no longer belongs to it.
+    this.form.update((f) => {
+      const values = this.variantOptions().find((o) => o.key === key)?.values ?? [];
+      return {
+        ...f,
+        optionKey: key,
+        variants: f.variants.filter((v) => values.includes(v.optionValue)),
+      };
+    });
+  }
+
+  addVariantRow() {
+    this.form.update((f) => ({ ...f, variants: [...f.variants, emptyVariantRow()] }));
+  }
+
+  removeVariantRow(i: number) {
+    this.form.update((f) => ({ ...f, variants: f.variants.filter((_, idx) => idx !== i) }));
+  }
+
+  updateVariantRow(i: number, patch: Partial<VariantRow>) {
+    this.form.update((f) => {
+      const variants = [...f.variants];
+      variants[i] = { ...variants[i], ...patch };
+      return { ...f, variants };
+    });
+  }
+
+  // Values already picked by other rows, so a value can't be selected twice.
+  usedVariantValues(exceptIndex: number): Set<string> {
+    return new Set(
+      this.form().variants
+        .filter((_, idx) => idx !== exceptIndex)
+        .map((v) => v.optionValue)
+        .filter(Boolean),
+    );
   }
 
   toggleCollection(id: string) {
@@ -395,12 +445,45 @@ export class ProductListComponent implements OnInit, OnDestroy {
     if (!f.categoryId)  { this.formError.set('Category is required'); return; }
     // Product-level price only applies to products WITHOUT variants. For variant
     // products, price/discount/stock are set per-variant and derived by backend.
+    let inlineVariants: InlineVariant[] = [];
     if (!f.hasVariants) {
       if (f.basePrice === '' || f.basePrice < 0) { this.formError.set('Valid price is required'); return; }
       if (f.discountedPrice !== '' && (f.discountedPrice < 0 || f.discountedPrice >= f.basePrice)) {
         this.formError.set('Discounted price must be less than base price');
         return;
       }
+    } else {
+      if (!this.hasVariantOptions()) {
+        this.formError.set('Create a Variant Option first (admin → Variant Options)');
+        return;
+      }
+      if (!f.optionKey) { this.formError.set('Choose an option type (e.g. Weight)'); return; }
+      if (f.variants.length === 0) { this.formError.set('Add at least one variant'); return; }
+
+      for (const [idx, v] of f.variants.entries()) {
+        const n = idx + 1;
+        if (!v.optionValue) { this.formError.set(`Variant ${n}: choose a value`); return; }
+        if (v.price === '' || Number(v.price) <= 0) { this.formError.set(`Variant ${n}: base price must be greater than 0`); return; }
+        if (v.discountedPrice !== '' && (Number(v.discountedPrice) < 0 || Number(v.discountedPrice) >= Number(v.price))) {
+          this.formError.set(`Variant ${n}: discounted price must be less than base price`);
+          return;
+        }
+      }
+      // No duplicate values
+      const values = f.variants.map((v) => v.optionValue);
+      if (new Set(values).size !== values.length) {
+        this.formError.set('Each variant value can be used only once');
+        return;
+      }
+
+      inlineVariants = f.variants.map((v) => ({
+        _id: v._id,
+        optionKey: f.optionKey,
+        optionValue: v.optionValue,
+        price: Number(v.price),
+        discountedPrice: v.discountedPrice !== '' ? Number(v.discountedPrice) : null,
+        stock: Number(v.stock) || 0,
+      }));
     }
     if (f.images.length === 0) {
       this.formError.set('At least 1 product image is required');
@@ -461,6 +544,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
       showBadge:        f.showBadge,
       badgeText:        f.badgeText,
       hasVariants:      f.hasVariants,
+      variants:         f.hasVariants ? inlineVariants : [],
     };
 
     this.formError.set(null);
@@ -479,14 +563,9 @@ export class ProductListComponent implements OnInit, OnDestroy {
           this.meta.update((m) => m ? { ...m, total: m.total + 1 } : m);
         }
 
-        // Close, then for a NEWLY created variant product jump straight into the
-        // variant manager so the admin can enter per-variant price & stock.
         const done = () => {
           this.saving.set(false);
           this.closeForm();
-          if (!id && f.hasVariants) {
-            this.openVariants(res.data);
-          }
         };
 
         // Save rating summary (one-liner) if it's an existing product
@@ -525,150 +604,5 @@ export class ProductListComponent implements OnInit, OnDestroy {
 
   previewProduct(id: string) {
     window.open(`/admin/products/preview/${id}`, '_blank');
-  }
-
-  // ── Variant Management ──
-
-  openVariants(product: Product) {
-    this.variantProduct.set(product);
-    this.variantError.set('');
-    this.variants.set([]);
-    this.variantForm.set(emptyVariantForm());
-    this.editingVariantId.set(null);
-    this.showVariantForm.set(false);
-    this.variantOptionKey.set('');
-    this.loadVariants(product._id);
-  }
-
-  closeVariants() {
-    this.variantProduct.set(null);
-    this.variants.set([]);
-    this.variantLoading.set(false);
-    this.variantSaving.set(false);
-    this.variantError.set('');
-    this.showVariantForm.set(false);
-    this.editingVariantId.set(null);
-    this.variantForm.set(emptyVariantForm());
-  }
-
-  loadVariants(productId: string) {
-    this.variantLoading.set(true);
-    this.catalog.getVariants(productId).subscribe({
-      next: (res) => {
-        const variants = res.data || [];
-        this.variants.set(variants);
-        // Adopt the option key already in use by this product's variants
-        const existingKey = variants.find((v) => v.optionKey)?.optionKey;
-        if (existingKey) this.variantOptionKey.set(existingKey);
-        this.variantLoading.set(false);
-      },
-      error: (err) => {
-        this.variantError.set(err?.error?.message ?? 'Failed to load variants');
-        this.variantLoading.set(false);
-      },
-    });
-  }
-
-  openVariantForm(variant?: ProductVariant) {
-    if (variant) {
-      this.editingVariantId.set(variant._id);
-      this.variantForm.set({
-        name: variant.name,
-        optionValue: variant.optionValue ?? '',
-        sku: variant.sku ?? '',
-        price: variant.price,
-        discountedPrice: variant.discountedPrice ?? '',
-        stock: variant.stock,
-        trackInventory: variant.trackInventory,
-        isActive: variant.isActive,
-      });
-    } else {
-      this.editingVariantId.set(null);
-      this.variantForm.set(emptyVariantForm());
-    }
-    this.variantError.set('');
-    this.showVariantForm.set(true);
-  }
-
-  closeVariantForm() {
-    this.showVariantForm.set(false);
-    this.editingVariantId.set(null);
-    this.variantForm.set(emptyVariantForm());
-    this.variantError.set('');
-  }
-
-  saveVariant() {
-    const f = this.variantForm();
-    const product = this.variantProduct();
-    const optionKey = this.variantOptionKey();
-    const useDictionary = this.hasVariantOptions() && !!optionKey;
-
-    if (!product) return;
-
-    // Dictionary mode: the value is chosen from the option key's list and
-    // doubles as the variant name. Free-text mode: use the Name field.
-    const displayName = (useDictionary ? f.optionValue : f.name).trim();
-    if (useDictionary && !f.optionValue.trim()) {
-      this.variantError.set('Please choose a value for the selected option');
-      return;
-    }
-    if (!displayName) { this.variantError.set('Variant name is required'); return; }
-    if (f.price === '' || f.price < 0) { this.variantError.set('Valid price is required'); return; }
-    if (f.discountedPrice !== '' && (f.discountedPrice < 0 || f.discountedPrice >= f.price)) {
-      this.variantError.set('Discounted price must be less than price');
-      return;
-    }
-
-    this.variantError.set('');
-    this.variantSaving.set(true);
-
-    const payload: CreateVariantPayload = {
-      name: displayName,
-      optionKey: useDictionary ? optionKey : undefined,
-      optionValue: useDictionary ? f.optionValue.trim() : undefined,
-      sku: f.sku.trim() || undefined,
-      price: Number(f.price),
-      // null (not undefined) so clearing the field actually removes the discount
-      discountedPrice: f.discountedPrice !== '' ? Number(f.discountedPrice) : null,
-      stock: Number(f.stock) || 0,
-      trackInventory: f.trackInventory,
-      isActive: f.isActive,
-    };
-
-    const variantId = this.editingVariantId();
-    const request = variantId
-      ? this.catalog.updateVariant(product._id, variantId, payload)
-      : this.catalog.createVariant(product._id, payload);
-
-    request.subscribe({
-      next: (res) => {
-        if (variantId) {
-          this.variants.update((list) => list.map((v) => v._id === variantId ? res.data : v));
-        } else {
-          this.variants.update((list) => [...list, res.data]);
-        }
-        this.variantSaving.set(false);
-        this.closeVariantForm();
-      },
-      error: (err) => {
-        this.variantError.set(err?.error?.message ?? 'Failed to save variant');
-        this.variantSaving.set(false);
-      },
-    });
-  }
-
-  deleteVariant(variantId: string) {
-    const product = this.variantProduct();
-    if (!product) return;
-    if (!confirm('Delete this variant? This cannot be undone.')) return;
-
-    this.catalog.deleteVariant(product._id, variantId).subscribe({
-      next: () => {
-        this.variants.update((list) => list.filter((v) => v._id !== variantId));
-      },
-      error: (err) => {
-        this.variantError.set(err?.error?.message ?? 'Failed to delete variant');
-      },
-    });
   }
 }

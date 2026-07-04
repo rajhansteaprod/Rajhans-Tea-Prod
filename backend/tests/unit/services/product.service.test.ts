@@ -24,6 +24,19 @@ jest.mock('../../../src/modules/cart/models/cart.model', () => ({
   Cart: { updateMany: (...args: unknown[]) => cartUpdateMany(...(args as [])) },
 }));
 
+// Inline variant reconciliation delegates to ProductVariantService — mock it so
+// we can assert the create/update/delete decisions without touching the DB.
+const mockVariantCreate = jest.fn().mockResolvedValue({});
+const mockVariantUpdate = jest.fn().mockResolvedValue({});
+const mockVariantDelete = jest.fn().mockResolvedValue(undefined);
+jest.mock('../../../src/modules/catalog/services/product-variant.service', () => ({
+  ProductVariantService: jest.fn().mockImplementation(() => ({
+    create: mockVariantCreate,
+    update: mockVariantUpdate,
+    delete: mockVariantDelete,
+  })),
+}));
+
 import { ProductService } from '../../../src/modules/catalog/services/product.service';
 import { ProductRepository } from '../../../src/modules/catalog/repositories/product.repository';
 import { ProductVariantRepository } from '../../../src/modules/catalog/repositories/product-variant.repository';
@@ -213,6 +226,48 @@ describe('ProductService', () => {
       await expect(service.delete(PRODUCT_ID)).rejects.toThrow('Product not found');
       expect(productRepo.deleteById).not.toHaveBeenCalled();
       expect(variantDeleteMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('reconcileVariants (inline variant sync)', () => {
+    it('updates rows with an _id, creates rows without, and deletes removed ones', async () => {
+      const keepId = new Types.ObjectId();
+      const removeId = new Types.ObjectId();
+      variantRepo.findByProductIdAll.mockResolvedValue([
+        { _id: keepId },
+        { _id: removeId },
+      ] as never);
+
+      await service.reconcileVariants(PRODUCT_ID, [
+        { _id: keepId.toString(), optionKey: 'Weight', optionValue: '250g', price: 200, stock: 5 },
+        { optionKey: 'Weight', optionValue: '500g', price: 350, stock: 3 },
+      ]);
+
+      // existing kept → update; the one absent from the list → delete
+      expect(mockVariantUpdate).toHaveBeenCalledTimes(1);
+      expect(mockVariantUpdate).toHaveBeenCalledWith(keepId.toString(), expect.objectContaining({
+        optionValue: '250g', price: 200, name: '250g',
+      }));
+      expect(mockVariantDelete).toHaveBeenCalledTimes(1);
+      expect(mockVariantDelete).toHaveBeenCalledWith(removeId.toString());
+
+      // new row (no _id) → create
+      expect(mockVariantCreate).toHaveBeenCalledTimes(1);
+      expect(mockVariantCreate).toHaveBeenCalledWith(PRODUCT_ID, expect.objectContaining({
+        optionValue: '500g', price: 350, name: '500g',
+      }));
+    });
+
+    it('deletes every variant when reconciling against an empty list', async () => {
+      const a = new Types.ObjectId();
+      const b = new Types.ObjectId();
+      variantRepo.findByProductIdAll.mockResolvedValue([{ _id: a }, { _id: b }] as never);
+
+      await service.reconcileVariants(PRODUCT_ID, []);
+
+      expect(mockVariantDelete).toHaveBeenCalledTimes(2);
+      expect(mockVariantCreate).not.toHaveBeenCalled();
+      expect(mockVariantUpdate).not.toHaveBeenCalled();
     });
   });
 });

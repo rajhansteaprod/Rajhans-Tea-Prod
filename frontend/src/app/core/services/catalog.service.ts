@@ -81,6 +81,18 @@ export interface CreateVariantPayload {
   isActive?: boolean;
 }
 
+// A variant sent inline with the product create/update payload. Per variant the
+// admin gives only value + base price + discounted price + stock; `_id` marks an
+// existing variant so the backend can reconcile on edit.
+export interface InlineVariant {
+  _id?: string;
+  optionKey?: string;
+  optionValue: string;
+  price: number;
+  discountedPrice?: number | null;
+  stock?: number;
+}
+
 // Global variant-options dictionary (e.g. Weight → [100g, 250g, 500g, 1kg])
 export interface VariantOption {
   _id: string;
@@ -196,6 +208,7 @@ export interface CreateProductPayload {
   stock?: number;
   trackInventory?: boolean;
   hasVariants?: boolean; // true → pricing/stock come from variants, not these fields
+  variants?: InlineVariant[]; // inline variants created/reconciled with the product
 }
 
 export interface UpdateProductPayload extends Partial<CreateProductPayload> {}

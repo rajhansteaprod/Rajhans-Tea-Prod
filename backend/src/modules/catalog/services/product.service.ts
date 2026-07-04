@@ -26,6 +26,16 @@ interface ProductListQuery {
   weight?: string;
 }
 
+/** A variant supplied inline with the product create/update payload. */
+export interface InlineVariantInput {
+  _id?: string;
+  optionKey?: string;
+  optionValue: string;
+  price: number;
+  discountedPrice?: number | null;
+  stock?: number;
+}
+
 export class ProductService {
   private productRepo: ProductRepository;
   private variantRepo: ProductVariantRepository;
@@ -148,6 +158,7 @@ export class ProductService {
     stock?: number;
     trackInventory?: boolean;
     hasVariants?: boolean;
+    variants?: InlineVariantInput[];
   }) {
     // Validate category
     const category = await this.categoryRepo.findById(data.categoryId);
@@ -208,6 +219,12 @@ export class ProductService {
       'Product created',
     );
 
+    // Create any inline variants. The variant service flips hasVariants=true and
+    // syncs the product's base/discounted price from the cheapest variant.
+    if (data.hasVariants && data.variants?.length) {
+      await this.reconcileVariants(product._id.toString(), data.variants);
+    }
+
     return this.getById(product._id.toString());
   }
 
@@ -237,6 +254,7 @@ export class ProductService {
       stock?: number;
       trackInventory?: boolean;
       hasVariants?: boolean;
+      variants?: InlineVariantInput[];
     },
   ) {
     const product = await this.productRepo.findById(id);
@@ -319,6 +337,16 @@ export class ProductService {
       ? { $set: update, $unset: unset }
       : update;
     await this.productRepo.updateById(id, updateQuery as never);
+
+    // Reconcile inline variants when the payload carries them.
+    //  - hasVariants=true  → create/update/delete to match the incoming list
+    //  - hasVariants=false → drop all variants (product reverts to flat pricing)
+    if (data.variants !== undefined) {
+      await this.reconcileVariants(id, data.hasVariants === false ? [] : data.variants);
+    } else if (data.hasVariants === false) {
+      await this.reconcileVariants(id, []);
+    }
+
     // If the product has variants, base/discounted price mirror the cheapest variant
     await this.updateBasePricingByVariant(id);
 
@@ -328,6 +356,45 @@ export class ProductService {
     );
 
     return this.getById(id);
+  }
+
+  /**
+   * Reconcile a product's variants against an inline list (single option key
+   * per product). Rows with `_id` are updated, rows without are created, and
+   * existing variants absent from the list are deleted. Delegates to
+   * ProductVariantService so cart cleanup, the hasVariants flag, and base-price
+   * sync all stay correct.
+   */
+  async reconcileVariants(productId: string, incoming: InlineVariantInput[]): Promise<void> {
+    const { ProductVariantService } = await import('./product-variant.service');
+    const variantService = new ProductVariantService();
+
+    const existing = await this.variantRepo.findByProductIdAll(productId);
+    const incomingIds = new Set(incoming.filter((v) => v._id).map((v) => v._id));
+
+    // Delete variants that are no longer present
+    for (const ex of existing) {
+      if (!incomingIds.has(ex._id.toString())) {
+        await variantService.delete(ex._id.toString());
+      }
+    }
+
+    // Create or update the incoming variants
+    for (const v of incoming) {
+      const payload = {
+        name: v.optionValue,
+        optionKey: v.optionKey,
+        optionValue: v.optionValue,
+        price: v.price,
+        discountedPrice: v.discountedPrice ?? null,
+        stock: v.stock ?? 0,
+      };
+      if (v._id) {
+        await variantService.update(v._id, payload);
+      } else {
+        await variantService.create(productId, payload);
+      }
+    }
   }
 
   async delete(id: string) {

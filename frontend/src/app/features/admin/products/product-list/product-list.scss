@@ -799,6 +799,70 @@ textarea.form-input { resize: vertical; font-family: inherit; }
   select { max-width: 320px; }
 }
 
+// ── Inline variant editor (inside the product form) ──
+.variant-inline {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+  padding: $space-md;
+  border: 1px dashed $color-border;
+  background: $color-bg-tertiary;
+
+  &__empty {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+
+  &__optionrow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    select { max-width: 320px; }
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: $color-text-secondary;
+      padding: 4px 8px 4px 0;
+      font-weight: 600;
+    }
+
+    td {
+      padding: 4px 8px 4px 0;
+      vertical-align: middle;
+    }
+
+    .form-input,
+    .form-select { width: 100%; min-width: 90px; }
+  }
+
+  &__remove {
+    border: none;
+    background: none;
+    color: $color-text-tertiary;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+
+    &:hover { color: #dc2626; }
+  }
+
+  &__none {
+    font-size: $font-size-sm;
+    color: $color-text-tertiary;
+    padding: $space-sm 0;
+  }
+}
+
 .variant-form-section {
   border-top: 1px solid $color-border-light;
   padding-top: $space-lg;

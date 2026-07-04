@@ -119,6 +119,18 @@ const bestTakenForSchema = z.enum(['Morning', 'Noon', 'Evening']).nullable().opt
 // null = "clear the discount"; number = set it
 const discountedPriceSchema = z.number({ coerce: true }).min(0).nullable().optional();
 
+// Inline variant sent with the product create/update payload. Per-variant the
+// admin provides only value + base price + discounted price + stock; `_id` is
+// present when editing an existing variant so the backend can reconcile.
+const inlineVariantSchema = z.object({
+  _id: mongoId.optional(),
+  optionKey: z.string().trim().max(50).optional(),
+  optionValue: z.string().trim().min(1).max(50),
+  price: z.coerce.number().gt(0),
+  discountedPrice: discountedPriceSchema,
+  stock: z.coerce.number().int().min(0).optional(),
+});
+
 export const createProductSchema = z.object({
   body: z.object({
     name: z.string().trim().min(1).max(200),
@@ -144,6 +156,7 @@ export const createProductSchema = z.object({
     stock: z.coerce.number().int().min(0).optional(),
     trackInventory: z.boolean().optional(),
     hasVariants: z.boolean().optional(),
+    variants: z.array(inlineVariantSchema).max(50).optional(),
   }),
 });
 
@@ -173,6 +186,7 @@ export const updateProductSchema = z.object({
     stock: z.coerce.number().int().min(0).optional(),
     trackInventory: z.boolean().optional(),
     hasVariants: z.boolean().optional(),
+    variants: z.array(inlineVariantSchema).max(50).optional(),
   }),
 });
 
