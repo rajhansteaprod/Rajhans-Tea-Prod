@@ -51,11 +51,13 @@
 
   @include respond-to(lg) {
     gap: $space-xxl;
+    margin-bottom:20px;
   }
 
   @include respond-to(md) {
     grid-template-columns: 1fr;
     gap: $space-xxl;
+    margin-bottom:30px;
   }
 }
 
