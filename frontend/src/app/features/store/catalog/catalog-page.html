@@ -14,29 +14,63 @@
 
   <!-- Content -->
   <div class="catalog__content">
-    @if (!store.hasResults()) {
-      <div class="catalog__empty">
-        <p>No products found in this category.</p>
-        <app-button variant="primary" size="md" (click)="goToAllProducts()">Browse All Teas</app-button>
-      </div>
-    } @else {
-      <div class="catalog__grid">
-        @for (p of store.results(); track p._id; let i = $index) {
-          <app-product-card
-            [appScrollReveal]="i"
-            [product]="p"
-            [isHovering]="isHovering(p._id)"
-            [isWishlisted]="isWishlisted(p._id)"
-            [getRating]="getRating"
-            [getReviewCount]="getReviewCount"
-            (imageHover)="setHovering(p._id, $event)"
-            (toggleWishlistClick)="toggleWishlist(p, $event)"
-            (addToCartClick)="addToCart(p, $event)"
-            (buyNowClick)="buyNow(p, $event)"
-            (cardClick)="goToProduct(p)"
-          />
+    <div class="catalog__layout">
+      <!-- Left filter panel (variant facets) -->
+      @if (variantOptions().length > 0) {
+        <aside class="catalog__filters">
+          <div class="catalog__filters-head">
+            <h2 class="catalog__filters-title">Filters</h2>
+            @if (selectedValues().size > 0) {
+              <button class="catalog__filters-clear" (click)="clearFilters()">Clear</button>
+            }
+          </div>
+          @for (opt of variantOptions(); track opt._id) {
+            <div class="catalog__filter-group">
+              <h3 class="catalog__filter-name">{{ opt.key }}</h3>
+              <div class="catalog__filter-values">
+                @for (v of opt.values; track v) {
+                  <label class="catalog__filter-check" [class.checked]="isValueSelected(v)">
+                    <input type="checkbox" [checked]="isValueSelected(v)" (change)="toggleValue(v)" />
+                    <span>{{ v }}</span>
+                  </label>
+                }
+              </div>
+            </div>
+          }
+        </aside>
+      }
+
+      <!-- Product grid -->
+      <div class="catalog__main">
+        @if (!store.hasResults()) {
+          <div class="catalog__empty">
+            <p>No products found.</p>
+            @if (selectedValues().size > 0) {
+              <app-button variant="secondary" size="md" (click)="clearFilters()">Clear Filters</app-button>
+            } @else {
+              <app-button variant="primary" size="md" (click)="goToAllProducts()">Browse All Teas</app-button>
+            }
+          </div>
+        } @else {
+          <div class="catalog__grid">
+            @for (p of store.results(); track p._id; let i = $index) {
+              <app-product-card
+                [appScrollReveal]="i"
+                [product]="p"
+                [isHovering]="isHovering(p._id)"
+                [isWishlisted]="isWishlisted(p._id)"
+                [getRating]="getRating"
+                [getReviewCount]="getReviewCount"
+                (imageHover)="setHovering(p._id, $event)"
+                (toggleWishlistClick)="toggleWishlist(p, $event)"
+                (addToCartClick)="addToCart(p, $event)"
+                (buyNowClick)="buyNow(p, $event)"
+                (cardClick)="goToProduct(p)"
+              />
+            }
+          </div>
         }
       </div>
-    }
+    </div>
   </div>
 </div>

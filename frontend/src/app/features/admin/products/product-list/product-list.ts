@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import {
   CatalogService, Product, Category, Collection,
   CreateProductPayload, UpdateProductPayload, ProductVariant,
-  CreateVariantPayload,
+  CreateVariantPayload, VariantOption,
 } from '../../../../core/services/catalog.service';
 import { ReviewStore } from '../../../../core/services/review.store';
 
@@ -39,6 +39,7 @@ interface ProductForm {
 
 interface VariantForm {
   name: string;
+  optionValue: string; // chosen value from the product's option key (dictionary)
   sku: string;
   price: number | '';
   discountedPrice: number | '';
@@ -58,7 +59,7 @@ const emptyForm = (): ProductForm => ({
 });
 
 const emptyVariantForm = (): VariantForm => ({
-  name: '', sku: '', price: '', discountedPrice: '',
+  name: '', optionValue: '', sku: '', price: '', discountedPrice: '',
   stock: 0, trackInventory: false, isActive: true,
 });
 
@@ -98,6 +99,19 @@ export class ProductListComponent implements OnInit, OnDestroy {
   editingVariantId    = signal<string | null>(null);
   variantForm         = signal<VariantForm>(emptyVariantForm());
 
+  // Dictionary-driven variant options
+  variantOptions      = signal<VariantOption[]>([]);
+  variantOptionKey    = signal<string>(''); // the option key this product's variants use
+
+  // Values available for the currently selected option key
+  readonly selectedKeyValues = computed(() => {
+    const key = this.variantOptionKey();
+    if (!key) return [];
+    return this.variantOptions().find((o) => o.key === key)?.values ?? [];
+  });
+  // Whether the dictionary has any options to pick from
+  readonly hasVariantOptions = computed(() => this.variantOptions().length > 0);
+
   private searchTimeout: ReturnType<typeof setTimeout> | null = null;
   private loadEffect = effect(() => {
     const page     = this.currentPage();
@@ -111,6 +125,14 @@ export class ProductListComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.loadMeta();
+    this.loadVariantOptions();
+  }
+
+  private loadVariantOptions() {
+    this.catalog.getVariantOptions().subscribe({
+      next: (res) => this.variantOptions.set((res.data || []).filter((o) => o.isActive)),
+      error: () => { /* dictionary is optional; falls back to free-text */ },
+    });
   }
 
   ngOnDestroy() {
@@ -514,6 +536,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.variantForm.set(emptyVariantForm());
     this.editingVariantId.set(null);
     this.showVariantForm.set(false);
+    this.variantOptionKey.set('');
     this.loadVariants(product._id);
   }
 
@@ -532,7 +555,11 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.variantLoading.set(true);
     this.catalog.getVariants(productId).subscribe({
       next: (res) => {
-        this.variants.set(res.data || []);
+        const variants = res.data || [];
+        this.variants.set(variants);
+        // Adopt the option key already in use by this product's variants
+        const existingKey = variants.find((v) => v.optionKey)?.optionKey;
+        if (existingKey) this.variantOptionKey.set(existingKey);
         this.variantLoading.set(false);
       },
       error: (err) => {
@@ -547,6 +574,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
       this.editingVariantId.set(variant._id);
       this.variantForm.set({
         name: variant.name,
+        optionValue: variant.optionValue ?? '',
         sku: variant.sku ?? '',
         price: variant.price,
         discountedPrice: variant.discountedPrice ?? '',
@@ -572,9 +600,19 @@ export class ProductListComponent implements OnInit, OnDestroy {
   saveVariant() {
     const f = this.variantForm();
     const product = this.variantProduct();
+    const optionKey = this.variantOptionKey();
+    const useDictionary = this.hasVariantOptions() && !!optionKey;
 
     if (!product) return;
-    if (!f.name.trim()) { this.variantError.set('Variant name is required'); return; }
+
+    // Dictionary mode: the value is chosen from the option key's list and
+    // doubles as the variant name. Free-text mode: use the Name field.
+    const displayName = (useDictionary ? f.optionValue : f.name).trim();
+    if (useDictionary && !f.optionValue.trim()) {
+      this.variantError.set('Please choose a value for the selected option');
+      return;
+    }
+    if (!displayName) { this.variantError.set('Variant name is required'); return; }
     if (f.price === '' || f.price < 0) { this.variantError.set('Valid price is required'); return; }
     if (f.discountedPrice !== '' && (f.discountedPrice < 0 || f.discountedPrice >= f.price)) {
       this.variantError.set('Discounted price must be less than price');
@@ -585,7 +623,9 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.variantSaving.set(true);
 
     const payload: CreateVariantPayload = {
-      name: f.name.trim(),
+      name: displayName,
+      optionKey: useDictionary ? optionKey : undefined,
+      optionValue: useDictionary ? f.optionValue.trim() : undefined,
       sku: f.sku.trim() || undefined,
       price: Number(f.price),
       // null (not undefined) so clearing the field actually removes the discount

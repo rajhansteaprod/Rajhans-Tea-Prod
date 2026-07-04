@@ -787,6 +787,18 @@ textarea.form-input { resize: vertical; font-family: inherit; }
   &.delete:hover  { border-color: $color-error; color: $color-error; background: rgba(192, 57, 43, 0.06); }
 }
 
+.variant-option-type {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: $space-md;
+  margin-bottom: $space-md;
+  border: 1px dashed $color-border;
+  background: $color-bg-tertiary;
+
+  select { max-width: 320px; }
+}
+
 .variant-form-section {
   border-top: 1px solid $color-border-light;
   padding-top: $space-lg;

@@ -1,27 +1,66 @@
-<div class="login-container">
-  <div class="login-card">
-    <h1 class="login-title">Sign In</h1>
-    <p class="login-subtitle">Complete verification in the popup to continue</p>
+<div class="login">
+  <!-- Visual (left on desktop, top on mobile) -->
+  <div class="login__visual">
+    <div class="login__visual-content">
+      <div class="login__visual-top">
+        <a routerLink="/" class="login__brand">Rajhans Tea</a>
+      </div>
 
-    <!-- Loading state -->
-    <p class="success-message" *ngIf="isLoading">Signing you in...</p>
-
-    <!-- Error Message -->
-    <div class="error-banner" *ngIf="error">
-      <p>{{ error }}</p>
-      <button class="btn-close" (click)="clearError()">×</button>
+      <div class="login__chips">
+        <span class="login__chip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13V7a1 1 0 0 1 1-1h6a7 7 0 0 1 7 7 7 7 0 0 1-7 7z"/><path d="M11 13c1.5-4 4-6 8-6"/></svg>
+          100% Natural Leaves
+        </span>
+        <span class="login__chip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>
+          Farm-fresh &amp; Handpicked
+        </span>
+        <span class="login__chip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>
+          Rich, Authentic Aroma
+        </span>
+        <span class="login__chip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M9 14.5 7 22l5-3 5 3-2-7.5"/></svg>
+          Premium Quality
+        </span>
+        <span class="login__chip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
+          No Additives
+        </span>
+      </div>
     </div>
+  </div>
 
-    <!-- Reopen the MSG91 popup (e.g. if the user closed it) -->
-    <button class="btn-primary" (click)="openLogin()" [disabled]="isLoading">
-      Sign in with OTP
-    </button>
+  <!-- Login panel (right on desktop, below on mobile) -->
+  <div class="login__panel">
+    <div class="login__card">
+      <h1 class="login__title">Sign In</h1>
+      <p class="login__subtitle">Verify in the popup to continue</p>
 
-    <!-- Terms -->
-    <p class="terms-text">
-      By continuing, you agree to our
-      <a href="/terms" target="_blank">Terms of Service</a> and
-      <a href="/privacy" target="_blank">Privacy Policy</a>
-    </p>
+      <p class="login__loading" *ngIf="isLoading">Signing you in…</p>
+
+      <div class="login__error" *ngIf="error">
+        <p>{{ error }}</p>
+        <button class="login__error-close" (click)="clearError()" aria-label="Dismiss">×</button>
+      </div>
+
+      <button class="login__btn" (click)="openLogin()" [disabled]="isLoading">
+        Sign in with Mobile
+      </button>
+
+      <p class="login__secure">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Powered by a trusted third-party OTP service — 100% safe.
+      </p>
+
+      <p class="login__terms">
+        By continuing, you agree to our
+        <a routerLink="/page/terms-conditions">Terms</a> and
+        <a routerLink="/page/privacy-policy">Privacy Policy</a>
+      </p>
+    </div>
   </div>
 </div>

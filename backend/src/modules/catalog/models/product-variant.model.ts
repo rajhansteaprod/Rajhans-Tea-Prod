@@ -3,6 +3,8 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 export interface IProductVariantDoc extends Document {
   productId: Types.ObjectId;
   name: string;           // e.g. "50g", "100g", "250ml"
+  optionKey?: string;     // dictionary option key, e.g. "Weight"
+  optionValue?: string;   // chosen value from the dictionary, e.g. "250g"
   sku?: string;           // SKU code (optional)
   price: number;
   discountedPrice?: number; // Price after discount applied (if different from price)
@@ -21,6 +23,8 @@ const productVariantSchema = new Schema<IProductVariantDoc>(
   {
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
     name: { type: String, required: true, trim: true },
+    optionKey: { type: String, trim: true },
+    optionValue: { type: String, trim: true },
     sku: { type: String, lowercase: true, sparse: true, unique: true },
     price: { type: Number, required: true, min: 0 },
     discountedPrice: { type: Number, min: 0 },
@@ -38,6 +42,8 @@ const productVariantSchema = new Schema<IProductVariantDoc>(
 productVariantSchema.index({ productId: 1, isActive: 1 });
 productVariantSchema.index({ productId: 1, position: 1 });
 productVariantSchema.index({ sku: 1 }, { sparse: true });
+// Supports catalog facet filtering by option value (e.g. all products with a 250g variant)
+productVariantSchema.index({ optionValue: 1, isActive: 1 });
 
 export const ProductVariant = mongoose.model<IProductVariantDoc>(
   'ProductVariant',

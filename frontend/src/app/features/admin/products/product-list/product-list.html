@@ -466,6 +466,21 @@
         @if (variantLoading()) {
           <div class="loading-state"><div class="spinner"></div></div>
         } @else {
+          <!-- Product-level option type — drives the value dropdown & catalog filters -->
+          @if (hasVariantOptions()) {
+            <div class="variant-option-type">
+              <label class="form-label">Option Type</label>
+              <select class="form-input" [ngModel]="variantOptionKey()"
+                (ngModelChange)="variantOptionKey.set($event)">
+                <option value="">— Free text (no dictionary) —</option>
+                @for (opt of variantOptions(); track opt._id) {
+                  <option [value]="opt.key">{{ opt.key }}</option>
+                }
+              </select>
+              <span class="hint">Which option (e.g. Weight) this product's variants vary by. Manage the list under Variant Options.</span>
+            </div>
+          }
+
           <!-- Variant List -->
           @if (variants().length > 0) {
             <table class="variant-table">
@@ -515,11 +530,24 @@
           @if (showVariantForm()) {
             <div class="variant-form-section">
               <div class="form-grid-3">
-                <div class="form-field span-2">
-                  <label class="form-label">Name *</label>
-                  <input class="form-input" type="text" [ngModel]="variantForm().name"
-                    (ngModelChange)="variantForm.update(f=>({...f,name:$event}))" placeholder="e.g., 100g, Red, Large" />
-                </div>
+                @if (hasVariantOptions() && variantOptionKey()) {
+                  <div class="form-field span-2">
+                    <label class="form-label">{{ variantOptionKey() }} *</label>
+                    <select class="form-input" [ngModel]="variantForm().optionValue"
+                      (ngModelChange)="variantForm.update(f=>({...f,optionValue:$event}))">
+                      <option value="">Select {{ variantOptionKey() }}…</option>
+                      @for (val of selectedKeyValues(); track val) {
+                        <option [value]="val">{{ val }}</option>
+                      }
+                    </select>
+                  </div>
+                } @else {
+                  <div class="form-field span-2">
+                    <label class="form-label">Name *</label>
+                    <input class="form-input" type="text" [ngModel]="variantForm().name"
+                      (ngModelChange)="variantForm.update(f=>({...f,name:$event}))" placeholder="e.g., 100g, Red, Large" />
+                  </div>
+                }
                 <div class="form-field">
                   <label class="form-label">SKU</label>
                   <input class="form-input" type="text" [ngModel]="variantForm().sku"
@@ -565,7 +593,7 @@
               <div class="variant-form-actions">
                 <button class="btn-cancel" (click)="closeVariantForm()">Cancel</button>
                 <button class="btn-save" (click)="saveVariant()"
-                  [disabled]="variantSaving() || !variantForm().name || variantForm().price === ''">
+                  [disabled]="variantSaving() || variantForm().price === '' || ((hasVariantOptions() && variantOptionKey()) ? !variantForm().optionValue : !variantForm().name)">
                   {{ variantSaving() ? 'Saving…' : (editingVariantId() ? 'Update Variant' : 'Add Variant') }}
                 </button>
               </div>

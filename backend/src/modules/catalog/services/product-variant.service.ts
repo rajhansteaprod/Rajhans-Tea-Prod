@@ -25,6 +25,8 @@ export class ProductVariantService {
 
   async create(productId: string, data: {
     name: string;
+    optionKey?: string;
+    optionValue?: string;
     sku?: string;
     price: number;
     discountedPrice?: number | null;
@@ -38,7 +40,9 @@ export class ProductVariantService {
     const product = await this.productRepo.findById(productId);
     if (!product) throw new NotFoundError('Product not found');
 
-    if (!data.name || !data.price) {
+    // When a dictionary value is provided, it is the canonical display name.
+    const name = (data.optionValue ?? data.name)?.trim();
+    if (!name || !data.price) {
       throw new BadRequestError('name and price are required');
     }
 
@@ -57,7 +61,9 @@ export class ProductVariantService {
     try {
       variant = await this.variantRepo.create({
         productId: product._id,
-        name: data.name.trim(),
+        name,
+        optionKey: data.optionKey?.trim() || undefined,
+        optionValue: data.optionValue?.trim() || undefined,
         sku: this.normalizeSku(data.sku),
         price: data.price,
         discountedPrice: data.discountedPrice ?? undefined,
@@ -95,6 +101,8 @@ export class ProductVariantService {
 
   async update(variantId: string, data: {
     name?: string;
+    optionKey?: string;
+    optionValue?: string;
     sku?: string;
     price?: number;
     discountedPrice?: number | null; // null clears an existing discount
@@ -120,7 +128,14 @@ export class ProductVariantService {
     }
 
     const update: Record<string, unknown> = {};
-    if (data.name !== undefined) update.name = data.name.trim();
+    // If a dictionary value is chosen it becomes the display name too.
+    if (data.optionValue !== undefined) {
+      update.optionValue = data.optionValue.trim() || undefined;
+      update.name = data.optionValue.trim() || data.name?.trim() || variant.name;
+    } else if (data.name !== undefined) {
+      update.name = data.name.trim();
+    }
+    if (data.optionKey !== undefined) update.optionKey = data.optionKey.trim() || undefined;
     if (data.sku !== undefined) update.sku = this.normalizeSku(data.sku);
     if (data.price !== undefined) update.price = data.price;
     // null → remove the discount entirely; a number → set it

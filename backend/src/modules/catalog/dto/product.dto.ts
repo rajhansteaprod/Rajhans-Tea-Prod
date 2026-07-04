@@ -9,6 +9,8 @@ import { IProductVariantDoc } from '../models/product-variant.model';
 export interface ProductVariantView {
   _id: string;
   name: string;
+  optionKey?: string;
+  optionValue?: string;
   price: number;
   discountedPrice?: number;
   stock?: number;
@@ -118,6 +120,8 @@ export class ProductDTO {
     return (variants ?? []).map(v => ({
       _id: v._id.toString(),
       name: v.name,
+      optionKey: v.optionKey,
+      optionValue: v.optionValue,
       price: v.price,
       discountedPrice: v.discountedPrice,
       stock: v.stock,

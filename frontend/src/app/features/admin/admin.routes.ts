@@ -43,6 +43,11 @@ export const ADMIN_ROUTES: Routes = [
           import('./collections/collection-list').then((m) => m.CollectionListComponent),
       },
       {
+        path: 'variant-options',
+        loadComponent: () =>
+          import('./variant-options/variant-option-list').then((m) => m.VariantOptionListComponent),
+      },
+      {
         path: 'payments',
         loadComponent: () =>
           import('./payments/payment-list').then((m) => m.AdminPaymentListComponent),

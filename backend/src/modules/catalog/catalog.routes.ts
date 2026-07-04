@@ -23,6 +23,9 @@ import {
   updateVariantSchema,
   variantIdSchema,
   reorderVariantsSchema,
+  createVariantOptionSchema,
+  updateVariantOptionSchema,
+  variantOptionIdSchema,
 } from './catalog.validator';
 
 const router = Router();
@@ -47,6 +50,9 @@ router.get(
   catalog.listProductsPublic,
 );
 router.get('/catalog/products/:slug', validate(productSlugSchema), catalog.getProductBySlug);
+
+// Variant options — public list drives catalog facet filters (cached 5 min)
+router.get('/catalog/variant-options', cacheResponse(300), catalog.listVariantOptionsPublic);
 
 // ===========================================================================
 // ADMIN — authenticate + admin role required
@@ -88,6 +94,12 @@ adminRouter.post('/products/:productId/variants/reorder', validate(reorderVarian
 adminRouter.get('/products/:productId/variants/:variantId', validate(variantIdSchema), catalog.getVariant);
 adminRouter.put('/products/:productId/variants/:variantId', validate(updateVariantSchema), catalog.updateVariant);
 adminRouter.delete('/products/:productId/variants/:variantId', validate(variantIdSchema), catalog.deleteVariant);
+
+// Variant Options — admin CRUD (global dictionary)
+adminRouter.get('/variant-options', catalog.listVariantOptions);
+adminRouter.post('/variant-options', validate(createVariantOptionSchema), catalog.createVariantOption);
+adminRouter.put('/variant-options/:id', validate(updateVariantOptionSchema), catalog.updateVariantOption);
+adminRouter.delete('/variant-options/:id', validate(variantOptionIdSchema), catalog.deleteVariantOption);
 
 router.use('/admin', adminRouter);
 

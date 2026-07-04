@@ -56,6 +56,8 @@ export interface Collection {
 export interface ProductVariant {
   _id: string;
   name: string;
+  optionKey?: string;   // dictionary key, e.g. "Weight"
+  optionValue?: string; // chosen value, e.g. "250g"
   sku?: string;
   price: number;
   discountedPrice?: number;
@@ -69,6 +71,8 @@ export interface ProductVariant {
 
 export interface CreateVariantPayload {
   name: string;
+  optionKey?: string;
+  optionValue?: string;
   sku?: string;
   price: number;
   discountedPrice?: number | null; // null clears an existing discount
@@ -76,6 +80,26 @@ export interface CreateVariantPayload {
   trackInventory?: boolean;
   isActive?: boolean;
 }
+
+// Global variant-options dictionary (e.g. Weight → [100g, 250g, 500g, 1kg])
+export interface VariantOption {
+  _id: string;
+  key: string;
+  values: string[];
+  isActive: boolean;
+  sortOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateVariantOptionPayload {
+  key: string;
+  values?: string[];
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export type UpdateVariantOptionPayload = Partial<CreateVariantOptionPayload>;
 
 export interface Product {
   _id: string;
@@ -313,6 +337,28 @@ export class CatalogService {
 
   deleteVariant(productId: string, variantId: string): Observable<void> {
     return this.http.delete<void>(`${this.adminUrl}/products/${productId}/variants/${variantId}`);
+  }
+
+  // --- Variant Options (global dictionary) ---
+
+  getVariantOptionsPublic(): Observable<ApiResponse<VariantOption[]>> {
+    return this.http.get<ApiResponse<VariantOption[]>>(`${this.publicUrl}/variant-options`);
+  }
+
+  getVariantOptions(): Observable<ApiResponse<VariantOption[]>> {
+    return this.http.get<ApiResponse<VariantOption[]>>(`${this.adminUrl}/variant-options`);
+  }
+
+  createVariantOption(payload: CreateVariantOptionPayload): Observable<ApiResponse<VariantOption>> {
+    return this.http.post<ApiResponse<VariantOption>>(`${this.adminUrl}/variant-options`, payload);
+  }
+
+  updateVariantOption(id: string, payload: UpdateVariantOptionPayload): Observable<ApiResponse<VariantOption>> {
+    return this.http.put<ApiResponse<VariantOption>>(`${this.adminUrl}/variant-options/${id}`, payload);
+  }
+
+  deleteVariantOption(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.adminUrl}/variant-options/${id}`);
   }
 
   // --- Image upload ---

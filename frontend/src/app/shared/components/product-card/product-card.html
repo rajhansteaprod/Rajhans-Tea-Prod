@@ -21,8 +21,26 @@
       <!-- Title & Description -->
       <div class="product-card__title-desc">
         <h3 class="product-card__name">{{ product.name }}</h3>
-        <p class="product-card__weight-text">500gm</p>
+        @if (!product.variants || product.variants.length === 0) {
+          <p class="product-card__weight-text">500gm</p>
+        }
       </div>
+
+      <!-- Weight / Variant selector — price updates with the selected variant -->
+      @if (product.variants && product.variants.length > 0) {
+        <div class="product-card__variants" (click)="$event.stopPropagation()"
+             role="radiogroup" aria-label="Select weight">
+          @for (variant of product.variants; track variant._id) {
+            <label class="product-card__variant-chip"
+                   [class.product-card__variant-chip--selected]="selectedVariantId() === variant._id">
+              <input type="radio" [name]="'variant-' + product._id" [value]="variant._id"
+                     [checked]="selectedVariantId() === variant._id"
+                     (change)="onVariantChange(variant._id)" />
+              <span>{{ variant.name }}</span>
+            </label>
+          }
+        </div>
+      }
 
       <!-- Badges/Tags -->
       @if (product.tags && product.tags.length > 0) {

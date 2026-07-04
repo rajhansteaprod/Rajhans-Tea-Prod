@@ -3,6 +3,7 @@ import { CategoryService } from './services/category.service';
 import { CollectionService } from './services/collection.service';
 import { ProductService } from './services/product.service';
 import { ProductVariantService } from './services/product-variant.service';
+import { VariantOptionService } from './services/variant-option.service';
 import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../../utils/api-response';
 import { BadRequestError } from '../../utils/api-error';
 import { invalidateCache } from '../../middleware/cache-response.middleware';
@@ -14,6 +15,7 @@ const categoryService = new CategoryService();
 const collectionService = new CollectionService();
 const productService = new ProductService();
 const variantService = new ProductVariantService();
+const variantOptionService = new VariantOptionService();
 
 // ---------------------------------------------------------------------------
 // Category controllers
@@ -201,4 +203,38 @@ export const uploadImage = async (req: Request, res: Response) => {
   }
   const url = `/uploads/${req.file.filename}`;
   sendSuccess(res, { url }, 'Image uploaded successfully');
+};
+
+// ---------------------------------------------------------------------------
+// Variant Option controllers (global dictionary)
+// ---------------------------------------------------------------------------
+
+export const listVariantOptionsPublic = async (_req: Request, res: Response) => {
+  const data = await variantOptionService.listPublic();
+  sendSuccess(res, data);
+};
+
+export const listVariantOptions = async (_req: Request, res: Response) => {
+  const data = await variantOptionService.listForAdmin();
+  sendSuccess(res, data);
+};
+
+export const createVariantOption = async (req: Request, res: Response) => {
+  const data = await variantOptionService.create(req.body);
+  await invalidateCatalogCache();
+  sendCreated(res, data, 'Variant option created successfully');
+};
+
+export const updateVariantOption = async (req: Request, res: Response) => {
+  const id = req.params['id'] as string;
+  const data = await variantOptionService.update(id, req.body);
+  await invalidateCatalogCache();
+  sendSuccess(res, data, 'Variant option updated successfully');
+};
+
+export const deleteVariantOption = async (req: Request, res: Response) => {
+  const id = req.params['id'] as string;
+  await variantOptionService.delete(id);
+  await invalidateCatalogCache();
+  sendNoContent(res);
 };

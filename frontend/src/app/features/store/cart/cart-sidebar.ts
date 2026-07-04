@@ -75,4 +75,8 @@ export class CartSidebarComponent {
     this.cart.clearTemporaryCart();
     this.router.navigate(['/checkout']);
   }
+  redirectProducts(){
+    this.cart.closeSidebar();
+    this.router.navigate(['/products']);
+  }
 }

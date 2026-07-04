@@ -191,6 +191,9 @@ const variantBodySchema = z.object({
   images: z.array(z.string().url().or(z.string().startsWith('/'))).optional(),
   position: z.coerce.number().int().min(0).optional(),
   isActive: z.boolean().optional(),
+  // Dictionary-driven option (e.g. optionKey "Weight", optionValue "250g")
+  optionKey: optStr(50),
+  optionValue: optStr(50),
 });
 
 export const createVariantSchema = z.object({
@@ -220,4 +223,31 @@ export const productIdSchema = z.object({
 
 export const productSlugSchema = z.object({
   params: z.object({ slug: z.string().min(1).max(220) }),
+});
+
+// ---------------------------------------------------------------------------
+// Variant Options (global dictionary)
+// ---------------------------------------------------------------------------
+
+export const createVariantOptionSchema = z.object({
+  body: z.object({
+    key: z.string().trim().min(1).max(50),
+    values: z.array(z.string().trim().max(50)).max(100).optional(),
+    isActive: z.boolean().optional(),
+    sortOrder: z.coerce.number().int().min(0).optional(),
+  }),
+});
+
+export const updateVariantOptionSchema = z.object({
+  params: z.object({ id: mongoId }),
+  body: z.object({
+    key: z.string().trim().min(1).max(50).optional(),
+    values: z.array(z.string().trim().max(50)).max(100).optional(),
+    isActive: z.boolean().optional(),
+    sortOrder: z.coerce.number().int().min(0).optional(),
+  }),
+});
+
+export const variantOptionIdSchema = z.object({
+  params: z.object({ id: mongoId }),
 });

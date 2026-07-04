@@ -17,6 +17,7 @@ export interface SearchFilters {
   priceMax?: number;
   inStock?: boolean;
   tags?: string[];
+  optionValues?: string[]; // variant option values, e.g. ["250g", "500g"]
 }
 
 export interface AutocompleteSuggestion {
@@ -89,6 +90,7 @@ export class SearchStore {
     if (f.priceMax !== undefined) url += `&priceMax=${f.priceMax}`;
     if (f.inStock) url += `&inStock=true`;
     if (f.tags && f.tags.length) url += `&tags=${f.tags.join(',')}`;
+    if (f.optionValues && f.optionValues.length) url += `&optionValues=${encodeURIComponent(f.optionValues.join(','))}`;
 
     this.http.get<SearchResponse>(url).subscribe({
       next: (res) => {
