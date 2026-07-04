@@ -1,4 +1,6 @@
 import { Component, inject, signal, output, OnInit, computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { startWith } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -59,12 +61,20 @@ export class AddressStepComponent implements OnInit {
   // Computed: true if adding new address, false if using saved address
   readonly isNewAddress = computed(() => this.selectedAddressId() === null);
 
+  // Reactive form status: form.invalid is NOT a signal, so it can't be read
+  // directly inside a computed(). Bridge statusChanges into a signal so the
+  // button state re-evaluates as the user fills the form.
+  readonly formStatus = toSignal(
+    this.form.statusChanges.pipe(startWith(this.form.status)),
+    { initialValue: this.form.status }
+  );
+
   // Computed: button disabled state (prevents flicker by being strict)
   readonly isButtonDisabled = computed(() => {
     // Always disabled while submitting
     if (this.isSubmitting()) return true;
     // If new address: form must be valid
-    if (this.isNewAddress()) return this.form.invalid;
+    if (this.isNewAddress()) return this.formStatus() === 'INVALID';
     // If saved address: always enabled (it's already saved)
     return false;
   });
@@ -121,6 +131,11 @@ export class AddressStepComponent implements OnInit {
         }
       }
     }
+
+    // Programmatic population above used { emitEvent: false }, which does not
+    // fire statusChanges. Force one emission so formStatus reflects the
+    // populated values and the submit button enables without needing a keystroke.
+    this.form.updateValueAndValidity();
   }
 
   private loadSavedAddresses() {
