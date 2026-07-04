@@ -30,6 +30,19 @@
         attempt();
       })(['https://verify.msg91.com/otp-provider.js', 'https://verify.phone91.com/otp-provider.js']);
     </script>
+
+
+<!-- google analytics for PROD -->
+ <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-16DFYCDSY5"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-16DFYCDSY5');
+</script>
+ <!-- MIX PANEL for PROD -->
   </head>
   <body>
     <app-root></app-root>
