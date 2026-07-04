@@ -61,7 +61,7 @@
 
           <!-- Title Row with Wishlist Heart Button -->
           <div class="pd__title-row">
-            <button
+            <!-- <button
               class="pd__main-wishlist"
               [class.active]="isWishlisted(product()!._id)"
               (click)="toggleWishlist($event, product()!._id)"
@@ -71,7 +71,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pd__wishlist-icon">
                 <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
               </svg>
-            </button>
+            </button> -->
             <h1 class="pd__name">{{ product()?.name }}</h1>
           </div>
 
@@ -272,6 +272,7 @@
               <div class="pd__reviews-divider"></div>
 
               <!-- Review Form - SECOND -->
+               @if(false){
               <div class="pd__review-form-section">
                 <h3 class="pd__review-form-title">Share Your Review</h3>
 
@@ -335,14 +336,14 @@
                     <a href="/auth/login" class="pd__login-btn">Sign In</a>
                   </div>
                 }
-              </div>
+              </div>}
             </div>
           }
         </div>
       </div>
 
       <!-- Related products: You might also like -->
-      @if (relatedProducts().length > 0) {
+      @if (false) {
         <div class="pd__recos">
           <p class="pd__recos-label">You might also like</p>
           <h2 class="pd__recos-title">More from this category.</h2>
