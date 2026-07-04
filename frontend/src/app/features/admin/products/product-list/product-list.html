@@ -195,29 +195,51 @@
                 (ngModelChange)="form.update(f=>({...f,ratingOneLiner:$event}))"
                 placeholder="Comma-separated attributes" maxlength="300" />
             </div>
-            <div class="form-field">
-              <label class="form-label">Base Price (₹) *</label>
-              <input class="form-input" type="number" min="0" [ngModel]="form().basePrice"
-                (ngModelChange)="form.update(f=>({...f,basePrice:$event}))" placeholder="0" />
-            </div>
-            <div class="form-field">
-              <label class="form-label">Discounted Price (₹)</label>
-              <input class="form-input" type="number" min="0" [ngModel]="form().discountedPrice"
-                (ngModelChange)="form.update(f=>({...f,discountedPrice:$event}))" placeholder="Optional" />
-            </div>
-            <div class="form-field">
-              <label class="form-label">Stock Quantity</label>
-              <input class="form-input" type="number" min="0" [ngModel]="form().stock"
-                (ngModelChange)="form.update(f=>({...f,stock:$event}))" placeholder="0" />
-            </div>
-            <div class="form-field">
-              <label class="form-label">Inventory Tracking</label>
+
+            <!-- Does this product have variants? -->
+            <div class="form-field span-3">
               <label class="toggle-label">
-                <input type="checkbox" [ngModel]="form().trackInventory"
-                  (ngModelChange)="form.update(f=>({...f,trackInventory:$event}))" />
-                Enable
+                <input type="checkbox" [ngModel]="form().hasVariants"
+                  (ngModelChange)="form.update(f=>({...f,hasVariants:$event}))" />
+                This product has variants (e.g. different sizes / pack weights)
               </label>
+              <span class="hint">Turn on if price &amp; stock differ per size/pack — you'll set those per variant.</span>
             </div>
+
+            @if (!form().hasVariants) {
+              <div class="form-field">
+                <label class="form-label">Base Price (₹) *</label>
+                <input class="form-input" type="number" min="0" [ngModel]="form().basePrice"
+                  (ngModelChange)="form.update(f=>({...f,basePrice:$event}))" placeholder="0" />
+              </div>
+              <div class="form-field">
+                <label class="form-label">Discounted Price (₹)</label>
+                <input class="form-input" type="number" min="0" [ngModel]="form().discountedPrice"
+                  (ngModelChange)="form.update(f=>({...f,discountedPrice:$event}))" placeholder="Optional" />
+              </div>
+              <div class="form-field">
+                <label class="form-label">Stock Quantity</label>
+                <input class="form-input" type="number" min="0" [ngModel]="form().stock"
+                  (ngModelChange)="form.update(f=>({...f,stock:$event}))" placeholder="0" />
+              </div>
+              <div class="form-field">
+                <label class="form-label">Inventory Tracking</label>
+                <label class="toggle-label">
+                  <input type="checkbox" [ngModel]="form().trackInventory"
+                    (ngModelChange)="form.update(f=>({...f,trackInventory:$event}))" />
+                  Enable
+                </label>
+              </div>
+            } @else {
+              <div class="form-field span-3 variant-pricing-note">
+                @if (editingId()) {
+                  <p>Price, discount &amp; stock for this product are managed per variant.</p>
+                  <button type="button" class="btn-add-attr" (click)="manageVariants()">Manage Variants</button>
+                } @else {
+                  <p>Price, discount &amp; stock will be set per variant. Create the product first — the variant manager opens automatically so you can add them.</p>
+                }
+              </div>
+            }
             <div class="form-field span-3">
               <label class="form-label">Description</label>
               <textarea class="form-input" rows="4" [ngModel]="form().description"
@@ -419,7 +441,7 @@
       <div class="modal-footer">
         <button class="btn-cancel" (click)="closeForm()">Cancel</button>
         <button class="btn-save" (click)="saveForm()"
-          [disabled]="saving() || !form().name || !form().categoryId || form().basePrice === '' || form().images.length === 0">
+          [disabled]="saving() || !form().name || !form().categoryId || (!form().hasVariants && form().basePrice === '') || form().images.length === 0">
           {{ saving() ? (editingId() ? 'Saving…' : 'Creating…') : (editingId() ? 'Save Changes' : 'Create Product') }}
         </button>
       </div>

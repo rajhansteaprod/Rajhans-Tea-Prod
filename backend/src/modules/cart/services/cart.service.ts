@@ -43,12 +43,17 @@ export class CartService {
     return this.formatCartView(cart);
   }
 
-  // Add item / set quantity (works for both guest & user)
+  // Add item / set quantity (works for both guest & user).
+  // mode 'add'  → increment the existing quantity by `qty` (adding the same
+  //               product twice results in qty 2). Used by "Add to cart".
+  // mode 'set'  → replace the quantity with `qty` absolutely. Used by the
+  //               quantity stepper / update endpoint.
   async addItem(
     identifier: string | Types.ObjectId,
     productId: string,
     qty: number,
     variantId?: string,
+    mode: 'add' | 'set' = 'set',
   ): Promise<CartView> {
     if (!Number.isInteger(qty) || qty < 1) {
       throw new BadRequestError('Quantity must be at least 1');
@@ -71,19 +76,29 @@ export class CartService {
       if (!variant.isActive) throw new BadRequestError('Variant not available');
     }
 
-    // Stock validation for inventory-tracked items
+    // Resolve the resulting quantity. For 'add', build on top of what's already
+    // in the cart (capped at the per-item max so re-adding never overflows).
+    let resultingQty = qty;
+    if (mode === 'add') {
+      const currentQty = await this.cartRepo.getItemQty(identifier, productId, variantId);
+      resultingQty = Math.min(currentQty + qty, MAX_QTY_PER_ITEM);
+    }
+
+    // Stock validation for inventory-tracked items — against the resulting total
     const trackInventory = variant ? variant.trackInventory : product.trackInventory;
     if (trackInventory) {
       const stock = variant ? variant.stock : product.stock;
-      if (stock < qty) {
+      if (stock < resultingQty) {
         throw new BadRequestError(
           stock <= 0 ? 'Out of stock' : `Only ${stock} unit(s) available`,
         );
       }
     }
 
-    // Slug is always taken from the product — never trusted from the client
-    const cart = await this.cartRepo.upsertItem(identifier, productId, qty, variantId, product.slug);
+    // Slug is always taken from the product — never trusted from the client.
+    // upsertItem sets the quantity absolutely; we've already folded the
+    // increment into resultingQty above.
+    const cart = await this.cartRepo.upsertItem(identifier, productId, resultingQty, variantId, product.slug);
     return this.formatCartView(cart);
   }
 

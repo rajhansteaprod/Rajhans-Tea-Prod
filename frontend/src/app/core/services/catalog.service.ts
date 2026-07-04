@@ -95,6 +95,7 @@ export interface Product {
   tags: string[];
   region?: 'Assam' | 'Darjeeling' | 'Nilgiri' | 'Dooars';
   bestTakenFor?: 'Morning' | 'Noon' | 'Evening';
+  hasVariants?: boolean; // when true, basePrice/discountedPrice/stock are derived from variants
   variants?: ProductVariant[];
   // Admin-only (present in /admin/products, absent in /catalog/products)
   status?: 'draft' | 'active' | 'archived';
@@ -170,6 +171,7 @@ export interface CreateProductPayload {
   isFeatured?: boolean;
   stock?: number;
   trackInventory?: boolean;
+  hasVariants?: boolean; // true → pricing/stock come from variants, not these fields
 }
 
 export interface UpdateProductPayload extends Partial<CreateProductPayload> {}

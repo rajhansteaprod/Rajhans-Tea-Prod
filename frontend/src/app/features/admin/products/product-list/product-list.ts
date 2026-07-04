@@ -31,6 +31,7 @@ interface ProductForm {
   isFeatured: boolean;
   stock: number;
   trackInventory: boolean;
+  hasVariants: boolean; // true → price/discount/stock are set per-variant, not here
   showBadge: boolean;
   badgeText: string;
   ratingOneLiner: string; // Admin-editable: "Cleanser Effectiveness, Face Wash Effectiveness, ..."
@@ -53,7 +54,7 @@ const emptyForm = (): ProductForm => ({
   region: undefined, bestTakenFor: undefined,
   status: 'draft', isFeatured: false,
   showBadge: false, badgeText: '',
-  stock: 0, trackInventory: false, ratingOneLiner: '',
+  stock: 0, trackInventory: false, hasVariants: false, ratingOneLiner: '',
 });
 
 const emptyVariantForm = (): VariantForm => ({
@@ -176,6 +177,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
       badgeText:        product.badgeText ?? '',
       stock:            product.stock ?? 0,
       trackInventory:   product.trackInventory ?? false,
+      hasVariants:      product.hasVariants ?? false,
       ratingOneLiner:   '',
     });
     this.formError.set(null);
@@ -197,6 +199,13 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.showForm.set(false);
     this.editingId.set(null);
     this.formError.set(null);
+  }
+
+  // Open the variant manager for the product currently being edited.
+  manageVariants() {
+    const id = this.editingId();
+    const product = this.products().find((p) => p._id === id);
+    if (product) this.openVariants(product);
   }
 
   toggleCollection(id: string) {
@@ -362,10 +371,14 @@ export class ProductListComponent implements OnInit, OnDestroy {
 
     if (!f.name.trim()) { this.formError.set('Product name is required'); return; }
     if (!f.categoryId)  { this.formError.set('Category is required'); return; }
-    if (f.basePrice === '' || f.basePrice < 0) { this.formError.set('Valid price is required'); return; }
-    if (f.discountedPrice !== '' && (f.discountedPrice < 0 || f.discountedPrice >= f.basePrice)) {
-      this.formError.set('Discounted price must be less than base price');
-      return;
+    // Product-level price only applies to products WITHOUT variants. For variant
+    // products, price/discount/stock are set per-variant and derived by backend.
+    if (!f.hasVariants) {
+      if (f.basePrice === '' || f.basePrice < 0) { this.formError.set('Valid price is required'); return; }
+      if (f.discountedPrice !== '' && (f.discountedPrice < 0 || f.discountedPrice >= f.basePrice)) {
+        this.formError.set('Discounted price must be less than base price');
+        return;
+      }
     }
     if (f.images.length === 0) {
       this.formError.set('At least 1 product image is required');
@@ -392,15 +405,26 @@ export class ProductListComponent implements OnInit, OnDestroy {
     // Default reflectedImage to primaryImage for old DB schema compatibility or keep it if uploaded
     const reflectedImage = f.reflectedImage || primaryImage;
 
+    // Variant products derive price/discount/stock from their variants, so we
+    // send neutral placeholders (backend overwrites basePrice from the cheapest
+    // variant). Non-variant products send the admin-entered values.
+    const pricing = f.hasVariants
+      ? { basePrice: Number(f.basePrice) || 0, discountedPrice: null, stock: 0, trackInventory: false }
+      : {
+          basePrice: Number(f.basePrice),
+          // null (not undefined) so clearing the field actually removes the discount
+          discountedPrice: f.discountedPrice !== '' ? Number(f.discountedPrice) : null,
+          stock: Number(f.stock) || 0,
+          trackInventory: f.trackInventory,
+        };
+
     const payload = {
       name:             f.name,
       description:      f.description || undefined,
       shortDescription: f.shortDescription || undefined,
       categoryId:       f.categoryId,
       collectionIds:    f.collectionIds,
-      basePrice:        Number(f.basePrice),
-      // null (not undefined) so clearing the field actually removes the discount
-      discountedPrice:  f.discountedPrice !== '' ? Number(f.discountedPrice) : null,
+      ...pricing,
       images:           f.images,
       primaryImage,
       imageAltText:     f.imageAltText || f.name,
@@ -414,8 +438,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
       isFeatured:       f.isFeatured,
       showBadge:        f.showBadge,
       badgeText:        f.badgeText,
-      stock:            Number(f.stock) || 0,
-      trackInventory:   f.trackInventory,
+      hasVariants:      f.hasVariants,
     };
 
     this.formError.set(null);
@@ -434,25 +457,30 @@ export class ProductListComponent implements OnInit, OnDestroy {
           this.meta.update((m) => m ? { ...m, total: m.total + 1 } : m);
         }
 
+        // Close, then for a NEWLY created variant product jump straight into the
+        // variant manager so the admin can enter per-variant price & stock.
+        const done = () => {
+          this.saving.set(false);
+          this.closeForm();
+          if (!id && f.hasVariants) {
+            this.openVariants(res.data);
+          }
+        };
+
         // Save rating summary (one-liner) if it's an existing product
         const productId = res.data._id;
         const ratingOneLiner = f.ratingOneLiner.trim();
         if (productId && ratingOneLiner) {
           this.catalog.updateRatingOneLiner(productId, ratingOneLiner).subscribe({
-            next: () => {
-              this.saving.set(false);
-              this.closeForm();
-            },
+            next: () => done(),
             error: (err) => {
               // Rating summary is optional, just warn and close
               console.warn('Failed to update rating summary:', err);
-              this.saving.set(false);
-              this.closeForm();
+              done();
             },
           });
         } else {
-          this.saving.set(false);
-          this.closeForm();
+          done();
         }
       },
       error: (err) => {

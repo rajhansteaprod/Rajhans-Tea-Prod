@@ -147,6 +147,7 @@ export class ProductService {
     badgeText?: string;
     stock?: number;
     trackInventory?: boolean;
+    hasVariants?: boolean;
   }) {
     // Validate category
     const category = await this.categoryRepo.findById(data.categoryId);
@@ -197,7 +198,9 @@ export class ProductService {
       badgeText: data.badgeText,
       stock: data.stock ?? 0,
       trackInventory: data.trackInventory ?? false,
-      hasVariants: false,
+      // Admin's declared intent; the variant service flips this automatically
+      // as variants are added/removed.
+      hasVariants: data.hasVariants ?? false,
     });
 
     logger.info(
@@ -233,6 +236,7 @@ export class ProductService {
       badgeText?: string;
       stock?: number;
       trackInventory?: boolean;
+      hasVariants?: boolean;
     },
   ) {
     const product = await this.productRepo.findById(id);
@@ -309,6 +313,7 @@ export class ProductService {
     if (data.badgeText !== undefined) update.badgeText = data.badgeText;
     if (data.stock !== undefined) update.stock = data.stock;
     if (data.trackInventory !== undefined) update.trackInventory = data.trackInventory;
+    if (data.hasVariants !== undefined) update.hasVariants = data.hasVariants;
 
     const updateQuery = Object.keys(unset).length > 0
       ? { $set: update, $unset: unset }

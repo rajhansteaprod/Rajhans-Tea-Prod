@@ -684,6 +684,22 @@ textarea.form-input { resize: vertical; font-family: inherit; }
   padding: $space-md 0;
 }
 
+.variant-pricing-note {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+  padding: $space-md;
+  border: 1px dashed $color-border;
+  border-radius: 0;
+  background: $color-bg-tertiary;
+
+  p {
+    margin: 0;
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+}
+
 .btn-cancel {
   padding: $space-sm $space-md;
   border: 1px solid $color-border;

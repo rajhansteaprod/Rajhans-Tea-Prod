@@ -42,7 +42,8 @@ export const getCart = async (req: Request, res: Response) => {
 export const addItem = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
   const { productId, variantId, qty } = req.body as { productId: string; variantId?: string; qty: number };
-  const data = await cartService.addItem(identifier, productId, qty, variantId);
+  // 'add' → increment existing quantity, so adding the same product twice → qty 2
+  const data = await cartService.addItem(identifier, productId, qty, variantId, 'add');
   sendSuccess(res, data, 'Item added to cart');
 };
 
@@ -50,7 +51,8 @@ export const updateItem = async (req: Request, res: Response) => {
   const identifier = getSessionIdentifier(req);
   const productId = req.params['productId'] as string;
   const { qty, variantId } = req.body as { qty: number; variantId?: string };
-  const data = await cartService.addItem(identifier, productId, qty, variantId);
+  // 'set' → replace quantity absolutely (quantity stepper on the cart page)
+  const data = await cartService.addItem(identifier, productId, qty, variantId, 'set');
   sendSuccess(res, data, 'Cart updated');
 };
 

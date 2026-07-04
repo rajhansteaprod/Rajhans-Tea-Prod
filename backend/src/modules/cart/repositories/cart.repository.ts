@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { Cart, ICartDoc } from '../models/cart.model';
+import { Cart, ICartDoc, ICartItem } from '../models/cart.model';
 
 export class CartRepository {
   // Get cart by identifier (guest sessionId or userId)
@@ -12,6 +12,28 @@ export class CartRepository {
       .populate('items.productId', 'name slug images basePrice category collections status shortDescription description discountedPrice')
       .populate('items.variantId', 'name price discountedPrice')
       .exec();
+  }
+
+  // Current quantity of a specific line item (0 if not in the cart yet).
+  // Used to compute increments for "Add to cart".
+  async getItemQty(
+    identifier: string | Types.ObjectId,
+    productId: string,
+    variantId?: string,
+  ): Promise<number> {
+    const filter = typeof identifier === 'string'
+      ? { guestSessionId: identifier }
+      : { userId: identifier };
+
+    const cart = await Cart.findOne(filter).exec();
+    if (!cart) return 0;
+
+    const item = cart.items.find(
+      (i) =>
+        i.productId.toString() === productId &&
+        (i.variantId?.toString() === variantId || (!i.variantId && !variantId)),
+    );
+    return item?.qty ?? 0;
   }
 
   // Upsert item for both guest and user
@@ -101,62 +123,62 @@ export class CartRepository {
     await Cart.findOneAndUpdate(filter, { $set: { items: [] } }).exec();
   }
 
-  // Merge guest cart to user cart on login
+  // Merge guest cart to user cart on login.
+  // Always returns a fully populated cart (or null when neither cart exists) so
+  // the caller can format a correct view — every branch below funnels through
+  // the single populated read at the end.
   async mergeOnLogin(guestSessionId: string, userId: Types.ObjectId): Promise<ICartDoc | null> {
     const guestCart = await Cart.findOne({ guestSessionId }).exec();
     const userCart = await Cart.findOne({ userId }).exec();
 
-    if (!guestCart) {
-      // No guest cart - return user cart as is
-      return userCart;
-    }
-
-    if (!userCart) {
-      // No user cart - convert guest cart to user cart
-      return Cart.findOneAndUpdate(
-        { guestSessionId },
-        {
-          $unset: { guestSessionId: 1 },
-          $set: { userId },
-        },
-        { new: true }
+    if (guestCart && !userCart) {
+      // No user cart yet — adopt the guest cart as the user's cart in place.
+      await Cart.updateOne(
+        { _id: guestCart._id },
+        { $unset: { guestSessionId: 1 }, $set: { userId } },
       ).exec();
-    }
+    } else if (guestCart && userCart) {
+      // Both exist — UNION of the two carts: every distinct item appears once,
+      // and for an item present in both we keep the HIGHER quantity (no summing,
+      // no cap). The user's saved cart is the base; guest-only items add on top
+      // so nothing the guest put in the cart is lost.
+      const merged = new Map<string, ICartItem>();
 
-    // Both exist - merge items (take max qty for duplicates)
-    const merged = new Map<string, any>();
+      const keyOf = (item: ICartItem) =>
+        `${item.productId.toString()}-${item.variantId?.toString() || 'none'}`;
+      const toPlain = (item: ICartItem): ICartItem => ({
+        productId: item.productId,
+        slug: item.slug,
+        variantId: item.variantId,
+        qty: item.qty,
+        addedAt: item.addedAt,
+      });
 
-    // Add all guest items
-    for (const item of guestCart.items) {
-      const key = `${item.productId.toString()}-${item.variantId?.toString() || 'none'}`;
-      merged.set(key, item);
-    }
-
-    // Merge user items (take max qty)
-    for (const item of userCart.items) {
-      const key = `${item.productId.toString()}-${item.variantId?.toString() || 'none'}`;
-      const existing = merged.get(key);
-      if (existing) {
-        existing.qty = Math.max(existing.qty, item.qty);
-      } else {
-        merged.set(key, item);
+      for (const item of userCart.items) {
+        merged.set(keyOf(item), toPlain(item));
       }
+      for (const item of guestCart.items) {
+        const existing = merged.get(keyOf(item));
+        if (existing) {
+          existing.qty = Math.max(existing.qty, item.qty);
+        } else {
+          merged.set(keyOf(item), toPlain(item));
+        }
+      }
+
+      await Cart.updateOne(
+        { _id: userCart._id },
+        { $set: { items: Array.from(merged.values()) } },
+      ).exec();
+      await Cart.deleteOne({ _id: guestCart._id }).exec();
     }
+    // else: no guest cart — nothing to merge; fall through to return user cart.
 
-    // Update user cart with merged items
-    await Cart.findByIdAndUpdate(userCart._id, {
-      items: Array.from(merged.values()),
-    }).exec();
-
-    // Delete guest cart
-    await Cart.deleteOne({ guestSessionId }).exec();
-
-    // Repopulate and return
-    const mergedCart = await Cart.findById(userCart._id)
+    // Single populated read for every path above.
+    return Cart.findOne({ userId })
       .populate('items.productId', 'name slug images basePrice category collections status shortDescription description discountedPrice')
       .populate('items.variantId', 'name price discountedPrice')
       .exec();
-    return mergedCart as ICartDoc;
   }
 
   // Delete old guest carts (called by background job)

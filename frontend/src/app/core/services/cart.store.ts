@@ -5,7 +5,6 @@ import {
   pairwise,
   filter,
   switchMap,
-  startWith,
   Observable,
   tap,
   finalize,
@@ -159,7 +158,10 @@ export class CartStore {
     // AND merge guest cart into user cart
     toObservable(this.auth.isLoggedIn)
       .pipe(
-        startWith(false),
+        // No startWith(false): rely on pairwise so we only fire on a genuine
+        // guest→login transition within the session. A page reload while
+        // already logged in emits a single `true` and pairwise never fires,
+        // so we don't re-run the merge on every reload.
         pairwise(),
         filter(([prev, curr]) => !prev && curr), // false → true (login)
       )
@@ -186,8 +188,9 @@ export class CartStore {
             },
             error: () => {
               this._merging.set(false);
-              // Keep using guestSessionId, try merge again
-              this.loadCart();
+              // Keep using guestSessionId; reload cart so the UI reflects
+              // server state (loadCart returns a cold observable — must subscribe).
+              this.loadCart().subscribe();
             },
           });
         }
@@ -195,7 +198,8 @@ export class CartStore {
 
     toObservable(this.auth.isLoggedIn)
       .pipe(
-        startWith(false),
+        // See cart-merge note above: no startWith(false), so this only fires on
+        // a real guest→login transition, not on every reload.
         pairwise(),
         filter(([prev, curr]) => !prev && curr),
         switchMap(() => {
@@ -212,6 +216,32 @@ export class CartStore {
         next: (res) => this.applyWishlist(res.data),
         error: () => this.loadWishlist(),
       });
+
+    // ON LOGOUT (isLoggedIn true → false): the sessionId currently holds the
+    // userId, and headers() stops sending X-Session-ID, which the backend
+    // rejects for guests. Reset to a fresh guest session so cart/wishlist keep
+    // working without a page reload.
+    toObservable(this.auth.isLoggedIn)
+      .pipe(
+        pairwise(),
+        filter(([prev, curr]) => prev && !curr), // true → false (logout)
+      )
+      .subscribe(() => this.resetToGuestSession());
+  }
+
+  // Start a brand-new empty guest session (used after logout). The previous
+  // guest cart was consumed by the login merge, so we mint a fresh id rather
+  // than resurrecting a stale one.
+  private resetToGuestSession(): void {
+    const id = crypto.randomUUID();
+    this.platform.localStorage.setItem('guestSessionId', id);
+    this._sessionId.set(id);
+    this._cartType.set('guest');
+    this._cartItems.set([]);
+    this._wishlistItems.set([]);
+    this._wishlistIds.set(new Set());
+    this.loadCart().subscribe();
+    this.loadWishlist();
   }
 
   // ─── Cart Actions ──────────────────────────────────────────────────────────

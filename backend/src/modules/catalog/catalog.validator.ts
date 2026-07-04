@@ -143,6 +143,7 @@ export const createProductSchema = z.object({
     badgeText: z.string().trim().max(50).optional(),
     stock: z.coerce.number().int().min(0).optional(),
     trackInventory: z.boolean().optional(),
+    hasVariants: z.boolean().optional(),
   }),
 });
 
@@ -171,6 +172,7 @@ export const updateProductSchema = z.object({
     badgeText: z.string().trim().max(50).optional(),
     stock: z.coerce.number().int().min(0).optional(),
     trackInventory: z.boolean().optional(),
+    hasVariants: z.boolean().optional(),
   }),
 });
 
