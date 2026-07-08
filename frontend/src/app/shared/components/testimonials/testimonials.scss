@@ -201,30 +201,6 @@
   }
 }
 
-.card-product {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-top: 16px;
-  border-top: 1px solid #F3F4F6;
-  margin-top: auto;
-}
-
-.product-thumbnail {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
-  object-fit: cover;
-  background-color: #F3F4F6;
-}
-
-.product-name {
-  font-family: $font-family-body;
-  font-size: 13px;
-  font-weight: 600;
-  color: #374151;
-}
-
 // ── Navigation Arrows ──
 .carousel-arrow {
   position: absolute;
