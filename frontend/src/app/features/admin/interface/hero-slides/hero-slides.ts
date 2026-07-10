@@ -16,7 +16,7 @@ const emptyForm = (): SlideForm => ({
   title: '', subtitle: '', ctaText: '', ctaLink: '', textAlign: 'center', isActive: true,
 });
 
-const MAX_HERO_IMAGE_SIZE = 2 * 1024 * 1024; // 2 MB
+const MAX_HERO_IMAGE_SIZE = 3 * 1024 * 1024; // 3 MB
 
 @Component({
   selector: 'app-hero-slides',
@@ -91,7 +91,7 @@ export class HeroSlidesComponent implements OnInit {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
     if (file.size > MAX_HERO_IMAGE_SIZE) {
-      this.formError.set(`${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds the 2MB limit`);
+      this.formError.set(`${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds the 3MB limit`);
       (event.target as HTMLInputElement).value = '';
       return;
     }
@@ -158,7 +158,7 @@ export class HeroSlidesComponent implements OnInit {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
     if (file.size > MAX_HERO_IMAGE_SIZE) {
-      this.formError.set(`${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds the 2MB limit`);
+      this.formError.set(`${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds the 3MB limit`);
       (event.target as HTMLInputElement).value = '';
       return;
     }
