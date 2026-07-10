@@ -95,9 +95,13 @@ function attributesToRecord(attrs: Map<string, string> | undefined): Record<stri
 }
 
 function extractCategory(product: IProductDoc) {
-  const category = product.category as unknown as ICategoryDoc;
+  const category = product.category as unknown as ICategoryDoc | null;
+  // category can be null when the referenced category was deleted
+  if (!category) {
+    return { _id: '', name: '', slug: '' };
+  }
   return {
-    _id: category._id?.toString() ?? product.category.toString(),
+    _id: category._id?.toString() ?? category.toString(),
     name: category.name ?? '',
     slug: category.slug ?? '',
   };
