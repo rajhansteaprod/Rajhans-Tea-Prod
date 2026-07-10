@@ -16,6 +16,8 @@ const emptyForm = (): SlideForm => ({
   title: '', subtitle: '', ctaText: '', ctaLink: '', textAlign: 'center', isActive: true,
 });
 
+const MAX_HERO_IMAGE_SIZE = 2 * 1024 * 1024; // 2 MB
+
 @Component({
   selector: 'app-hero-slides',
   standalone: true,
@@ -88,6 +90,11 @@ export class HeroSlidesComponent implements OnInit {
   onCreateFileSelect(event: Event, type: 'desktop' | 'mobile') {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
+    if (file.size > MAX_HERO_IMAGE_SIZE) {
+      this.formError.set(`${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds the 2MB limit`);
+      (event.target as HTMLInputElement).value = '';
+      return;
+    }
     const url = URL.createObjectURL(file);
     if (type === 'desktop') {
       this.createDesktopFile = file;
@@ -150,6 +157,11 @@ export class HeroSlidesComponent implements OnInit {
   onEditFileSelect(event: Event, type: 'desktop' | 'mobile') {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
+    if (file.size > MAX_HERO_IMAGE_SIZE) {
+      this.formError.set(`${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds the 2MB limit`);
+      (event.target as HTMLInputElement).value = '';
+      return;
+    }
     const url = URL.createObjectURL(file);
     if (type === 'desktop') {
       this.editDesktopFile = file;
