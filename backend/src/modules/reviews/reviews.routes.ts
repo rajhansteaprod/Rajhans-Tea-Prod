@@ -13,6 +13,7 @@ import {
   reportSchema,
   adminReplySchema,
   rejectSchema,
+  adminCreateReviewSchema,
 } from './reviews.validator';
 
 const router = Router();
@@ -32,6 +33,8 @@ router.get(
   ctrl.getRatingSummary,
 );
 router.get('/reviews/products/:productId/qa', validate(productIdSchema), ctrl.getProductQA);
+// Batch rating summaries for listing pages (?productIds=id1,id2,...)
+router.get('/reviews/summaries', ctrl.getRatingSummaries);
 
 // ===========================================================================
 // AUTHENTICATED
@@ -89,6 +92,12 @@ const adminRouter = Router();
 adminRouter.use(authenticate);
 adminRouter.use(authorize('admin'));
 
+adminRouter.post(
+  '/reviews/products/:productId/reviews',
+  validate(adminCreateReviewSchema),
+  ctrl.adminCreateReview,
+);
+adminRouter.delete('/reviews/reviews/:reviewId', validate(reviewIdSchema), ctrl.adminDeleteReview);
 adminRouter.get('/reviews/moderation', ctrl.adminGetModeration);
 adminRouter.patch('/reviews/reviews/:id/approve', ctrl.adminApproveReview);
 adminRouter.patch('/reviews/reviews/:id/reject', validate(rejectSchema), ctrl.adminRejectReview);

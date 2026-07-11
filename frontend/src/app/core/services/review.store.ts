@@ -6,8 +6,9 @@ import { environment } from '../../../environments/environment';
 interface ApiResponse<T> { success: boolean; data: T; }
 interface PaginatedResponse<T> { success: boolean; data: T[]; meta: any; }
 
-export interface Review { _id: string; userId: any; productId: any; rating: number; title: string; body: string; images: string[]; isVerifiedPurchase: boolean; status: string; helpfulVotes: number; reportCount: number; adminReply: { body: string; repliedAt: string } | null; isPinned: boolean; createdAt: string; }
+export interface Review { _id: string; userId: any; productId: any; reviewerName?: string; rating: number; title: string; body: string; images: string[]; isVerifiedPurchase: boolean; status: string; helpfulVotes: number; reportCount: number; adminReply: { body: string; repliedAt: string } | null; isPinned: boolean; createdAt: string; }
 export interface RatingSummary { averageRating: number; totalReviews: number; distribution: { 1: number; 2: number; 3: number; 4: number; 5: number }; ratingOneLiner?: string; }
+export interface ProductRatingSummary { productId: string; averageRating: number; totalReviews: number; }
 export interface Question { _id: string; userId: any; productId: any; questionText: string; voteCount: number; answers: { _id: string; userId: any; body: string; isAdminAnswer: boolean; createdAt: string }[]; createdAt: string; }
 
 @Injectable({ providedIn: 'root' })
@@ -17,7 +18,7 @@ export class ReviewStore {
 
   // Public
   getProductReviews(productId: string, params: any = {}): Observable<PaginatedResponse<Review>> {
-    let url = `${this.api}/reviews/products/${productId}/reviews?limit=10`;
+    let url = `${this.api}/reviews/products/${productId}/reviews?limit=${params.limit ?? 10}`;
     if (params.page) url += `&page=${params.page}`;
     if (params.sort) url += `&sort=${params.sort}`;
     if (params.rating) url += `&rating=${params.rating}`;
@@ -26,6 +27,11 @@ export class ReviewStore {
 
   getRatingSummary(productId: string): Observable<ApiResponse<RatingSummary>> {
     return this.http.get<ApiResponse<RatingSummary>>(`${this.api}/reviews/products/${productId}/summary`);
+  }
+
+  /** Batch summaries for listing pages — one request for all visible cards */
+  getSummaries(productIds: string[]): Observable<ApiResponse<ProductRatingSummary[]>> {
+    return this.http.get<ApiResponse<ProductRatingSummary[]>>(`${this.api}/reviews/summaries?productIds=${productIds.join(',')}`);
   }
 
   getProductQA(productId: string, page = 1): Observable<PaginatedResponse<Question>> {
@@ -66,6 +72,10 @@ export class ReviewStore {
     return this.http.get<PaginatedResponse<any>>(`${this.api}/admin/reviews/moderation?type=${type}&page=${page}&limit=20`);
   }
 
+  adminCreateReview(productId: string, data: { reviewerName: string; rating: number; reviewText?: string; images?: string[] }): Observable<ApiResponse<Review>> {
+    return this.http.post<ApiResponse<Review>>(`${this.api}/admin/reviews/products/${productId}/reviews`, data);
+  }
+  adminDeleteReview(reviewId: string): Observable<any> { return this.http.delete(`${this.api}/admin/reviews/reviews/${reviewId}`); }
   approveReview(id: string): Observable<any> { return this.http.patch(`${this.api}/admin/reviews/reviews/${id}/approve`, {}); }
   rejectReview(id: string, reason: string): Observable<any> { return this.http.patch(`${this.api}/admin/reviews/reviews/${id}/reject`, { reason }); }
   replyToReview(id: string, body: string): Observable<any> { return this.http.post(`${this.api}/admin/reviews/reviews/${id}/reply`, { body }); }

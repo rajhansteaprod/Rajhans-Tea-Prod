@@ -7,9 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "build:ssr": "npm run build && npm run build:server",
-    "build:server": "tsc -p tsconfig.server.json",
-    "serve:ssr": "node dist/frontend/server/server.js",
+    "build:ssr": "ng build",
+    "serve:ssr": "node dist/frontend/server/server.mjs",
     "dev:ssr": "nodemon"
   },
   "prettier": {

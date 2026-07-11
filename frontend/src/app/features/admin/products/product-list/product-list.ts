@@ -7,7 +7,7 @@ import {
   CreateProductPayload, UpdateProductPayload,
   InlineVariant, VariantOption,
 } from '../../../../core/services/catalog.service';
-import { ReviewStore } from '../../../../core/services/review.store';
+import { ReviewStore, Review } from '../../../../core/services/review.store';
 
 interface AttributeEntry { key: string; value: string; }
 
@@ -90,6 +90,17 @@ export class ProductListComponent implements OnInit, OnDestroy {
   form           = signal<ProductForm>(emptyForm());
   ratingSummarySaving = signal(false);
   ratingSummaryError = signal('');
+
+  // ── Admin-managed reviews (visible when editing a product) ──
+  productReviews       = signal<Review[]>([]);
+  productReviewsLoading = signal(false);
+  newReviewerName      = signal('');
+  newReviewRating      = signal(5);
+  newReviewText        = signal('');
+  newReviewImages      = signal<string[]>([]);
+  uploadingReviewImage = signal(false);
+  reviewSaving         = signal(false);
+  reviewError          = signal('');
 
   // ── Dictionary-driven variant options (inline in the product form) ──
   variantOptions      = signal<VariantOption[]>([]);
@@ -233,6 +244,135 @@ export class ProductListComponent implements OnInit, OnDestroy {
         // Silently fail - rating summary is optional
       },
     });
+
+    // Load reviews for the admin reviews section
+    this.loadProductReviews(product._id);
+  }
+
+  // ── Admin-managed reviews ──
+  private loadProductReviews(productId: string) {
+    this.productReviewsLoading.set(true);
+    this.newReviewerName.set('');
+    this.newReviewRating.set(5);
+    this.newReviewText.set('');
+    this.newReviewImages.set([]);
+    this.reviewError.set('');
+    this.reviews.getProductReviews(productId, { limit: 100 }).subscribe({
+      next: (res) => {
+        this.productReviews.set(res.data || []);
+        this.productReviewsLoading.set(false);
+      },
+      error: () => this.productReviewsLoading.set(false),
+    });
+  }
+
+  /** Uploads review images through the same /admin/uploads endpoint as product images */
+  onReviewImageSelect(event: Event) {
+    const files = (event.target as HTMLInputElement).files;
+    if (!files || files.length === 0) return;
+
+    const MAX_FILE_SIZE = 3 * 1024 * 1024; // matches product image limit
+    const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const MAX_REVIEW_IMAGES = 4;
+
+    if (this.newReviewImages().length + files.length > MAX_REVIEW_IMAGES) {
+      this.reviewError.set(`Maximum of ${MAX_REVIEW_IMAGES} images per review.`);
+      (event.target as HTMLInputElement).value = '';
+      return;
+    }
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        this.reviewError.set(`${file.name}: only JPEG, PNG, and WebP images are allowed.`);
+        (event.target as HTMLInputElement).value = '';
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        this.reviewError.set(`${file.name} exceeds the 3MB limit.`);
+        (event.target as HTMLInputElement).value = '';
+        return;
+      }
+    }
+
+    this.reviewError.set('');
+    this.uploadingReviewImage.set(true);
+    let done = 0;
+    const total = files.length;
+    for (let i = 0; i < total; i++) {
+      const file = files[i];
+      this.catalog.uploadImage(file).subscribe({
+        next: (res) => {
+          this.newReviewImages.update((imgs) => [...imgs, res.data.url]);
+          if (++done === total) {
+            this.uploadingReviewImage.set(false);
+            (event.target as HTMLInputElement).value = '';
+          }
+        },
+        error: (err) => {
+          this.reviewError.set(err?.error?.message ?? `Upload failed for ${file.name}`);
+          if (++done === total) {
+            this.uploadingReviewImage.set(false);
+            (event.target as HTMLInputElement).value = '';
+          }
+        },
+      });
+    }
+  }
+
+  removeReviewImage(index: number) {
+    this.newReviewImages.update((imgs) => imgs.filter((_, i) => i !== index));
+  }
+
+  addProductReview() {
+    const productId = this.editingId();
+    const name = this.newReviewerName().trim();
+    const rating = this.newReviewRating();
+    if (!productId) return;
+    if (!name) {
+      this.reviewError.set('Reviewer name is required');
+      return;
+    }
+    this.reviewSaving.set(true);
+    this.reviewError.set('');
+    this.reviews.adminCreateReview(productId, {
+      reviewerName: name,
+      rating,
+      reviewText: this.newReviewText().trim() || undefined,
+      images: this.newReviewImages().length ? this.newReviewImages() : undefined,
+    }).subscribe({
+      next: () => {
+        this.reviewSaving.set(false);
+        this.newReviewerName.set('');
+        this.newReviewRating.set(5);
+        this.newReviewText.set('');
+        this.newReviewImages.set([]);
+        this.loadProductReviews(productId);
+      },
+      error: (err) => {
+        this.reviewSaving.set(false);
+        this.reviewError.set(err?.error?.message ?? 'Failed to add review');
+      },
+    });
+  }
+
+  deleteProductReview(reviewId: string) {
+    const productId = this.editingId();
+    if (!productId || !confirm('Delete this review?')) return;
+    this.reviews.adminDeleteReview(reviewId).subscribe({
+      next: () => this.loadProductReviews(productId),
+      error: (err) => this.reviewError.set(err?.error?.message ?? 'Failed to delete review'),
+    });
+  }
+
+  reviewerDisplayName(review: Review): string {
+    if (review.reviewerName) return review.reviewerName;
+    const u = review.userId;
+    if (u && typeof u === 'object') {
+      const name = [u.firstName, u.lastName].filter(Boolean).join(' ');
+      if (name) return name;
+    }
+    return 'Customer';
   }
 
   closeForm() {

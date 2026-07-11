@@ -1,11 +1,11 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { CatalogService, Product, ProductVariant } from '../../../core/services/catalog.service';
 import { CartStore } from '../../../core/services/cart.store';
-import { ReviewStore, RatingSummary, Review } from '../../../core/services/review.store';
+import { ReviewStore, RatingSummary, Review, ProductRatingSummary } from '../../../core/services/review.store';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -24,6 +24,7 @@ export class ProductDetailComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly meta = inject(Meta);
   private readonly titleService = inject(Title);
+  private readonly document = inject(DOCUMENT);
 
   readonly isLoggedIn = this.authService.isLoggedIn;
 
@@ -34,6 +35,9 @@ export class ProductDetailComponent implements OnInit {
   readonly quantity = signal(1);
   readonly loading = signal(true);
   readonly relatedProducts = signal<Product[]>([]);
+  readonly relatedSummaries = signal<Map<string, ProductRatingSummary>>(new Map());
+  /** Review image shown enlarged in a simple overlay; null = closed */
+  readonly lightboxImage = signal<string | null>(null);
   readonly selectedVariant = signal<ProductVariant | undefined>(undefined);
   readonly hoveredProductId = signal<string | null>(null);
   readonly activeTab = signal<'description' | 'brewing' | 'sourcing' | 'reviews'>('description');
@@ -173,11 +177,35 @@ export class ProductDetailComponent implements OnInit {
           }
 
           // SEO
-          this.titleService.setTitle(`${res.data.name} — Rajhans Tea`);
-          this.meta.updateTag({ name: 'description', content: res.data.shortDescription || res.data.name });
+          const pageTitle = `${res.data.name} — Rajhans Tea`;
+          const pageDescription = res.data.shortDescription || res.data.name;
+          const pageUrl = `https://rajhanstea.com/product/${res.data.slug}`;
+
+          this.titleService.setTitle(pageTitle);
+          this.meta.updateTag({ name: 'description', content: pageDescription });
           this.meta.updateTag({ property: 'og:title', content: res.data.name });
-          this.meta.updateTag({ property: 'og:description', content: res.data.shortDescription || '' });
-          if (res.data.images?.[0]) this.meta.updateTag({ property: 'og:image', content: res.data.images[0] });
+          this.meta.updateTag({ property: 'og:description', content: pageDescription });
+          this.meta.updateTag({ property: 'og:type', content: 'product' });
+          this.meta.updateTag({ property: 'og:url', content: pageUrl });
+          this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
+          this.meta.updateTag({ name: 'twitter:title', content: res.data.name });
+          this.meta.updateTag({ name: 'twitter:description', content: pageDescription });
+          if (res.data.images?.[0]) {
+            // Social crawlers require absolute image URLs
+            const img = res.data.images[0];
+            const absoluteImg = img.startsWith('http') ? img : `https://rajhanstea.com${img.startsWith('/') ? '' : '/'}${img}`;
+            this.meta.updateTag({ property: 'og:image', content: absoluteImg });
+            this.meta.updateTag({ name: 'twitter:image', content: absoluteImg });
+          }
+
+          // Canonical link (Angular's Meta service has no built-in canonical helper)
+          let canonical = this.document.querySelector('link[rel="canonical"]');
+          if (!canonical) {
+            canonical = this.document.createElement('link');
+            canonical.setAttribute('rel', 'canonical');
+            this.document.head.appendChild(canonical);
+          }
+          canonical.setAttribute('href', pageUrl);
 
           // Load rating summary
           this.reviewStore.getRatingSummary(res.data._id).subscribe({
@@ -202,6 +230,7 @@ export class ProductDetailComponent implements OnInit {
                 const filtered = r.data.filter((p) => p._id !== res.data._id);
                 this.relatedProducts.set(filtered.slice(0, 8));
                 this.loading.set(false);
+                this.loadRelatedSummaries(this.relatedProducts().map((p) => p._id));
               },
             });
         },
@@ -329,12 +358,44 @@ export class ProductDetailComponent implements OnInit {
     this.router.navigate(['/product', product.slug]);
   }
 
-  // ─ Helper methods for recommendation cards ─
-  getRating(): number {
-    return 5;
+  // ─ Real rating summaries for recommendation cards ─
+  private loadRelatedSummaries(ids: string[]): void {
+    if (!ids.length) return;
+    this.reviewStore.getSummaries(ids).subscribe({
+      next: (res) => {
+        const map = new Map(this.relatedSummaries());
+        for (const s of res.data || []) map.set(s.productId, s);
+        this.relatedSummaries.set(map);
+      },
+      error: () => { /* ratings are non-critical */ },
+    });
   }
 
-  getReviewCount(): number {
-    return this.ratingSummary()?.totalReviews ?? 0;
+  ratingFor(productId: string): number {
+    return this.relatedSummaries().get(productId)?.averageRating ?? 0;
+  }
+
+  roundedRatingFor(productId: string): number {
+    return Math.round(this.ratingFor(productId));
+  }
+
+  /** Whole-star fill for the main product's average rating */
+  mainRoundedRating(): number {
+    return Math.round(this.ratingSummary()?.averageRating ?? 0);
+  }
+
+  reviewCountFor(productId: string): number {
+    return this.relatedSummaries().get(productId)?.totalReviews ?? 0;
+  }
+
+  /** Display name for a review: admin-entered name, else the reviewer's account name */
+  reviewerNameFor(review: Review): string {
+    if (review.reviewerName) return review.reviewerName;
+    const u = review.userId;
+    if (u && typeof u === 'object') {
+      const name = [u.firstName, u.lastName].filter(Boolean).join(' ');
+      if (name) return name;
+    }
+    return 'Verified Customer';
   }
 }

@@ -67,6 +67,10 @@ export class ReviewService {
     return this.repo.getRatingSummary(productId);
   }
 
+  async getSummariesForProducts(productIds: string[]) {
+    return this.repo.getSummariesByProductIds(productIds);
+  }
+
   async getMyReviews(userId: string, query: { page?: number; limit?: number } = {}) {
     return this.repo.findByUser(userId, query);
   }
@@ -124,6 +128,38 @@ export class ReviewService {
   }
 
   // ─── Admin ────────────────────────────────────────────────────────────────
+
+  /**
+   * Admin manually enters a review (reviewer name + rating only).
+   * Uses a synthetic userId so the unique {userId, productId} index (one
+   * review per real user per product) never collides for admin entries.
+   * Approved immediately so it counts toward the rating summary.
+   */
+  async adminCreateReview(
+    productId: string,
+    data: { reviewerName: string; rating: number; reviewText?: string; images?: string[] },
+  ) {
+    const review = await this.repo.create({
+      userId: new Types.ObjectId(),
+      productId: new Types.ObjectId(productId),
+      reviewerName: data.reviewerName,
+      rating: data.rating,
+      body: data.reviewText?.trim() || '',
+      images: data.images || [],
+      status: 'approved',
+    });
+    await this.repo.computeRatingSummary(productId);
+    return review;
+  }
+
+  /** Admin deletes any review (no ownership check) and recomputes the summary */
+  async adminDeleteReview(reviewId: string): Promise<void> {
+    const review = await this.repo.findById(reviewId);
+    if (!review) throw new NotFoundError('Review not found');
+    const productId = review.productId.toString();
+    await this.repo.deleteById(reviewId);
+    await this.repo.computeRatingSummary(productId);
+  }
 
   async getModerationQueue(query: { page?: number; limit?: number; status?: string } = {}) {
     return this.repo.findModerationQueue(query as any);

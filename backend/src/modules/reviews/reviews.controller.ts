@@ -25,6 +25,13 @@ export const getRatingSummary = async (req: Request, res: Response) => {
   sendSuccess(res, summary);
 };
 
+export const getRatingSummaries = async (req: Request, res: Response) => {
+  const idsParam = (req.query['productIds'] as string | undefined) ?? '';
+  const productIds = idsParam.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 100);
+  const summaries = await reviewService.getSummariesForProducts(productIds);
+  sendSuccess(res, summaries, 'Rating summaries');
+};
+
 export const getProductQA = async (req: Request, res: Response) => {
   const productId = req.params['productId'] as string;
   const { page, limit } = req.query as Record<string, string | undefined>;
@@ -97,6 +104,23 @@ export const getMyReviews = async (req: Request, res: Response) => {
 };
 
 // ─── Admin ───────────────────────────────────────────────────────────────────
+
+export const adminCreateReview = async (req: Request, res: Response) => {
+  const productId = req.params['productId'] as string;
+  const { reviewerName, rating, reviewText, images } = req.body;
+  const review = await reviewService.adminCreateReview(productId, {
+    reviewerName,
+    rating,
+    reviewText,
+    images,
+  });
+  sendCreated(res, review, 'Review created');
+};
+
+export const adminDeleteReview = async (req: Request, res: Response) => {
+  await reviewService.adminDeleteReview(req.params['reviewId'] as string);
+  sendNoContent(res);
+};
 
 export const adminGetModeration = async (req: Request, res: Response) => {
   const { page, limit, type } = req.query as Record<string, string | undefined>;

@@ -38,8 +38,11 @@ jobs:
       - name: Build and push Frontend image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./frontend/Dockerfile
+          # SSR build (Express + Angular Universal). Rollback: switch back to
+          # context: . / file: ./frontend/Dockerfile (static nginx build) and
+          # revert the tea-frontend proxy port in nginx.prod.conf to 80.
+          context: ./frontend
+          file: ./frontend/Dockerfile.ssr
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/rajhans-tea-frontend:latest
           cache-from: type=gha

@@ -730,6 +730,20 @@
   text-transform: uppercase;
 }
 
+.pd__review-author {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: #111827;
+}
+
+.pd__reviews-average {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  color: #4b5563;
+  margin: 4px 0 16px 0;
+}
+
 .pd__review-title {
   font-family: $font-family-heading;
   font-size: $font-size-md;
@@ -760,6 +774,52 @@
   object-fit: cover;
   border-radius: 2px;
   border: 1px solid rgba($color-mono-dark, 0.1);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+// ── Review image lightbox ──
+.pd__lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  cursor: zoom-out;
+}
+
+.pd__lightbox-img {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 4px;
+  cursor: default;
+}
+
+.pd__lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
 }
 
 .pd__review-footer {

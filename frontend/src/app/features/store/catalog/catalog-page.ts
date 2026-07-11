@@ -1,10 +1,11 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { SearchStore } from '../../../core/services/search.store';
 import { CartStore } from '../../../core/services/cart.store';
 import { CatalogService, VariantOption } from '../../../core/services/catalog.service';
+import { ReviewStore, ProductRatingSummary } from '../../../core/services/review.store';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { ScrollRevealDirective } from '../../../shared/directives/scroll-reveal.directive';
@@ -24,9 +25,40 @@ export class CatalogPageComponent implements OnInit {
   private readonly cart = inject(CartStore);
   private readonly router = inject(Router);
   private readonly catalog = inject(CatalogService);
+  private readonly reviewStore = inject(ReviewStore);
 
   categoryName = '';
   readonly hoveringProducts = signal<Set<string>>(new Set());
+  readonly ratingSummaries = signal<Map<string, ProductRatingSummary>>(new Map());
+
+  constructor() {
+    // Fetch real rating summaries whenever the visible result set changes
+    effect(() => {
+      const ids = this.store.results().map((p: any) => p._id);
+      const missing = ids.filter((id: string) => !this.ratingSummaries().has(id));
+      if (missing.length) this.loadRatingSummaries(missing);
+    });
+  }
+
+  private loadRatingSummaries(ids: string[]): void {
+    this.reviewStore.getSummaries(ids).subscribe({
+      next: (res) => {
+        const map = new Map(this.ratingSummaries());
+        for (const id of ids) if (!map.has(id)) map.set(id, { productId: id, averageRating: 0, totalReviews: 0 });
+        for (const s of res.data || []) map.set(s.productId, s);
+        this.ratingSummaries.set(map);
+      },
+      error: () => { /* ratings are non-critical */ },
+    });
+  }
+
+  ratingFor(productId: string): number {
+    return this.ratingSummaries().get(productId)?.averageRating ?? 0;
+  }
+
+  reviewCountFor(productId: string): number {
+    return this.ratingSummaries().get(productId)?.totalReviews ?? 0;
+  }
 
   // Variant option facet filters
   readonly variantOptions = signal<VariantOption[]>([]);
@@ -85,9 +117,6 @@ export class CatalogPageComponent implements OnInit {
   isWishlisted(productId: string): boolean {
     return false;
   }
-
-  getRating = (): number => 4;
-  getReviewCount = (): number => 0;
 
   toggleWishlist(product: any, event: Event): void {
     event.stopPropagation();

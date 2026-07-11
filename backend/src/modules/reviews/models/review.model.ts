@@ -11,6 +11,8 @@ export interface IAdminReply {
 export interface IReviewDoc extends Document {
   userId: Types.ObjectId;
   productId: Types.ObjectId;
+  /** Display name for admin-entered reviews (no real user account behind them) */
+  reviewerName?: string;
   rating: number;
   title: string;
   body: string;
@@ -30,9 +32,13 @@ const reviewSchema = new Schema<IReviewDoc>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+    reviewerName: { type: String, trim: true, maxlength: 100 },
     rating: { type: Number, required: true, min: 1, max: 5 },
-    title: { type: String, required: true, trim: true, maxlength: 200 },
-    body: { type: String, required: true, trim: true, maxlength: 5000 },
+    // title/body are optional at the model level so admin-entered reviews
+    // (name + rating only) can exist; the customer submission API still
+    // requires both via submitReviewSchema (zod).
+    title: { type: String, default: '', trim: true, maxlength: 200 },
+    body: { type: String, default: '', trim: true, maxlength: 5000 },
     images: [{ type: String }],
     isVerifiedPurchase: { type: Boolean, default: false },
     status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },

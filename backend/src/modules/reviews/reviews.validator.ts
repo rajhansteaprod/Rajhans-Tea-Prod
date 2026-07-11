@@ -16,6 +16,17 @@ export const submitReviewSchema = z.object({
   }),
 });
 
+export const adminCreateReviewSchema = z.object({
+  params: z.object({ productId: mongoId }),
+  body: z.object({
+    reviewerName: z.string().min(1).max(100),
+    rating: z.number({ coerce: true }).int().min(1).max(5),
+    reviewText: z.string().max(1000).optional(),
+    // Image URLs from the existing /admin/uploads endpoint (not raw files)
+    images: z.array(z.string().max(500)).max(4).optional(),
+  }),
+});
+
 export const submitQuestionSchema = z.object({
   params: z.object({ productId: mongoId }),
   body: z.object({

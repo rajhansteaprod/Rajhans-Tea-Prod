@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
 import { CatalogService, Product, Category } from '../../../core/services/catalog.service';
 import { CartStore } from '../../../core/services/cart.store';
+import { ReviewStore, ProductRatingSummary } from '../../../core/services/review.store';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card';
 import { ScrollRevealDirective } from '../../../shared/directives/scroll-reveal.directive';
 
@@ -23,9 +24,11 @@ export class ProductsPageComponent implements OnInit {
   private readonly catalog = inject(CatalogService);
   private readonly cartStore = inject(CartStore);
   private readonly titleService = inject(Title);
+  private readonly reviewStore = inject(ReviewStore);
 
   // State
   readonly products = signal<Product[]>([]);
+  readonly ratingSummaries = signal<Map<string, ProductRatingSummary>>(new Map());
   readonly categories = signal<Category[]>([]);
   readonly loading = signal(true);
   readonly totalProducts = signal(0);
@@ -117,11 +120,34 @@ export class ProductsPageComponent implements OnInit {
         this.totalProducts.set(res.meta.total);
         this.totalPages.set(res.meta.totalPages);
         this.loading.set(false);
+        this.loadRatingSummaries(res.data.map((p) => p._id));
       },
       error: () => {
         this.loading.set(false);
       },
     });
+  }
+
+  private loadRatingSummaries(ids: string[]): void {
+    const missing = ids.filter((id) => !this.ratingSummaries().has(id));
+    if (!missing.length) return;
+    this.reviewStore.getSummaries(missing).subscribe({
+      next: (res) => {
+        const map = new Map(this.ratingSummaries());
+        for (const id of missing) if (!map.has(id)) map.set(id, { productId: id, averageRating: 0, totalReviews: 0 });
+        for (const s of res.data || []) map.set(s.productId, s);
+        this.ratingSummaries.set(map);
+      },
+      error: () => { /* ratings are non-critical */ },
+    });
+  }
+
+  ratingFor(productId: string): number {
+    return this.ratingSummaries().get(productId)?.averageRating ?? 0;
+  }
+
+  reviewCountFor(productId: string): number {
+    return this.ratingSummaries().get(productId)?.totalReviews ?? 0;
   }
 
   selectCategory(catId: string | null): void {
@@ -236,14 +262,6 @@ export class ProductsPageComponent implements OnInit {
 
   isHovering(productId: string): boolean {
     return this.hoveredProductId() === productId;
-  }
-
-  getRating(): number {
-    return 5;
-  }
-
-  getReviewCount(): number {
-    return 0;
   }
 
   goToProduct(product: Product): void {

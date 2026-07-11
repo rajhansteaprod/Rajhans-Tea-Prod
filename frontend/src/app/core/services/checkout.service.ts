@@ -175,7 +175,7 @@ export class CheckoutService {
 
   constructor() {
     // Load address from localStorage on init
-    const saved = localStorage.getItem('checkout_address');
+    const saved = this.platform.localStorage.getItem('checkout_address');
     if (saved) {
       try {
         const data = JSON.parse(saved);
@@ -223,7 +223,7 @@ export class CheckoutService {
   saveAddress(address: CheckoutAddress) {
     this.addressSignal.set({ ...address });
     // Persist to localStorage for recovery on page reload
-    localStorage.setItem('checkout_address', JSON.stringify(address));
+    this.platform.localStorage.setItem('checkout_address', JSON.stringify(address));
   }
 
   // Get current address

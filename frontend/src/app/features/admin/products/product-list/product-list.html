@@ -188,6 +188,84 @@
                 placeholder="Comma-separated attributes" maxlength="300" />
             </div>
 
+            <!-- Reviews management (existing products only) -->
+            @if (editingId()) {
+              <div class="form-field span-3">
+                <label class="form-label">Reviews <span class="hint">(shown on the product page; average &amp; count update automatically)</span></label>
+
+                @if (productReviewsLoading()) {
+                  <p class="hint">Loading reviews…</p>
+                } @else if (productReviews().length === 0) {
+                  <p class="hint">No reviews yet.</p>
+                } @else {
+                  <div class="admin-reviews-list">
+                    @for (r of productReviews(); track r._id) {
+                      <div class="admin-review-row">
+                        <div class="admin-review-main">
+                          <div class="admin-review-line">
+                            <span class="admin-review-name">{{ reviewerDisplayName(r) }}</span>
+                            <span class="admin-review-stars">
+                              @for (i of [1,2,3,4,5]; track i) {<span [class.filled]="i <= r.rating">★</span>}
+                            </span>
+                            <span class="admin-review-date">{{ r.createdAt | date: 'MMM dd, yyyy' }}</span>
+                          </div>
+                          @if (r.body) {
+                            <p class="admin-review-text">{{ r.body }}</p>
+                          }
+                          @if (r.images?.length) {
+                            <div class="admin-review-thumbs">
+                              @for (img of r.images; track img) {
+                                <img [src]="img" class="admin-review-thumb" alt="Review image" />
+                              }
+                            </div>
+                          }
+                        </div>
+                        <button type="button" class="variant-inline__remove" (click)="deleteProductReview(r._id)" title="Delete review">×</button>
+                      </div>
+                    }
+                  </div>
+                }
+
+                <div class="admin-review-add">
+                  <input class="form-input" type="text" placeholder="Reviewer name"
+                    [ngModel]="newReviewerName()" (ngModelChange)="newReviewerName.set($event)" maxlength="100" />
+                  <select class="form-input" [ngModel]="newReviewRating()" (ngModelChange)="newReviewRating.set(+$event)">
+                    <option [value]="5">5 ★</option>
+                    <option [value]="4">4 ★</option>
+                    <option [value]="3">3 ★</option>
+                    <option [value]="2">2 ★</option>
+                    <option [value]="1">1 ★</option>
+                  </select>
+                  <button type="button" class="btn-add-attr" [disabled]="reviewSaving() || uploadingReviewImage()" (click)="addProductReview()">
+                    {{ reviewSaving() ? 'Adding…' : '+ Add review' }}
+                  </button>
+                </div>
+                <textarea class="form-input admin-review-textarea" rows="2" maxlength="1000"
+                  placeholder="Review text (optional)"
+                  [ngModel]="newReviewText()" (ngModelChange)="newReviewText.set($event)"></textarea>
+                <div class="admin-review-upload">
+                  <label class="upload-btn" [class.loading]="uploadingReviewImage()">
+                    <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden
+                      (change)="onReviewImageSelect($event)" [disabled]="uploadingReviewImage()" />
+                    {{ uploadingReviewImage() ? 'Uploading…' : 'Attach images (optional, max 4)' }}
+                  </label>
+                  @if (newReviewImages().length) {
+                    <div class="admin-review-thumbs">
+                      @for (img of newReviewImages(); track img; let i = $index) {
+                        <div class="admin-review-thumb-wrap">
+                          <img [src]="img" class="admin-review-thumb" alt="Attached image" />
+                          <button type="button" class="admin-review-thumb-remove" (click)="removeReviewImage(i)" title="Remove">×</button>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+                @if (reviewError()) {
+                  <p class="form-error">{{ reviewError() }}</p>
+                }
+              </div>
+            }
+
             <!-- Does this product have variants? -->
             <div class="form-field span-3">
               <label class="toggle-label">
