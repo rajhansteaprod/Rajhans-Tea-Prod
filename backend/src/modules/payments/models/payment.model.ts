@@ -112,7 +112,9 @@ const paymentSchema = new Schema<IPaymentDoc>(
     razorpayOrderId: { type: String, required: true },
     razorpayPaymentId: { type: String, default: null },
     razorpaySignature: { type: String, default: null },
-    amountPaise: { type: Number, required: true, min: 100 },
+    // 0 is valid: order fully covered by wallet and/or 100% discount.
+    // Razorpay's own ₹1 minimum still applies on the gateway path.
+    amountPaise: { type: Number, required: true, min: 0 },
     currency: { type: String, default: 'INR' },
     status: {
       type: String,

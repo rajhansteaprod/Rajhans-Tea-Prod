@@ -81,8 +81,10 @@ export class PaymentService {
           };
         }
 
-        // Stale or failed — mark old and create fresh
-        await this.paymentRepo.updateStatus(existing._id.toString(), 'failed');
+        // Stale 'created' — mark failed; never touch captured/terminal records
+        if (existing.status === 'created') {
+          await this.paymentRepo.updateStatus(existing._id.toString(), 'failed');
+        }
         // Generate new unique idempotency key
         idempotencyKey = `${idempotencyKey}-${Date.now()}`;
       }
@@ -142,20 +144,25 @@ export class PaymentService {
       await this.loyaltyService.redeemPoints(userId, loyaltyPointsUsed, idempotencyKey);
     }
 
-    // Full wallet payment — debit wallet NOW, no Razorpay needed
+    // Fully covered without Razorpay (wallet and/or 100% discount) — debit
+    // wallet NOW only if there is actually something to deduct
     if (razorpayAmountPaise <= 0 && userId) {
-      await this.walletService.debit(
-        userId,
-        walletDeductPaise / 100,
-        'purchase',
-        idempotencyKey,
-        `Order payment (wallet)`,
-        `wallet-debit-${idempotencyKey}`,
-      );
+      if (walletDeductPaise > 0) {
+        await this.walletService.debit(
+          userId,
+          walletDeductPaise / 100,
+          'purchase',
+          idempotencyKey,
+          `Order payment (wallet)`,
+          `wallet-debit-${idempotencyKey}`,
+        );
+      }
       const payment = await this.paymentRepo.create({
         sessionId,
         userId: userId ? (userId as never) : null,
-        razorpayOrderId: `wallet_${idempotencyKey.slice(0, 20)}`,
+        // Hash the FULL key — a truncated prefix collides across retries of
+        // the same session+address (retry suffix lands beyond the cut)
+        razorpayOrderId: `wallet_${crypto.createHash('md5').update(idempotencyKey).digest('hex').slice(0, 24)}`,
         amountPaise: totalPaise,
         walletDeductPaise,
         loyaltyPointsUsed,
