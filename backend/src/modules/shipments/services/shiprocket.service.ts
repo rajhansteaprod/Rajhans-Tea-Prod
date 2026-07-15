@@ -175,6 +175,7 @@ export class ShiprocketService implements IShippingBase {
 
   private async callShiprocketAuthAPI(): Promise<AuthenticateResponse> {
     try {
+      logger.info('Calling Shiprocket authentication API with email: ' + this.email+' and password: ' + this.password);
       const response = await this.axiosInstance.post('/auth/login', {
         email: this.email,
         password: this.password,

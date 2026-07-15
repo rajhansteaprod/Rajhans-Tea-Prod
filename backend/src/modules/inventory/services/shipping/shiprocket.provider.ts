@@ -37,6 +37,7 @@ export class ShiprocketProvider implements ShippingProvider {
     }
 
     // Token expired or not found — re-authenticate
+    logger.info('Shiprocket token expired or not found, re-authenticating with credentials email and password as'+ config.shipping.shiprocket.email+" "+config.shipping.shiprocket.password );
     const res = await fetch(`${this.baseUrl}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -46,13 +47,10 @@ export class ShiprocketProvider implements ShippingProvider {
       }),
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      logger.error({ status: res.status, body: text }, 'Shiprocket auth failed');
-      throw new Error('Shiprocket authentication failed');
-    }
-
     const data = (await res.json()) as Record<string, any>;
+    if(!data.token){
+      throw new Error(`Shiprocket authentication failed: ${data.message || 'No token received'}`);
+    }
     this.token = data.token;
     // Shiprocket tokens last 10 days — refresh after 9
     this.tokenExpiry = new Date(Date.now() + 9 * 24 * 60 * 60 * 1000);
