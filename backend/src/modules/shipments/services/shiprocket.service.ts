@@ -179,7 +179,7 @@ export class ShiprocketService implements IShippingBase {
         email: this.email,
         password: this.password,
       });
-
+      logger.info({ status: response.status }, 'Shiprocket authentication response received');
       const { token, expires_in } = response.data;
 
       if (!token) {
