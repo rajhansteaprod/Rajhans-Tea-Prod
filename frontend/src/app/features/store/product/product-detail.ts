@@ -190,10 +190,12 @@ export class ProductDetailComponent implements OnInit {
           this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
           this.meta.updateTag({ name: 'twitter:title', content: res.data.name });
           this.meta.updateTag({ name: 'twitter:description', content: pageDescription });
-          if (res.data.images?.[0]) {
+          const toAbsoluteUrl = (path: string) =>
+            path.startsWith('http') ? path : `https://rajhanstea.com${path.startsWith('/') ? '' : '/'}${path}`;
+
+          const absoluteImg = res.data.images?.[0] ? toAbsoluteUrl(res.data.images[0]) : undefined;
+          if (absoluteImg) {
             // Social crawlers require absolute image URLs
-            const img = res.data.images[0];
-            const absoluteImg = img.startsWith('http') ? img : `https://rajhanstea.com${img.startsWith('/') ? '' : '/'}${img}`;
             this.meta.updateTag({ property: 'og:image', content: absoluteImg });
             this.meta.updateTag({ name: 'twitter:image', content: absoluteImg });
           }
@@ -207,9 +209,15 @@ export class ProductDetailComponent implements OnInit {
           }
           canonical.setAttribute('href', pageUrl);
 
-          // Load rating summary
+          // Load rating summary, then inject Product JSON-LD (includes aggregateRating
+          // once known — chained here so prerendering captures the real value, not a
+          // placeholder written before the rating summary request resolves)
           this.reviewStore.getRatingSummary(res.data._id).subscribe({
-            next: (r) => this.ratingSummary.set(r.data),
+            next: (r) => {
+              this.ratingSummary.set(r.data);
+              this.injectProductSchema(res.data, pageUrl, absoluteImg, r.data);
+            },
+            error: () => this.injectProductSchema(res.data, pageUrl, absoluteImg, null),
           });
 
           // Load reviews
@@ -232,6 +240,7 @@ export class ProductDetailComponent implements OnInit {
                 this.loading.set(false);
                 this.loadRelatedSummaries(this.relatedProducts().map((p) => p._id));
               },
+              error: () => this.loading.set(false),
             });
         },
         error: () => this.loading.set(false),
@@ -356,6 +365,51 @@ export class ProductDetailComponent implements OnInit {
   // ─ Recommendations card navigation ─
   goToProduct(product: Product): void {
     this.router.navigate(['/product', product.slug]);
+  }
+
+  /** Injects/updates the schema.org Product JSON-LD block for this page. */
+  private injectProductSchema(
+    product: Product,
+    pageUrl: string,
+    absoluteImg: string | undefined,
+    rating: RatingSummary | null,
+  ): void {
+    const price = product.discountedPrice ?? product.basePrice;
+    const schema: Record<string, unknown> = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      description: product.shortDescription || product.description || product.name,
+      brand: { '@type': 'Brand', name: 'Rajhans Tea' },
+      offers: {
+        '@type': 'Offer',
+        url: pageUrl,
+        priceCurrency: 'INR',
+        price,
+        availability:
+          product.inStock === false
+            ? 'https://schema.org/OutOfStock'
+            : 'https://schema.org/InStock',
+      },
+    };
+    if (absoluteImg) schema['image'] = absoluteImg;
+    if (rating && rating.totalReviews > 0) {
+      schema['aggregateRating'] = {
+        '@type': 'AggregateRating',
+        ratingValue: rating.averageRating,
+        reviewCount: rating.totalReviews,
+      };
+    }
+
+    const scriptId = 'product-jsonld';
+    let script = this.document.getElementById(scriptId) as HTMLScriptElement | null;
+    if (!script) {
+      script = this.document.createElement('script');
+      script.type = 'application/ld+json';
+      script.id = scriptId;
+      this.document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(schema);
   }
 
   // ─ Real rating summaries for recommendation cards ─
