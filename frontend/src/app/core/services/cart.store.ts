@@ -17,6 +17,8 @@ import { AuthService } from './auth.service';
 import { PlatformService } from './platform.service';
 import { Product, ProductVariant } from './catalog.service';
 
+declare const fbq: ((...args: unknown[]) => void) | undefined;
+
 // ─── API types (mirror backend) ───────────────────────────────────────────────
 
 export interface CartItem {
@@ -284,6 +286,9 @@ export class CartStore {
           this.applyCart(res.data);
           this._cartLoading.set(false);
           if (openSidebar) this.openSidebar();
+          if (typeof fbq !== 'undefined') {
+            fbq('track', 'AddToCart');
+          }
         },
         error: () => this._cartLoading.set(false),
       });
