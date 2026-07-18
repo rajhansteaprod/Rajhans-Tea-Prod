@@ -2,9 +2,14 @@ import axios from 'axios';
 import { config } from '../../config';
 import { BadRequestError, UnauthorizedError } from '../../utils/api-error';
 import { logger } from '../../utils/logger';
+import { getRedisClient } from '../../loaders';
 
 const MSG91_OTP_URL = 'https://control.msg91.com/api/v5/otp';
 const MSG91_WIDGET_VERIFY_URL = 'https://control.msg91.com/api/v5/widget/verifyAccessToken';
+const TWO_FACTOR_OTP_URL = 'https://2factor.in/API/V1';
+const OTP_REDIS_KEY_PREFIX = 'otp:';
+
+const getOtpRedisKey = (phone: string) => `${OTP_REDIS_KEY_PREFIX}${phone}`;
 
 export class OtpService {
   /**
@@ -56,12 +61,67 @@ export class OtpService {
   }
 
   /**
-   * Send OTP to a phone number via MSG91 OTP service
-   * MSG91 generates and manages the OTP
+   * Send OTP to a phone number.
+   * - 2factor: 2factor.in generates the OTP, we store it in Redis (single key per
+   *   phone, 5-min expiry). A new OTP overwrites the old one, so the key always
+   *   holds the latest OTP; verify reads and deletes it.
+   * - msg91: MSG91 generates and manages the OTP.
    */
   async sendOtp(phone: string): Promise<{ success: boolean; message: string }> {
     if (!phone || phone.length !== 10) {
       throw new BadRequestError('Phone number must be 10 digits');
+    }
+
+    const provider = config.communication.sms.provider;
+    if (provider === '2factor') {
+      const apiKey = config.communication.sms.twoFactor.apiKey;
+      const templateName = config.communication.sms.twoFactor.templateName;
+
+      if (!apiKey) {
+        logger.error('TWO_FACTOR_API_KEY not configured');
+        throw new Error('TWO_FACTOR_API_KEY not configured');
+      }
+      if (!templateName) {
+        logger.error('TWO_FACTOR_TEMPLATE_NAME not configured');
+        throw new Error('TWO_FACTOR_TEMPLATE_NAME not configured');
+      }
+
+      const url = `${TWO_FACTOR_OTP_URL}/${apiKey}/SMS/${phone}/AUTOGEN2/${templateName}`;
+      logger.info({ provider, phone, url: url.replace(apiKey, '***API_KEY***') }, 'OTP Send: Calling 2factor.in');
+
+      try {
+        const response = await axios.get(url, {
+          timeout: 10000,
+        });
+
+        const data = response.data;
+        logger.info({ phone, status: data.Status, responseData: data }, 'OTP Send: 2factor response');
+
+        if (data.Status !== 'Success' || !data.OTP) {
+          logger.error({ phone, data }, 'OTP Send: 2factor returned an error');
+          throw new Error('Failed to send OTP');
+        }
+
+        // Store latest OTP in Redis (single key per phone, overwrites old, 5-min expiry)
+        await getRedisClient().set(getOtpRedisKey(phone), data.OTP, 'EX', 300);
+
+        return {
+          success: true,
+          message: 'OTP sent successfully',
+        };
+      } catch (error: any) {
+        logger.error(
+          {
+            phone,
+            provider,
+            errorMessage: error.message,
+            errorStatus: error.response?.status,
+            errorData: error.response?.data,
+          },
+          'OTP Send: 2factor API Failed',
+        );
+        throw new Error(`Failed to send OTP: ${error.response?.data?.Message || error.message}`);
+      }
     }
 
     const authKey = config.communication.sms.msg91.authKey;
@@ -133,8 +193,9 @@ export class OtpService {
   }
 
   /**
-   * Verify OTP via MSG91 OTP service
-   * Validates OTP against MSG91's stored OTP
+   * Verify OTP.
+   * - 2factor: validates against the OTP stored in Redis, then deletes the key.
+   * - msg91: validates against MSG91's stored OTP.
    */
   async verifyOtp(phone: string, otp: string): Promise<boolean> {
     if (!phone || phone.length !== 10) {
@@ -143,6 +204,26 @@ export class OtpService {
 
     if (!otp || otp.length !== 6) {
       throw new BadRequestError('OTP must be 6 digits');
+    }
+
+    if (config.communication.sms.provider === '2factor') {
+      const redis = getRedisClient();
+      const redisKey = getOtpRedisKey(phone);
+      const storedOtp = await redis.get(redisKey);
+
+      if (!storedOtp) {
+        logger.warn({ phone }, 'OTP Verify: No OTP found in Redis or expired');
+        throw new UnauthorizedError('Invalid or expired OTP');
+      }
+
+      if (storedOtp !== otp) {
+        logger.warn({ phone }, 'OTP Verify: Provided OTP did not match');
+        throw new UnauthorizedError('Invalid OTP');
+      }
+
+      await redis.del(redisKey);
+      logger.info({ phone }, 'OTP Verify: OTP validated and Redis key deleted');
+      return true;
     }
 
     const authKey = config.communication.sms.msg91.authKey;
@@ -191,11 +272,17 @@ export class OtpService {
   }
 
   /**
-   * Resend OTP via MSG91 retry endpoint
+   * Resend OTP.
+   * - 2factor: just send a fresh OTP (overwrites the Redis key).
+   * - msg91: use MSG91 retry endpoint.
    */
   async resendOtp(phone: string): Promise<{ success: boolean; message: string }> {
     if (!phone || phone.length !== 10) {
       throw new BadRequestError('Phone number must be 10 digits');
+    }
+
+    if (config.communication.sms.provider === '2factor') {
+      return this.sendOtp(phone);
     }
 
     const authKey = config.communication.sms.msg91.authKey;

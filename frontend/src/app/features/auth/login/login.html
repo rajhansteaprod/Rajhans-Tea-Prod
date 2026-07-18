@@ -19,18 +19,72 @@
   <div class="login__panel">
     <div class="login__card">
       <h1 class="login__title">Sign In</h1>
-      <p class="login__subtitle">Verify in the popup to continue</p>
+      <p class="login__subtitle">
+        {{ otpSent() ? 'Enter the OTP we sent to your mobile' : 'Enter your mobile number to continue' }}
+      </p>
 
-      <p class="login__loading" *ngIf="isLoading">Signing you in…</p>
+      <p class="login__loading" *ngIf="isLoading()">Please wait&hellip;</p>
 
-      <div class="login__error" *ngIf="error">
-        <p>{{ error }}</p>
-        <button class="login__error-close" (click)="clearError()" aria-label="Dismiss">×</button>
+      <div class="login__error" *ngIf="error()">
+        <p>{{ error() }}</p>
+        <button class="login__error-close" (click)="clearError()" aria-label="Dismiss">&times;</button>
       </div>
 
-      <button class="login__btn" (click)="openLogin()" [disabled]="isLoading">
-        Sign in with Mobile
-      </button>
+      <!-- Step 1 · Enter mobile number -->
+      <form class="login__form" *ngIf="!otpSent()" (ngSubmit)="sendOtp()">
+        <div class="login__field">
+          <label for="phone">Mobile number</label>
+          <div class="login__phone">
+            <span class="login__cc">+91</span>
+            <input
+              id="phone"
+              type="tel"
+              inputmode="numeric"
+              maxlength="10"
+              autocomplete="tel"
+              placeholder="10-digit mobile number"
+              name="phone"
+              [(ngModel)]="phoneNumber"
+              [disabled]="isLoading()"
+            />
+          </div>
+        </div>
+        <button type="submit" class="login__btn" [disabled]="isLoading() || phoneNumber.length !== 10">
+          Send OTP
+        </button>
+      </form>
+
+      <!-- Step 2 · Enter OTP -->
+      <form class="login__form" *ngIf="otpSent()" (ngSubmit)="verifyOtp()">
+        <p class="login__sent-to">
+          OTP sent to <strong>+91 {{ phoneNumber }}</strong>
+        </p>
+        <div class="login__field">
+          <label for="otp">Enter OTP</label>
+          <input
+            id="otp"
+            type="tel"
+            inputmode="numeric"
+            maxlength="6"
+            autocomplete="one-time-code"
+            placeholder="6-digit OTP"
+            name="otp"
+            [(ngModel)]="otp"
+            [disabled]="isLoading()"
+          />
+        </div>
+        <button type="submit" class="login__btn" [disabled]="isLoading() || otp.length !== 6">
+          Verify OTP
+        </button>
+        <div class="login__actions">
+          <button type="button" class="login__link" (click)="changeMobile()" [disabled]="isLoading()">
+            Change number
+          </button>
+          <button type="button" class="login__link" (click)="resendOtp()" [disabled]="isLoading()">
+            Resend OTP
+          </button>
+        </div>
+      </form>
 
       <p class="login__secure">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
