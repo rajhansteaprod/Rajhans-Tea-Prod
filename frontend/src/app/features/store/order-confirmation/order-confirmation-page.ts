@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { PaymentStore } from '../../../core/services/payment.store';
 import { OrderStore, OrderView } from '../../../core/services/order.store';
-
-declare const fbq: ((...args: unknown[]) => void) | undefined;
+import { trackPixelEvent } from '../../../core/utils/meta-pixel';
 
 @Component({
   selector: 'app-order-confirmation-page',
@@ -58,9 +57,7 @@ export class OrderConfirmationPageComponent implements OnInit {
         if (orders.length > 0) {
           const newOrder = orders[0];
           this.order.set(newOrder);
-          if (typeof fbq !== 'undefined') {
-            fbq('track', 'Purchase', { value: newOrder.total, currency: 'INR' });
-          }
+          trackPixelEvent('Purchase', { value: newOrder.total, currency: 'INR' });
         } else {
           // Order not ready yet — BullMQ may be slower.
           this.orderNotYetCreated.set(true);

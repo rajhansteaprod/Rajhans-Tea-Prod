@@ -16,8 +16,7 @@ import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import { PlatformService } from './platform.service';
 import { Product, ProductVariant } from './catalog.service';
-
-declare const fbq: ((...args: unknown[]) => void) | undefined;
+import { trackPixelEvent } from '../utils/meta-pixel';
 
 // ─── API types (mirror backend) ───────────────────────────────────────────────
 
@@ -286,9 +285,19 @@ export class CartStore {
           this.applyCart(res.data);
           this._cartLoading.set(false);
           if (openSidebar) this.openSidebar();
-          if (typeof fbq !== 'undefined') {
-            fbq('track', 'AddToCart');
-          }
+
+          const added = res.data.items.find(
+            (i) => i.productId === productId && (i.variantId ?? undefined) === (variantId ?? undefined),
+          );
+          const unitPrice = added
+            ? (added.variantPrice ?? added.discountedPrice ?? added.price ?? added.basePrice ?? 0)
+            : 0;
+          trackPixelEvent('AddToCart', {
+            content_ids: [productId],
+            content_type: 'product',
+            value: unitPrice * qty,
+            currency: 'INR',
+          });
         },
         error: () => this._cartLoading.set(false),
       });
