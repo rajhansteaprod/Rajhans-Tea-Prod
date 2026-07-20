@@ -52,6 +52,10 @@ export const config = {
         authKey: process.env.MSG91_AUTH_KEY || '',
         senderId: process.env.MSG91_SENDER_ID || 'RAJHNS',
       },
+      twoFactor: {
+        apiKey: process.env.TWO_FACTOR_API_KEY || '',
+        templateName: process.env.TWO_FACTOR_TEMPLATE_NAME || '',
+      },
     },
   },
   shipping: {

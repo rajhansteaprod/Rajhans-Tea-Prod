@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
-import { Msg91WidgetService } from '../../../core/services/msg91-widget.service';
+import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
+import { Msg91OtpService } from '../../../core/services/msg91-otp.service';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -11,67 +11,67 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './login.html',
   styleUrls: ['./login.scss'],
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
 })
-export class LoginComponent implements OnInit {
-  isLoading = false;
-  error = '';
+export class LoginComponent {
+  // Zoneless app (Angular, no zone.js): async state must be signals so change
+  // detection runs after awaited HTTP calls resolve.
+  readonly isLoading = signal(false);
+  readonly error = signal('');
+  readonly otpSent = signal(false);
+
+  phoneNumber = '';
+  otp = '';
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private http: HttpClient,
-    private msg91Widget: Msg91WidgetService,
+    private otpService: Msg91OtpService,
     private authService: AuthService,
   ) {}
 
-  ngOnInit(): void {
-    
-  }
-
-  openLogin(): void {
-    this.error = '';
-    this.msg91Widget.triggerLogin(
-      (data: any) => {
-        const accessToken = data?.message || data?.access_token || data?.token;
-        this.verifyMsg91Token(accessToken);
-      },
-      (error: any) => {
-        this.error = error?.message || 'OTP verification failed. Please try again.';
-      },
-    );
-  }
-
   clearError(): void {
-    this.error = '';
+    this.error.set('');
   }
 
-  private async verifyMsg91Token(accessToken: string): Promise<void> {
-    if (!accessToken) {
-      this.error = 'Verification failed. Please try again.';
+  /** Step 1 — send OTP to the entered mobile number */
+  async sendOtp(): Promise<void> {
+    this.error.set('');
+    if (!/^[0-9]{10}$/.test(this.phoneNumber)) {
+      this.error.set('Please enter a valid 10-digit phone number.');
       return;
     }
 
-    this.isLoading = true;
-    this.error = '';
-
+    this.isLoading.set(true);
     try {
-      const response = await this.http
-        .post<any>(
-          `${environment.apiUrl}/auth/verify-msg91-token`,
-          { accessToken },
-          { withCredentials: true },
-        )
-        .toPromise();
+      await firstValueFrom(this.otpService.sendOtp(this.phoneNumber));
+      this.otpSent.set(true);
+    } catch (err: any) {
+      this.error.set(err.error?.message || err.message || 'Failed to send OTP. Please try again.');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  /** Step 2 — verify OTP and log the user in */
+  async verifyOtp(): Promise<void> {
+    this.error.set('');
+    if (!/^[0-9]{10}$/.test(this.phoneNumber) || !/^[0-9]{6}$/.test(this.otp)) {
+      this.error.set('Please enter a valid phone number and 6-digit OTP.');
+      return;
+    }
+
+    this.isLoading.set(true);
+    try {
+      const response = await firstValueFrom(this.otpService.verifyOtp(this.phoneNumber, this.otp));
 
       if (!response?.data?.tokens?.accessToken) {
-        this.error = 'Failed to store authentication tokens';
+        this.error.set('Failed to store authentication tokens');
         return;
       }
 
       this.authService.handleOtpLoginResponse(response);
 
-      // Redirect to returnUrl (set by auth guard, e.g. checkout) or default
       const returnUrl = this.route.snapshot.queryParams['returnUrl'];
       if (returnUrl) {
         this.router.navigateByUrl(returnUrl);
@@ -80,9 +80,35 @@ export class LoginComponent implements OnInit {
         this.router.navigate([redirectTo]);
       }
     } catch (err: any) {
-      this.error = err.error?.message || 'Authentication failed. Please try again.';
+      this.error.set(err.error?.message || err.message || 'OTP verification failed. Please try again.');
     } finally {
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
+  }
+
+  /** Send a fresh OTP for the same mobile number */
+  async resendOtp(): Promise<void> {
+    this.error.set('');
+    if (!/^[0-9]{10}$/.test(this.phoneNumber)) {
+      this.error.set('Please enter a valid phone number before resending OTP.');
+      return;
+    }
+
+    this.isLoading.set(true);
+    try {
+      await firstValueFrom(this.otpService.resendOtp(this.phoneNumber));
+      this.otpSent.set(true);
+    } catch (err: any) {
+      this.error.set(err.error?.message || err.message || 'Failed to resend OTP. Please try again.');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  /** Go back to the mobile-number step to enter a different number */
+  changeMobile(): void {
+    this.otpSent.set(false);
+    this.otp = '';
+    this.error.set('');
   }
 }
