@@ -87,15 +87,26 @@ export class OtpService {
       }
 
       const url = `${TWO_FACTOR_OTP_URL}/${apiKey}/SMS/${phone}/AUTOGEN2/${templateName}`;
-      logger.info({ provider, phone, url: url.replace(apiKey, '***API_KEY***') }, 'OTP Send: Calling 2factor.in');
-
+      logger.info(
+        { provider, phone, url: url.replace(apiKey, '***API_KEY***') },
+        'OTP Send: Calling 2factor.in',
+      );
+      if (config.env === 'development') {
+        return {
+          success: true,
+          message: 'OTP sent successfully',
+        };
+      }
       try {
         const response = await axios.get(url, {
           timeout: 10000,
         });
 
         const data = response.data;
-        logger.info({ phone, status: data.Status, responseData: data }, 'OTP Send: 2factor response');
+        logger.info(
+          { phone, status: data.Status, responseData: data },
+          'OTP Send: 2factor response',
+        );
 
         if (data.Status !== 'Success' || !data.OTP) {
           logger.error({ phone, data }, 'OTP Send: 2factor returned an error');
@@ -205,10 +216,13 @@ export class OtpService {
     if (!otp || otp.length !== 6) {
       throw new BadRequestError('OTP must be 6 digits');
     }
-
+    if (config.env === 'development') {
+      return true;
+    }
     if (config.communication.sms.provider === '2factor') {
       const redis = getRedisClient();
       const redisKey = getOtpRedisKey(phone);
+
       const storedOtp = await redis.get(redisKey);
 
       if (!storedOtp) {
@@ -248,10 +262,7 @@ export class OtpService {
       // MSG91 returns 200 even on errors - check response body, not just status
       const responseData = response.data;
       if (responseData.type === 'error' || !responseData.success) {
-        logger.error(
-          { phone, responseData },
-          'OTP Verify: MSG91 API returned error in body',
-        );
+        logger.error({ phone, responseData }, 'OTP Verify: MSG91 API returned error in body');
         throw new UnauthorizedError('Invalid or expired OTP');
       }
 
