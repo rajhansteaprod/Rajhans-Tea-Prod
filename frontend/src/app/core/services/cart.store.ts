@@ -431,11 +431,17 @@ export class CartStore {
   }
 
   toggleWishlist(productId: string): void {
+    // Capture state before the toggle so we only fire AddToWishlist on an add,
+    // not a removal.
+    const wasWishlisted = this._wishlistIds().has(productId);
     this.http
       .post<
         ApiResponse<WishlistView>
       >(`${this.api}/wishlist/${productId}`, {}, { headers: this.headers() })
       .subscribe({ next: (res) => this.applyWishlist(res.data) });
+    if (!wasWishlisted) {
+      trackPixelEvent('AddToWishlist', { content_ids: [productId], content_type: 'product' });
+    }
   }
 
   // ─── Internals ─────────────────────────────────────────────────────────────

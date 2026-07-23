@@ -4,6 +4,7 @@ import { environment } from '../../../environments/environment';
 import { CartStore } from './cart.store';
 import { RazorpayService, RazorpayResponse } from './razorpay.service';
 import { AuthService } from './auth.service';
+import { trackPixelCustomEvent } from '../utils/meta-pixel';
 
 // ─── API Types ───────────────────────────────────────────────────────────────
 
@@ -220,6 +221,12 @@ export class PaymentStore {
         });
       } catch {
         // User dismissed modal
+        // Meta Pixel: payment abandoned at the gateway (custom event — no Meta
+        // standard equivalent). Useful for funnel drop-off analysis.
+        trackPixelCustomEvent('PaymentCancelled', {
+          value: order.amountPaise / 100,
+          currency: order.currency,
+        });
         this._paymentLoading.set(false);
         this._paymentError.set('Payment cancelled');
         return false;

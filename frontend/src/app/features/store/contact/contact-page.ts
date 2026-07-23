@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { environment } from '../../../../environments/environment';
+import { trackPixelEvent } from '../../../core/utils/meta-pixel';
 
 interface ContactFormData {
   fullName: string;
@@ -144,6 +145,8 @@ export class ContactPageComponent {
         this.loading.set(false);
         this.referenceId.set(response.referenceId);
         this.showSuccessMessage(formData.reasonToContact);
+        // Meta Pixel: contact inquiry submitted successfully.
+        trackPixelEvent('Lead', { content_category: formData.reasonToContact });
         this.form.reset();
         this.submitted.set(false);
         this.successSubmitted.set(true);

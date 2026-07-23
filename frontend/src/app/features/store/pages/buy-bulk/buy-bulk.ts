@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
+import { trackPixelEvent } from '../../../../core/utils/meta-pixel';
 
 @Component({
   selector: 'app-buy-bulk',
@@ -77,6 +78,8 @@ export class BuyBulkComponent implements OnInit {
       payload
     ).subscribe({
       next: () => {
+        // Meta Pixel: bulk enquiry submitted successfully.
+        trackPixelEvent('Lead', { content_category: 'bulk' });
         this.bulkSuccess.set(true);
         this.bulkForm.reset();
         this.bulkSubmitting.set(false);
@@ -112,6 +115,8 @@ export class BuyBulkComponent implements OnInit {
       payload
     ).subscribe({
       next: () => {
+        // Meta Pixel: corporate gifting enquiry submitted successfully.
+        trackPixelEvent('Lead', { content_category: 'gifting' });
         this.giftingSuccess.set(true);
         this.giftingForm.reset();
         this.giftingSubmitting.set(false);

@@ -9,6 +9,7 @@ import { ReviewStore, ProductRatingSummary } from '../../../core/services/review
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { ScrollRevealDirective } from '../../../shared/directives/scroll-reveal.directive';
+import { trackPixelCustomEvent } from '../../../core/utils/meta-pixel';
 
 @Component({
   selector: 'app-catalog-page',
@@ -77,6 +78,9 @@ export class CatalogPageComponent implements OnInit {
       // Changing category resets any active facet selection
       this.selectedValues.set(new Set());
       this.store.search('', { categorySlug: slug });
+      // Meta Pixel: category browsed. `ViewCategory` has no Meta standard-event
+      // equivalent, so it is fired as a custom event.
+      trackPixelCustomEvent('ViewCategory', { content_category: this.categoryName || slug });
     });
   }
 

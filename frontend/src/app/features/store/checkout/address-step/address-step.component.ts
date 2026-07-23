@@ -10,6 +10,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { CartStore } from '../../../../core/services/cart.store';
 import { SavedAddressesComponent } from './saved-addresses.component';
 import { ButtonComponent } from '../../../../../shared/components/button/button.component';
+import { trackPixelCustomEvent } from '../../../../core/utils/meta-pixel';
 
 @Component({
   selector: 'app-address-step',
@@ -280,6 +281,7 @@ export class AddressStepComponent implements OnInit {
           const finalAddress = { ...address, _id: newAddressId };
           this.checkoutService.saveAddress(finalAddress);
           localStorage.setItem('checkout_address', JSON.stringify({ ...finalAddress, email: formValue.email || '' }));
+          this.trackShippingInfo();
           this.isSubmitting.set(false);
           this.nextStep.emit();
         },
@@ -293,9 +295,19 @@ export class AddressStepComponent implements OnInit {
       // Guest checkout OR using existing saved address
       this.checkoutService.saveAddress(address);
       localStorage.setItem('checkout_address', JSON.stringify({ ...address, email: formValue.email || '' }));
+      this.trackShippingInfo();
       this.isSubmitting.set(false);
       this.nextStep.emit();
     }
+  }
+
+  // Meta Pixel: shipping details captured. `AddShippingInfo` has no Meta
+  // standard-event equivalent, so it is fired as a custom event.
+  private trackShippingInfo() {
+    trackPixelCustomEvent('AddShippingInfo', {
+      value: this.cartTotal(),
+      currency: 'INR',
+    });
   }
 
   goBack() {

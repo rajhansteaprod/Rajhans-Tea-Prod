@@ -57,7 +57,7 @@ export class OrderConfirmationPageComponent implements OnInit {
         if (orders.length > 0) {
           const newOrder = orders[0];
           this.order.set(newOrder);
-          trackPixelEvent('Purchase', { value: newOrder.total, currency: 'INR' });
+          this.trackPurchaseOnce(newOrder);
         } else {
           // Order not ready yet — BullMQ may be slower.
           this.orderNotYetCreated.set(true);
@@ -74,5 +74,30 @@ export class OrderConfirmationPageComponent implements OnInit {
         this.orderLoading.set(false);
       }
     }, 8000);
+  }
+
+  /**
+   * Fires the Meta Pixel `Purchase` event at most once per order.
+   *
+   * Guards against double-counting when the user refreshes or revisits
+   * /order-confirmation (which re-runs pollForOrder). The order `_id` is also
+   * passed as Meta's `eventID` so any duplicate — including a future
+   * server-side Conversions API event for the same order — is deduplicated by
+   * Meta itself.
+   */
+  private trackPurchaseOnce(order: OrderView): void {
+    const key = `purchaseTracked:${order._id}`;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+    } catch {
+      // sessionStorage unavailable (SSR / private mode) — proceed without the
+      // local guard; the eventID below still lets Meta deduplicate.
+    }
+    trackPixelEvent(
+      'Purchase',
+      { value: order.total, currency: 'INR', content_type: 'product' },
+      { eventID: order._id },
+    );
   }
 }
