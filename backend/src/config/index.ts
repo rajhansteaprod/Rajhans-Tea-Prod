@@ -24,6 +24,12 @@ export const config = {
     maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
     authMaxRequests: parseInt(process.env.AUTH_RATE_LIMIT_MAX_REQUESTS || '10', 10),
   },
+  otp: {
+    // Max OTP sends allowed per phone number within the window below.
+    maxPerWindow: parseInt(process.env.OTP_MAX_PER_WINDOW || '4', 10),
+    // Rolling window for the OTP send limit (default 1 hour).
+    windowMs: parseInt(process.env.OTP_RATE_LIMIT_WINDOW_MS || '3600000', 10),
+  },
   cors: {
     origin: (process.env.CORS_ORIGIN || 'http://localhost:4200').split(',').map(s => s.trim()),
   },

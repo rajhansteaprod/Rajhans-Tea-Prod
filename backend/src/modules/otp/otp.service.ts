@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { config } from '../../config';
-import { BadRequestError, UnauthorizedError } from '../../utils/api-error';
+import { BadRequestError, TooManyRequestsError, UnauthorizedError } from '../../utils/api-error';
 import { logger } from '../../utils/logger';
 import { getRedisClient } from '../../loaders';
 
@@ -8,8 +8,41 @@ const MSG91_OTP_URL = 'https://control.msg91.com/api/v5/otp';
 const MSG91_WIDGET_VERIFY_URL = 'https://control.msg91.com/api/v5/widget/verifyAccessToken';
 const TWO_FACTOR_OTP_URL = 'https://2factor.in/API/V1';
 const OTP_REDIS_KEY_PREFIX = 'otp:';
+const OTP_LIMIT_REDIS_KEY_PREFIX = 'otp:limit:';
 
 const getOtpRedisKey = (phone: string) => `${OTP_REDIS_KEY_PREFIX}${phone}`;
+const getOtpLimitRedisKey = (phone: string) => `${OTP_LIMIT_REDIS_KEY_PREFIX}${phone}`;
+
+/**
+ * Reject the request if this phone number has already hit the configured
+ * OTP send limit within the current window. Checked before any SMS is sent
+ * so we never spend a paid SMS on an over-the-limit request.
+ */
+const assertOtpRateLimit = async (phone: string): Promise<void> => {
+  const max = config.otp.maxPerWindow;
+  const key = getOtpLimitRedisKey(phone);
+  const current = parseInt((await getRedisClient().get(key)) || '0', 10);
+
+  if (current >= max) {
+    logger.warn({ phone, current, max }, 'OTP Send: rate limit exceeded');
+    throw new TooManyRequestsError(
+      `You can request an OTP only ${max} times per hour. Please try again later.`,
+    );
+  }
+};
+
+/**
+ * Record a successful OTP send by incrementing this phone number's counter.
+ * On the first send the counter's expiry is set to the configured window, so
+ * the count auto-resets when the window passes.
+ */
+const recordOtpSent = async (phone: string): Promise<void> => {
+  const key = getOtpLimitRedisKey(phone);
+  const count = await getRedisClient().incr(key);
+  if (count === 1) {
+    await getRedisClient().pexpire(key, config.otp.windowMs);
+  }
+};
 
 export class OtpService {
   /**
@@ -72,6 +105,9 @@ export class OtpService {
       throw new BadRequestError('Phone number must be 10 digits');
     }
 
+    // Abuse guard: cap OTP sends per phone within the configured window.
+    await assertOtpRateLimit(phone);
+
     const provider = config.communication.sms.provider;
     if (provider === '2factor') {
       const apiKey = config.communication.sms.twoFactor.apiKey;
@@ -92,6 +128,7 @@ export class OtpService {
         'OTP Send: Calling 2factor.in',
       );
       if (config.env === 'development') {
+        await recordOtpSent(phone);
         return {
           success: true,
           message: 'OTP sent successfully',
@@ -115,6 +152,8 @@ export class OtpService {
 
         // Store latest OTP in Redis (single key per phone, overwrites old, 5-min expiry)
         await getRedisClient().set(getOtpRedisKey(phone), data.OTP, 'EX', 300);
+
+        await recordOtpSent(phone);
 
         return {
           success: true,
@@ -180,6 +219,8 @@ export class OtpService {
         },
         'OTP Send: MSG91 Response Success',
       );
+
+      await recordOtpSent(phone);
 
       return {
         success: true,
