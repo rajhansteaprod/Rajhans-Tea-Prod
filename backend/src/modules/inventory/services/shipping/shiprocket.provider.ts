@@ -164,10 +164,14 @@ export class ShiprocketProvider implements ShippingProvider {
         selling_price: item.unitPrice.toString(),
       })),
       payment_method: 'Prepaid',
-      sub_total: order.subtotal,
-      length: 20,
-      breadth: 15,
-      height: 10,
+      // Cart-level discount (coupon/offer) applies to the whole order, not per
+      // product — so the amount the customer actually paid lives in order.total
+      // (items − coupon + shipping, tax included), NOT order.subtotal (pre-tax,
+      // pre-coupon). Send order.total so Shiprocket reflects the paid amount.
+      sub_total: order.total,
+      length: 23,
+      breadth:8,
+      height: 26,
       weight: 0.5,
     });
 
