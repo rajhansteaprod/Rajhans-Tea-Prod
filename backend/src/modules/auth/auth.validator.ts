@@ -49,6 +49,8 @@ export const updateProfileSchema = z.object({
 
 const addressBodySchema = z.object({
   label: z.string().trim().min(1, 'Label is required').max(50),
+  name: z.string().trim().max(100).optional(),
+  phone: z.string().trim().regex(/^[6-9]\d{9}$/, 'Phone number must be 10 digits').optional(),
   address: z.string().trim().min(1, 'Address is required').max(200),
   landmark: z.string().trim().max(100).optional(),
   city: z.string().trim().min(1, 'City is required').max(100),

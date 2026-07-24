@@ -190,8 +190,8 @@ export class AddressStepComponent implements OnInit {
   selectAddress(address: Address) {
     this.selectedAddressId.set(address._id || null);
     this.form.patchValue({
-      name: '',
-      phone: address._id ? '' : '',
+      name: address.name || '',
+      phone: address.phone || '',
       pincode: address.pinCode,
       address: address.address,
       landmark: address.landmark || '',
@@ -235,7 +235,7 @@ export class AddressStepComponent implements OnInit {
     this.submitError.set('');
 
     if (!this.form.valid) {
-      this.submitError.set('Please fill all fields correctly');
+      this.submitError.set('Please Add a New Address');
       return;
     }
 
@@ -257,6 +257,8 @@ export class AddressStepComponent implements OnInit {
     if (this.auth.isLoggedIn() && !this.selectedAddressId()) {
       const backendAddress: Address = {
         label: `${formValue.city} - ${(formValue.address || '').substring(0, 20)}`,
+        name: formValue.name!,
+        phone: formValue.phone!,
         address: formValue.address!,
         landmark: formValue.landmark || undefined,
         city: formValue.city!,

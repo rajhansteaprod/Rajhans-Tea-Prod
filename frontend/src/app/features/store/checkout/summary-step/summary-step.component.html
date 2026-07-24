@@ -51,6 +51,9 @@
       <h3 class="summary-heading">Delivery Address</h3>
 
       <div class="summary-address">
+        @if (address().name) {
+          <p class="summary-address-text">{{ address().name }}</p>
+        }
         <p class="summary-address-text">
           {{ address().address }}
           @if (address().landmark) {
