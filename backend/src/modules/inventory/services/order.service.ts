@@ -21,6 +21,7 @@ const VALID_TRANSITIONS: Record<string, OrderStatus[]> = {
 
 // Map Shiprocket tracking statuses to local order statuses
 const SHIPROCKET_STATUS_MAP: Record<string, OrderStatus> = {
+  'OUT FOR PICKUP': 'shipped',
   'PICKED UP': 'shipped',
   'IN TRANSIT': 'in_transit',
   'OUT FOR DELIVERY': 'out_for_delivery',
@@ -268,7 +269,8 @@ export class OrderService {
 
     try {
       const provider = getShippingProvider();
-      const shiprocketId = order.shiprocket.orderId || order.orderNumber;
+      // Shiprocket's /courier/track only reliably resolves tracking data by order number
+      const shiprocketId: string = order.orderNumber || order.shiprocket.orderId!;
 
       shipmentLogger.debug({
         orderId: order._id,
@@ -384,7 +386,7 @@ export class OrderService {
           trackingWith: freshOrder.shiprocket.orderId ? 'shiprocketOrderId' : 'orderNumber',
         }, '📡 Fetching real-time tracking from Shiprocket');
 
-        const tracking = await provider.trackByOrderId(shiprocketId);
+        const tracking = await provider.trackByOrderId(freshOrder.orderNumber);
 
         if (tracking) {
           currentShiprocketStatus = tracking.currentStatus;
