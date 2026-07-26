@@ -4,6 +4,7 @@ export type OrderStatus =
   | 'confirmed'
   | 'In Progress'
   | 'shipped'
+  | 'pickup_done'
   | 'in_transit'
   | 'out_for_delivery'
   | 'delivered'
@@ -129,6 +130,7 @@ const orderSchema = new Schema<IOrderDoc>(
         'processing',
         'In Progress',
         'shipped',
+        'pickup_done',
         'in_transit',
         'out_for_delivery',
         'delivered',

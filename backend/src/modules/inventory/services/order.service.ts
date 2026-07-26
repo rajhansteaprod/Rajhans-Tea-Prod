@@ -1,6 +1,7 @@
 import { OrderRepository } from '../repositories/order.repository';
 import { InventoryService } from './inventory.service';
 import { getShippingProvider } from './shipping/shipping.factory';
+import { matchShiprocketStatus } from './shipping/shiprocket-status.util';
 import { Payment } from '../../payments/models/payment.model';
 import { Product } from '../../catalog/models/product.model';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../../../utils/api-error';
@@ -12,7 +13,8 @@ import { Types } from 'mongoose';
 const VALID_TRANSITIONS: Record<string, OrderStatus[]> = {
   confirmed: ['In Progress', 'cancelled'],
   "In Progress": ['shipped', 'cancelled'],
-  shipped: ['in_transit'],
+  shipped: ['pickup_done', 'in_transit'],
+  pickup_done: ['in_transit'],
   in_transit: ['out_for_delivery'],
   out_for_delivery: ['delivered'],
   delivered: ['return_requested'],
@@ -22,7 +24,7 @@ const VALID_TRANSITIONS: Record<string, OrderStatus[]> = {
 // Map Shiprocket tracking statuses to local order statuses
 const SHIPROCKET_STATUS_MAP: Record<string, OrderStatus> = {
   'OUT FOR PICKUP': 'shipped',
-  'PICKED UP': 'shipped',
+  'PICKED UP': 'pickup_done',
   'IN TRANSIT': 'in_transit',
   'OUT FOR DELIVERY': 'out_for_delivery',
   'DELIVERED': 'delivered',
@@ -30,6 +32,9 @@ const SHIPROCKET_STATUS_MAP: Record<string, OrderStatus> = {
   'RETURN INITIATED': 'return_requested',
   'RETURNED': 'returned',
 };
+
+const resolveShiprocketStatus = (rawStatus: string): OrderStatus | undefined =>
+  matchShiprocketStatus(rawStatus, SHIPROCKET_STATUS_MAP);
 
 export class OrderService {
   private orderRepo = new OrderRepository();
@@ -284,7 +289,7 @@ export class OrderService {
 
       // Map Shiprocket status to local status
       const shiprocketStatus = tracking.currentStatus.toUpperCase();
-      const newStatus = SHIPROCKET_STATUS_MAP[shiprocketStatus] as OrderStatus | undefined;
+      const newStatus = resolveShiprocketStatus(shiprocketStatus);
 
       if (!newStatus) {
         shipmentLogger.warn({
