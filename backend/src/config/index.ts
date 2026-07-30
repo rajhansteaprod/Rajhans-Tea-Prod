@@ -4,6 +4,11 @@ dotenv.config();
 export const config = {
   env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '3000', 10),
+  // Public base URL of the customer-facing frontend. Used to build absolute,
+  // shareable links (e.g. the anonymous review URL sent over WhatsApp).
+  app: {
+    frontendUrl: (process.env.FRONTEND_URL || 'http://localhost:4200').replace(/\/+$/, ''),
+  },
   mongo: {
     uri: process.env.MONGO_URI || 'mongodb://localhost:27017/rajhans-tea',
     testUri: process.env.MONGO_TEST_URI || 'mongodb://localhost:27018/rajhans-tea-test',

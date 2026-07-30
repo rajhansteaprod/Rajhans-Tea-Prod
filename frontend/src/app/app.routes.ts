@@ -67,6 +67,12 @@ export const routes: Routes = [
           import('./features/store/pages/track-order/track-order').then((m) => m.TrackOrderComponent),
       },
       {
+        // Public, no-auth review page reached via the shareable token URL
+        path: 'review/:token',
+        loadComponent: () =>
+          import('./features/store/review/review-token-page').then((m) => m.ReviewTokenPageComponent),
+      },
+      {
         path: 'page/:slug',
         loadComponent: () =>
           import('./features/store/pages/static-page').then((m) => m.StaticPageComponent),

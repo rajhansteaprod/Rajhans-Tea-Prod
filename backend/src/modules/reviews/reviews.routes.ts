@@ -2,6 +2,12 @@ import { Router } from 'express';
 import { authenticate } from '../../middleware/auth.middleware';
 import { authorize } from '../../middleware/rbac.middleware';
 import { validate } from '../../middleware/validate.middleware';
+import {
+  upload,
+  uploadTimeoutMiddleware,
+  uploadErrorHandler,
+} from '../../middleware/upload.middleware';
+import { requireValidReviewToken } from './middleware/review-token.guard';
 import * as ctrl from './reviews.controller';
 import {
   productIdSchema,
@@ -14,6 +20,8 @@ import {
   adminReplySchema,
   rejectSchema,
   adminCreateReviewSchema,
+  reviewTokenParamSchema,
+  tokenReviewSchema,
 } from './reviews.validator';
 
 const router = Router();
@@ -35,6 +43,26 @@ router.get(
 router.get('/reviews/products/:productId/qa', validate(productIdSchema), ctrl.getProductQA);
 // Batch rating summaries for listing pages (?productIds=id1,id2,...)
 router.get('/reviews/summaries', ctrl.getRatingSummaries);
+
+// ===========================================================================
+// ANONYMOUS ORDER-TOKEN REVIEWS (no auth — the token proves the purchase)
+// ===========================================================================
+
+router.get('/reviews/token/:token', validate(reviewTokenParamSchema), ctrl.getReviewByToken);
+router.post(
+  '/reviews/token/:token/products/:productId',
+  validate(tokenReviewSchema),
+  ctrl.submitTokenReview,
+);
+router.post(
+  '/reviews/token/:token/upload',
+  validate(reviewTokenParamSchema),
+  requireValidReviewToken,
+  uploadTimeoutMiddleware,
+  upload.single('image'),
+  uploadErrorHandler,
+  ctrl.uploadTokenReviewImage,
+);
 
 // ===========================================================================
 // AUTHENTICATED

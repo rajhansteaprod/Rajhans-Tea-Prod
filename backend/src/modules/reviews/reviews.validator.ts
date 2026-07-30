@@ -27,6 +27,25 @@ export const adminCreateReviewSchema = z.object({
   }),
 });
 
+// ─── Anonymous order-token reviews ───────────────────────────────────────────
+
+const reviewToken = z.string().min(10).max(100);
+
+export const reviewTokenParamSchema = z.object({
+  params: z.object({ token: reviewToken }),
+});
+
+export const tokenReviewSchema = z.object({
+  params: z.object({ token: reviewToken, productId: mongoId }),
+  body: z.object({
+    // Rating is the only mandatory field; name, comment and images are optional.
+    rating: z.number({ coerce: true }).int().min(1).max(5),
+    name: z.string().max(100).optional(),
+    comment: z.string().max(5000).optional(),
+    images: z.array(z.string().max(500)).max(5).optional(),
+  }),
+});
+
 export const submitQuestionSchema = z.object({
   params: z.object({ productId: mongoId }),
   body: z.object({

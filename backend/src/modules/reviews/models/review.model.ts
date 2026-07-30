@@ -9,9 +9,14 @@ export interface IAdminReply {
 }
 
 export interface IReviewDoc extends Document {
-  userId: Types.ObjectId;
+  /** Optional: absent for anonymous, order-token based customer reviews */
+  userId?: Types.ObjectId;
   productId: Types.ObjectId;
-  /** Display name for admin-entered reviews (no real user account behind them) */
+  /** Set for anonymous order-token reviews so each order reviews a product once */
+  orderId?: Types.ObjectId;
+  /** Human-readable order reference, kept for admin traceability */
+  orderNumber?: string;
+  /** Display name for admin-entered / anonymous reviews (no real user account behind them) */
   reviewerName?: string;
   rating: number;
   title: string;
@@ -30,8 +35,10 @@ export interface IReviewDoc extends Document {
 
 const reviewSchema = new Schema<IReviewDoc>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+    orderId: { type: Schema.Types.ObjectId, ref: 'Order', default: null },
+    orderNumber: { type: String, default: null, trim: true },
     reviewerName: { type: String, trim: true, maxlength: 100 },
     rating: { type: Number, required: true, min: 1, max: 5 },
     // title/body are optional at the model level so admin-entered reviews
@@ -59,7 +66,18 @@ const reviewSchema = new Schema<IReviewDoc>(
 );
 
 reviewSchema.index({ productId: 1, status: 1, createdAt: -1 });
-reviewSchema.index({ userId: 1, productId: 1 }, { unique: true });
+// One review per real user per product — only applies to docs that actually
+// carry a userId (authenticated + admin-entered reviews). Anonymous order-token
+// reviews have no userId, so this partial index skips them.
+reviewSchema.index(
+  { userId: 1, productId: 1 },
+  { unique: true, partialFilterExpression: { userId: { $type: 'objectId' } } },
+);
+// One review per product per order for anonymous order-token reviews.
+reviewSchema.index(
+  { orderId: 1, productId: 1 },
+  { unique: true, partialFilterExpression: { orderId: { $type: 'objectId' } } },
+);
 reviewSchema.index({ status: 1, createdAt: -1 });
 reviewSchema.index({ reportCount: -1 });
 

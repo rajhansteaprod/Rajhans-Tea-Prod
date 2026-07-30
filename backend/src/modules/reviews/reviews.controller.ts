@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ReviewService } from './services/review.service';
 import { QAService } from './services/qa.service';
 import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../../utils/api-response';
+import { BadRequestError } from '../../utils/api-error';
 
 const reviewService = new ReviewService();
 const qaService = new QAService();
@@ -40,6 +41,28 @@ export const getProductQA = async (req: Request, res: Response) => {
     limit: limit ? parseInt(limit, 10) : undefined,
   });
   sendPaginated(res, result.questions, result.meta, 'Q&A');
+};
+
+// ─── Anonymous order-token reviews (no auth) ─────────────────────────────────
+
+export const getReviewByToken = async (req: Request, res: Response) => {
+  const info = await reviewService.getTokenInfo(req.params['token'] as string);
+  sendSuccess(res, info);
+};
+
+export const submitTokenReview = async (req: Request, res: Response) => {
+  const token = req.params['token'] as string;
+  const productId = req.params['productId'] as string;
+  const review = await reviewService.submitTokenReview(token, productId, req.body);
+  sendCreated(res, review, 'Review submitted');
+};
+
+export const uploadTokenReviewImage = async (req: Request, res: Response) => {
+  if (!req.file || !req.file.filename) {
+    throw new BadRequestError('No file uploaded');
+  }
+  const url = `/uploads/${req.file.filename}`;
+  sendSuccess(res, { url }, 'Image uploaded successfully');
 };
 
 // ─── Authenticated ───────────────────────────────────────────────────────────

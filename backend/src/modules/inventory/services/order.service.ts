@@ -6,6 +6,7 @@ import { Payment } from '../../payments/models/payment.model';
 import { Product } from '../../catalog/models/product.model';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../../../utils/api-error';
 import { shipmentLogger } from '../../../utils/shipment-logger';
+import { reviewTokenService } from '../../reviews/services/review-token.service';
 import { OrderStatus, IOrderDoc } from '../models/order.model';
 import { Types } from 'mongoose';
 
@@ -236,6 +237,20 @@ export class OrderService {
       );
     }
 
+    // On delivery, mint the 2-month anonymous review token (eager path).
+    // Never let a Redis hiccup fail the status update — My Orders load mints
+    // lazily as a fallback.
+    if (newStatus === 'delivered' && updated) {
+      try {
+        await reviewTokenService.mintForOrder(updated);
+      } catch (err) {
+        shipmentLogger.warn(
+          { orderId, error: err instanceof Error ? err.message : String(err) },
+          '⚠️ Failed to mint review token on delivery',
+        );
+      }
+    }
+
     return updated!;
   }
 
@@ -444,7 +459,31 @@ export class OrderService {
     userId: string,
     query: { page?: number; limit?: number; status?: string } = {},
   ) {
-    return this.orderRepo.findByUserId(userId, query);
+    const result = await this.orderRepo.findByUserId(userId, query);
+
+    // Attach the anonymous review URL to delivered orders. Mints lazily if the
+    // eager (on-delivery) path didn't run — e.g. Redis was down at delivery.
+    const orders = await Promise.all(
+      result.orders.map(async (order) => {
+        const obj = order.toObject() as unknown as Record<string, unknown>;
+        obj['reviewUrl'] = null;
+        if (order.status === 'delivered') {
+          try {
+            let url = await reviewTokenService.getActiveUrlForOrder(order._id.toString());
+            if (!url) {
+              const token = await reviewTokenService.mintForOrder(order);
+              url = token ? reviewTokenService.buildUrl(token) : null;
+            }
+            obj['reviewUrl'] = url;
+          } catch {
+            // Redis unavailable — omit the review URL rather than break the list.
+          }
+        }
+        return obj;
+      }),
+    );
+
+    return { orders, meta: result.meta };
   }
 
   async adminListOrders(

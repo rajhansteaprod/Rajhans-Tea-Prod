@@ -10,6 +10,8 @@ export interface Review { _id: string; userId: any; productId: any; reviewerName
 export interface RatingSummary { averageRating: number; totalReviews: number; distribution: { 1: number; 2: number; 3: number; 4: number; 5: number }; ratingOneLiner?: string; }
 export interface ProductRatingSummary { productId: string; averageRating: number; totalReviews: number; }
 export interface Question { _id: string; userId: any; productId: any; questionText: string; voteCount: number; answers: { _id: string; userId: any; body: string; isAdminAnswer: boolean; createdAt: string }[]; createdAt: string; }
+export interface TokenReviewProduct { productId: string; name: string; image: string | null; reviewed: boolean; }
+export interface TokenReviewInfo { orderNumber: string; products: TokenReviewProduct[]; }
 
 @Injectable({ providedIn: 'root' })
 export class ReviewStore {
@@ -36,6 +38,31 @@ export class ReviewStore {
 
   getProductQA(productId: string, page = 1): Observable<PaginatedResponse<Question>> {
     return this.http.get<PaginatedResponse<Question>>(`${this.api}/reviews/products/${productId}/qa?page=${page}&limit=10`);
+  }
+
+  // Anonymous order-token reviews (no auth)
+  getReviewByToken(token: string): Observable<ApiResponse<TokenReviewInfo>> {
+    return this.http.get<ApiResponse<TokenReviewInfo>>(`${this.api}/reviews/token/${token}`);
+  }
+
+  submitTokenReview(
+    token: string,
+    productId: string,
+    data: { rating: number; name?: string; comment?: string; images?: string[] },
+  ): Observable<ApiResponse<Review>> {
+    return this.http.post<ApiResponse<Review>>(
+      `${this.api}/reviews/token/${token}/products/${productId}`,
+      data,
+    );
+  }
+
+  uploadTokenReviewImage(token: string, file: File): Observable<ApiResponse<{ url: string }>> {
+    const form = new FormData();
+    form.append('image', file);
+    return this.http.post<ApiResponse<{ url: string }>>(
+      `${this.api}/reviews/token/${token}/upload`,
+      form,
+    );
   }
 
   // Authenticated

@@ -3,7 +3,13 @@ import { ReviewRepository } from '../repositories/review.repository';
 import { ReviewVote } from '../models/review-vote.model';
 import { ReviewReport } from '../models/review-report.model';
 import { Order } from '../../inventory/models/order.model';
-import { NotFoundError, ForbiddenError, ConflictError } from '../../../utils/api-error';
+import { reviewTokenService } from './review-token.service';
+import {
+  NotFoundError,
+  ForbiddenError,
+  ConflictError,
+  BadRequestError,
+} from '../../../utils/api-error';
 
 // Simple bad words filter
 const BAD_WORDS = ['scam', 'fraud', 'cheat', 'fake', 'spam'];
@@ -53,6 +59,64 @@ export class ReviewService {
       await this.repo.computeRatingSummary(productId);
     }
 
+    return review;
+  }
+
+  // ─── Anonymous order-token reviews ─────────────────────────────────────────
+
+  /** Token payload for the review page: order number + products with reviewed flags. */
+  async getTokenInfo(token: string) {
+    const payload = await reviewTokenService.getPayload(token);
+    if (!payload) throw new NotFoundError('This review link is invalid or has expired');
+    return {
+      orderNumber: payload.orderNumber,
+      products: payload.products.map((p) => ({
+        productId: p.productId,
+        name: p.name,
+        image: p.image,
+        reviewed: p.reviewed,
+      })),
+    };
+  }
+
+  /**
+   * Submit one anonymous review for a product in a delivered order via its token.
+   * No auth: the token itself is the proof of a real, delivered purchase.
+   */
+  async submitTokenReview(
+    token: string,
+    productId: string,
+    data: { rating: number; name?: string; comment?: string; images?: string[] },
+  ) {
+    const payload = await reviewTokenService.getPayload(token);
+    if (!payload) throw new NotFoundError('This review link is invalid or has expired');
+
+    const product = payload.products.find((p) => p.productId === productId);
+    if (!product) throw new BadRequestError('This product is not part of the order');
+    if (product.reviewed) throw new ConflictError('You have already reviewed this product');
+
+    let review;
+    try {
+      review = await this.repo.create({
+        productId: new Types.ObjectId(productId),
+        orderId: new Types.ObjectId(payload.orderId),
+        orderNumber: payload.orderNumber,
+        reviewerName: data.name?.trim() || undefined,
+        rating: data.rating,
+        body: data.comment?.trim() || '',
+        images: data.images || [],
+        isVerifiedPurchase: true,
+        status: 'pending',
+      });
+    } catch (err: unknown) {
+      // Unique {orderId, productId} index — a concurrent submit already landed.
+      if (typeof err === 'object' && err !== null && (err as { code?: number }).code === 11000) {
+        throw new ConflictError('You have already reviewed this product');
+      }
+      throw err;
+    }
+
+    await reviewTokenService.markProductReviewed(token, productId);
     return review;
   }
 
@@ -119,7 +183,7 @@ export class ReviewService {
   async deleteReview(userId: string, reviewId: string): Promise<void> {
     const review = await this.repo.findById(reviewId);
     if (!review) throw new NotFoundError('Review not found');
-    if (review.userId.toString() !== userId)
+    if (!review.userId || review.userId.toString() !== userId)
       throw new ForbiddenError("Cannot delete another user's review");
 
     const productId = review.productId.toString();
