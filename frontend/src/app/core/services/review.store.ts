@@ -13,6 +13,47 @@ export interface Question { _id: string; userId: any; productId: any; questionTe
 export interface TokenReviewProduct { productId: string; name: string; image: string | null; reviewed: boolean; }
 export interface TokenReviewInfo { orderNumber: string; products: TokenReviewProduct[]; }
 
+// ─── Admin moderation ────────────────────────────────────────────────────────
+
+export type ReviewStatus = 'pending' | 'approved' | 'rejected';
+export type ModerationStatus = ReviewStatus | 'all';
+
+export interface PaginationMeta { page: number; limit: number; total: number; totalPages: number; }
+export interface AdminPaginated<T> { success: boolean; data: T[]; meta: PaginationMeta; }
+
+/** Populated by the moderation queue — may be a bare id if the product was deleted. */
+export interface AdminReviewProduct { _id: string; name: string; slug: string; primaryImage?: string; images?: string[]; }
+export interface AdminReviewUser { _id: string; phone?: string; firstName?: string; lastName?: string; }
+
+export interface AdminReview {
+  _id: string;
+  userId: AdminReviewUser | string | null;
+  productId: AdminReviewProduct | string;
+  orderId?: string | null;
+  orderNumber?: string | null;
+  reviewerName?: string;
+  rating: number;
+  title: string;
+  body: string;
+  images: string[];
+  isVerifiedPurchase: boolean;
+  status: ReviewStatus;
+  rejectionReason: string | null;
+  helpfulVotes: number;
+  reportCount: number;
+  adminReply: { body: string; repliedAt: string } | null;
+  isPinned: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReviewAnalytics {
+  totalApproved: number;
+  pendingCount: number;
+  reportedCount: number;
+  overallAvgRating: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ReviewStore {
   private readonly http = inject(HttpClient);
@@ -99,6 +140,17 @@ export class ReviewStore {
     return this.http.get<PaginatedResponse<any>>(`${this.api}/admin/reviews/moderation?type=${type}&page=${page}&limit=20`);
   }
 
+  /** Moderation queue filtered by status ('all' returns every status). */
+  getReviewModeration(
+    status: ModerationStatus,
+    page = 1,
+    limit = 20,
+  ): Observable<AdminPaginated<AdminReview>> {
+    return this.http.get<AdminPaginated<AdminReview>>(
+      `${this.api}/admin/reviews/moderation?type=reviews&status=${status}&page=${page}&limit=${limit}`,
+    );
+  }
+
   adminCreateReview(productId: string, data: { reviewerName: string; rating: number; reviewText?: string; images?: string[] }): Observable<ApiResponse<Review>> {
     return this.http.post<ApiResponse<Review>>(`${this.api}/admin/reviews/products/${productId}/reviews`, data);
   }
@@ -107,6 +159,8 @@ export class ReviewStore {
   rejectReview(id: string, reason: string): Observable<any> { return this.http.patch(`${this.api}/admin/reviews/reviews/${id}/reject`, { reason }); }
   replyToReview(id: string, body: string): Observable<any> { return this.http.post(`${this.api}/admin/reviews/reviews/${id}/reply`, { body }); }
   pinReview(id: string): Observable<any> { return this.http.patch(`${this.api}/admin/reviews/reviews/${id}/pin`, {}); }
-  getAnalytics(): Observable<ApiResponse<any>> { return this.http.get<ApiResponse<any>>(`${this.api}/admin/reviews/analytics`); }
-  getReported(page = 1): Observable<PaginatedResponse<Review>> { return this.http.get<PaginatedResponse<Review>>(`${this.api}/admin/reviews/reported?page=${page}&limit=20`); }
+  getAnalytics(): Observable<ApiResponse<ReviewAnalytics>> { return this.http.get<ApiResponse<ReviewAnalytics>>(`${this.api}/admin/reviews/analytics`); }
+  getReported(page = 1, limit = 20): Observable<AdminPaginated<AdminReview>> {
+    return this.http.get<AdminPaginated<AdminReview>>(`${this.api}/admin/reviews/reported?page=${page}&limit=${limit}`);
+  }
 }

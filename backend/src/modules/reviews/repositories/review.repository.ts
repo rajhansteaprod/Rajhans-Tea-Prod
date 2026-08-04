@@ -62,16 +62,21 @@ export class ReviewRepository {
     return { reviews, meta: buildPaginationMeta(page, limit, total) };
   }
 
-  async findModerationQueue(query: { page?: number; limit?: number; status?: ReviewStatus } = {}) {
+  async findModerationQueue(
+    query: { page?: number; limit?: number; status?: ReviewStatus | 'all' } = {},
+  ) {
     const { page, limit, skip } = parsePagination(query);
     const filter: Record<string, unknown> = {};
-    if (query.status) filter.status = query.status;
+    // 'all' shows every status; no status at all defaults to the pending queue.
+    if (query.status === 'all') {
+      /* no status filter */
+    } else if (query.status) filter.status = query.status;
     else filter.status = 'pending';
 
     const [reviews, total] = await Promise.all([
       Review.find(filter)
         .populate('userId', 'phone firstName lastName')
-        .populate('productId', 'name slug')
+        .populate('productId', 'name slug primaryImage images')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -174,8 +179,8 @@ export class ReviewRepository {
     const filter = { reportCount: { $gt: 0 } };
     const [reviews, total] = await Promise.all([
       Review.find(filter)
-        .populate('userId', 'phone firstName')
-        .populate('productId', 'name slug')
+        .populate('userId', 'phone firstName lastName')
+        .populate('productId', 'name slug primaryImage images')
         .sort({ reportCount: -1 })
         .skip(skip)
         .limit(limit)

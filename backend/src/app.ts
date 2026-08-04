@@ -41,7 +41,13 @@ import { observabilityMiddleware } from './middleware/observability.middleware';
 app.use(observabilityMiddleware);
 
 // Static file serving for uploaded images
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+// helmet() defaults Cross-Origin-Resource-Policy to same-origin, which blocks
+// <img> loads from a different origin (e.g. Angular dev server on :4200).
+app.use(
+  '/uploads',
+  helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }),
+  express.static(path.join(process.cwd(), 'uploads')),
+);
 
 // Routes
 app.use('/api/v1', apiV1Routes);

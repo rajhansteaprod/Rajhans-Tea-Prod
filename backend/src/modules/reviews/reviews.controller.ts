@@ -145,8 +145,11 @@ export const adminDeleteReview = async (req: Request, res: Response) => {
   sendNoContent(res);
 };
 
+const MODERATION_STATUSES = ['pending', 'approved', 'rejected', 'all'] as const;
+type ModerationStatus = (typeof MODERATION_STATUSES)[number];
+
 export const adminGetModeration = async (req: Request, res: Response) => {
-  const { page, limit, type } = req.query as Record<string, string | undefined>;
+  const { page, limit, type, status } = req.query as Record<string, string | undefined>;
   if (type === 'questions') {
     const result = await qaService.getModerationQueue({
       page: page ? parseInt(page, 10) : undefined,
@@ -154,9 +157,13 @@ export const adminGetModeration = async (req: Request, res: Response) => {
     });
     sendPaginated(res, result.questions, result.meta, 'Questions moderation');
   } else {
+    if (status && !MODERATION_STATUSES.includes(status as ModerationStatus)) {
+      throw new BadRequestError(`status must be one of: ${MODERATION_STATUSES.join(', ')}`);
+    }
     const result = await reviewService.getModerationQueue({
       page: page ? parseInt(page, 10) : undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
+      status: status as ModerationStatus | undefined,
     });
     sendPaginated(res, result.reviews, result.meta, 'Reviews moderation');
   }

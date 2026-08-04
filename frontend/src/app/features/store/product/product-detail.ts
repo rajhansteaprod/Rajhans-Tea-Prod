@@ -450,14 +450,18 @@ export class ProductDetailComponent implements OnInit {
     return this.relatedSummaries().get(productId)?.totalReviews ?? 0;
   }
 
-  /** Display name for a review: admin-entered name, else the reviewer's account name */
+  /**
+   * Display name for a review: the name the reviewer typed, else their account
+   * name. Order-token reviews leave the name field blank, so those show as
+   * "Anonymous" rather than a generic label.
+   */
   reviewerNameFor(review: Review): string {
-    if (review.reviewerName) return review.reviewerName;
+    if (review.reviewerName?.trim()) return review.reviewerName.trim();
     const u = review.userId;
     if (u && typeof u === 'object') {
-      const name = [u.firstName, u.lastName].filter(Boolean).join(' ');
+      const name = [u.firstName, u.lastName].filter(Boolean).join(' ').trim();
       if (name) return name;
     }
-    return 'Verified Customer';
+    return 'Anonymous';
   }
 }
