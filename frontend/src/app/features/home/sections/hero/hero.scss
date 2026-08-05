@@ -21,22 +21,16 @@
 .hero__frame {
   position: relative;
   width: 100%;
-  height: calc(100vh - #{$announcement-bar-height} - #{$header-height});
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   cursor: grab;
   user-select: none;
   margin: 0;
   padding: 0;
 
-  @include respond-to(md) {
-    height: calc(100vh - #{$announcement-bar-height} - #{$header-height-md} - #{$bottom-nav-height});
-  }
-
   @include respond-to(sm) {
-    height: auto;
     width: 100%;
     max-width: 100%;
-    overflow: visible;
   }
 
   &:active { cursor: grabbing; }
@@ -48,13 +42,6 @@
   inset: 0;
   background:white;
   overflow: hidden;
-
-  @include respond-to(sm) {
-    position: relative;
-    width: 100%;
-    height: auto;
-    inset: auto;
-  }
 }
 
 .hero__bg-img {
@@ -64,12 +51,6 @@
   object-fit: cover;
   object-position: center;
   -webkit-user-drag: none;
-
-  @include respond-to(sm) {
-    height: auto;
-    display: block;
-    width: 100%;
-  }
 }
 
 picture {

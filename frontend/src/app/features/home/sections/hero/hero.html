@@ -5,7 +5,9 @@
       <div class="hero__bg">
         @if (slides()[activeSlide()].desktopImage) {
           <picture>
-            <source media="(max-width: 768px)" [srcset]="slides()[activeSlide()].mobileImage" />
+            @if (slides()[activeSlide()].mobileImage) {
+              <source media="(max-width: 768px)" [srcset]="slides()[activeSlide()].mobileImage" />
+            }
             <img class="hero__bg-img" [src]="slides()[activeSlide()].desktopImage" [alt]="slides()[activeSlide()].title" />
           </picture>
         }
