@@ -41,7 +41,8 @@ export class ProductDetailComponent implements OnInit {
   readonly lightboxImage = signal<string | null>(null);
   readonly selectedVariant = signal<ProductVariant | undefined>(undefined);
   readonly hoveredProductId = signal<string | null>(null);
-  readonly activeTab = signal<'description' | 'brewing' | 'sourcing' | 'reviews'>('description');
+  /** Accordion sections currently expanded (collapsed by default). */
+  readonly openSections = signal<Set<string>>(new Set());
   readonly reviews = signal<Review[]>([]);
   readonly reviewsLoading = signal(false);
   readonly reviewRating = signal(5);
@@ -70,21 +71,46 @@ export class ProductDetailComponent implements OnInit {
     return result;
   });
 
-  readonly brewingGuide = signal<string[]>([
+  /** Fallback trust points used until settings load / when none are configured. */
+  private readonly defaultTrustPoints: string[] = [
+    'Free delivery on orders over Rs.649',
+    '100% money-back on your first order',
+    'FSSAI certified - packed fresh in Bhopal',
+    'Prepaid & COD available',
+  ];
+
+  /** Trust points shown below the action buttons (from global store settings). */
+  readonly trustPoints = signal<string[]>(this.defaultTrustPoints);
+
+  /** Fallback brewing steps shown when a product has none configured. */
+  private readonly defaultBrewingGuide: string[] = [
     'Use 1 teaspoon (2g) of tea per 200ml of water',
     'Water temperature: 90-95°C (just off the boil)',
     'Steep for 3-4 minutes for optimal flavor',
     'Can be re-steeped 2-3 times with excellent results',
-  ]);
+  ];
 
-  readonly sourcingInfo = signal<string[]>([
+  /** Fallback sourcing points shown when a product has none configured. */
+  private readonly defaultSourcingInfo: string[] = [
     'Sourced from the finest gardens in India\'s tea regions',
     'Direct partnerships with ethical and sustainable tea farms',
     'Each batch tested for quality, flavor, and purity',
     'Freshly dried and packaged within weeks of harvest',
     'Fair trade practices ensure farmer communities thrive',
     'Commitment to organic and eco-friendly farming methods',
-  ]);
+  ];
+
+  /** Admin-configured brewing steps, falling back to the defaults when empty. */
+  readonly brewingGuide = computed(() => {
+    const configured = this.product()?.brewingGuide;
+    return configured && configured.length > 0 ? configured : this.defaultBrewingGuide;
+  });
+
+  /** Admin-configured sourcing points, falling back to the defaults when empty. */
+  readonly sourcingInfo = computed(() => {
+    const configured = this.product()?.sourcingInfo;
+    return configured && configured.length > 0 ? configured : this.defaultSourcingInfo;
+  });
 
   // ─ Computed ─
   readonly effectivePrice = computed(() => {
@@ -101,6 +127,17 @@ export class ProductDetailComponent implements OnInit {
 
     return 0;
   });
+
+  /** Free delivery threshold (Rs). Hardcoded for now. */
+  private readonly FREE_DELIVERY_THRESHOLD = 649;
+
+  /** Admin-configured cost-per-cup line for the selected variant, or '' when unset. */
+  readonly costPerCup = computed(() => this.selectedVariant()?.costPerCupText?.trim() ?? '');
+
+  /** Rupees remaining until free delivery; 0 or less means threshold met. */
+  readonly freeDeliveryRemaining = computed(() =>
+    this.FREE_DELIVERY_THRESHOLD - this.effectivePrice(),
+  );
 
   readonly discountPercent = computed(() => {
     const variant = this.selectedVariant();
@@ -124,6 +161,15 @@ export class ProductDetailComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    // Global trust strip content (falls back to defaults on error / when empty)
+    this.catalog.getPublicStoreSettings().subscribe({
+      next: (res) => {
+        if (res.data?.trustPoints?.length) {
+          this.trustPoints.set(res.data.trustPoints);
+        }
+      },
+    });
+
     this.route.params.subscribe((params) => {
       const slug = params['slug'];
       this.loading.set(true);
@@ -172,9 +218,9 @@ export class ProductDetailComponent implements OnInit {
           this.product.set(res.data);
           this.selectedImage.set(this.orderedImages()[0] || '');
 
-          // Set first variant if available
+          // Default to the 1 Kg variant when available (else largest/first)
           if (res.data.variants?.length) {
-            this.selectedVariant.set(res.data.variants[0]);
+            this.selectedVariant.set(this.defaultVariant(res.data.variants));
           }
 
           trackPixelEvent('ViewContent', {
@@ -313,6 +359,54 @@ export class ProductDetailComponent implements OnInit {
 
   selectVariant(variant: ProductVariant): void {
     this.selectedVariant.set(variant);
+  }
+
+  /**
+   * Parses a variant weight to grams from its free-text name, tolerating
+   * casing/spacing variations ("1kg", "1 Kg", "500 gm", "750g"). Returns null
+   * when no weight can be read.
+   */
+  private variantGrams(variant: ProductVariant | undefined): number | null {
+    if (!variant?.name) return null;
+    const match = variant.name.toLowerCase().replace(/\s+/g, '').match(/([\d.]+)(kg|gm|g)/);
+    if (!match) return null;
+    const value = parseFloat(match[1]);
+    if (isNaN(value)) return null;
+    return match[2] === 'kg' ? Math.round(value * 1000) : Math.round(value);
+  }
+
+  /**
+   * Chooses the default variant: prefer the 1 kg option, else fall back to the
+   * last (typically largest) variant, else the first.
+   */
+  private defaultVariant(variants: ProductVariant[]): ProductVariant {
+    const oneKg = variants.find((v) => this.variantGrams(v) === 1000);
+    return oneKg ?? variants[variants.length - 1] ?? variants[0];
+  }
+
+  // ─ Accordions ─
+  toggleSection(key: string): void {
+    const next = new Set(this.openSections());
+    if (next.has(key)) {
+      next.delete(key);
+    } else {
+      next.add(key);
+    }
+    this.openSections.set(next);
+  }
+
+  isSectionOpen(key: string): boolean {
+    return this.openSections().has(key);
+  }
+
+  /** Opens the Reviews accordion and scrolls it into view. */
+  scrollToReviews(): void {
+    const next = new Set(this.openSections());
+    next.add('reviews');
+    this.openSections.set(next);
+    setTimeout(() => {
+      this.document.getElementById('pd-reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   }
 
   // ─ Quantity ─

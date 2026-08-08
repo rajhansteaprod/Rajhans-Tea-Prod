@@ -22,6 +22,17 @@
         <div class="form-field"><label>Default Tax %</label><input type="number" [(ngModel)]="settings().defaultTaxPercent" min="0" max="100" /></div>
       </div>
 
+      <!-- Trust Strip -->
+      <div class="settings-card span-2">
+        <h3 class="card-title">Product Page Trust Strip</h3>
+        <div class="form-field">
+          <label>Trust points <span class="hint">(one per line; shown on every product page)</span></label>
+          <textarea rows="4" [ngModel]="trustPointsText()"
+            (ngModelChange)="trustPointsText.set($event)"
+            placeholder="Free delivery on orders over Rs.649&#10;100% money-back on your first order&#10;FSSAI certified - packed fresh in Bhopal&#10;Prepaid & COD available"></textarea>
+        </div>
+      </div>
+
       <!-- Feature Toggles -->
       <div class="settings-card span-2">
         <h3 class="card-title">Feature Toggles</h3>

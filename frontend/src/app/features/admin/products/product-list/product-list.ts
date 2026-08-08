@@ -20,12 +20,15 @@ interface VariantRow {
   price: number | '';
   discountedPrice: number | '';
   stock: number;
+  costPerCupText: string;
 }
 
 interface ProductForm {
   name: string;
   description: string;
   shortDescription: string;
+  brewingGuide: string;   // one bullet per line
+  sourcingInfo: string;   // one bullet per line
   categoryId: string;
   collectionIds: string[];
   basePrice: number | '';
@@ -51,7 +54,7 @@ interface ProductForm {
 }
 
 const emptyForm = (): ProductForm => ({
-  name: '', description: '', shortDescription: '',
+  name: '', description: '', shortDescription: '', brewingGuide: '', sourcingInfo: '',
   categoryId: '', collectionIds: [], basePrice: '', discountedPrice: '',
   images: [], primaryImage: '', imageAltText: '', reflectedImage: '', attributes: [], tags: '',
   region: undefined, bestTakenFor: undefined,
@@ -62,7 +65,7 @@ const emptyForm = (): ProductForm => ({
 });
 
 const emptyVariantRow = (): VariantRow => ({
-  optionValue: '', price: '', discountedPrice: '', stock: 0,
+  optionValue: '', price: '', discountedPrice: '', stock: 0, costPerCupText: '',
 });
 
 @Component({
@@ -184,6 +187,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
       name:             product.name,
       description:      product.description ?? '',
       shortDescription: product.shortDescription ?? '',
+      brewingGuide:     (product.brewingGuide ?? []).join('\n'),
+      sourcingInfo:     (product.sourcingInfo ?? []).join('\n'),
       categoryId:       product.category._id,
       collectionIds:    product.collections.map((c) => c._id),
       basePrice:        product.basePrice,
@@ -227,6 +232,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
               price: v.price,
               discountedPrice: v.discountedPrice ?? '',
               stock: v.stock,
+              costPerCupText: v.costPerCupText ?? '',
             })),
           }));
           this.variantsLoading.set(false);
@@ -623,6 +629,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
         price: Number(v.price),
         discountedPrice: v.discountedPrice !== '' ? Number(v.discountedPrice) : null,
         stock: Number(v.stock) || 0,
+        costPerCupText: v.costPerCupText.trim(),
       }));
     }
     if (f.images.length === 0) {
@@ -667,6 +674,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
       name:             f.name,
       description:      f.description || undefined,
       shortDescription: f.shortDescription || undefined,
+      brewingGuide:     f.brewingGuide.split('\n').map((s) => s.trim()).filter(Boolean),
+      sourcingInfo:     f.sourcingInfo.split('\n').map((s) => s.trim()).filter(Boolean),
       categoryId:       f.categoryId,
       collectionIds:    f.collectionIds,
       ...pricing,
