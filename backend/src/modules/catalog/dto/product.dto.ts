@@ -13,6 +13,7 @@ export interface ProductVariantView {
   optionValue?: string;
   price: number;
   discountedPrice?: number;
+  costPerCupText?: string;
   stock?: number;
   isActive?: boolean;
 }
@@ -26,6 +27,8 @@ export interface ProductAdminView {
   slug: string;
   description?: string;
   shortDescription?: string;
+  brewingGuide?: string[];
+  sourcingInfo?: string[];
   category: { _id: string; name: string; slug: string };
   collections: { _id: string; name: string; slug: string }[];
   basePrice: number;
@@ -59,6 +62,8 @@ export interface ProductPublicView {
   slug: string;
   description?: string;
   shortDescription?: string;
+  brewingGuide?: string[];
+  sourcingInfo?: string[];
   category: { _id: string; name: string; slug: string };
   collections: { _id: string; name: string; slug: string }[];
   basePrice: number;
@@ -128,6 +133,7 @@ export class ProductDTO {
       optionValue: v.optionValue,
       price: v.price,
       discountedPrice: v.discountedPrice,
+      costPerCupText: v.costPerCupText,
       stock: v.stock,
       isActive: v.isActive,
     }));
@@ -141,6 +147,8 @@ export class ProductDTO {
       slug: product.slug,
       description: product.description,
       shortDescription: product.shortDescription,
+      brewingGuide: product.brewingGuide ?? [],
+      sourcingInfo: product.sourcingInfo ?? [],
       category: extractCategory(product),
       collections: extractCollections(product),
       basePrice: product.basePrice,
@@ -174,6 +182,8 @@ export class ProductDTO {
       slug: product.slug,
       description: product.description,
       shortDescription: product.shortDescription,
+      brewingGuide: product.brewingGuide ?? [],
+      sourcingInfo: product.sourcingInfo ?? [],
       category: extractCategory(product),
       collections: extractCollections(product),
       basePrice: product.basePrice,

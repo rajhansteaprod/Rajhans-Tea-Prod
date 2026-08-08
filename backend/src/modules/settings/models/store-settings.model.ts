@@ -12,6 +12,7 @@ export interface IStoreSettingsDoc extends Document {
   currency: string;
   timezone: string;
   defaultTaxPercent: number;
+  trustPoints: string[];
   features: {
     loyaltyEnabled: boolean;
     referralEnabled: boolean;
@@ -31,6 +32,15 @@ const storeSettingsSchema = new Schema<IStoreSettingsDoc>(
     currency: { type: String, default: 'INR' },
     timezone: { type: String, default: 'Asia/Kolkata' },
     defaultTaxPercent: { type: Number, default: 18 },
+    trustPoints: {
+      type: [String],
+      default: [
+        'Free delivery on orders over Rs.649',
+        '100% money-back on your first order',
+        'FSSAI certified - packed fresh in Bhopal',
+        'Prepaid & COD available',
+      ],
+    },
     features: {
       loyaltyEnabled: { type: Boolean, default: true },
       referralEnabled: { type: Boolean, default: true },

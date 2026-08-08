@@ -34,6 +34,7 @@ export interface InlineVariantInput {
   price: number;
   discountedPrice?: number | null;
   stock?: number;
+  costPerCupText?: string;
 }
 
 export class ProductService {
@@ -139,6 +140,8 @@ export class ProductService {
     slug?: string;
     description?: string;
     shortDescription?: string;
+    brewingGuide?: string[];
+    sourcingInfo?: string[];
     categoryId: string;
     collectionIds?: string[];
     basePrice: number;
@@ -191,6 +194,8 @@ export class ProductService {
       slug,
       description: data.description,
       shortDescription: data.shortDescription,
+      brewingGuide: data.brewingGuide ?? [],
+      sourcingInfo: data.sourcingInfo ?? [],
       category: data.categoryId as never,
       collections: (data.collectionIds ?? []) as never,
       basePrice: data.basePrice,
@@ -235,6 +240,8 @@ export class ProductService {
       slug?: string;
       description?: string;
       shortDescription?: string;
+      brewingGuide?: string[];
+      sourcingInfo?: string[];
       categoryId?: string;
       collectionIds?: string[];
       basePrice?: number;
@@ -296,6 +303,8 @@ export class ProductService {
     if (slug !== undefined) update.slug = slug;
     if (data.description !== undefined) update.description = data.description;
     if (data.shortDescription !== undefined) update.shortDescription = data.shortDescription;
+    if (data.brewingGuide !== undefined) update.brewingGuide = data.brewingGuide;
+    if (data.sourcingInfo !== undefined) update.sourcingInfo = data.sourcingInfo;
     if (data.categoryId !== undefined) update.category = data.categoryId;
     if (data.collectionIds !== undefined) update.collections = data.collectionIds;
     if (data.basePrice !== undefined) update.basePrice = data.basePrice;
@@ -388,6 +397,7 @@ export class ProductService {
         price: v.price,
         discountedPrice: v.discountedPrice ?? null,
         stock: v.stock ?? 0,
+        costPerCupText: v.costPerCupText,
       };
       if (v._id) {
         await variantService.update(v._id, payload);

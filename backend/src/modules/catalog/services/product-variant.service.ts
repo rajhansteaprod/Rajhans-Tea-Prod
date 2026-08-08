@@ -31,6 +31,7 @@ export class ProductVariantService {
     price: number;
     discountedPrice?: number | null;
     cost?: number;
+    costPerCupText?: string;
     stock: number;
     trackInventory?: boolean;
     images?: string[];
@@ -68,6 +69,7 @@ export class ProductVariantService {
         price: data.price,
         discountedPrice: data.discountedPrice ?? undefined,
         cost: data.cost,
+        costPerCupText: data.costPerCupText?.trim() || undefined,
         stock: data.stock ?? 0,
         trackInventory: data.trackInventory ?? true,
         images: data.images ?? [],
@@ -107,6 +109,7 @@ export class ProductVariantService {
     price?: number;
     discountedPrice?: number | null; // null clears an existing discount
     cost?: number;
+    costPerCupText?: string;
     stock?: number;
     trackInventory?: boolean;
     images?: string[];
@@ -146,6 +149,7 @@ export class ProductVariantService {
       update.discountedPrice = data.discountedPrice;
     }
     if (data.cost !== undefined) update.cost = data.cost;
+    if (data.costPerCupText !== undefined) update.costPerCupText = data.costPerCupText.trim();
     if (data.stock !== undefined) update.stock = data.stock;
     if (data.trackInventory !== undefined) update.trackInventory = data.trackInventory;
     if (data.images !== undefined) update.images = data.images;

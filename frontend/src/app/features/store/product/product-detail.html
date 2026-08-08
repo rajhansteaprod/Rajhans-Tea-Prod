@@ -75,30 +75,20 @@
             <h1 class="pd__name">{{ product()?.name }}</h1>
           </div>
 
-          <!-- Rating row (real data; hidden when no reviews) -->
-          @if ((ratingSummary()?.totalReviews ?? 0) > 0) {
-            <div class="pd__rating-row">
-              <div class="pd__stars">
-                @for (i of [1, 2, 3, 4, 5]; track i) {
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    [class.filled]="i <= mainRoundedRating()"
-                    fill="currentColor"
-                  >
-                    <path
-                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                    />
-                  </svg>
-                }
-              </div>
-              <span class="pd__rating-count">
-                {{ ratingSummary()!.averageRating | number: '1.1-1' }}
-                ({{ ratingSummary()!.totalReviews }} {{ ratingSummary()!.totalReviews === 1 ? 'review' : 'reviews' }})
-              </span>
+          <!-- Rating row (hardcoded for now; to be wired to real data later) -->
+          <div class="pd__rating-row">
+            <div class="pd__stars">
+              @for (i of [1, 2, 3, 4, 5]; track i) {
+                <svg width="18" height="18" viewBox="0 0 24 24" class="filled" fill="currentColor">
+                  <path
+                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                  />
+                </svg>
+              }
             </div>
-          }
+            <span class="pd__rating-score">4.8</span>
+            <button type="button" class="pd__rating-link" (click)="scrollToReviews()">47 reviews</button>
+          </div>
 
           <!-- Price Section -->
           <div class="pd__price-container">
@@ -110,6 +100,11 @@
               }
             </div>
           </div>
+
+          <!-- Cost per cup (variant-dependent) -->
+          @if (costPerCup()) {
+            <p class="pd__cost-per-cup">{{ costPerCup() }}</p>
+          }
 
           <!-- Short description -->
           <p class="pd__short-desc">{{ product()?.shortDescription || 'Tis is description' }}</p>
@@ -148,87 +143,117 @@
             <button class="pd__add-to-cart" (click)="addToCart()">ADD TO CART</button>
             <button class="pd__buy-now" (click)="buyNow()">BUY NOW</button>
           </div>
-        </div>
-      </div>
 
-      <!-- Middle section -->
-      <div class="pd__tabs-section">
-        <div class="pd__tabs-nav-wrapper">
-          <nav class="pd__tabs-nav">
-            <button
-              class="pd__tab-btn"
-              [class.active]="activeTab() === 'description'"
-              (click)="activeTab.set('description')"
-            >
-              Description
-            </button>
-            <button
-              class="pd__tab-btn"
-              [class.active]="activeTab() === 'brewing'"
-              (click)="activeTab.set('brewing')"
-            >
-              Brewing Guide
-            </button>
-            <button
-              class="pd__tab-btn"
-              [class.active]="activeTab() === 'sourcing'"
-              (click)="activeTab.set('sourcing')"
-            >
-              Sourcing Info
-            </button>
-            <button
-              class="pd__tab-btn"
-              [class.active]="activeTab() === 'reviews'"
-              (click)="activeTab.set('reviews')"
-            >
-              Reviews
-            </button>
-          </nav>
-        </div>
+          <!-- Trust strip (static) -->
+          <div class="pd__trust">
+            @for (item of trustPoints(); track item) {
+              <div class="pd__trust-row">
+                <svg class="pd__trust-tick" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span class="pd__trust-text">{{ item }}</span>
+              </div>
+            }
+          </div>
 
-        <div class="pd__tabs-content">
-          <!-- Description Tab -->
-          @if (activeTab() === 'description') {
-            <div class="pd__tab-pane">
-              <p>{{ product()?.description }}</p>
-            </div>
+          <!-- Free-delivery progress (hidden once threshold met) -->
+          @if (freeDeliveryRemaining() > 0) {
+            <p class="pd__free-delivery">
+              You're Rs.{{ freeDeliveryRemaining() | number:'1.0-0' }} away from free delivery
+            </p>
           }
 
-          <!-- Brewing Guide Tab -->
-          @if (activeTab() === 'brewing') {
-            <div class="pd__tab-pane pd__tab-pane--list">
-              <h3 class="pd__tab-heading">How to Brew the Perfect Cup</h3>
-              <ul class="pd__tab-list">
-                @for (item of brewingGuide(); track $index) {
-                  <li class="pd__tab-list-item">
-                    <span class="pd__tab-bullet">•</span>
-                    <span>{{ item }}</span>
-                  </li>
-                }
-              </ul>
+          <!-- Product detail accordions (collapsed by default) -->
+          <div class="pd__accordion">
+            <!-- Description -->
+            <div class="pd__acc-item">
+              <button
+                type="button"
+                class="pd__acc-header"
+                [class.open]="isSectionOpen('description')"
+                [attr.aria-expanded]="isSectionOpen('description')"
+                (click)="toggleSection('description')"
+              >
+                <span class="pd__acc-title">Description</span>
+                <svg class="pd__acc-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              @if (isSectionOpen('description')) {
+                <div class="pd__acc-panel">
+                  <p>{{ product()?.description }}</p>
+                </div>
+              }
             </div>
-          }
 
-          <!-- Sourcing Info Tab -->
-          @if (activeTab() === 'sourcing') {
-            <div class="pd__tab-pane pd__tab-pane--list">
-              <h3 class="pd__tab-heading">Our Sourcing Philosophy</h3>
-              <ul class="pd__tab-list">
-                @for (item of sourcingInfo(); track $index) {
-                  <li class="pd__tab-list-item">
-                    <span class="pd__tab-bullet">•</span>
-                    <span>{{ item }}</span>
-                  </li>
-                }
-              </ul>
+            <!-- Brewing Guide -->
+            <div class="pd__acc-item">
+              <button
+                type="button"
+                class="pd__acc-header"
+                [class.open]="isSectionOpen('brewing')"
+                [attr.aria-expanded]="isSectionOpen('brewing')"
+                (click)="toggleSection('brewing')"
+              >
+                <span class="pd__acc-title">Brewing Guide</span>
+                <svg class="pd__acc-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              @if (isSectionOpen('brewing')) {
+                <div class="pd__acc-panel pd__tab-pane--list">
+                  <h3 class="pd__tab-heading">How to Brew the Perfect Cup</h3>
+                  <ul class="pd__tab-list">
+                    @for (item of brewingGuide(); track $index) {
+                      <li class="pd__tab-list-item">
+                        <span class="pd__tab-bullet">•</span>
+                        <span>{{ item }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
             </div>
-          }
 
-          <!-- Reviews Tab -->
-          @if (activeTab() === 'reviews') {
-            <div class="pd__tab-pane">
-              <!-- Reviews List - FIRST -->
-              <div class="pd__reviews-section">
+            <!-- Sourcing Info -->
+            <div class="pd__acc-item">
+              <button
+                type="button"
+                class="pd__acc-header"
+                [class.open]="isSectionOpen('sourcing')"
+                [attr.aria-expanded]="isSectionOpen('sourcing')"
+                (click)="toggleSection('sourcing')"
+              >
+                <span class="pd__acc-title">Sourcing Info</span>
+                <svg class="pd__acc-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              @if (isSectionOpen('sourcing')) {
+                <div class="pd__acc-panel pd__tab-pane--list">
+                  <h3 class="pd__tab-heading">Our Sourcing Philosophy</h3>
+                  <ul class="pd__tab-list">
+                    @for (item of sourcingInfo(); track $index) {
+                      <li class="pd__tab-list-item">
+                        <span class="pd__tab-bullet">•</span>
+                        <span>{{ item }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+            </div>
+
+            <!-- Reviews -->
+            <div class="pd__acc-item" id="pd-reviews">
+              <button
+                type="button"
+                class="pd__acc-header"
+                [class.open]="isSectionOpen('reviews')"
+                [attr.aria-expanded]="isSectionOpen('reviews')"
+                (click)="toggleSection('reviews')"
+              >
+                <span class="pd__acc-title">Reviews</span>
+                <svg class="pd__acc-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              @if (isSectionOpen('reviews')) {
+                <div class="pd__acc-panel">
+                  <!-- Reviews List - FIRST -->
+                  <div class="pd__reviews-section">
                 <h3 class="pd__reviews-title">Customer Reviews ({{ reviews().length }})</h3>
                 @if ((ratingSummary()?.totalReviews ?? 0) > 0) {
                   <p class="pd__reviews-average">
@@ -354,8 +379,10 @@
                   </div>
                 }
               </div>}
+                </div>
+              }
             </div>
-          }
+          </div>
         </div>
       </div>
 

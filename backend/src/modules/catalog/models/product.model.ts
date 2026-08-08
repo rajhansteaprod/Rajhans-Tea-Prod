@@ -10,6 +10,8 @@ export interface IProductDoc extends Document {
   slug: string;
   description?: string;
   shortDescription?: string;
+  brewingGuide?: string[];
+  sourcingInfo?: string[];
   category: Types.ObjectId;
   collections: Types.ObjectId[];
   basePrice: number;
@@ -40,6 +42,8 @@ const productSchema = new Schema<IProductDoc>(
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     description: { type: String, trim: true },
     shortDescription: { type: String, trim: true, maxlength: 300 },
+    brewingGuide: [{ type: String, trim: true, maxlength: 300 }],
+    sourcingInfo: [{ type: String, trim: true, maxlength: 300 }],
     category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
     collections: [{ type: Schema.Types.ObjectId, ref: 'Collection' }],
     basePrice: { type: Number, required: true, min: 0 },
