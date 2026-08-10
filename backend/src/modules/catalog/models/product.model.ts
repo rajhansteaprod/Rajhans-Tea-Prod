@@ -21,7 +21,7 @@ export interface IProductDoc extends Document {
   attributes: Map<string, string>;
   tags: string[];
   region?: ProductRegion;
-  bestTakenFor?: ProductBestTakenFor;
+  bestTakenFor?: ProductBestTakenFor[];
   status: ProductStatus;
   isFeatured: boolean;
   showBadge: boolean;
@@ -55,8 +55,9 @@ const productSchema = new Schema<IProductDoc>(
       enum: ['Assam', 'Darjeeling', 'Nilgiri', 'Dooars'],
     },
     bestTakenFor: {
-      type: String,
+      type: [String],
       enum: ['Morning', 'Noon', 'Evening'],
+      default: undefined,
     },
     status: {
       type: String,

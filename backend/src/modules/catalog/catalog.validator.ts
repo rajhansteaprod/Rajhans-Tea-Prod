@@ -115,7 +115,15 @@ export const listProductsSchema = z.object({
 
 const attributesSchema = z.record(z.string(), z.string()).optional();
 const regionSchema = z.enum(['Assam', 'Darjeeling', 'Nilgiri', 'Dooars']).nullable().optional();
-const bestTakenForSchema = z.enum(['Morning', 'Noon', 'Evening']).nullable().optional();
+// Accepts an array of times (multi-select). A single string or null is coerced
+// to an array / [] so older clients and "clear the field" still work.
+const bestTakenForSchema = z
+  .preprocess(
+    (v) => (v == null ? v : Array.isArray(v) ? v : [v]),
+    z.array(z.enum(['Morning', 'Noon', 'Evening'])),
+  )
+  .nullable()
+  .optional();
 // null = "clear the discount"; number = set it
 const discountedPriceSchema = z.number({ coerce: true }).min(0).nullable().optional();
 
