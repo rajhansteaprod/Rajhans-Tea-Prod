@@ -153,7 +153,7 @@ export class ProductService {
     attributes?: Record<string, string>;
     tags?: string[];
     region?: string | null;
-    bestTakenFor?: string | null;
+    bestTakenFor?: string[] | null;
     status?: ProductStatus;
     isFeatured?: boolean;
     showBadge?: boolean;
@@ -207,7 +207,7 @@ export class ProductService {
       attributes: attributesMap as never,
       tags: (data.tags ?? []).map((t) => t.toLowerCase().trim()),
       region: (data.region ?? undefined) as any,
-      bestTakenFor: (data.bestTakenFor ?? undefined) as any,
+      bestTakenFor: (data.bestTakenFor?.length ? data.bestTakenFor : undefined) as any,
       status: data.status ?? 'draft',
       isFeatured: data.isFeatured ?? false,
       showBadge: data.showBadge ?? false,
@@ -253,7 +253,7 @@ export class ProductService {
       attributes?: Record<string, string>;
       tags?: string[];
       region?: string | null; // null clears the field
-      bestTakenFor?: string | null; // null clears the field
+      bestTakenFor?: string[] | null; // null/empty clears the field
       status?: ProductStatus;
       isFeatured?: boolean;
       showBadge?: boolean;
@@ -330,8 +330,12 @@ export class ProductService {
     const unset: Record<string, 1> = {};
     if (data.region === null) unset.region = 1;
     else if (data.region !== undefined) update.region = data.region;
-    if (data.bestTakenFor === null) unset.bestTakenFor = 1;
-    else if (data.bestTakenFor !== undefined) update.bestTakenFor = data.bestTakenFor;
+    // null or an empty array clears the field; a non-empty array sets it
+    if (data.bestTakenFor === null || (Array.isArray(data.bestTakenFor) && data.bestTakenFor.length === 0)) {
+      unset.bestTakenFor = 1;
+    } else if (data.bestTakenFor !== undefined) {
+      update.bestTakenFor = data.bestTakenFor;
+    }
     if (clearDiscount) unset.discountedPrice = 1;
 
     if (data.status !== undefined) update.status = data.status;

@@ -134,7 +134,7 @@ export interface Product {
   attributes: Record<string, string>;
   tags: string[];
   region?: 'Assam' | 'Darjeeling' | 'Nilgiri' | 'Dooars';
-  bestTakenFor?: 'Morning' | 'Noon' | 'Evening';
+  bestTakenFor?: ('Morning' | 'Noon' | 'Evening')[];
   hasVariants?: boolean; // when true, basePrice/discountedPrice/stock are derived from variants
   variants?: ProductVariant[];
   // Admin-only (present in /admin/products, absent in /catalog/products)
@@ -206,7 +206,7 @@ export interface CreateProductPayload {
   attributes?: Record<string, string>;
   tags?: string[];
   region?: 'Assam' | 'Darjeeling' | 'Nilgiri' | 'Dooars' | null; // null clears
-  bestTakenFor?: 'Morning' | 'Noon' | 'Evening' | null; // null clears
+  bestTakenFor?: ('Morning' | 'Noon' | 'Evening')[] | null; // null/empty clears
   status?: 'draft' | 'active' | 'archived';
   showBadge?: boolean;
   badgeText?: string;
