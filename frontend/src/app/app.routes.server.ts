@@ -15,7 +15,13 @@ interface ApiListResponse<T> {
 
 async function fetchSlugs(path: string): Promise<string[]> {
   try {
-    const res = await fetch(`${PRERENDER_API_URL}${path}`);
+    // Short timeout so an unreachable/slow API at build time (CI runners, or a
+    // host that can't hairpin to its own domain) fails fast and the build still
+    // completes — the route extractor otherwise hangs until it aborts and the
+    // whole production build fails. Dynamic pages fall back to runtime rendering.
+    const res = await fetch(`${PRERENDER_API_URL}${path}`, {
+      signal: AbortSignal.timeout(4000),
+    });
     if (!res.ok) {
       console.warn(`[prerender] ${path} returned ${res.status}; skipping dynamic params for this route`);
       return [];
