@@ -1,6 +1,37 @@
 declare const fbq: ((...args: unknown[]) => void) | undefined;
 
 /**
+ * Generates a UUID for a single event occurrence, used as Meta's `eventID`
+ * (browser) and, later, the CAPI `event_id`, so the two collapse into one.
+ * Falls back to a random string where `crypto.randomUUID` is unavailable.
+ */
+export function generateEventId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'evt-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+}
+
+/**
+ * Fires a Meta Pixel STANDARD event with a controlled `eventID` and returns it,
+ * so the same id can later be sent as the CAPI `event_id` for deduplication.
+ * Pass an explicit `eventId` for events whose id must be deterministic (e.g.
+ * Purchase = order id). No-ops firing the pixel during SSR / when the script is
+ * blocked, but still returns an id.
+ */
+export function trackStandardEvent(
+  eventName: string,
+  params?: Record<string, unknown>,
+  eventId?: string,
+): string {
+  const id = eventId ?? generateEventId();
+  if (typeof fbq !== 'undefined') {
+    fbq('track', eventName, params ?? {}, { eventID: id });
+  }
+  return id;
+}
+
+/**
  * Fires a Meta Pixel STANDARD event (ViewContent, AddToCart, AddPaymentInfo,
  * Purchase, etc.) if the pixel script (loaded in index.html) is present.
  *
