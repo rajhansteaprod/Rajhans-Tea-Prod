@@ -3,7 +3,7 @@ import { sendMetaEvent } from './meta-capi.service';
 import { User } from '../../auth/models/user.model';
 
 // Group B events. AddPaymentInfo / Purchase are added in Group C.
-const ALLOWED = new Set(['ViewContent', 'AddToCart', 'InitiateCheckout']);
+const ALLOWED = new Set(['ViewContent', 'AddToCart', 'InitiateCheckout', 'AddPaymentInfo']);
 
 /**
  * Browser beacon → mirror a standard event to the Conversions API, deduped by

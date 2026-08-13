@@ -6,7 +6,7 @@ import { CheckoutService } from '../../../../core/services/checkout.service';
 import { PaymentStore } from '../../../../core/services/payment.store';
 import { CartStore } from '../../../../core/services/cart.store';
 import { ButtonComponent } from '../../../../../shared/components/button/button.component';
-import { trackStandardEvent } from '../../../../core/utils/meta-pixel';
+import { trackStandardEvent, sendCapiBeacon } from '../../../../core/utils/meta-pixel';
 
 @Component({
   selector: 'app-summary-step',
@@ -60,13 +60,15 @@ export class SummaryStepComponent {
     this.isPlacing.set(true);
 
     // Meta Pixel: user committed to paying (fires before the Razorpay modal opens).
-    trackStandardEvent('AddPaymentInfo', {
+    const apData = {
       content_ids: this.cartItems().map((i) => i.productId),
       content_type: 'product',
       value: this.cartTotal(),
       currency: 'INR',
       num_items: this.cartItems().reduce((sum, i) => sum + i.qty, 0),
-    });
+    };
+    const apEid = trackStandardEvent('AddPaymentInfo', apData);
+    sendCapiBeacon('AddPaymentInfo', apEid, apData);
 
     try {
       // ✅ Use PaymentStore.pay() which handles:
