@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { PaymentStore } from '../../../core/services/payment.store';
 import { OrderStore, OrderView } from '../../../core/services/order.store';
-import { trackStandardEvent } from '../../../core/utils/meta-pixel';
+import { trackPixelEvent } from '../../../core/utils/meta-pixel';
 
 @Component({
   selector: 'app-order-confirmation-page',
@@ -94,19 +94,10 @@ export class OrderConfirmationPageComponent implements OnInit {
       // sessionStorage unavailable (SSR / private mode) — proceed without the
       // local guard; the eventID below still lets Meta deduplicate.
     }
-    trackStandardEvent(
+    trackPixelEvent(
       'Purchase',
-      {
-        content_ids: order.items.map((i) => i.productId),
-        content_type: 'product',
-        value: order.total,
-        currency: 'INR',
-        num_items: order.items.reduce((sum, i) => sum + i.qty, 0),
-      },
-      // Deterministic id = the order's ObjectId as a string. Group C's server
-      // Purchase MUST serialise the same ObjectId with .toString() so the two
-      // events share an identical event_id and Meta dedupes them to one.
-      order._id.toString(),
+      { value: order.total, currency: 'INR', content_type: 'product' },
+      { eventID: order._id },
     );
   }
 }
