@@ -7,7 +7,7 @@ import { CheckoutService } from '../../../core/services/checkout.service';
 import { CartStepComponent } from './cart-step/cart-step.component';
 import { AddressStepComponent } from './address-step/address-step.component';
 import { SummaryStepComponent } from './summary-step/summary-step.component';
-import { trackPixelEvent } from '../../../core/utils/meta-pixel';
+import { trackStandardEvent } from '../../../core/utils/meta-pixel';
 
 type Step = 'cart' | 'address' | 'summary';
 
@@ -67,7 +67,9 @@ export class CheckoutPageComponent implements OnInit {
       // Initialize checkout once
       this.checkoutService.initializeCheckout(checkoutItems);
 
-      trackPixelEvent('InitiateCheckout', {
+      trackStandardEvent('InitiateCheckout', {
+        content_ids: checkoutItems.map((i) => i.productId),
+        content_type: 'product',
         value: checkoutItems.reduce((sum, i) => sum + (i.lineTotal ?? i.basePrice * i.qty), 0),
         currency: 'INR',
         num_items: checkoutItems.reduce((sum, i) => sum + i.qty, 0),
