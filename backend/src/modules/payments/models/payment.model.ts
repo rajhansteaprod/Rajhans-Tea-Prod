@@ -77,6 +77,13 @@ export interface IPaymentDoc extends Document {
   walletDebitFailed: boolean;
   // Coupon usage is recorded once, on capture (idempotency flag)
   couponUsageRecorded: boolean;
+  // Meta attribution captured at order creation; copied onto the Order.
+  tracking?: {
+    fbp?: string | null;
+    fbc?: string | null;
+    clientIp?: string | null;
+    userAgent?: string | null;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -147,6 +154,12 @@ const paymentSchema = new Schema<IPaymentDoc>(
     refundedAmount: { type: Number, default: 0 },
     refunds: [refundSchema],
     idempotencyKey: { type: String, required: true },
+    tracking: {
+      fbp: { type: String, default: null },
+      fbc: { type: String, default: null },
+      clientIp: { type: String, default: null },
+      userAgent: { type: String, default: null },
+    },
     invoiceId: { type: Schema.Types.ObjectId, ref: 'Invoice', default: null },
     priceSnapshotId: { type: Schema.Types.ObjectId, ref: 'PriceSnapshot', default: null },
     // Pessimistic locking (prevents concurrent verification)
