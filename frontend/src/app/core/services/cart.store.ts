@@ -16,7 +16,7 @@ import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import { PlatformService } from './platform.service';
 import { Product, ProductVariant } from './catalog.service';
-import { trackPixelEvent, trackStandardEvent } from '../utils/meta-pixel';
+import { trackPixelEvent } from '../utils/meta-pixel';
 
 // ─── API types (mirror backend) ───────────────────────────────────────────────
 
@@ -292,7 +292,7 @@ export class CartStore {
           const unitPrice = added
             ? (added.variantPrice ?? added.discountedPrice ?? added.price ?? added.basePrice ?? 0)
             : 0;
-          trackStandardEvent('AddToCart', {
+          trackPixelEvent('AddToCart', {
             content_ids: [productId],
             content_type: 'product',
             value: unitPrice * qty,

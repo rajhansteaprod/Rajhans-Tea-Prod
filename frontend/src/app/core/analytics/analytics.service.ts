@@ -2,7 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { PlatformService } from '../services/platform.service';
-import { trackStandardEvent } from '../utils/meta-pixel';
 
 declare global {
   interface Window {
@@ -24,11 +23,6 @@ export class AnalyticsService {
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe((event) => {
         this.trackPageView(event.urlAfterRedirects);
-        // Meta Pixel: standard PageView per SPA navigation (one per route).
-        // The subscription is registered in the root component constructor,
-        // before the router's initial navigation, so the first hard-load
-        // NavigationEnd is captured too.
-        trackStandardEvent('PageView');
       });
   }
 
