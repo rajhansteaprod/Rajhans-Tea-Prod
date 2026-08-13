@@ -1,3 +1,5 @@
+import { environment } from '../../../environments/environment';
+
 declare const fbq: ((...args: unknown[]) => void) | undefined;
 
 /**
@@ -29,6 +31,44 @@ export function trackStandardEvent(
     fbq('track', eventName, params ?? {}, { eventID: id });
   }
   return id;
+}
+
+function readCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return m ? decodeURIComponent(m[1]) : undefined;
+}
+
+/**
+ * Mirrors a standard event to the server (Conversions API) using the SAME
+ * eventId the pixel used, so Meta deduplicates the browser + server events.
+ * Sends only fbp/fbc from the browser — no PII (the server derives PII from the
+ * authenticated session). Fire-and-forget; never surfaces errors to the user.
+ */
+export function sendCapiBeacon(
+  eventName: string,
+  eventId: string,
+  customData?: Record<string, unknown>,
+): void {
+  if (typeof fetch === 'undefined') return; // SSR guard
+  try {
+    fetch(`${environment.apiUrl}/catalog/meta/track`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      keepalive: true,
+      body: JSON.stringify({
+        eventName,
+        eventId,
+        customData,
+        eventSourceUrl: typeof location !== 'undefined' ? location.href : undefined,
+        fbp: readCookie('_fbp'),
+        fbc: readCookie('_fbc'),
+      }),
+    }).catch(() => {});
+  } catch {
+    /* never break the page on analytics */
+  }
 }
 
 /**

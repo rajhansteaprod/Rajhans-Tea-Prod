@@ -119,6 +119,7 @@ export class OrderService {
         },
       ],
       shippingAddress: payment.shippingAddress,
+      tracking: payment.tracking,
       shiprocket: {
         orderId: null,
         shipmentId: null,
