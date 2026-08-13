@@ -9,6 +9,10 @@ import { shipmentLogger } from '../../../utils/shipment-logger';
 import { reviewTokenService } from '../../reviews/services/review-token.service';
 import { OrderStatus, IOrderDoc } from '../models/order.model';
 import { Types } from 'mongoose';
+import { config } from '../../../config';
+import { logger } from '../../../utils/logger';
+import { User } from '../../auth/models/user.model';
+import { sendMetaEvent } from '../../marketing/meta/meta-capi.service';
 
 // Valid status transitions (state machine)
 const VALID_TRANSITIONS: Record<string, OrderStatus[]> = {
@@ -139,7 +143,72 @@ export class OrderService {
     await this.inventoryService.deductStock(order._id.toString());
     console.log(`[Order] ✓ Stock deducted`);
 
+    // Authoritative server-side Purchase → Meta CAPI. Fire-and-forget: a Meta
+    // failure can NEVER affect order handling. Deduped against the browser
+    // Purchase via event_id = order._id.toString() (identical string).
+    void this.sendPurchaseToMeta(order);
+
     return order;
+  }
+
+  /**
+   * Sends the authoritative server-side Purchase to the Meta Conversions API.
+   * Never throws — a Meta/network failure must not affect order handling. The
+   * event_id is order._id.toString(), matching the browser Purchase on the
+   * confirmation page so Meta deduplicates the two into one.
+   *
+   * Static imports are used deliberately: none of these modules import back
+   * into order.service (no circular dependency), and a dynamic import failing
+   * inside the catch would swallow the very error we want logged.
+   */
+  private async sendPurchaseToMeta(order: IOrderDoc): Promise<void> {
+    try {
+      // Email only from the registered account — guest orders store no contact
+      // email anywhere (order/payment/shippingAddress have none).
+      let email: string | undefined;
+      if (order.userId) {
+        const u = await User.findById(order.userId, 'email')
+          .lean<{ email?: string }>()
+          .exec()
+          .catch(() => null);
+        email = u?.email ?? undefined;
+      }
+
+      const addr = order.shippingAddress;
+      const [firstName, ...rest] = (addr.name || '').trim().split(/\s+/);
+      const lastName = rest.join(' ') || undefined;
+
+      await sendMetaEvent({
+        eventName: 'Purchase',
+        eventId: order._id.toString(),
+        eventSourceUrl: `${config.app.frontendUrl}/order-confirmation`,
+        customData: {
+          content_ids: order.items.map((i) => i.productId),
+          content_type: 'product',
+          value: order.total,
+          currency: 'INR',
+          num_items: order.items.reduce((sum, i) => sum + i.qty, 0),
+        },
+        userData: {
+          email,
+          phone: addr.phone,
+          firstName,
+          lastName,
+          city: addr.city,
+          state: addr.state,
+          zip: addr.pinCode,
+          fbp: order.tracking?.fbp,
+          fbc: order.tracking?.fbc,
+          clientIp: order.tracking?.clientIp,
+          userAgent: order.tracking?.userAgent,
+        },
+      });
+    } catch (err) {
+      logger.error(
+        { orderId: order._id?.toString(), error: String(err) },
+        '[meta-capi] Purchase send failed (order flow unaffected)',
+      );
+    }
   }
 
   // ─── Ship order via shipping provider ─────────────────────────────────────
