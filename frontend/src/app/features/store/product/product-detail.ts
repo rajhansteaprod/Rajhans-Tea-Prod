@@ -7,7 +7,7 @@ import { CatalogService, Product, ProductVariant } from '../../../core/services/
 import { CartStore } from '../../../core/services/cart.store';
 import { ReviewStore, RatingSummary, Review, ProductRatingSummary } from '../../../core/services/review.store';
 import { AuthService } from '../../../core/services/auth.service';
-import { trackPixelEvent } from '../../../core/utils/meta-pixel';
+import { trackStandardEvent } from '../../../core/utils/meta-pixel';
 
 @Component({
   selector: 'app-product-detail',
@@ -223,7 +223,7 @@ export class ProductDetailComponent implements OnInit {
             this.selectedVariant.set(this.defaultVariant(res.data.variants));
           }
 
-          trackPixelEvent('ViewContent', {
+          trackStandardEvent('ViewContent', {
             content_ids: [res.data._id],
             content_type: 'product',
             value: this.effectivePrice(),
