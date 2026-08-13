@@ -16,6 +16,12 @@ import metricsRoutes from './api/v1/routes/metrics.routes';
 
 const app = express();
 
+// Behind exactly one reverse proxy (tea-nginx). Lets Express derive the real
+// client IP from X-Forwarded-For so rate limiting keys per-user (not per-proxy)
+// and express-rate-limit stops rejecting the header. One hop only — nothing
+// runs in front of tea-nginx — so a spoofed X-Forwarded-For can't be trusted.
+app.set('trust proxy', 1);
+
 // Security & parsing
 app.use(helmet());
 app.use(cors({ origin: config.cors.origin, credentials: true }));
