@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule, DOCUMENT } from '@angular/common';
+import { Component, OnInit, inject, signal, computed, effect, PLATFORM_ID } from '@angular/core';
+import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
@@ -8,6 +8,19 @@ import { CartStore } from '../../../core/services/cart.store';
 import { ReviewStore, RatingSummary, Review, ProductRatingSummary } from '../../../core/services/review.store';
 import { AuthService } from '../../../core/services/auth.service';
 import { trackStandardEvent, sendCapiBeacon } from '../../../core/utils/meta-pixel';
+
+/**
+ * Colours read along the two edges of an image that end up beside the empty
+ * bars in a square frame.
+ */
+interface AmbientEdges {
+  /** 'x' = portrait image, bars left/right. 'y' = landscape, bars top/bottom. */
+  axis: 'x' | 'y';
+  /** Left (or top) edge colours, in order along that edge. */
+  lead: string[];
+  /** Right (or bottom) edge colours, in order along that edge. */
+  trail: string[];
+}
 
 @Component({
   selector: 'app-product-detail',
@@ -26,6 +39,7 @@ export class ProductDetailComponent implements OnInit {
   private readonly meta = inject(Meta);
   private readonly titleService = inject(Title);
   private readonly document = inject(DOCUMENT);
+  private readonly platformId = inject(PLATFORM_ID);
 
   readonly isLoggedIn = this.authService.isLoggedIn;
 
@@ -49,6 +63,148 @@ export class ProductDetailComponent implements OnInit {
   reviewTitle = '';
   reviewBody = '';
   readonly submittingReview = signal(false);
+
+  // ─ Ambient backdrop (blends a non-square image into the 1:1 frame) ─
+
+  /** Number of slices sampled along each edge — enough to follow a soft vignette. */
+  private readonly AMBIENT_SLICES = 8;
+
+  /** Edge colours keyed by image URL, so each image is analysed at most once. */
+  private readonly ambientCache = new Map<string, AmbientEdges>();
+
+  /** Edges of the image currently on screen; null while it is being read. */
+  private readonly ambient = signal<AmbientEdges | null>(null);
+
+  /**
+   * Paints each empty bar with the colours of the image edge it touches, so the
+   * bar continues the photo's own backdrop and the join becomes invisible. Two
+   * gradient layers, each covering its half of the frame — the image sits on
+   * top and hides where they meet. Empty until the read resolves, which leaves
+   * the neutral CSS background in place.
+   */
+  readonly ambientBackground = computed(() => {
+    const edges = this.ambient();
+    if (!edges) return '';
+
+    const direction = edges.axis === 'x' ? 'to bottom' : 'to right';
+    const ramp = (colors: string[]) => {
+      const stops = colors.map(
+        (color, i) => `${color} ${((i / (colors.length - 1)) * 100).toFixed(1)}%`,
+      );
+      return `linear-gradient(${direction}, ${stops.join(', ')})`;
+    };
+
+    // Slight overlap (50.5%) so rounding never leaves a hairline down the middle
+    const size = edges.axis === 'x' ? '50.5% 100%' : '100% 50.5%';
+    const leadAt = edges.axis === 'x' ? 'left center' : 'center top';
+    const trailAt = edges.axis === 'x' ? 'right center' : 'center bottom';
+
+    return (
+      `${ramp(edges.lead)} ${leadAt} / ${size} no-repeat, ` +
+      `${ramp(edges.trail)} ${trailAt} / ${size} no-repeat`
+    );
+  });
+
+  constructor() {
+    // Re-read the edges whenever the visible image changes.
+    effect(() => {
+      const url = this.selectedImage();
+      if (!url) {
+        this.ambient.set(null);
+        return;
+      }
+
+      const cached = this.ambientCache.get(url);
+      if (cached) {
+        this.ambient.set(cached);
+        return;
+      }
+
+      this.ambient.set(null);
+      if (isPlatformBrowser(this.platformId)) this.extractAmbient(url);
+    });
+  }
+
+  /**
+   * Reads the outermost pixels of the image from a 64x64 downscale. Only a 2px
+   * strip is sampled per slice — roughly 3% of the source width, which stays on
+   * the photo's backdrop instead of picking up the product itself. Gives up
+   * silently on load or cross-origin failures, leaving the neutral background.
+   */
+  private extractAmbient(url: string): void {
+    const SIZE = 64;
+    const EDGE = 2; // strip thickness sampled at the very border
+    const slices = this.AMBIENT_SLICES;
+    const step = SIZE / slices;
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      const canvas = this.document.createElement('canvas');
+      canvas.width = SIZE;
+      canvas.height = SIZE;
+
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0, SIZE, SIZE);
+
+      // Which pair of bars `object-fit: contain` will leave in the square frame
+      const axis: 'x' | 'y' = img.naturalWidth <= img.naturalHeight ? 'x' : 'y';
+
+      try {
+        const lead: string[] = [];
+        const trail: string[] = [];
+
+        for (let i = 0; i < slices; i++) {
+          const offset = i * step;
+          if (axis === 'x') {
+            lead.push(this.averageColor(ctx, 0, offset, EDGE, step));
+            trail.push(this.averageColor(ctx, SIZE - EDGE, offset, EDGE, step));
+          } else {
+            lead.push(this.averageColor(ctx, offset, 0, step, EDGE));
+            trail.push(this.averageColor(ctx, offset, SIZE - EDGE, step, EDGE));
+          }
+        }
+
+        const edges: AmbientEdges = { axis, lead, trail };
+        this.ambientCache.set(url, edges);
+        // The shopper may have moved on to another image while this loaded
+        if (this.selectedImage() === url) this.ambient.set(edges);
+      } catch {
+        // Tainted canvas (image served without CORS headers) — keep the neutral
+      }
+    };
+
+    img.src = url;
+  }
+
+  /** Mean rgb() of a canvas rectangle, skipping near-transparent pixels. */
+  private averageColor(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  ): string {
+    const { data } = ctx.getImageData(x, y, width, height);
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    let count = 0;
+
+    for (let i = 0; i < data.length; i += 4) {
+      // Transparent PNG margins carry no colour and would wash the average out
+      if (data[i + 3] < 16) continue;
+      r += data[i];
+      g += data[i + 1];
+      b += data[i + 2];
+      count++;
+    }
+
+    if (count === 0) return 'rgb(249, 250, 251)'; // matches the neutral fallback
+    return `rgb(${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)})`;
+  }
 
   readonly orderedImages = computed(() => {
     const prod = this.product();
