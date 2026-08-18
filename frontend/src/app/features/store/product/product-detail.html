@@ -11,11 +11,6 @@
             #zoomEl
             (click)="onImageClick($event, zoomEl)"
           >
-            <!-- Ambient backdrop: fills the empty bars with the colours of the
-                 image edge beside them, so a non-square photo reads as if it
-                 filled the 1:1 frame -->
-            <div class="pd__ambient" [style.background]="ambientBackground()"></div>
-
             <img
               [src]="selectedImage()"
               class="pd__main-img"
