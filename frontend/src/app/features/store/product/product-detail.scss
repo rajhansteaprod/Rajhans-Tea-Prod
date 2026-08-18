@@ -90,7 +90,20 @@
   border: 1px solid rgba($color-mono-dark, 0.08);
 }
 
+// Ambient backdrop — the empty bars left by `object-fit: contain`, painted with
+// the colours of the image edge they sit against so a portrait photo (e.g. 5:7)
+// reads as one piece with the square frame. The component sets the background
+// inline; this is the neutral shown until it resolves.
+.pd__ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: rgb(249, 250, 251);
+}
+
 .pd__main-img {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: contain;
