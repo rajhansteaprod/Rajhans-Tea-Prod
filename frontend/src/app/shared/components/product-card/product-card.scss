@@ -28,8 +28,8 @@
 .product-card__image-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 5/7;
-  background-size: contain;
+  aspect-ratio: 1/1;
+  background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-color: #faf7f2; // soft warm tint so contained images sit on a surface
