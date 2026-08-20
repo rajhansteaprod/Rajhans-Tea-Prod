@@ -109,6 +109,18 @@ export class CmsService {
       Blog.find({ status: 'published' }).select('slug updatedAt').lean().exec(),
     ]);
 
+    // Safe lastmod: an invalid/missing updatedAt on a single record must never
+    // 500 the whole sitemap — fall back to today.
+    const lastmod = (d: unknown): string => {
+      const dt = d ? new Date(d as string | number | Date) : null;
+      return dt && !isNaN(dt.getTime())
+        ? dt.toISOString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10);
+    };
+    const escapeXml = (s: string): string =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const loc = (path: string): string => `${baseUrl}${escapeXml(path)}`;
+
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 
@@ -117,22 +129,26 @@ export class CmsService {
 
     // Products
     for (const p of products) {
-      xml += `  <url><loc>${baseUrl}/product/${p.slug}</loc><lastmod>${new Date(p.updatedAt).toISOString().slice(0, 10)}</lastmod><priority>0.8</priority></url>\n`;
+      if (!p.slug) continue;
+      xml += `  <url><loc>${loc(`/product/${p.slug}`)}</loc><lastmod>${lastmod(p.updatedAt)}</lastmod><priority>0.8</priority></url>\n`;
     }
 
     // Categories
     for (const c of categories) {
-      xml += `  <url><loc>${baseUrl}/catalog/${c.slug}</loc><lastmod>${new Date(c.updatedAt).toISOString().slice(0, 10)}</lastmod><priority>0.7</priority></url>\n`;
+      if (!c.slug) continue;
+      xml += `  <url><loc>${loc(`/catalog/${c.slug}`)}</loc><lastmod>${lastmod(c.updatedAt)}</lastmod><priority>0.7</priority></url>\n`;
     }
 
     // Pages
     for (const p of pages) {
-      xml += `  <url><loc>${baseUrl}/page/${p.slug}</loc><lastmod>${new Date(p.updatedAt).toISOString().slice(0, 10)}</lastmod><priority>0.5</priority></url>\n`;
+      if (!p.slug) continue;
+      xml += `  <url><loc>${loc(`/page/${p.slug}`)}</loc><lastmod>${lastmod(p.updatedAt)}</lastmod><priority>0.5</priority></url>\n`;
     }
 
     // Blog
     for (const b of blogs) {
-      xml += `  <url><loc>${baseUrl}/blog/${b.slug}</loc><lastmod>${new Date(b.updatedAt).toISOString().slice(0, 10)}</lastmod><priority>0.6</priority></url>\n`;
+      if (!b.slug) continue;
+      xml += `  <url><loc>${loc(`/blog/${b.slug}`)}</loc><lastmod>${lastmod(b.updatedAt)}</lastmod><priority>0.6</priority></url>\n`;
     }
 
     xml += '</urlset>';
