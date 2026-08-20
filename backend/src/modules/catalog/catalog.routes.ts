@@ -49,6 +49,8 @@ router.get(
   cacheResponse(120),
   catalog.listProductsPublic,
 );
+// All active product slugs for prerender enumeration (cached 5 min).
+router.get('/catalog/product-slugs', cacheResponse(300), catalog.listProductSlugs);
 router.get('/catalog/products/:slug', validate(productSlugSchema), catalog.getProductBySlug);
 
 // Variant options — public list drives catalog facet filters (cached 5 min)

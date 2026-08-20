@@ -41,6 +41,16 @@ export class ProductRepository extends BaseRepository<IProductDoc> {
       .exec();
   }
 
+  /** All active product slugs — used by the build-time prerender (no pagination cap). */
+  async findActiveSlugs(): Promise<string[]> {
+    const docs = await this.model
+      .find({ status: 'active' })
+      .select('slug')
+      .lean<{ slug: string }[]>()
+      .exec();
+    return docs.map((d) => d.slug).filter(Boolean);
+  }
+
   async slugExists(slug: string, excludeId?: string): Promise<boolean> {
     const query: Record<string, unknown> = { slug };
     if (excludeId) query._id = { $ne: excludeId };

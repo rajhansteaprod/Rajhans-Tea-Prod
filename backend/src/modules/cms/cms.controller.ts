@@ -35,9 +35,10 @@ export const getSitemap = async (req: Request, res: Response) => {
   res.send(xml);
 };
 
-export const getRobotsTxt = async (_req: Request, res: Response) => {
+export const getRobotsTxt = async (req: Request, res: Response) => {
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
   res.setHeader('Content-Type', 'text/plain');
-  res.send(`User-agent: *\nAllow: /\nSitemap: /sitemap.xml\nDisallow: /admin\nDisallow: /api\n`);
+  res.send(`User-agent: *\nAllow: /\nSitemap: ${baseUrl}/sitemap.xml\nDisallow: /admin\nDisallow: /api\n`);
 };
 
 // ─── Admin: Pages ────────────────────────────────────────────────────────────
