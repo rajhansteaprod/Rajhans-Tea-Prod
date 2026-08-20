@@ -49,7 +49,8 @@ export const serverRoutes: ServerRoute[] = [
     path: 'product/:slug',
     renderMode: RenderMode.Prerender,
     async getPrerenderParams() {
-      const slugs = await fetchSlugs('/catalog/products?limit=100');
+      // Dedicated endpoint returns ALL active product slugs (no 100 cap).
+      const slugs = await fetchSlugs('/catalog/product-slugs');
       return slugs.map((slug) => ({ slug }));
     },
   },

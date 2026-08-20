@@ -106,6 +106,12 @@ export class ProductService {
     };
   }
 
+  /** Active product slugs for build-time prerender enumeration (all, uncapped). */
+  async listActiveSlugs(): Promise<{ slug: string }[]> {
+    const slugs = await this.productRepo.findActiveSlugs();
+    return slugs.map((slug) => ({ slug }));
+  }
+
   async getBySlug(slug: string) {
     const product = await this.productRepo.findBySlug(slug);
     if (!product) throw new NotFoundError('Product not found');

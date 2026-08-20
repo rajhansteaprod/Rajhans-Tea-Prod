@@ -116,6 +116,12 @@ export const getProductBySlug = async (req: Request, res: Response) => {
   sendSuccess(res, data);
 };
 
+/** All active product slugs — consumed by the frontend build-time prerender. */
+export const listProductSlugs = async (_req: Request, res: Response) => {
+  const data = await productService.listActiveSlugs();
+  sendSuccess(res, data);
+};
+
 export const getProductById = async (req: Request, res: Response) => {
   const data = await productService.getById(req.params['id'] as string);
   sendSuccess(res, data);
