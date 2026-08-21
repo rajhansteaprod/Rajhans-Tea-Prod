@@ -127,28 +127,32 @@ export class CmsService {
     // Homepage
     xml += `  <url><loc>${baseUrl}/</loc><priority>1.0</priority></url>\n`;
 
+    // Canonical URLs carry a trailing slash (prerendered pages are directories
+    // that 301 to add it) — emit the final slash form so Google indexes the
+    // canonical URL directly instead of following a redirect for every entry.
+
     // Products
     for (const p of products) {
       if (!p.slug) continue;
-      xml += `  <url><loc>${loc(`/product/${p.slug}`)}</loc><lastmod>${lastmod(p.updatedAt)}</lastmod><priority>0.8</priority></url>\n`;
+      xml += `  <url><loc>${loc(`/product/${p.slug}/`)}</loc><lastmod>${lastmod(p.updatedAt)}</lastmod><priority>0.8</priority></url>\n`;
     }
 
     // Categories
     for (const c of categories) {
       if (!c.slug) continue;
-      xml += `  <url><loc>${loc(`/catalog/${c.slug}`)}</loc><lastmod>${lastmod(c.updatedAt)}</lastmod><priority>0.7</priority></url>\n`;
+      xml += `  <url><loc>${loc(`/catalog/${c.slug}/`)}</loc><lastmod>${lastmod(c.updatedAt)}</lastmod><priority>0.7</priority></url>\n`;
     }
 
     // Pages
     for (const p of pages) {
       if (!p.slug) continue;
-      xml += `  <url><loc>${loc(`/page/${p.slug}`)}</loc><lastmod>${lastmod(p.updatedAt)}</lastmod><priority>0.5</priority></url>\n`;
+      xml += `  <url><loc>${loc(`/page/${p.slug}/`)}</loc><lastmod>${lastmod(p.updatedAt)}</lastmod><priority>0.5</priority></url>\n`;
     }
 
     // Blog
     for (const b of blogs) {
       if (!b.slug) continue;
-      xml += `  <url><loc>${loc(`/blog/${b.slug}`)}</loc><lastmod>${lastmod(b.updatedAt)}</lastmod><priority>0.6</priority></url>\n`;
+      xml += `  <url><loc>${loc(`/blog/${b.slug}/`)}</loc><lastmod>${lastmod(b.updatedAt)}</lastmod><priority>0.6</priority></url>\n`;
     }
 
     xml += '</urlset>';
