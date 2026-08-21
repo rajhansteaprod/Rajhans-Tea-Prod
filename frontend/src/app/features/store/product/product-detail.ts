@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
@@ -24,6 +24,7 @@ export class ProductDetailComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly meta = inject(Meta);
   private readonly titleService = inject(Title);
+  private readonly document = inject(DOCUMENT);
 
   readonly isLoggedIn = this.authService.isLoggedIn;
 
@@ -173,15 +174,51 @@ export class ProductDetailComponent implements OnInit {
           }
 
           // SEO
-          this.titleService.setTitle(`${res.data.name} — Rajhans Tea`);
-          this.meta.updateTag({ name: 'description', content: res.data.shortDescription || res.data.name });
-          this.meta.updateTag({ property: 'og:title', content: res.data.name });
-          this.meta.updateTag({ property: 'og:description', content: res.data.shortDescription || '' });
-          if (res.data.images?.[0]) this.meta.updateTag({ property: 'og:image', content: res.data.images[0] });
+          const pageTitle = `${res.data.name} — Rajhans Tea`;
+          const pageDescription = res.data.shortDescription || res.data.name;
+          // Canonical URL carries the trailing slash — matches sitemap + redirect policy.
+          const pageUrl = `https://rajhanstea.com/product/${res.data.slug}/`;
 
-          // Load rating summary
+          this.titleService.setTitle(pageTitle);
+          this.meta.updateTag({ name: 'description', content: pageDescription });
+          this.meta.updateTag({ property: 'og:title', content: res.data.name });
+          this.meta.updateTag({ property: 'og:description', content: pageDescription });
+          this.meta.updateTag({ property: 'og:type', content: 'product' });
+          this.meta.updateTag({ property: 'og:url', content: pageUrl });
+          this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
+          this.meta.updateTag({ name: 'twitter:title', content: res.data.name });
+          this.meta.updateTag({ name: 'twitter:description', content: pageDescription });
+
+          const toAbsoluteUrl = (path: string) =>
+            path.startsWith('http')
+              ? path
+              : `https://rajhanstea.com${path.startsWith('/') ? '' : '/'}${path}`;
+
+          const absoluteImg = res.data.images?.[0]
+            ? toAbsoluteUrl(res.data.images[0])
+            : undefined;
+
+          if (absoluteImg) {
+            this.meta.updateTag({ property: 'og:image', content: absoluteImg });
+            this.meta.updateTag({ name: 'twitter:image', content: absoluteImg });
+          }
+
+          let canonical = this.document.querySelector('link[rel="canonical"]');
+          if (!canonical) {
+            canonical = this.document.createElement('link');
+            canonical.setAttribute('rel', 'canonical');
+            this.document.head.appendChild(canonical);
+          }
+          canonical.setAttribute('href', pageUrl);
+
+          // Load rating summary, then inject Product JSON-LD so prerendered HTML
+          // contains aggregateRating when rating evidence is available.
           this.reviewStore.getRatingSummary(res.data._id).subscribe({
-            next: (r) => this.ratingSummary.set(r.data),
+            next: (r) => {
+              this.ratingSummary.set(r.data);
+              this.injectProductSchema(res.data, pageUrl, absoluteImg, r.data);
+            },
+            error: () => this.injectProductSchema(res.data, pageUrl, absoluteImg, null),
           });
 
           // Load reviews
@@ -322,6 +359,55 @@ export class ProductDetailComponent implements OnInit {
     event.preventDefault();
     event.stopPropagation();
     this.cartStore.toggleWishlist(productId);
+  }
+
+  /** Injects/updates the schema.org Product JSON-LD block for this page. */
+  private injectProductSchema(
+    product: Product,
+    pageUrl: string,
+    absoluteImg: string | undefined,
+    rating: RatingSummary | null,
+  ): void {
+    const price = product.discountedPrice ?? product.basePrice;
+    const schema: Record<string, unknown> = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      description: product.shortDescription || product.description || product.name,
+      brand: { '@type': 'Brand', name: 'Rajhans Tea' },
+      offers: {
+        '@type': 'Offer',
+        url: pageUrl,
+        priceCurrency: 'INR',
+        price,
+        availability:
+          product.inStock === false
+            ? 'https://schema.org/OutOfStock'
+            : 'https://schema.org/InStock',
+      },
+    };
+
+    if (absoluteImg) schema['image'] = absoluteImg;
+
+    if (rating && rating.totalReviews > 0) {
+      schema['aggregateRating'] = {
+        '@type': 'AggregateRating',
+        ratingValue: rating.averageRating,
+        reviewCount: rating.totalReviews,
+      };
+    }
+
+    const scriptId = 'product-jsonld';
+    let script = this.document.getElementById(scriptId) as HTMLScriptElement | null;
+
+    if (!script) {
+      script = this.document.createElement('script');
+      script.type = 'application/ld+json';
+      script.id = scriptId;
+      this.document.head.appendChild(script);
+    }
+
+    script.textContent = JSON.stringify(schema);
   }
 
   // ─ Recommendations card navigation ─
