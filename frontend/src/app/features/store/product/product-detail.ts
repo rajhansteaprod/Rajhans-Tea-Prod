@@ -393,7 +393,9 @@ export class ProductDetailComponent implements OnInit {
           // SEO
           const pageTitle = `${res.data.name} — Rajhans Tea`;
           const pageDescription = res.data.shortDescription || res.data.name;
-          const pageUrl = `https://rajhanstea.com/product/${res.data.slug}`;
+          // Canonical URL carries the trailing slash — matches the sitemap and
+          // the prerendered directory URL the site 301s to. Dynamic per product.
+          const pageUrl = `https://rajhanstea.com/product/${res.data.slug}/`;
 
           this.titleService.setTitle(pageTitle);
           this.meta.updateTag({ name: 'description', content: pageDescription });
