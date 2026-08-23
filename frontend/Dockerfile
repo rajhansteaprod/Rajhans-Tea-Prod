@@ -7,7 +7,7 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
 COPY frontend/ .
-RUN npx ng build --configuration=production
+RUN NODE_OPTIONS=--max-old-space-size=6144 npx ng build --configuration=production
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine AS production
