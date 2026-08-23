@@ -121,15 +121,19 @@ export class CmsService {
       s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const loc = (path: string): string => `${baseUrl}${escapeXml(path)}`;
 
+    // Duplicate policy slugs whose content lives at a canonical slug; these are
+    // 301-redirected at the edge, so they must not appear in the sitemap.
+    const EXCLUDED_PAGE_SLUGS = new Set(['return-refund', 'terms-and-conditions']);
+
+    // Canonical URLs carry a trailing slash (prerendered pages are directories
+    // that 301 to add it) — emit the final slash form so Google indexes the
+    // canonical URL directly instead of following a redirect for every entry.
+
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 
     // Homepage
     xml += `  <url><loc>${baseUrl}/</loc><priority>1.0</priority></url>\n`;
-
-    // Canonical URLs carry a trailing slash (prerendered pages are directories
-    // that 301 to add it) — emit the final slash form so Google indexes the
-    // canonical URL directly instead of following a redirect for every entry.
 
     // Products
     for (const p of products) {
@@ -143,9 +147,9 @@ export class CmsService {
       xml += `  <url><loc>${loc(`/catalog/${c.slug}/`)}</loc><lastmod>${lastmod(c.updatedAt)}</lastmod><priority>0.7</priority></url>\n`;
     }
 
-    // Pages
+    // Pages (excluding duplicate policy slugs)
     for (const p of pages) {
-      if (!p.slug) continue;
+      if (!p.slug || EXCLUDED_PAGE_SLUGS.has(p.slug)) continue;
       xml += `  <url><loc>${loc(`/page/${p.slug}/`)}</loc><lastmod>${lastmod(p.updatedAt)}</lastmod><priority>0.5</priority></url>\n`;
     }
 
