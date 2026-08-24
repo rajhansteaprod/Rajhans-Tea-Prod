@@ -26,6 +26,10 @@ import {
   startReviewsWorker,
   closeReviewsWorker,
 } from '../modules/reviews/jobs/workers/reviews.worker';
+import {
+  startSeoAuditWorker,
+  closeSeoAuditWorker,
+} from '../modules/seo/jobs/workers/seo-audit.worker';
 import { logger } from '../utils/logger';
 
 export const registerWorkers = (): void => {
@@ -36,6 +40,7 @@ export const registerWorkers = (): void => {
   startFulfillmentWorker();
   startPromotionsWorker();
   startReviewsWorker();
+  startSeoAuditWorker();
   logger.info('BullMQ workers registered');
 };
 
@@ -47,5 +52,6 @@ export const closeWorkers = async (): Promise<void> => {
   await closeFulfillmentWorker();
   await closePromotionsWorker();
   await closeReviewsWorker();
+  await closeSeoAuditWorker();
   logger.info('BullMQ workers closed');
 };
