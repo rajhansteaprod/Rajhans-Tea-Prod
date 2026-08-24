@@ -24,6 +24,23 @@
   }
 }
 
+// ── Crawlable media link (wraps the image) ──
+.product-card__media-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+// ── Crawlable product-name link ──
+.product-card__name-link {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    color: inherit;
+  }
+}
+
 // ── Image Container ──
 .product-card__image-container {
   position: relative;

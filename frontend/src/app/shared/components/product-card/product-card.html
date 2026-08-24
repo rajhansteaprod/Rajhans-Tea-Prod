@@ -1,26 +1,33 @@
-<div class="product-card" (click)="onCardClick()">
-  <!-- Image Container (Large, Dominant) -->
-  <div
-    class="product-card__image-container"
-    [style.backgroundImage]="'url(' + getImages()[currentImageIndex()] + ')'"
-    [style.--secondary-image]="getSecondaryImage()"
-    (mouseenter)="onHover(true)"
-    (mouseleave)="onHover(false)">
-    
-    @if (product.showBadge && product.badgeText) {
-      <div class="product-badge">{{ product.badgeText }}</div>
-    }
+<div class="product-card">
+  <!-- Image Container (Large, Dominant) — crawlable link to the product page -->
+  <a
+    class="product-card__media-link"
+    [routerLink]="['/product', product.slug]"
+    [attr.aria-label]="product.name">
+    <div
+      class="product-card__image-container"
+      [style.backgroundImage]="'url(' + getImages()[currentImageIndex()] + ')'"
+      [style.--secondary-image]="getSecondaryImage()"
+      (mouseenter)="onHover(true)"
+      (mouseleave)="onHover(false)">
+
+      @if (product.showBadge && product.badgeText) {
+        <div class="product-badge">{{ product.badgeText }}</div>
+      }
 
 
 
-  </div>
+    </div>
+  </a>
 
   <!-- Content Section -->
   <div class="product-card__content">
     <div class="product-card__info-group">
       <!-- Title & selected-variant weight -->
       <div class="product-card__title-desc">
-        <h3 class="product-card__name">{{ product.name }}</h3>
+        <h3 class="product-card__name">
+          <a class="product-card__name-link" [routerLink]="['/product', product.slug]">{{ product.name }}</a>
+        </h3>
         @if (getSelectedVariant()) {
           <p class="product-card__weight">{{ getSelectedVariant()!.name }}</p>
         }

@@ -626,6 +626,20 @@ export class ProductDetailComponent implements OnInit {
     this.cartStore.toggleWishlist(productId);
   }
 
+  /**
+   * Descriptive, SEO-friendly ALT text for a product image. Beyond the bare
+   * product name it includes the category and a "tea" qualifier so the alt
+   * describes the image content (helps image search and accessibility). An
+   * optional 1-based position disambiguates gallery thumbnails.
+   */
+  imageAltText(position?: number): string {
+    const p = this.product();
+    if (!p) return 'Rajhans Tea product image';
+    const category = p.category?.name ? `${p.category.name} ` : '';
+    const base = `${p.name} — ${category}loose-leaf tea by Rajhans Tea`;
+    return position && position > 1 ? `${base} (view ${position})` : base;
+  }
+
   // ─ Recommendations card navigation ─
   goToProduct(product: Product): void {
     this.router.navigate(['/product', product.slug]);

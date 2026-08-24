@@ -1,7 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Meta } from '@angular/platform-browser';
 import { firstValueFrom } from 'rxjs';
 import { Msg91OtpService } from '../../../core/services/msg91-otp.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -13,7 +14,8 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit, OnDestroy {
+  private readonly meta = inject(Meta);
   // Zoneless app (Angular, no zone.js): async state must be signals so change
   // detection runs after awaited HTTP calls resolve.
   readonly isLoading = signal(false);
@@ -29,6 +31,19 @@ export class LoginComponent {
     private otpService: Msg91OtpService,
     private authService: AuthService,
   ) {}
+
+  ngOnInit(): void {
+    // The login page has no indexable value and would surface as thin/duplicate
+    // content. noindex,follow keeps it out of the index while still letting link
+    // equity flow through any links on the page.
+    this.meta.updateTag({ name: 'robots', content: 'noindex,follow' });
+  }
+
+  ngOnDestroy(): void {
+    // Remove the noindex on navigation away so indexable pages (this is a SPA —
+    // the tag would otherwise persist) don't inherit it.
+    this.meta.removeTag("name='robots'");
+  }
 
   clearError(): void {
     this.error.set('');

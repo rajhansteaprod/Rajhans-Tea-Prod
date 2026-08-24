@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Title } from '@angular/platform-browser';
+import { Meta, Title } from '@angular/platform-browser';
 import { CatalogService, Product, Category } from '../../../core/services/catalog.service';
 import { CartStore } from '../../../core/services/cart.store';
 import { ReviewStore, ProductRatingSummary } from '../../../core/services/review.store';
@@ -24,6 +24,8 @@ export class ProductsPageComponent implements OnInit {
   private readonly catalog = inject(CatalogService);
   private readonly cartStore = inject(CartStore);
   private readonly titleService = inject(Title);
+  private readonly meta = inject(Meta);
+  private readonly document = inject(DOCUMENT);
   private readonly reviewStore = inject(ReviewStore);
 
   // State
@@ -84,7 +86,25 @@ export class ProductsPageComponent implements OnInit {
   });
 
   constructor() {
+    // SEO for the product listing page. Set in the constructor so it's present
+    // during build-time prerendering of /products.
     this.titleService.setTitle('All Products — Rajhans Tea');
+    this.meta.updateTag({
+      name: 'description',
+      content:
+        'Shop the full range of Rajhans Tea — premium Assam, green, and specialty loose-leaf teas. Fresh, ethically sourced, and delivered across India.',
+    });
+
+    // Self-canonical for the listing page (trailing slash matches the sitemap and
+    // the prerendered directory URL the site 301s to).
+    const pageUrl = 'https://rajhanstea.com/products/';
+    let canonical = this.document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = this.document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      this.document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', pageUrl);
   }
 
   ngOnInit(): void {
