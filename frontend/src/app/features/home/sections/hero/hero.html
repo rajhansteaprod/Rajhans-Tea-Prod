@@ -17,7 +17,9 @@
           <div class="hero__overlay-container">
             <div class="hero__overlay-content">
               @if (slides()[activeSlide()].title) {
-                <h1 class="hero__h1">{{ slides()[activeSlide()].title }}</h1>
+                <!-- h2, not h1: the page's single semantic H1 lives in home.html.
+                     Hero slide titles rotate/are data-dependent, so they must not be the H1. -->
+                <h2 class="hero__h1">{{ slides()[activeSlide()].title }}</h2>
               }
               @if (slides()[activeSlide()].subtitle) {
                 <p class="hero__sub">{{ slides()[activeSlide()].subtitle }}</p>
