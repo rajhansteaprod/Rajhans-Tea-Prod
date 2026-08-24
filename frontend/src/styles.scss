@@ -343,3 +343,18 @@ app-summary-step {
   }
 }
 
+
+// ── Accessibility utility: visually hidden but present for screen readers & crawlers ──
+// Used to provide a stable semantic <h1> on pages whose visible headings are
+// data-dependent (hero slides, quiz results) so the prerendered HTML always has one.
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
