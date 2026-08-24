@@ -18,6 +18,7 @@ import newsletterRoutes from '../../../modules/newsletter/newsletter.routes';
 import shipmentRoutes from '../../../modules/shipments/shipments.routes';
 import contactRoutes from '../../../modules/contact/contact.routes';
 import metaRoutes from '../../../modules/marketing/meta/meta.routes';
+import seoRoutes from '../../../modules/seo/seo.routes';
 const router = Router();
 
 router.use(healthRoutes);
@@ -39,4 +40,5 @@ router.use(newsletterRoutes);
 router.use(shipmentRoutes);
 router.use(contactRoutes);
 router.use(metaRoutes);
+router.use(seoRoutes);
 export default router;
