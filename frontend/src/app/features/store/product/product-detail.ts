@@ -361,6 +361,20 @@ export class ProductDetailComponent implements OnInit {
     this.cartStore.toggleWishlist(productId);
   }
 
+  /**
+   * Descriptive, SEO-friendly ALT text for a product image.
+   * An optional 1-based position disambiguates gallery thumbnails.
+   */
+  imageAltText(position?: number): string {
+    const p = this.product();
+    if (!p) return 'Rajhans Tea product image';
+
+    const category = p.category?.name ? `${p.category.name} ` : '';
+    const base = `${p.name} — ${category}loose-leaf tea by Rajhans Tea`;
+
+    return position && position > 1 ? `${base} (view ${position})` : base;
+  }
+
   /** Injects/updates the schema.org Product JSON-LD block for this page. */
   private injectProductSchema(
     product: Product,

@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal, ViewEncapsulation } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { HttpClient } from '@angular/common/http';
@@ -18,13 +18,19 @@ export class StaticPageComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly titleService = inject(Title);
   private readonly meta = inject(Meta);
+  private readonly document = inject(DOCUMENT);
   readonly page = signal<any>(null);
   readonly notFound = signal(false);
 
   ngOnInit(): void {
     this.route.params.subscribe((params) => {
       const slug = params['slug'];
-      
+
+      // Self-canonical (trailing slash matches the sitemap and the prerendered
+      // directory URL the site 301s to). Duplicate policy slugs are 301'd at the
+      // edge, so a page that renders here is always its own canonical.
+      this.setCanonical(`https://rajhanstea.com/page/${slug}/`);
+
       // Prioritize updated local fallbacks over old backend DB content
       const fallback = this.getFallbackPage(slug);
       if (fallback) {
@@ -47,6 +53,16 @@ export class StaticPageComponent implements OnInit {
         },
       });
     });
+  }
+
+  private setCanonical(href: string): void {
+    let canonical = this.document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = this.document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      this.document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', href);
   }
 
   private getFallbackPage(slug: string): any {

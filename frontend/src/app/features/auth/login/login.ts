@@ -2,6 +2,7 @@ import { Component, signal, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewI
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Meta } from '@angular/platform-browser';
 import { AuthService } from '../../../core/services/auth.service';
 import { Msg91OtpService } from '../../../core/services/msg91-otp.service';
 import { LogoComponent } from '../../../shared/components/logo/logo.component';
@@ -42,9 +43,12 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
     private msg91OtpService: Msg91OtpService,
     private router: Router,
     private route: ActivatedRoute,
+    private meta: Meta,
   ) {}
 
   ngOnInit(): void {
+    this.meta.updateTag({ name: 'robots', content: 'noindex,follow' });
+
     setTimeout(() => this.entered.set(true), 100);
 
     if (this.route.snapshot.queryParamMap.get('reason') === 'banned') {
@@ -59,6 +63,7 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy(): void {
+    this.meta.removeTag("name='robots'");
     this.clearCooldown();
   }
 

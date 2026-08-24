@@ -14,7 +14,7 @@
             <img
               [src]="selectedImage()"
               class="pd__main-img"
-              [alt]="product()?.name"
+              [alt]="imageAltText()"
               loading="lazy"
             />
             
@@ -43,7 +43,7 @@
                     [class.active]="selectedImage() === img"
                     (click)="selectedImage.set(img)"
                   >
-                    <img [src]="img" [alt]="product()?.name" loading="lazy" />
+                    <img [src]="img" [alt]="imageAltText($index + 1)" loading="lazy" />
                   </button>
                 }
               </div>

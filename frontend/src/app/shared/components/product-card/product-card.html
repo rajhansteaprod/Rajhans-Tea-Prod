@@ -20,7 +20,13 @@
     <div class="product-card__info-group">
       <!-- Title & Description -->
       <div class="product-card__title-desc">
-        <h3 class="product-card__name">{{ product.name }}</h3>
+        <h3 class="product-card__name">
+          <a class="product-card__name-link"
+             [routerLink]="['/product', product.slug]"
+             (click)="$event.stopPropagation()">
+            {{ product.name }}
+          </a>
+        </h3>
         <p class="product-card__weight-text">500gm</p>
       </div>
 

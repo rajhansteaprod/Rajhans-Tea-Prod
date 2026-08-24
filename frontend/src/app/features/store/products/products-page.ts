@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Title } from '@angular/platform-browser';
+import { Meta, Title } from '@angular/platform-browser';
 import { CatalogService, Product, Category } from '../../../core/services/catalog.service';
 import { CartStore } from '../../../core/services/cart.store';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card';
@@ -23,6 +23,8 @@ export class ProductsPageComponent implements OnInit {
   private readonly catalog = inject(CatalogService);
   private readonly cartStore = inject(CartStore);
   private readonly titleService = inject(Title);
+  private readonly meta = inject(Meta);
+  private readonly document = inject(DOCUMENT);
 
   // State
   readonly products = signal<Product[]>([]);
@@ -85,6 +87,19 @@ export class ProductsPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.meta.updateTag({
+      name: 'description',
+      content: 'Shop Rajhans Tea products — Assam, Darjeeling, Nilgiri and Dooars teas for everyday chai and premium tea drinking.',
+    });
+
+    let canonical = this.document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = this.document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      this.document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', 'https://rajhanstea.com/products/');
+
     // Load categories
     this.catalog.getCategoriesPublic().subscribe({
       next: (res) => this.categories.set(res.data),
