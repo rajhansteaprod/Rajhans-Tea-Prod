@@ -121,9 +121,14 @@ export class CmsService {
       s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const loc = (path: string): string => `${baseUrl}${escapeXml(path)}`;
 
-    // Duplicate policy slugs whose content lives at a canonical slug; these are
-    // 301-redirected at the edge, so they must not appear in the sitemap.
-    const EXCLUDED_PAGE_SLUGS = new Set(['return-refund', 'terms-and-conditions']);
+    // Duplicate policy slugs 301 to their canonical slug at the edge. Map them to
+    // the canonical so the sitemap lists ONLY the canonical URL — regardless of
+    // which slug the CMS actually stores — and dedupe if both happen to exist.
+    const CANONICAL_PAGE_SLUG: Record<string, string> = {
+      'terms-conditions': 'terms-and-conditions',
+      'return-refund': 'return-refund-policy',
+    };
+    const emittedPageSlugs = new Set<string>();
 
     // Canonical URLs carry a trailing slash (prerendered pages are directories
     // that 301 to add it) — emit the final slash form so Google indexes the
@@ -147,10 +152,13 @@ export class CmsService {
       xml += `  <url><loc>${loc(`/catalog/${c.slug}/`)}</loc><lastmod>${lastmod(c.updatedAt)}</lastmod><priority>0.7</priority></url>\n`;
     }
 
-    // Pages (excluding duplicate policy slugs)
+    // Pages (duplicate policy slugs collapsed onto their canonical slug)
     for (const p of pages) {
-      if (!p.slug || EXCLUDED_PAGE_SLUGS.has(p.slug)) continue;
-      xml += `  <url><loc>${loc(`/page/${p.slug}/`)}</loc><lastmod>${lastmod(p.updatedAt)}</lastmod><priority>0.5</priority></url>\n`;
+      if (!p.slug) continue;
+      const slug = CANONICAL_PAGE_SLUG[p.slug] ?? p.slug;
+      if (emittedPageSlugs.has(slug)) continue;
+      emittedPageSlugs.add(slug);
+      xml += `  <url><loc>${loc(`/page/${slug}/`)}</loc><lastmod>${lastmod(p.updatedAt)}</lastmod><priority>0.5</priority></url>\n`;
     }
 
     // Blog
