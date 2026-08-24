@@ -1,0 +1,107 @@
+<div class="seo">
+  <div class="seo__header">
+    <div>
+      <h1>SEO Audit</h1>
+      <p class="seo__subtitle">Read-only technical SEO monitoring. Observes production — never changes it.</p>
+    </div>
+    <button class="seo__btn" (click)="triggerAudit()" [disabled]="triggering() || hasRunning()">
+      {{ hasRunning() ? 'Audit running…' : (triggering() ? 'Starting…' : 'Run audit now') }}
+    </button>
+  </div>
+
+  @if (error()) { <div class="seo__error">{{ error() }}</div> }
+
+  <!-- Runs history -->
+  <div class="seo__card">
+    <h2>Recent runs</h2>
+    @if (loading() && runs().length === 0) {
+      <p class="seo__muted">Loading…</p>
+    } @else if (runs().length === 0) {
+      <p class="seo__muted">No audits yet. Click “Run audit now” to establish the baseline.</p>
+    } @else {
+      <table class="seo__table">
+        <thead>
+          <tr>
+            <th>Date</th><th>Status</th><th>Coverage</th>
+            <th>Critical</th><th>Warning</th><th>Info</th>
+            <th>New</th><th>Resolved</th><th>Regressions</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of runs(); track r.id) {
+            <tr>
+              <td>{{ r.date | date: 'MMM d, HH:mm' }} @if (r.isBaseline) {<span class="seo__tag">baseline</span>}</td>
+              <td><span class="seo__status seo__status--{{ r.status }}">{{ r.status }}</span></td>
+              <td>{{ (r.coverage * 100) | number: '1.0-0' }}% <span class="seo__muted">({{ r.urlsFetched }}/{{ r.urlsDiscovered }})</span></td>
+              <td class="seo__c--critical">{{ r.counts.critical }}</td>
+              <td class="seo__c--warning">{{ r.counts.warning }}</td>
+              <td class="seo__c--info">{{ r.counts.info }}</td>
+              <td>{{ r.delta.new }}</td>
+              <td>{{ r.delta.resolved }}</td>
+              <td>{{ r.delta.regressions }}</td>
+              <td><button class="seo__link" (click)="viewReport(r.id)" [disabled]="r.status === 'running'">View</button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+  <!-- Selected report -->
+  @if (report(); as rep) {
+    <div class="seo__report">
+      <div class="seo__report-head">
+        <h2>Report — {{ rep.summary.date | date: 'MMM d, y HH:mm' }}
+          <span class="seo__status seo__status--{{ rep.summary.status }}">{{ rep.summary.status }}</span>
+          @if (rep.summary.isBaseline) { <span class="seo__tag">baseline</span> }
+        </h2>
+        <button class="seo__link" (click)="closeReport()">Close ✕</button>
+      </div>
+
+      <div class="seo__summary">
+        <div><span>URLs discovered</span><strong>{{ rep.summary.urlsDiscovered }}</strong></div>
+        <div><span>URLs fetched</span><strong>{{ rep.summary.urlsFetched }}</strong></div>
+        <div><span>Coverage</span><strong>{{ (rep.summary.coverage * 100) | number: '1.0-0' }}%</strong></div>
+        <div><span>Critical</span><strong class="seo__c--critical">{{ rep.summary.counts.critical }}</strong></div>
+        <div><span>Warning</span><strong class="seo__c--warning">{{ rep.summary.counts.warning }}</strong></div>
+        <div><span>Info</span><strong class="seo__c--info">{{ rep.summary.counts.info }}</strong></div>
+        <div><span>New</span><strong>{{ rep.summary.delta.new }}</strong></div>
+        <div><span>Resolved</span><strong>{{ rep.summary.delta.resolved }}</strong></div>
+        <div><span>Regressions</span><strong>{{ rep.summary.delta.regressions }}</strong></div>
+      </div>
+
+      @for (section of [
+        { key: 'regressions', label: 'Regressions', list: rep.regressions },
+        { key: 'critical', label: 'Critical', list: rep.critical },
+        { key: 'warning', label: 'Warning', list: rep.warning },
+        { key: 'info', label: 'Info', list: rep.info },
+        { key: 'resolved', label: 'Resolved since last run', list: rep.resolved }
+      ]; track section.key) {
+        @if (section.list.length > 0) {
+          <div class="seo__section">
+            <h3>{{ section.label }} <span class="seo__count">{{ section.list.length }}</span></h3>
+            @for (iss of section.list; track iss.url + iss.checkId) {
+              <div class="seo__issue seo__issue--{{ iss.severity }}">
+                <div class="seo__issue-top">
+                  <code class="seo__check">{{ iss.checkId }}</code>
+                  <span class="seo__sev seo__sev--{{ iss.severity }}">{{ iss.severity }}</span>
+                  <a class="seo__url" [href]="iss.url" target="_blank" rel="noopener">{{ iss.url }}</a>
+                </div>
+                <div class="seo__why">{{ iss.why }}</div>
+                <div class="seo__kv">
+                  <div><span>Actual</span><code>{{ fmt(iss.actual) }}</code></div>
+                  <div><span>Expected</span><code>{{ fmt(iss.expected) }}</code></div>
+                  <div><span>State</span><code>{{ iss.previousState }} → {{ iss.currentState }}</code></div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+
+      @if (rep.summary.counts.critical === 0 && rep.summary.counts.warning === 0 && rep.summary.counts.info === 0) {
+        <p class="seo__muted">No issues detected in this run. 🎉</p>
+      }
+    </div>
+  }
+</div>
