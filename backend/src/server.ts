@@ -11,6 +11,7 @@ import { registerGlobalErrorHandlers } from './core/graceful-error-handler';
 import { validateEnvironment } from './core/env-validator';
 import { scheduleCartCleanup } from './modules/cart/jobs/cleanup.job';
 import { scheduleWebhookRetry } from './modules/payments/jobs/webhook-retry.job';
+import { scheduleSeoAudit } from './modules/seo/jobs/seo-audit.job';
 
 const startServer = async () => {
   validateEnvironment();
@@ -19,6 +20,7 @@ const startServer = async () => {
   registerWorkers();
   scheduleCartCleanup();
   scheduleWebhookRetry();
+  scheduleSeoAudit(); // daily 03:15 SEO audit → enqueues a BullMQ job (observe-only, no auto-fix)
   registerEventHandlers();
 
   const httpServer = http.createServer(app);
