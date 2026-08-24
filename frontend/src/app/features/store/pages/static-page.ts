@@ -36,6 +36,9 @@ export class StaticPageComponent implements OnInit {
       if (fallback) {
         this.page.set(fallback);
         this.titleService.setTitle(`${fallback.title} — Rajhans Tea`);
+        if (fallback.metaDescription) {
+          this.meta.updateTag({ name: 'description', content: fallback.metaDescription });
+        }
         this.notFound.set(false);
         return;
       }
@@ -109,8 +112,10 @@ export class StaticPageComponent implements OnInit {
           </div>
         `
       },
-      'terms-conditions': {
+      'terms-and-conditions': {
         title: 'Terms & Conditions',
+        metaDescription:
+          'Read the Terms & Conditions for Rajhans Tea — eligibility, orders, pricing, payment, intellectual property, and governing law for purchases on rajhanstea.com.',
         updatedAt: today,
         content: `
           <div class="policy-content">

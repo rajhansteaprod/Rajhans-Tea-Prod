@@ -74,10 +74,12 @@ export const serverRoutes: ServerRoute[] = [
     path: 'page/:slug',
     renderMode: RenderMode.Prerender,
     async getPrerenderParams() {
-      // These 3 policy pages are hardcoded content in static-page.ts, not API-driven
+      // These 3 policy pages are hardcoded content in static-page.ts, not API-driven.
+      // terms-and-conditions is the canonical policy slug (terms-conditions 301s to
+      // it at the edge), so that is the one we prerender with real content.
       return [
         { slug: 'shipping-policy' },
-        { slug: 'terms-conditions' },
+        { slug: 'terms-and-conditions' },
         { slug: 'return-refund-policy' },
       ];
     },
