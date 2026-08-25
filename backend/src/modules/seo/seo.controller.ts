@@ -3,6 +3,7 @@ import { sendSuccess } from '../../utils/api-response';
 import { SeoAuditRun } from './models/seo-audit-run.model';
 import { getSeoAuditQueue, SEO_RUN_JOB } from './jobs/queues/seo-audit.queue';
 import { listRuns, getReport, getRunIssues } from './services/report.service';
+import { getRecommendationsReport } from './services/recommendation.service';
 import { RULE_REGISTRY } from './services/rules';
 import { RunScope } from './seo.types';
 
@@ -49,4 +50,14 @@ export const getIssues = async (req: Request, res: Response) => {
 /** The machine-readable check catalog (checkId → severity/automationLevel/description). */
 export const getChecks = async (_req: Request, res: Response) => {
   sendSuccess(res, RULE_REGISTRY);
+};
+
+/**
+ * Growth recommendations for a run (defaults to the latest completed run).
+ * Recommend-only — this never changes production SEO.
+ */
+export const getRecommendations = async (req: Request, res: Response) => {
+  const report = await getRecommendationsReport(str(req.query.runId));
+  if (!report) return res.status(404).json({ success: false, statusCode: 404, message: 'No completed audit run found' });
+  return sendSuccess(res, report);
 };

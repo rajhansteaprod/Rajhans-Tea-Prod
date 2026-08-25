@@ -81,14 +81,15 @@ function isPageTarget(normalized: string): boolean {
   return true;
 }
 
-/** Whether a fetched page is an indexable, self-canonical 200 HTML page. */
-function selfUrl(p: PageObservation, baseUrl: string): string {
+/** The page's own normalized URL (final URL after redirects). */
+export function selfUrl(p: PageObservation, baseUrl: string): string {
   return p.finalUrl ? normalizeUrl(p.finalUrl, baseUrl) : p.normalizedUrl;
 }
 function isNoindex(p: PageObservation): boolean {
   return !!p.robotsMeta && /noindex/.test(p.robotsMeta);
 }
-function isIndexableHtml(p: PageObservation, baseUrl: string): boolean {
+/** Whether a fetched page is an indexable, self-canonical 200 HTML page. */
+export function isIndexableHtml(p: PageObservation, baseUrl: string): boolean {
   if (!p.fetched || p.finalStatus !== 200 || p.contentHash === null) return false;
   if (isNoindex(p)) return false;
   // A page that canonicalizes ELSEWHERE is an intentional duplicate — exclude it

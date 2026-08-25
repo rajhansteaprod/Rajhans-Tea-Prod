@@ -170,3 +170,67 @@ export interface SeoRule {
   description: string;
   evaluate(page: PageObservation, ctx: AuditContext): DetectedIssue[];
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 3 — Recommendation layer (OBSERVE + RECOMMEND, never auto-apply)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type RecommendationCategory =
+  | 'metadata'
+  | 'internal-linking'
+  | 'content'
+  | 'schema'
+  | 'indexability'
+  | 'crawl'
+  | 'topical-authority';
+
+export type RecommendationPriority = 'high' | 'medium' | 'low';
+export type RecommendationImpact = 'very-high' | 'high' | 'medium' | 'low';
+export type RecommendationEffort = 'small' | 'medium' | 'large';
+
+/**
+ * An actionable growth recommendation synthesized from one or more audit
+ * findings. This is NOT an audit issue — it is advice (automationLevel always
+ * 'recommend'; Phase 3A never generates copy or changes production).
+ */
+export interface SeoRecommendation {
+  recommendationId: string;
+  category: RecommendationCategory;
+  priority: RecommendationPriority;
+  impact: RecommendationImpact;
+  title: string;
+  why: string;
+  affectedUrls: string[];
+  evidence: Record<string, unknown>;
+  suggestedFix: string;
+  estimatedEffort: RecommendationEffort;
+  automationLevel: 'recommend';
+}
+
+/** Signals fed to the (configurable) scoring engine to derive priority + impact. */
+export interface ScoringSignals {
+  isIndexability?: boolean;
+  isDuplicateMetadata?: boolean;
+  /** Extra flat score added by a generator for domain-specific weight. */
+  bonus?: number;
+}
+
+/**
+ * A generator's output before the scoring engine and persistence lifecycle are
+ * attached. `discriminator` folds into the fingerprint exactly like issues, so a
+ * per-URL recommendation (e.g. indexability on one page) has stable identity.
+ */
+export interface RecommendationDraft {
+  recommendationId: string;
+  discriminator?: string;
+  category: RecommendationCategory;
+  title: string;
+  why: string;
+  affectedUrls: string[];
+  evidence: Record<string, unknown>;
+  suggestedFix: string;
+  estimatedEffort: RecommendationEffort;
+  signals: ScoringSignals;
+  /** Audit checkIds this recommendation was synthesized from (for the drill-down). */
+  relatedCheckIds?: string[];
+}

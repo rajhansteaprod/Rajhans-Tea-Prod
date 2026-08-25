@@ -1,0 +1,88 @@
+<div class="rec">
+  <div class="rec__header">
+    <div>
+      <h1>SEO Recommendations</h1>
+      <p class="rec__subtitle">Growth opportunities synthesized from the latest audit. Recommend-only — never changes the site.</p>
+    </div>
+    <button class="rec__btn" (click)="load()" [disabled]="loading()">{{ loading() ? 'Loading…' : 'Refresh' }}</button>
+  </div>
+
+  @if (error()) { <div class="rec__error">{{ error() }}</div> }
+
+  @if (report(); as rep) {
+    <!-- Summary cards -->
+    <div class="rec__cards">
+      <div class="rec__card rec__card--high"><span>High Priority</span><strong>{{ rep.summary.high }}</strong></div>
+      <div class="rec__card rec__card--medium"><span>Medium Priority</span><strong>{{ rep.summary.medium }}</strong></div>
+      <div class="rec__card rec__card--low"><span>Low Priority</span><strong>{{ rep.summary.low }}</strong></div>
+      <div class="rec__card rec__card--impact"><span>High Impact</span><strong>{{ rep.summary.highImpact }}</strong></div>
+      <div class="rec__card"><span>Total</span><strong>{{ rep.summary.total }}</strong></div>
+    </div>
+    <p class="rec__muted">
+      From audit {{ rep.summary.date | date: 'MMM d, y HH:mm' }} —
+      {{ rep.summary.delta.new }} new · {{ rep.summary.delta.persistent }} persistent · {{ rep.summary.delta.resolved }} resolved
+    </p>
+
+    <!-- Recommendation list -->
+    @if (rep.recommendations.length === 0) {
+      <p class="rec__muted">No open recommendations. The site is in great shape. 🎉</p>
+    }
+    @for (r of rep.recommendations; track key(r)) {
+      <div class="rec__item rec__item--{{ r.priority }}">
+        <div class="rec__item-top">
+          <span class="rec__badge rec__badge--{{ r.priority }}">{{ r.priority }}</span>
+          <span class="rec__badge rec__badge--impact">{{ r.impact }} impact</span>
+          <span class="rec__cat">{{ r.category }}</span>
+          <span class="rec__effort">{{ r.estimatedEffort }} effort</span>
+          @if (r.state === 'new') { <span class="rec__tag rec__tag--new">new</span> }
+          <span class="rec__score">score {{ r.score }}</span>
+        </div>
+        <h3 class="rec__title">{{ r.title }}</h3>
+        <div class="rec__row"><span>Why this matters</span><p>{{ r.why }}</p></div>
+        <div class="rec__row"><span>Suggested fix</span><p>{{ r.suggestedFix }}</p></div>
+
+        @if (r.affectedUrls.length) {
+          <div class="rec__row">
+            <span>Affected URLs ({{ r.affectedUrls.length }})</span>
+            <ul class="rec__urls">
+              @for (u of r.affectedUrls; track u) { <li><a [href]="u" target="_blank" rel="noopener">{{ u }}</a></li> }
+            </ul>
+          </div>
+        }
+
+        <button class="rec__expand" (click)="toggle(r)">
+          {{ isOpen(r) ? '▾ Hide evidence' : '▸ Evidence & related findings' }}
+        </button>
+        @if (isOpen(r)) {
+          <div class="rec__evidence">
+            @if (r.relatedCheckIds.length) {
+              <div class="rec__related">
+                <span>Related audit findings</span>
+                <div>@for (c of r.relatedCheckIds; track c) { <code>{{ c }}</code> }</div>
+              </div>
+            }
+            <pre>{{ json(r.evidence) }}</pre>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Resolved -->
+    @if (rep.resolved.length) {
+      <div class="rec__section">
+        <h2>Resolved since last run <span class="rec__count">{{ rep.resolved.length }}</span></h2>
+        @for (r of rep.resolved; track key(r)) {
+          <div class="rec__item rec__item--resolved">
+            <div class="rec__item-top">
+              <span class="rec__tag rec__tag--resolved">resolved</span>
+              <span class="rec__cat">{{ r.category }}</span>
+            </div>
+            <h3 class="rec__title">{{ r.title }}</h3>
+          </div>
+        }
+      </div>
+    }
+  } @else if (loading()) {
+    <p class="rec__muted">Loading…</p>
+  }
+</div>
