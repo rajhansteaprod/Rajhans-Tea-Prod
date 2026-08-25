@@ -74,6 +74,8 @@ export class StaticPageComponent implements OnInit {
     const fallbacks: Record<string, any> = {
       'shipping-policy': {
         title: 'Shipping Policy',
+        metaDescription:
+          'Rajhans Tea shipping policy — dispatch times, delivery estimates, charges and coverage for orders across India.',
         updatedAt: today,
         content: `
           <div class="policy-content">
@@ -170,6 +172,8 @@ export class StaticPageComponent implements OnInit {
       },
       'return-refund-policy': {
         title: 'Refund & Returns Policy',
+        metaDescription:
+          'Rajhans Tea refund & returns policy — eligibility, timelines and how to request a return or refund for your order.',
         updatedAt: today,
         content: `
           <div class="policy-content">

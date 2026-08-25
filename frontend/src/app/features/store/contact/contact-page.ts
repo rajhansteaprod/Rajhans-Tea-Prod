@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
+import { Title, Meta } from '@angular/platform-browser';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { environment } from '../../../../environments/environment';
 
@@ -28,6 +29,8 @@ export class ContactPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
+  private readonly titleService = inject(Title);
+  private readonly meta = inject(Meta);
 
   form!: FormGroup;
   submitted = signal(false);
@@ -46,6 +49,12 @@ export class ContactPageComponent {
   constructor() {
     this.initForm();
     this.preFillReasonFromQueryParam();
+    this.titleService.setTitle('Contact Rajhans Tea — Support, Orders & Wholesale Enquiries');
+    this.meta.updateTag({
+      name: 'description',
+      content:
+        "Reach Rajhans Tea for order help, product questions or bulk & wholesale enquiries. We're happy to help you choose and brew the right chai.",
+    });
   }
 
   private preFillReasonFromQueryParam(): void {

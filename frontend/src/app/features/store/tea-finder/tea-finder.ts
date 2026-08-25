@@ -1,6 +1,7 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { Title, Meta } from '@angular/platform-browser';
 import { CartStore } from '../../../core/services/cart.store';
 
 interface Step {
@@ -32,8 +33,19 @@ interface Product {
   templateUrl: './tea-finder.html',
   styleUrls: ['./tea-finder.scss'],
 })
-export class TeaFinderComponent {
+export class TeaFinderComponent implements OnInit {
   private readonly cartStore = inject(CartStore);
+  private readonly titleService = inject(Title);
+  private readonly meta = inject(Meta);
+
+  ngOnInit(): void {
+    this.titleService.setTitle('Tea Finder — Discover Your Perfect Chai | Rajhans Tea');
+    this.meta.updateTag({
+      name: 'description',
+      content:
+        "Answer a few quick questions and we'll match you to the right Rajhans loose-leaf CTC chai — by strength, aroma and how you brew. Find your tea in under a minute.",
+    });
+  }
 
   readonly currentStep = signal<number>(0);
   readonly selectedOptions = signal<{ [key: number]: string }>({});

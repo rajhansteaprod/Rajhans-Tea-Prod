@@ -29,8 +29,16 @@ export async function diffAndPersist(opts: {
   allowResolution: boolean;
   detectedIssues: DetectedIssue[];
   fetchedNormalizedUrls: Set<string>;
+  /**
+   * Every URL the run DISCOVERED (attempted), regardless of fetch outcome. An
+   * open issue whose URL is no longer discovered at all — e.g. a legacy page slug
+   * now collapsed onto its canonical, or a deleted product — is out of scope and
+   * is resolved (it can't recur). Defaults to fetchedNormalizedUrls when omitted.
+   */
+  discoveredNormalizedUrls?: Set<string>;
 }): Promise<DiffResult> {
   const { runId, isBaseline, allowResolution, detectedIssues, fetchedNormalizedUrls } = opts;
+  const discoveredNormalizedUrls = opts.discoveredNormalizedUrls ?? fetchedNormalizedUrls;
 
   // Dedupe detected by fingerprint. The discriminator (empty for page-level
   // checks) lets a cross-page check emit several independent findings on one page
@@ -92,8 +100,11 @@ export async function diffAndPersist(opts: {
     for (const open of openIssues) {
       const fp = open.fingerprint;
       if (detected.has(fp)) continue; // still present
-      // Only resolve if we actually re-checked this URL this run.
-      if (!fetchedNormalizedUrls.has(open.normalizedUrl)) continue;
+      // Keep an IN-SCOPE issue we simply couldn't fetch this run (transient) —
+      // never resolve what we didn't actually re-check. But if the URL is no
+      // longer discovered at all (out of scope), the issue is stale → resolve it.
+      const inScope = discoveredNormalizedUrls.has(open.normalizedUrl);
+      if (inScope && !fetchedNormalizedUrls.has(open.normalizedUrl)) continue;
       open.status = 'resolved';
       open.resolvedRunId = runId;
       open.lastSeenRunId = runId;

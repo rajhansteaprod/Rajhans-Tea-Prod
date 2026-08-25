@@ -1,7 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
+import { CATALOG_SEO, breadcrumbJsonLd, injectJsonLd } from '../../../core/seo/seo-content';
 import { SearchStore } from '../../../core/services/search.store';
 import { CartStore } from '../../../core/services/cart.store';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card';
@@ -22,6 +23,7 @@ export class CatalogPageComponent implements OnInit {
   private readonly meta = inject(Meta);
   private readonly cart = inject(CartStore);
   private readonly router = inject(Router);
+  private readonly document = inject(DOCUMENT);
 
   categoryName = '';
   readonly hoveringProducts = signal<Set<string>>(new Set());
@@ -30,7 +32,24 @@ export class CatalogPageComponent implements OnInit {
     this.route.params.subscribe((params) => {
       const slug = params['slug'];
       this.categoryName = slug?.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) || '';
-      this.titleService.setTitle(`${this.categoryName || 'Catalog'} — Rajhans Tea`);
+
+      const seo = CATALOG_SEO[slug];
+      this.titleService.setTitle(seo?.title || `${this.categoryName || 'Catalog'} — Rajhans Tea`);
+      if (seo?.description) {
+        this.meta.updateTag({ name: 'description', content: seo.description });
+      }
+
+      if (slug) {
+        injectJsonLd(
+          this.document,
+          'breadcrumb-jsonld',
+          breadcrumbJsonLd([
+            { name: 'Home', url: '/' },
+            { name: this.categoryName || 'Catalog', url: `/catalog/${slug}/` },
+          ]),
+        );
+      }
+
       this.store.search('', { categorySlug: slug });
     });
   }

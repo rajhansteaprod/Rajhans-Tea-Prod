@@ -149,6 +149,18 @@ describe('duplicate-title / duplicate-description', () => {
     ];
     expect(byCheck(run(pages), 'duplicate-description')).toHaveLength(2);
   });
+
+  it('does NOT cluster a REDIRECTING URL as a phantom duplicate of its destination', () => {
+    // Legacy /page/return-refund/ 301s to the canonical, which shares its content.
+    const canonical = page('/page/return-refund-policy/', { title: 'Refund & Returns Policy — Rajhans Tea' });
+    const legacy = page('/page/return-refund/', {
+      title: 'Refund & Returns Policy — Rajhans Tea', // observed via the redirect
+      finalUrl: `${BASE}/page/return-refund-policy/`,
+      canonical: abs('/page/return-refund-policy/'),
+      redirectChain: [{ url: `${BASE}/page/return-refund/`, status: 301 }],
+    });
+    expect(byCheck(run([canonical, legacy]), 'duplicate-title')).toHaveLength(0);
+  });
 });
 
 // -----------------------------------------------------------------------------
@@ -397,8 +409,8 @@ describe('generic-image-alt', () => {
   it('flags an image whose alt is generic', () => {
     const p = page('/x/', {
       images: [
-        { src: `${BASE}/a.jpg`, alt: 'image' },
-        { src: `${BASE}/b.jpg`, alt: 'Rajhans Premium Nilgiri Tea' }, // clean
+        { src: `${BASE}/a.jpg`, alt: 'image', decorative: false },
+        { src: `${BASE}/b.jpg`, alt: 'Rajhans Premium Nilgiri Tea', decorative: false }, // clean
       ],
     });
     const found = byCheck(run([p]), 'generic-image-alt');
@@ -408,7 +420,7 @@ describe('generic-image-alt', () => {
   });
 
   it('does not flag empty alt (that is images-missing-alt)', () => {
-    const p = page('/x/', { images: [{ src: `${BASE}/a.jpg`, alt: '' }] });
+    const p = page('/x/', { images: [{ src: `${BASE}/a.jpg`, alt: '', decorative: false }] });
     expect(byCheck(run([p]), 'generic-image-alt')).toHaveLength(0);
   });
 });

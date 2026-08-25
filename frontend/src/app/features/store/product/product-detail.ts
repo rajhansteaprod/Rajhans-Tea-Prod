@@ -7,6 +7,12 @@ import { CatalogService, Product, ProductVariant } from '../../../core/services/
 import { CartStore } from '../../../core/services/cart.store';
 import { ReviewStore, RatingSummary, Review } from '../../../core/services/review.store';
 import { AuthService } from '../../../core/services/auth.service';
+import {
+  PRODUCT_META_OVERRIDE,
+  sanitizeMetaDescription,
+  breadcrumbJsonLd,
+  injectJsonLd,
+} from '../../../core/seo/seo-content';
 
 @Component({
   selector: 'app-product-detail',
@@ -175,7 +181,10 @@ export class ProductDetailComponent implements OnInit {
 
           // SEO
           const pageTitle = `${res.data.name} — Rajhans Tea`;
-          const pageDescription = res.data.shortDescription || res.data.name;
+          const pageDescription =
+            PRODUCT_META_OVERRIDE[res.data.slug] ||
+            sanitizeMetaDescription(res.data.shortDescription || res.data.name);
+
           // Canonical URL carries the trailing slash — matches sitemap + redirect policy.
           const pageUrl = `https://rajhanstea.com/product/${res.data.slug}/`;
 
@@ -210,6 +219,20 @@ export class ProductDetailComponent implements OnInit {
             this.document.head.appendChild(canonical);
           }
           canonical.setAttribute('href', pageUrl);
+
+          // Additive BreadcrumbList JSON-LD: Home → Category → Product.
+          const cat = res.data.category;
+          injectJsonLd(
+            this.document,
+            'breadcrumb-jsonld',
+            breadcrumbJsonLd([
+              { name: 'Home', url: '/' },
+              cat?.slug
+                ? { name: cat.name, url: `/catalog/${cat.slug}/` }
+                : { name: 'All Products', url: '/products/' },
+              { name: res.data.name, url: pageUrl },
+            ]),
+          );
 
           // Load rating summary, then inject Product JSON-LD so prerendered HTML
           // contains aggregateRating when rating evidence is available.

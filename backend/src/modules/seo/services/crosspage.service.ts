@@ -91,6 +91,12 @@ function isNoindex(p: PageObservation): boolean {
 /** Whether a fetched page is an indexable, self-canonical 200 HTML page. */
 export function isIndexableHtml(p: PageObservation, baseUrl: string): boolean {
   if (!p.fetched || p.finalStatus !== 200 || p.contentHash === null) return false;
+  // A URL that only reached 200 by FOLLOWING a redirect is NOT its own indexable
+  // page — the content belongs to the redirect destination. Treating it as a
+  // standalone page makes it a phantom duplicate of the destination (e.g. a
+  // legacy /page/return-refund/ 301'ing to /page/return-refund-policy/). Never
+  // let a redirecting URL participate in duplicate/orphan/content clustering.
+  if (p.redirectChain.length > 0) return false;
   if (isNoindex(p)) return false;
   // A page that canonicalizes ELSEWHERE is an intentional duplicate — exclude it
   // from duplicate/orphan reasoning (its dup title/desc/orphaning is by design).

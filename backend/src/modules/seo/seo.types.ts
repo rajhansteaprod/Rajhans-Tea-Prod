@@ -36,6 +36,13 @@ export interface RedirectHop {
 export interface ImageRef {
   src: string | null; // absolute src if resolvable, else the raw attribute
   alt: string; // the alt attribute value (may be '')
+  /**
+   * True when the image is explicitly DECORATIVE — an empty alt attribute
+   * (alt=""/bare alt, the HTML signal for "decorative"), role=presentation/none,
+   * or aria-hidden=true. Decorative images with no alt text are correct and must
+   * NOT be reported by images-missing-alt.
+   */
+  decorative: boolean;
 }
 
 /** One internal anchor from a page — carries context the cross-page link checks report. */

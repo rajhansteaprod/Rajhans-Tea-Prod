@@ -16,10 +16,35 @@ describe('parseHtml — image extraction', () => {
     `;
     const p = parseHtml(html, PAGE, BASE);
     expect(p.imagesTotal).toBe(3);
-    expect(p.imagesMissingAlt).toBe(2); // second (empty) + third (none)
-    expect(p.images[0]).toEqual({ src: `${BASE}/media/a.jpg`, alt: 'Rajhans Tea' });
+    expect(p.imagesMissingAlt).toBe(1); // only the third (no alt attr); second is alt="" = decorative
+    expect(p.images[0]).toEqual({ src: `${BASE}/media/a.jpg`, alt: 'Rajhans Tea', decorative: false });
     expect(p.images[1].src).toBe('https://cdn.x.com/b.png');
+    expect(p.images[1].decorative).toBe(true); // alt="" → decorative
     expect(p.images[2].src).toBe(`${BASE}/media/c.webp`); // data-src fallback
+    expect(p.images[2].decorative).toBe(false); // no alt attribute → truly missing
+  });
+});
+
+describe('parseHtml — decorative image / missing-alt refinement', () => {
+  it('does NOT count explicitly-decorative images as missing alt', () => {
+    const html = `
+      <img src="/hero.png" class="hero__bg-img" alt>
+      <img src="/a.png" alt="">
+      <img src="/b.png" role="presentation">
+      <img src="/c.png" aria-hidden="true">
+    `;
+    const p = parseHtml(html, PAGE, BASE);
+    expect(p.imagesTotal).toBe(4);
+    expect(p.imagesMissingAlt).toBe(0); // all four are decorative
+    expect(p.images.every((i) => i.decorative)).toBe(true);
+  });
+
+  it('DOES count a content image with no alt attribute at all', () => {
+    const html = `<img src="/product.png"> <img src="/logo.png" alt="Rajhans Tea">`;
+    const p = parseHtml(html, PAGE, BASE);
+    expect(p.imagesMissingAlt).toBe(1); // only the alt-less content image
+    expect(p.images[0].decorative).toBe(false);
+    expect(p.images[1].decorative).toBe(false); // has real alt text
   });
 });
 
