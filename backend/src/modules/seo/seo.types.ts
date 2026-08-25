@@ -189,7 +189,11 @@ export type RecommendationCategory =
   | 'schema'
   | 'indexability'
   | 'crawl'
-  | 'topical-authority';
+  | 'topical-authority'
+  | 'search-opportunity'; // Phase 4 — GSC-derived
+
+/** Where a recommendation was synthesized from. */
+export type RecommendationSource = 'audit' | 'gsc';
 
 export type RecommendationPriority = 'high' | 'medium' | 'low';
 export type RecommendationImpact = 'very-high' | 'high' | 'medium' | 'low';
@@ -240,4 +244,8 @@ export interface RecommendationDraft {
   signals: ScoringSignals;
   /** Audit checkIds this recommendation was synthesized from (for the drill-down). */
   relatedCheckIds?: string[];
+  /** 'audit' (default) or 'gsc' (Phase 4 search-opportunity). */
+  source?: RecommendationSource;
+  /** GSC-derived confidence, when source is 'gsc'. */
+  confidence?: 'low' | 'medium' | 'high';
 }

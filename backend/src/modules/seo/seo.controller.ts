@@ -6,6 +6,9 @@ import { listRuns, getReport, getRunIssues } from './services/report.service';
 import { getRecommendationsReport } from './services/recommendation.service';
 import { RULE_REGISTRY } from './services/rules';
 import { RunScope } from './seo.types';
+import { gscConfig } from './gsc.config';
+import { GscSyncRun } from './models/gsc-sync-run.model';
+import { getGscSyncQueue, GSC_SYNC_JOB } from './jobs/queues/gsc-sync.queue';
 
 /**
  * Manually trigger an audit (admin only). Enqueues a BullMQ job — the worker runs
@@ -60,4 +63,42 @@ export const getRecommendations = async (req: Request, res: Response) => {
   const report = await getRecommendationsReport(str(req.query.runId));
   if (!report) return res.status(404).json({ success: false, statusCode: 404, message: 'No completed audit run found' });
   return sendSuccess(res, report);
+};
+
+/**
+ * GSC status/summary (Phase 4). Never returns credential material — only whether
+ * GSC is configured and the latest sync's public rollups.
+ */
+export const getGscSummary = async (_req: Request, res: Response) => {
+  const latest = gscConfig.enabled
+    ? await GscSyncRun.findOne().sort({ createdAt: -1 }).lean().exec()
+    : null;
+  return sendSuccess(res, {
+    enabled: gscConfig.enabled,
+    siteConfigured: !!gscConfig.siteUrl,
+    latestSync: latest
+      ? {
+          date: latest.createdAt,
+          status: latest.status,
+          dateRange: latest.dateRange,
+          pageRows: latest.pageRowsUpserted,
+          queryPageRows: latest.queryPageRowsUpserted,
+          opportunities: latest.opportunitiesDetected,
+          error: latest.error, // already sanitized at write time
+        }
+      : null,
+  });
+};
+
+/** Manually trigger a GSC sync (admin). Guards against concurrent runs. */
+export const triggerGscSync = async (_req: Request, res: Response) => {
+  if (!gscConfig.enabled) {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'GSC is not configured' });
+  }
+  const running = await GscSyncRun.findOne({ status: 'running' }).exec();
+  if (running) {
+    return res.status(409).json({ success: false, statusCode: 409, message: 'A GSC sync is already running', data: { runId: running._id } });
+  }
+  const job = await getGscSyncQueue().add(GSC_SYNC_JOB, { trigger: 'manual' }, { removeOnComplete: 30, removeOnFail: 30 });
+  return sendSuccess(res, { queued: true, jobId: job.id }, 'GSC sync enqueued', 202);
 };

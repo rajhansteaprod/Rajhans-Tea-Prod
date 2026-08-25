@@ -74,6 +74,22 @@
     &--resolved { background: #ecfdf5; color: #059669; }
   }
 
+  &__scope {
+    font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px;
+    text-transform: uppercase; letter-spacing: 0.03em; background: #eff6ff; color: #1d4ed8;
+  }
+  &__conf {
+    font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px; text-transform: uppercase;
+    &--high { background: #ecfdf5; color: #059669; }
+    &--medium { background: #fffbeb; color: #b45309; }
+    &--low { background: #f3f4f6; color: #6b7280; }
+  }
+  &__demand {
+    margin: 6px 0; font-size: 12px; color: #1d4ed8; background: #eff6ff;
+    border-radius: 6px; padding: 6px 10px;
+    strong { color: #1e3a8a; }
+  }
+
   &__title { margin: 0 0 10px; font-size: 16px; font-weight: 700; color: #111827; }
 
   &__row {

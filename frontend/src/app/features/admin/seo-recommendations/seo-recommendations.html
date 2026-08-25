@@ -34,9 +34,19 @@
           <span class="rec__badge rec__badge--impact">{{ r.impact }} impact</span>
           <span class="rec__cat">{{ r.category }}</span>
           <span class="rec__effort">{{ r.estimatedEffort }} effort</span>
+          @if (r.source === 'gsc') { <span class="rec__scope">GSC</span> }
+          @if (r.confidence) { <span class="rec__conf rec__conf--{{ r.confidence }}">{{ r.confidence }} confidence</span> }
           @if (r.state === 'new') { <span class="rec__tag rec__tag--new">new</span> }
           <span class="rec__score">score {{ r.score }}</span>
         </div>
+        @if ((r.demandImpressions ?? 0) > 0) {
+          <div class="rec__demand">
+            🔍 Real search demand: <strong>{{ r.demandImpressions }}</strong> impressions/28d
+            @if (r.effectivePriority && r.effectivePriority !== r.priority) {
+              · demand-boosted priority <strong>{{ r.priority }} → {{ r.effectivePriority }}</strong>
+            }
+          </div>
+        }
         <h3 class="rec__title">{{ r.title }}</h3>
         <div class="rec__row"><span>Why this matters</span><p>{{ r.why }}</p></div>
         <div class="rec__row"><span>Suggested fix</span><p>{{ r.suggestedFix }}</p></div>
