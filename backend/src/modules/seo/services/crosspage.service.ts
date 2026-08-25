@@ -228,10 +228,24 @@ export function runCrossPageRules(
     }
   }
 
-  // ── 3 & 4: broken-internal-link / internal-link-to-redirect ──
+  // ── 3: broken-internal-link (one finding per broken source→target) ──
+  // ── 4: internal-link-to-redirect (GROUPED by canonical destination) ──
+  // Detection is unchanged and per-link; only redirect REPORTING is aggregated:
+  // every source→redirecting-target edge is still counted (affectedLinks), but
+  // rolled up into one finding per unique final canonical URL so one systemic
+  // pattern (e.g. site-wide non-trailing-slash links) is one warning, not N.
+  interface RedirectAgg {
+    finalUrl: string | null;
+    occurrences: number; // distinct source→target edges landing here
+    sources: Set<string>;
+    targets: Map<string, { redirectStatus: number | null; finalUrl: string | null; sources: Set<string> }>;
+  }
+  const redirectGroups = new Map<string, RedirectAgg>();
+
   for (const o of observations) {
     if (!o.fetched) continue;
-    const seen = new Set<string>(); // dedupe per (source, target) — first anchor wins
+    const source = selfUrl(o, baseUrl);
+    const seen = new Set<string>(); // one edge per (source, target)
     for (const link of o.internalLinkDetails) {
       if (!isPageTarget(link.target)) continue;
       if (seen.has(link.target)) continue;
@@ -252,18 +266,61 @@ export function runCrossPageRules(
           }, link.target),
         );
       } else if (res.redirects) {
-        issues.push(
-          makeIssue('internal-link-to-redirect', o, `Links to ${link.target} which redirects instead of the canonical URL.`, {
-            httpStatus: res.redirectChain[0]?.status ?? status ?? undefined,
-            finalUrl: res.finalUrl ?? undefined,
-            redirectChain: res.redirectChain,
-            actual: link.target,
-            expected: res.finalUrl,
-            extra: { target: link.target, anchor: link.anchor, href: link.href, finalUrl: res.finalUrl, redirectStatus: res.redirectChain[0]?.status ?? status },
-          }, link.target),
-        );
+        const key = res.finalNormalizedUrl; // group by the canonical destination
+        let g = redirectGroups.get(key);
+        if (!g) {
+          g = { finalUrl: res.finalUrl, occurrences: 0, sources: new Set(), targets: new Map() };
+          redirectGroups.set(key, g);
+        }
+        g.occurrences++;
+        g.sources.add(source);
+        let t = g.targets.get(link.target);
+        if (!t) {
+          t = { redirectStatus: res.redirectChain[0]?.status ?? status, finalUrl: res.finalUrl, sources: new Set() };
+          g.targets.set(link.target, t);
+        }
+        t.sources.add(source);
       }
     }
+  }
+
+  // Emit one grouped finding per canonical destination. Anchored on that
+  // (fetched, canonical) URL with an empty discriminator ⇒ a deterministic,
+  // stable fingerprint across runs (open→open, never re-NEW), and the existing
+  // coverage-gated resolution works because the destination is a fetched page.
+  for (const [finalNorm, g] of redirectGroups) {
+    const anchorObs = ctx.pagesByNormalizedUrl.get(finalNorm);
+    const anchor = anchorObs
+      ? { url: anchorObs.url, normalizedUrl: anchorObs.normalizedUrl }
+      : { url: finalNorm, normalizedUrl: finalNorm };
+    const targets = Array.from(g.targets.keys()).sort();
+    const examples = targets.slice(0, 5).map((t) => `${t} → ${g.targets.get(t)!.finalUrl ?? finalNorm}`);
+    const repStatus = g.targets.get(targets[0])?.redirectStatus ?? undefined;
+    issues.push(
+      makeIssue(
+        'internal-link-to-redirect',
+        anchor,
+        `${g.occurrences} internal link${g.occurrences === 1 ? '' : 's'} across ${g.sources.size} page${g.sources.size === 1 ? '' : 's'} point to a redirect that resolves to ${finalNorm}.`,
+        {
+          httpStatus: repStatus,
+          finalUrl: g.finalUrl ?? undefined,
+          actual: g.occurrences,
+          expected: 'direct links to the canonical URL',
+          extra: {
+            finalUrl: finalNorm,
+            affectedLinks: g.occurrences,
+            affectedSourcePages: g.sources.size,
+            uniqueTargets: targets,
+            targets: targets.map((t) => ({
+              target: t,
+              redirectStatus: g.targets.get(t)!.redirectStatus,
+              sources: Array.from(g.targets.get(t)!.sources).sort(),
+            })),
+            examples,
+          },
+        },
+      ),
+    );
   }
 
   // ── 5: orphan-page ──

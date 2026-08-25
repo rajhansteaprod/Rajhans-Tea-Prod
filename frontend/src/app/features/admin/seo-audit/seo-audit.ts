@@ -24,6 +24,11 @@ interface IssueEvidence {
     duplicateUrls?: string[];
     imageUrl?: string | null;
     inboundLinks?: number;
+    // grouped internal-link-to-redirect
+    affectedLinks?: number;
+    affectedSourcePages?: number;
+    uniqueTargets?: string[];
+    examples?: string[];
     [k: string]: unknown;
   };
   [k: string]: unknown;
@@ -151,5 +156,23 @@ export class SeoAuditComponent implements OnInit, OnDestroy {
   duplicateGroup(iss: Issue): string[] | null {
     const g = iss.evidence?.extra?.duplicateUrls;
     return Array.isArray(g) && g.length ? g : null;
+  }
+
+  /** Grouped internal-link-to-redirect summary (affected links/pages/targets + examples). */
+  redirectGroup(iss: Issue): {
+    affectedLinks: number;
+    affectedSourcePages: number;
+    uniqueTargets: number;
+    examples: string[];
+  } | null {
+    if (iss.checkId !== 'internal-link-to-redirect') return null;
+    const e = iss.evidence?.extra;
+    if (!e || e.affectedLinks === undefined) return null;
+    return {
+      affectedLinks: e.affectedLinks ?? 0,
+      affectedSourcePages: e.affectedSourcePages ?? 0,
+      uniqueTargets: Array.isArray(e.uniqueTargets) ? e.uniqueTargets.length : 0,
+      examples: Array.isArray(e.examples) ? e.examples : [],
+    };
   }
 }
