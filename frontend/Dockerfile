@@ -9,12 +9,16 @@ RUN npm ci
 COPY frontend/ .
 RUN NODE_OPTIONS=--max-old-space-size=6144 npx ng build --configuration=production
 
-# Stage 2: Serve with nginx
-FROM nginx:alpine AS production
+# Stage 2: Run the Angular SSR Node server (hybrid: prerendered static routes +
+# on-demand SSR for dynamic routes). server.mjs is fully self-bundled (express and
+# deps inlined), so no node_modules are needed at runtime — just Node + dist.
+FROM node:22-alpine AS production
 
-COPY --from=builder /app/dist/frontend/browser /usr/share/nginx/html
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
+COPY --from=builder /app/dist/frontend ./dist/frontend
 
-EXPOSE 80
+ENV NODE_ENV=production
+ENV PORT=4000
+EXPOSE 4000
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["node", "dist/frontend/server/server.mjs"]

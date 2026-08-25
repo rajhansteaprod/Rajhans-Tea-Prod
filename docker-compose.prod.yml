@@ -30,6 +30,12 @@ services:
     pull_policy: always
     container_name: tea-frontend
     restart: unless-stopped
+    environment:
+      # Node SSR server settings. SSR_API_URL points HttpClient at the backend
+      # internally during server-side rendering (avoids a public hairpin).
+      - NODE_ENV=production
+      - PORT=4000
+      - SSR_API_URL=http://tea-backend:3000/api/v1
     depends_on:
       - backend
     networks:

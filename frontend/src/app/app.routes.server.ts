@@ -1,39 +1,18 @@
-import { RenderMode, ServerRoute } from '@angular/ssr';
+import { PrerenderFallback, RenderMode, ServerRoute } from '@angular/ssr';
 
-// Absolute API base used only at BUILD TIME to enumerate dynamic route params
-// (product slugs, category slugs, blog slugs) for prerendering. There is no
-// browser origin available during a build-time prerender pass, so this must
-// be an absolute URL. Override with PRERENDER_API_URL if building against a
-// staging backend; defaults to the live production API so prerendered pages
-// always reflect real, current catalog data.
-const PRERENDER_API_URL = process.env['PRERENDER_API_URL'] || 'https://rajhanstea.com/api/v1';
-
-interface ApiListResponse<T> {
-  success: boolean;
-  data: T[];
-}
-
-async function fetchSlugs(path: string): Promise<string[]> {
-  try {
-    // Short timeout so an unreachable/slow API at build time (CI runners, or a
-    // host that can't hairpin to its own domain) fails fast and the build still
-    // completes — the route extractor otherwise hangs until it aborts and the
-    // whole production build fails. Dynamic pages fall back to runtime rendering.
-    const res = await fetch(`${PRERENDER_API_URL}${path}`, {
-      signal: AbortSignal.timeout(4000),
-    });
-    if (!res.ok) {
-      console.warn(`[prerender] ${path} returned ${res.status}; skipping dynamic params for this route`);
-      return [];
-    }
-    const json = (await res.json()) as ApiListResponse<{ slug: string }>;
-    return (json.data || []).map((item) => item.slug).filter(Boolean);
-  } catch (err) {
-    console.warn(`[prerender] Failed to fetch ${path}, skipping dynamic params:`, err);
-    return [];
-  }
-}
-
+/**
+ * Hybrid rendering (outputMode: 'server'):
+ *
+ * - Static marketing/content routes are PRERENDERED once at build time (fast,
+ *   cache-friendly, no runtime cost).
+ * - Data-driven dynamic routes (product/category/blog detail) are RENDERED ON
+ *   DEMAND by the Node SSR server, so their raw HTML always contains the real
+ *   record — content, <title>, meta description, self-canonical, and Product
+ *   JSON-LD — with no build-time API dependency. This removes the previous
+ *   nondeterminism where a flaky build-time slug fetch decided whether these
+ *   pages were prerendered or shipped as the homepage shell.
+ * - Auth-gated / per-user routes stay client-rendered.
+ */
 export const serverRoutes: ServerRoute[] = [
   // ── Static marketing/content routes: prerendered once at build time ──
   { path: '', renderMode: RenderMode.Prerender },
@@ -44,39 +23,19 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'contact', renderMode: RenderMode.Prerender },
   { path: 'buy-in-bulk', renderMode: RenderMode.Prerender },
 
-  // ── Dynamic routes: enumerate real params from the live API, then prerender each ──
-  {
-    path: 'product/:slug',
-    renderMode: RenderMode.Prerender,
-    async getPrerenderParams() {
-      // Dedicated endpoint returns ALL active product slugs (no 100 cap).
-      const slugs = await fetchSlugs('/catalog/product-slugs');
-      return slugs.map((slug) => ({ slug }));
-    },
-  },
-  {
-    path: 'catalog/:slug',
-    renderMode: RenderMode.Prerender,
-    async getPrerenderParams() {
-      const slugs = await fetchSlugs('/catalog/categories');
-      return slugs.map((slug) => ({ slug }));
-    },
-  },
-  {
-    path: 'blog/:slug',
-    renderMode: RenderMode.Prerender,
-    async getPrerenderParams() {
-      const slugs = await fetchSlugs('/blog');
-      return slugs.map((slug) => ({ slug }));
-    },
-  },
+  // ── Data-driven dynamic routes: server-side rendered on demand (always fresh) ──
+  { path: 'product/:slug', renderMode: RenderMode.Server },
+  { path: 'catalog/:slug', renderMode: RenderMode.Server },
+  { path: 'blog/:slug', renderMode: RenderMode.Server },
+
+  // CMS pages: prerender the hardcoded static policy pages (content lives in
+  // static-page.ts, no API needed → deterministic), and SERVER-render any other
+  // DB-backed page slug on demand so its content/canonical are in raw HTML.
   {
     path: 'page/:slug',
     renderMode: RenderMode.Prerender,
+    fallback: PrerenderFallback.Server,
     async getPrerenderParams() {
-      // These 3 policy pages are hardcoded content in static-page.ts, not API-driven.
-      // terms-and-conditions is the canonical policy slug (terms-conditions 301s to
-      // it at the edge), so that is the one we prerender with real content.
       return [
         { slug: 'shipping-policy' },
         { slug: 'terms-and-conditions' },

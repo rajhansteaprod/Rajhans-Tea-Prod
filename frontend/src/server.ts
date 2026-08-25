@@ -5,6 +5,12 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
+
+// KNOWN OPEN ISSUE (why this branch is NOT deployed): Angular 21 SSR's Host
+// allowlist rejects proxied requests and deopts dynamic routes to an empty CSR
+// shell. Configuring angular.json security.allowedHosts (baked into the manifest)
+// did not take effect at runtime in local testing. Must be resolved before this
+// branch can ship — do not bypass the check to force it.
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -18,6 +24,9 @@ const serverDistFolder = dirname(fileURLToPath(import.meta.url));
 const browserDistFolder = resolve(serverDistFolder, '../browser');
 
 const app = express();
+// Allowed hosts (Angular SSRF protection) are configured at build time in
+// angular.json → architect.build.options.security.allowedHosts, which is baked
+// into the server manifest the engine reads.
 const angularApp = new AngularNodeAppEngine();
 
 app.use(

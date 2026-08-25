@@ -45,9 +45,12 @@
           "options": {
             "browser": "src/main.ts",
             "server": "src/main.server.ts",
-            "outputMode": "static",
+            "outputMode": "server",
             "ssr": {
               "entry": "src/server.ts"
+            },
+            "security": {
+              "allowedHosts": ["rajhanstea.com", "www.rajhanstea.com", "localhost"]
             },
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
