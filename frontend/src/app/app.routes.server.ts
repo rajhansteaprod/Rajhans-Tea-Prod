@@ -74,11 +74,17 @@ export const serverRoutes: ServerRoute[] = [
     path: 'page/:slug',
     renderMode: RenderMode.Prerender,
     async getPrerenderParams() {
-      // Hardcoded policy pages (content lives in static-page.ts, not the API).
+      // CMS pages. shipping-policy/terms-and-conditions/return-refund-policy have
+      // hardcoded content in static-page.ts; faq/privacy-policy are DB-backed
+      // (content fetched from the API at build). All are stable, so the set is
+      // enumerated here; the post-build verify gate checks a DB-backed page so an
+      // unreachable API fails the build instead of shipping a shell.
       return [
         { slug: 'shipping-policy' },
         { slug: 'terms-and-conditions' },
         { slug: 'return-refund-policy' },
+        { slug: 'faq' },
+        { slug: 'privacy-policy' },
       ];
     },
   },
