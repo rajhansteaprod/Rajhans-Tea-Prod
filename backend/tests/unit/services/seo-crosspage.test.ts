@@ -184,23 +184,16 @@ describe('broken-internal-link', () => {
 });
 
 // -----------------------------------------------------------------------------
-describe('internal-link-to-redirect', () => {
-  it('flags a link to a non-canonical URL that 301s to the trailing-slash form', () => {
-    const src = page('/products/', { internalLinkDetails: [link('/product/foo')] }); // no trailing slash
-    const resolutions = new Map([
-      [abs('/product/foo'), res('/product/foo', {
-        finalUrl: `${BASE}/product/foo/`,
-        finalNormalizedUrl: abs('/product/foo/'),
-        finalStatus: 200,
-        redirectChain: [{ url: `${BASE}/product/foo`, status: 301 }],
-        redirects: true,
-      })],
-    ]);
-    const found = byCheck(run([src], resolutions), 'internal-link-to-redirect');
-    expect(found).toHaveLength(1);
-    expect(found[0].evidence.extra?.finalUrl).toBe(`${BASE}/product/foo/`);
-    expect(found[0].evidence.extra?.redirectStatus).toBe(301);
-  });
+describe('internal-link-to-redirect (grouped reporting)', () => {
+  // Build a redirect resolution: target 301s to its trailing-slash canonical.
+  const redirectRes = (target: string, finalPath: string, chain?: { url: string; status: number }[]): LinkResolution =>
+    res(target, {
+      finalUrl: `${BASE}${finalPath}`,
+      finalNormalizedUrl: abs(finalPath),
+      finalStatus: 200,
+      redirectChain: chain ?? [{ url: `${BASE}${target}`, status: 301 }],
+      redirects: true,
+    });
 
   it('does NOT flag a link that already points to the canonical 200 URL', () => {
     const src = page('/products/', { internalLinkDetails: [link('/product/foo/')] });
@@ -218,6 +211,83 @@ describe('internal-link-to-redirect', () => {
     const issues = run([src], resolutions);
     expect(byCheck(issues, 'broken-internal-link')).toHaveLength(1);
     expect(byCheck(issues, 'internal-link-to-redirect')).toHaveLength(0);
+  });
+
+  // Case A — many sources → the SAME redirect target → ONE grouped finding.
+  it('Case A: N sources linking to one redirecting target → one grouped finding', () => {
+    const target = page('/products/');
+    const srcA = page('/source-a/', { internalLinkDetails: [link('/products')] });
+    const srcB = page('/source-b/', { internalLinkDetails: [link('/products')] });
+    const srcC = page('/source-c/', { internalLinkDetails: [link('/products')] });
+    const resolutions = new Map([[abs('/products'), redirectRes('/products', '/products/')]]);
+
+    const found = byCheck(run([target, srcA, srcB, srcC], resolutions), 'internal-link-to-redirect');
+    expect(found).toHaveLength(1);
+    expect(found[0].normalizedUrl).toBe(abs('/products/')); // anchored on the canonical destination
+    expect(found[0].evidence.extra?.affectedLinks).toBe(3);
+    expect(found[0].evidence.extra?.affectedSourcePages).toBe(3);
+    expect(found[0].evidence.extra?.uniqueTargets).toEqual([abs('/products')]);
+    expect(found[0].evidence.extra?.finalUrl).toBe(abs('/products/'));
+  });
+
+  // Case B — different redirect targets → separate grouped findings.
+  it('Case B: distinct redirect targets → separate grouped findings', () => {
+    const src = page('/home/', { internalLinkDetails: [link('/products'), link('/blog')] });
+    const resolutions = new Map([
+      [abs('/products'), redirectRes('/products', '/products/')],
+      [abs('/blog'), redirectRes('/blog', '/blog/')],
+    ]);
+    const found = byCheck(run([src], resolutions), 'internal-link-to-redirect');
+    expect(found).toHaveLength(2);
+    expect(found.map((f) => f.evidence.extra?.finalUrl).sort()).toEqual([abs('/blog/'), abs('/products/')]);
+    for (const f of found) expect(f.evidence.extra?.affectedLinks).toBe(1);
+  });
+
+  // Case C — no redirect → no finding.
+  it('Case C: no redirect → no finding', () => {
+    const src = page('/home/', { internalLinkDetails: [link('/products/'), link('/blog/')] });
+    const resolutions = new Map([
+      [abs('/products/'), res('/products/')],
+      [abs('/blog/'), res('/blog/')],
+    ]);
+    expect(byCheck(run([src], resolutions), 'internal-link-to-redirect')).toHaveLength(0);
+  });
+
+  // Case D — redirect chain /foo → /bar → /bar/ → report the final canonical dest.
+  it('Case D: multi-hop chain reports the final canonical destination', () => {
+    const src = page('/home/', { internalLinkDetails: [link('/foo')] });
+    const resolutions = new Map([[abs('/foo'), redirectRes('/foo', '/bar/', [
+      { url: `${BASE}/foo`, status: 301 },
+      { url: `${BASE}/bar`, status: 301 },
+    ])]]);
+    const found = byCheck(run([src], resolutions), 'internal-link-to-redirect');
+    expect(found).toHaveLength(1);
+    expect(found[0].evidence.extra?.finalUrl).toBe(abs('/bar/'));
+    expect(String((found[0].evidence.extra?.examples as string[])?.[0])).toContain('/bar/');
+  });
+
+  // Case E — deterministic fingerprint across runs (open→open, never re-NEW).
+  it('Case E: grouping is fingerprint-stable across runs', () => {
+    const src = page('/home/', { internalLinkDetails: [link('/products')] });
+    const resolutions = new Map([[abs('/products'), redirectRes('/products', '/products/')]]);
+    const r1 = byCheck(run([src], resolutions), 'internal-link-to-redirect');
+    const r2 = byCheck(run([src], resolutions), 'internal-link-to-redirect');
+    const fp = (i: (typeof r1)[number]) => fingerprint(i.normalizedUrl, i.checkId, i.discriminator ?? '');
+    expect(fp(r1[0])).toBe(fp(r2[0]));
+    expect(r1[0].discriminator).toBe(''); // grouped by canonical dest, empty discriminator
+  });
+
+  // The underlying TRUTH is preserved — affectedLinks still sums to every edge.
+  it('preserves the full link count across grouped findings', () => {
+    const src1 = page('/a/', { internalLinkDetails: [link('/products'), link('/blog')] });
+    const src2 = page('/b/', { internalLinkDetails: [link('/products')] });
+    const resolutions = new Map([
+      [abs('/products'), redirectRes('/products', '/products/')],
+      [abs('/blog'), redirectRes('/blog', '/blog/')],
+    ]);
+    const found = byCheck(run([src1, src2], resolutions), 'internal-link-to-redirect');
+    const totalLinks = found.reduce((n, f) => n + (f.evidence.extra?.affectedLinks as number), 0);
+    expect(totalLinks).toBe(3); // 2 edges → /products/, 1 edge → /blog/
   });
 });
 
