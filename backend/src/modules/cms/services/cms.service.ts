@@ -6,6 +6,7 @@ import { Category } from '../../catalog/models/category.model';
 import { NotFoundError } from '../../../utils/api-error';
 import { slugify } from '../../../utils/slugify';
 import { parsePagination, buildPaginationMeta } from '../../../utils/pagination';
+import { canonicalPageSlug } from '../page-slug.util';
 
 export class CmsService {
   // ─── Pages ────────────────────────────────────────────────────────────────
@@ -122,12 +123,9 @@ export class CmsService {
     const loc = (path: string): string => `${baseUrl}${escapeXml(path)}`;
 
     // Duplicate policy slugs 301 to their canonical slug at the edge. Map them to
-    // the canonical so the sitemap lists ONLY the canonical URL — regardless of
-    // which slug the CMS actually stores — and dedupe if both happen to exist.
-    const CANONICAL_PAGE_SLUG: Record<string, string> = {
-      'terms-conditions': 'terms-and-conditions',
-      'return-refund': 'return-refund-policy',
-    };
+    // the canonical (shared with the SEO audit inventory) so the sitemap lists
+    // ONLY the canonical URL — regardless of which slug the CMS stores — and
+    // dedupe if both happen to exist.
     const emittedPageSlugs = new Set<string>();
 
     // Canonical URLs carry a trailing slash (prerendered pages are directories
@@ -169,7 +167,7 @@ export class CmsService {
     // Pages (duplicate policy slugs collapsed onto their canonical slug)
     for (const p of pages) {
       if (!p.slug) continue;
-      const slug = CANONICAL_PAGE_SLUG[p.slug] ?? p.slug;
+      const slug = canonicalPageSlug(p.slug);
       if (emittedPageSlugs.has(slug)) continue;
       emittedPageSlugs.add(slug);
       xml += `  <url><loc>${loc(`/page/${slug}/`)}</loc><lastmod>${lastmod(p.updatedAt)}</lastmod><priority>0.5</priority></url>\n`;

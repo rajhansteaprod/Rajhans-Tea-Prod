@@ -64,7 +64,7 @@ const seoPageSnapshotSchema = new Schema<ISeoPageSnapshotDoc>(
       default: [],
     },
     images: {
-      type: [new Schema<ImageRef>({ src: { type: String, default: null }, alt: String }, { _id: false })],
+      type: [new Schema<ImageRef>({ src: { type: String, default: null }, alt: String, decorative: { type: Boolean, default: false } }, { _id: false })],
       default: [],
     },
     structuredDataTypes: { type: [String], default: [] },

@@ -3,6 +3,7 @@ import { Category } from '../../catalog/models/category.model';
 import { Page } from '../../cms/models/page.model';
 import { Blog } from '../../cms/models/blog.model';
 import { seoConfig } from '../seo.config';
+import { canonicalPageSlug } from '../../cms/page-slug.util';
 import { normalizeUrl } from '../seo.util';
 import { fetchRaw } from './fetcher.service';
 import { parseSitemapLocs } from './parser.service';
@@ -39,7 +40,18 @@ export async function buildInventory(): Promise<Inventory> {
   ]);
   for (const p of products) if (p.slug) add(`/product/${p.slug}/`);
   for (const c of categories) if (c.slug) add(`/catalog/${c.slug}/`);
-  for (const p of pages) if (p.slug) add(`/page/${p.slug}/`);
+  // Collapse legacy/duplicate policy page slugs onto their canonical survivor
+  // (same map the sitemap uses) so a 301'd legacy slug is never inventoried as a
+  // standalone indexable page — otherwise the audit would follow the redirect
+  // and flag the destination's metadata as a duplicate of itself.
+  const emittedPageSlugs = new Set<string>();
+  for (const p of pages) {
+    if (!p.slug) continue;
+    const slug = canonicalPageSlug(p.slug);
+    if (emittedPageSlugs.has(slug)) continue;
+    emittedPageSlugs.add(slug);
+    add(`/page/${slug}/`);
+  }
   for (const b of blogs) if (b.slug) add(`/blog/${b.slug}/`);
 
   // 3) Sitemap URLs — both to audit and to power sitemap-consistency checks.

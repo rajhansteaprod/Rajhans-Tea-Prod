@@ -167,6 +167,7 @@ export async function runAudit(trigger: RunTrigger, scope: RunScope = 'daily'): 
       allowResolution: !isBaseline && !degraded,
       detectedIssues: detected,
       fetchedNormalizedUrls,
+      discoveredNormalizedUrls: new Set(observations.map((o) => o.normalizedUrl)),
     });
 
     run.status = status;

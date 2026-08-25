@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { Title, Meta } from '@angular/platform-browser';
 import { environment } from '../../../../../environments/environment';
 import { trackPixelEvent } from '../../../../core/utils/meta-pixel';
 
@@ -15,6 +16,8 @@ import { trackPixelEvent } from '../../../../core/utils/meta-pixel';
 export class BuyBulkComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
+  private readonly titleService = inject(Title);
+  private readonly meta = inject(Meta);
 
   bulkForm!: FormGroup;
   giftingForm!: FormGroup;
@@ -28,6 +31,12 @@ export class BuyBulkComponent implements OnInit {
 
   ngOnInit() {
     this.initForms();
+    this.titleService.setTitle('Buy Tea in Bulk — Wholesale Loose-Leaf CTC Chai | Rajhans Tea');
+    this.meta.updateTag({
+      name: 'description',
+      content:
+        'Order Rajhans CTC chai in bulk for cafés, offices, retailers and gifting. Wholesale pricing on Assam, Nilgiri, Darjeeling & Dooars teas — enquire today.',
+    });
   }
 
   private initForms() {

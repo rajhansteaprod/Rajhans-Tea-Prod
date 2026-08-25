@@ -8,6 +8,7 @@ import { CartStore } from '../../../core/services/cart.store';
 import { ReviewStore, RatingSummary, Review, ProductRatingSummary } from '../../../core/services/review.store';
 import { AuthService } from '../../../core/services/auth.service';
 import { trackStandardEvent, sendCapiBeacon } from '../../../core/utils/meta-pixel';
+import { PRODUCT_META_OVERRIDE, sanitizeMetaDescription, breadcrumbJsonLd, injectJsonLd } from '../../../core/seo/seo-content';
 
 /**
  * Colours read along the two edges of an image that end up beside the empty
@@ -390,9 +391,12 @@ export class ProductDetailComponent implements OnInit {
             sendCapiBeacon('ViewContent', eid, vcData);
           }
 
-          // SEO
+          // SEO — curated override where the source copy is unsuitable, else a
+          // length-sanitized shortDescription (keeps snippets ≤ ~158 chars).
           const pageTitle = `${res.data.name} — Rajhans Tea`;
-          const pageDescription = res.data.shortDescription || res.data.name;
+          const pageDescription =
+            PRODUCT_META_OVERRIDE[res.data.slug] ||
+            sanitizeMetaDescription(res.data.shortDescription || res.data.name);
           // Canonical URL carries the trailing slash — matches the sitemap and
           // the prerendered directory URL the site 301s to. Dynamic per product.
           const pageUrl = `https://rajhanstea.com/product/${res.data.slug}/`;
@@ -424,6 +428,23 @@ export class ProductDetailComponent implements OnInit {
             this.document.head.appendChild(canonical);
           }
           canonical.setAttribute('href', pageUrl);
+
+          // Additive BreadcrumbList JSON-LD: Home → Category → Product, derived
+          // from the product's real category taxonomy (falls back to All Products
+          // when a product has no single category). Never touches the Product /
+          // Organization JSON-LD blocks.
+          const cat = res.data.category;
+          injectJsonLd(
+            this.document,
+            'breadcrumb-jsonld',
+            breadcrumbJsonLd([
+              { name: 'Home', url: '/' },
+              cat?.slug
+                ? { name: cat.name, url: `/catalog/${cat.slug}/` }
+                : { name: 'All Products', url: '/products/' },
+              { name: res.data.name, url: pageUrl },
+            ]),
+          );
 
           // Load rating summary, then inject Product JSON-LD (includes aggregateRating
           // once known — chained here so prerendering captures the real value, not a
