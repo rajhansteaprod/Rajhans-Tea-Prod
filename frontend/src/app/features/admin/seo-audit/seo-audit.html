@@ -85,6 +85,7 @@
                 <div class="seo__issue-top">
                   <code class="seo__check">{{ iss.checkId }}</code>
                   <span class="seo__sev seo__sev--{{ iss.severity }}">{{ iss.severity }}</span>
+                  @if (iss.category === 'cross-page') { <span class="seo__scope">cross-page</span> }
                   <a class="seo__url" [href]="iss.url" target="_blank" rel="noopener">{{ iss.url }}</a>
                 </div>
                 <div class="seo__why">{{ iss.why }}</div>
@@ -93,6 +94,18 @@
                   <div><span>Expected</span><code>{{ fmt(iss.expected) }}</code></div>
                   <div><span>State</span><code>{{ iss.previousState }} → {{ iss.currentState }}</code></div>
                 </div>
+                @if (linkTarget(iss); as lt) {
+                  <div class="seo__kv">
+                    <div><span>Target</span><code>{{ lt.target }}</code></div>
+                    @if (lt.finalUrl) { <div><span>Resolves to</span><code>{{ lt.finalUrl }}</code></div> }
+                  </div>
+                }
+                @if (duplicateGroup(iss); as group) {
+                  <div class="seo__group">
+                    <span>Affected URLs ({{ group.length }})</span>
+                    <ul>@for (u of group; track u) { <li><code>{{ u }}</code></li> }</ul>
+                  </div>
+                }
               </div>
             }
           </div>

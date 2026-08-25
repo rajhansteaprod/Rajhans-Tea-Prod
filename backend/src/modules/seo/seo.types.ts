@@ -32,6 +32,34 @@ export interface RedirectHop {
   status: number;
 }
 
+/** One image reference from a page — used by the cross-page generic-alt check. */
+export interface ImageRef {
+  src: string | null; // absolute src if resolvable, else the raw attribute
+  alt: string; // the alt attribute value (may be '')
+}
+
+/** One internal anchor from a page — carries context the cross-page link checks report. */
+export interface InternalLinkRef {
+  href: string; // the raw href attribute as authored
+  target: string; // normalized, same-origin absolute URL
+  anchor: string; // trimmed anchor text (may be '')
+}
+
+/**
+ * The resolved state of a single internal link target (fetched once per unique
+ * URL). Powers broken-internal-link / internal-link-to-redirect and the
+ * trailing-slash-aware inbound graph used by orphan-page.
+ */
+export interface LinkResolution {
+  target: string; // the normalized URL that was resolved
+  finalUrl: string | null;
+  finalNormalizedUrl: string; // finalUrl normalized (self when no redirect)
+  finalStatus: number | null;
+  redirectChain: RedirectHop[];
+  redirects: boolean; // true when the chain is non-empty / status is 3xx
+  transient: boolean; // network/timeout/5xx — never treated as "broken"
+}
+
 /** How a URL relates to the sitemap — surfaced as evidence on several checks. */
 export type SitemapStatus =
   | 'present'
@@ -67,6 +95,22 @@ export interface DetectedIssue {
   explanation: string; // human-readable WHY
   evidence: SeoIssueEvidence;
   automationLevel: AutomationLevel; // 'observe' in Phase 2a
+  /**
+   * Optional identity discriminator folded into the fingerprint. Empty for
+   * page-level checks (one finding per URL+checkId). Cross-page checks that can
+   * emit several findings on one page (e.g. broken-internal-link per target) set
+   * it to the RELATIONSHIP key (the target/image URL) so each is a stable,
+   * independently-resolvable finding.
+   */
+  discriminator?: string;
+}
+
+/** Minimal shape of a fetch result the cross-page resolver needs (test-injectable). */
+export interface FetchResultLike {
+  finalUrl: string | null;
+  finalStatus: number | null;
+  redirectChain: RedirectHop[];
+  transient: boolean;
 }
 
 /** The normalized, parsed view of one fetched URL — the raw material for rules. */
@@ -88,6 +132,10 @@ export interface PageObservation {
   imagesTotal: number;
   imagesMissingAlt: number;
   internalLinks: string[];
+  /** Richer anchors (href + normalized target + anchor text) for cross-page link checks. */
+  internalLinkDetails: InternalLinkRef[];
+  /** Every <img> with its src + alt — feeds the generic-image-alt check. */
+  images: ImageRef[];
   structuredDataTypes: string[];
   wordCount: number;
   contentHash: string | null;

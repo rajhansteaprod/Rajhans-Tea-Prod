@@ -8,6 +8,7 @@ import { fetchUrl } from './fetcher.service';
 import { parseHtml } from './parser.service';
 import { runPageRules } from './rules';
 import { runSitemapRules } from './analyzer.service';
+import { resolveLinkTargets, runCrossPageRules } from './crosspage.service';
 import { diffAndPersist } from './diff.service';
 import { logger } from '../../../utils/logger';
 
@@ -49,6 +50,8 @@ async function observe(url: string, sitemapUrls: Set<string>): Promise<PageObser
       imagesTotal: 0,
       imagesMissingAlt: 0,
       internalLinks: [],
+      internalLinkDetails: [],
+      images: [],
       structuredDataTypes: [],
       wordCount: 0,
       contentHash: null,
@@ -75,6 +78,8 @@ async function observe(url: string, sitemapUrls: Set<string>): Promise<PageObser
     imagesTotal: parsed?.imagesTotal ?? 0,
     imagesMissingAlt: parsed?.imagesMissingAlt ?? 0,
     internalLinks: parsed?.internalLinks ?? [],
+    internalLinkDetails: parsed?.internalLinkDetails ?? [],
+    images: parsed?.images ?? [],
     structuredDataTypes: parsed?.structuredDataTypes ?? [],
     wordCount: parsed?.wordCount ?? 0,
     contentHash: parsed?.contentHash ?? null,
@@ -129,10 +134,23 @@ export async function runAudit(trigger: RunTrigger, scope: RunScope = 'daily'): 
       pagesByNormalizedUrl,
     };
 
+    // ── Resolve unique internal link targets once (for the cross-page checks) ──
+    // Reuses already-observed pages; only non-canonical targets (e.g. /x that
+    // 301s to /x/) are fetched, a single time each, rate-limited like the crawl.
+    const linkResolutions = await resolveLinkTargets(
+      observations,
+      pagesByNormalizedUrl,
+      seoConfig.baseUrl,
+      fetchUrl,
+      seoConfig.maxConcurrency,
+      seoConfig.perRequestDelayMs ? () => new Promise((r) => setTimeout(r, seoConfig.perRequestDelayMs)) : undefined,
+    );
+
     // ── Run rules ──
     const detected: DetectedIssue[] = [];
     for (const o of observations) detected.push(...runPageRules(o, ctx));
     detected.push(...runSitemapRules(ctx));
+    detected.push(...runCrossPageRules(observations, ctx, linkResolutions));
 
     // ── Coverage ──
     const fetched = observations.filter((o) => o.fetched);

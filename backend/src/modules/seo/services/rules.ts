@@ -7,36 +7,51 @@ import { fingerprint, normalizeUrl } from '../seo.util';
  * layers read `automationLevel` (all 'observe' in Phase 2a) and the metadata to
  * decide what may be proposed or applied. Adding a rule = add an entry here.
  */
+export type CheckCategory = 'page' | 'cross-page';
+
 export const RULE_REGISTRY: Record<
   string,
-  { severity: Severity; automationLevel: 'observe'; description: string }
+  { severity: Severity; automationLevel: 'observe'; category: CheckCategory; description: string }
 > = {
-  'missing-title': { severity: 'warning', automationLevel: 'observe', description: 'Indexable page has no <title>.' },
-  'missing-meta-description': { severity: 'warning', automationLevel: 'observe', description: 'Indexable page has no meta description.' },
-  'meta-description-length': { severity: 'info', automationLevel: 'observe', description: 'Meta description is outside the recommended length.' },
-  'missing-h1': { severity: 'warning', automationLevel: 'observe', description: 'Indexable page has no H1.' },
-  'multiple-h1': { severity: 'info', automationLevel: 'observe', description: 'Page has more than one H1.' },
-  'canonical-missing': { severity: 'critical', automationLevel: 'observe', description: 'Indexable page has no canonical link.' },
-  'canonical-not-self': { severity: 'warning', automationLevel: 'observe', description: 'Canonical does not point to the page itself.' },
-  'canonical-target-redirect': { severity: 'critical', automationLevel: 'observe', description: 'Canonical points to a URL that redirects.' },
-  'noindex-on-indexable': { severity: 'critical', automationLevel: 'observe', description: 'A sitemap/important URL is marked noindex.' },
-  'redirect-chain-long': { severity: 'warning', automationLevel: 'observe', description: 'URL resolves through multiple redirect hops.' },
-  'broken-url': { severity: 'critical', automationLevel: 'observe', description: 'A known/important URL returns a 4xx status.' },
-  'images-missing-alt': { severity: 'info', automationLevel: 'observe', description: 'Page has images without alt text.' },
-  // Sitemap / cross-page checks (emitted by the analyzer)
-  'redirect-in-sitemap': { severity: 'warning', automationLevel: 'observe', description: 'Sitemap lists a URL that redirects.' },
-  'sitemap-url-non-200': { severity: 'critical', automationLevel: 'observe', description: 'Sitemap lists a URL that does not return 200.' },
-  'sitemap-canonical-mismatch': { severity: 'warning', automationLevel: 'observe', description: 'Sitemap URL canonicalizes to a different URL.' },
-  'important-url-missing-from-sitemap': { severity: 'warning', automationLevel: 'observe', description: 'An important page is absent from the sitemap.' },
-  'robots-txt-unreachable': { severity: 'critical', automationLevel: 'observe', description: 'robots.txt is not reachable.' },
+  'missing-title': { severity: 'warning', automationLevel: 'observe', category: 'page', description: 'Indexable page has no <title>.' },
+  'missing-meta-description': { severity: 'warning', automationLevel: 'observe', category: 'page', description: 'Indexable page has no meta description.' },
+  'meta-description-length': { severity: 'info', automationLevel: 'observe', category: 'page', description: 'Meta description is outside the recommended length.' },
+  'missing-h1': { severity: 'warning', automationLevel: 'observe', category: 'page', description: 'Indexable page has no H1.' },
+  'multiple-h1': { severity: 'info', automationLevel: 'observe', category: 'page', description: 'Page has more than one H1.' },
+  'canonical-missing': { severity: 'critical', automationLevel: 'observe', category: 'page', description: 'Indexable page has no canonical link.' },
+  'canonical-not-self': { severity: 'warning', automationLevel: 'observe', category: 'page', description: 'Canonical does not point to the page itself.' },
+  'canonical-target-redirect': { severity: 'critical', automationLevel: 'observe', category: 'page', description: 'Canonical points to a URL that redirects.' },
+  'noindex-on-indexable': { severity: 'critical', automationLevel: 'observe', category: 'page', description: 'A sitemap/important URL is marked noindex.' },
+  'redirect-chain-long': { severity: 'warning', automationLevel: 'observe', category: 'page', description: 'URL resolves through multiple redirect hops.' },
+  'broken-url': { severity: 'critical', automationLevel: 'observe', category: 'page', description: 'A known/important URL returns a 4xx status.' },
+  'images-missing-alt': { severity: 'info', automationLevel: 'observe', category: 'page', description: 'Page has images without alt text.' },
+  // Sitemap-level checks (emitted by the analyzer)
+  'redirect-in-sitemap': { severity: 'warning', automationLevel: 'observe', category: 'cross-page', description: 'Sitemap lists a URL that redirects.' },
+  'sitemap-url-non-200': { severity: 'critical', automationLevel: 'observe', category: 'cross-page', description: 'Sitemap lists a URL that does not return 200.' },
+  'sitemap-canonical-mismatch': { severity: 'warning', automationLevel: 'observe', category: 'cross-page', description: 'Sitemap URL canonicalizes to a different URL.' },
+  'important-url-missing-from-sitemap': { severity: 'warning', automationLevel: 'observe', category: 'cross-page', description: 'An important page is absent from the sitemap.' },
+  'robots-txt-unreachable': { severity: 'critical', automationLevel: 'observe', category: 'cross-page', description: 'robots.txt is not reachable.' },
+  // ── Phase 2b: cross-page / site-wide relationship checks ──
+  'duplicate-title': { severity: 'warning', automationLevel: 'observe', category: 'cross-page', description: 'Multiple indexable URLs share the same <title>.' },
+  'duplicate-description': { severity: 'warning', automationLevel: 'observe', category: 'cross-page', description: 'Multiple indexable URLs share the same meta description.' },
+  'broken-internal-link': { severity: 'critical', automationLevel: 'observe', category: 'cross-page', description: 'An internal link points to a URL that returns a 4xx/410.' },
+  'internal-link-to-redirect': { severity: 'warning', automationLevel: 'observe', category: 'cross-page', description: 'An internal link points to a URL that redirects instead of the canonical destination.' },
+  'orphan-page': { severity: 'warning', automationLevel: 'observe', category: 'cross-page', description: 'An indexable page has zero internal inbound links from other pages.' },
+  'generic-image-alt': { severity: 'info', automationLevel: 'observe', category: 'cross-page', description: 'Image alt text is present but non-descriptive/generic.' },
 };
 
-/** Build a DetectedIssue with a stable fingerprint from the registry metadata. */
+/**
+ * Build a DetectedIssue with a stable fingerprint from the registry metadata.
+ * `discriminator` distinguishes multiple findings of the same check on one page
+ * (e.g. one broken-internal-link per target); it defaults to '' so every existing
+ * page-level check keeps its exact prior fingerprint (no migration).
+ */
 export function makeIssue(
   checkId: string,
   page: { url: string; normalizedUrl: string },
   explanation: string,
   evidence: DetectedIssue['evidence'],
+  discriminator = '',
 ): DetectedIssue {
   const meta = RULE_REGISTRY[checkId];
   return {
@@ -47,6 +62,7 @@ export function makeIssue(
     explanation,
     evidence,
     automationLevel: meta.automationLevel,
+    discriminator,
   };
 }
 
