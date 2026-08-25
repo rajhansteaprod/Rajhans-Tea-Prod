@@ -9,6 +9,7 @@ import { parseHtml } from './parser.service';
 import { runPageRules } from './rules';
 import { runSitemapRules } from './analyzer.service';
 import { resolveLinkTargets, runCrossPageRules } from './crosspage.service';
+import { generateAndPersistRecommendations } from './recommendation.service';
 import { diffAndPersist } from './diff.service';
 import { logger } from '../../../utils/logger';
 
@@ -179,6 +180,24 @@ export async function runAudit(trigger: RunTrigger, scope: RunScope = 'daily'): 
     run.delta = diff.delta;
     run.finishedAt = new Date();
     await run.save();
+
+    // ── Phase 3: synthesize + persist growth recommendations (recommend-only) ──
+    // Isolated in its own try/catch so a recommendation failure can never fail or
+    // roll back the audit itself.
+    try {
+      const recoDiff = await generateAndPersistRecommendations({
+        runId: run._id,
+        isBaseline,
+        allowResolution: !isBaseline && !degraded,
+        baseUrl: seoConfig.baseUrl,
+        detected,
+        observations,
+        linkResolutions,
+      });
+      logger.info({ runId: run._id.toString(), recoCounts: recoDiff.counts, recoDelta: recoDiff.delta }, 'SEO recommendations generated');
+    } catch (recErr) {
+      logger.error({ runId: run._id.toString(), err: recErr }, 'SEO recommendation generation failed (audit unaffected)');
+    }
 
     logger.info(
       { runId: run._id.toString(), status, urls: observations.length, fetched: fetched.length, counts: diff.counts, delta: diff.delta },
