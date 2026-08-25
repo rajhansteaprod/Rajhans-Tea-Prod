@@ -16,6 +16,8 @@ adminRouter.get('/seo/runs/:id', ctrl.getRun);
 adminRouter.get('/seo/runs/:id/issues', ctrl.getIssues);
 adminRouter.get('/seo/checks', ctrl.getChecks);
 adminRouter.get('/seo/recommendations', ctrl.getRecommendations);
+adminRouter.get('/seo/gsc/summary', ctrl.getGscSummary);
+adminRouter.post('/seo/gsc/sync', ctrl.triggerGscSync);
 
 router.use('/admin', adminRouter);
 

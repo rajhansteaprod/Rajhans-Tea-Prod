@@ -4,6 +4,7 @@ import {
   RecommendationEffort,
   RecommendationImpact,
   RecommendationPriority,
+  RecommendationSource,
 } from '../seo.types';
 
 /**
@@ -27,6 +28,12 @@ export interface ISeoRecommendationDoc extends Document {
   evidence: Record<string, unknown>;
   relatedCheckIds: string[];
   automationLevel: 'recommend';
+  /** 'audit' (default) or 'gsc'. Keeps the two diff lifecycles independent. */
+  source: RecommendationSource;
+  /** GSC demand attached to this rec (capped bonus + impressions) — kept SEPARATE
+   *  from technical severity/priority so the two stay conceptually distinct. */
+  demandBonus: number;
+  demandImpressions: number;
   status: 'open' | 'resolved';
   firstSeenRunId: mongoose.Types.ObjectId;
   lastSeenRunId: mongoose.Types.ObjectId;
@@ -51,6 +58,9 @@ const seoRecommendationSchema = new Schema<ISeoRecommendationDoc>(
     evidence: { type: Schema.Types.Mixed, default: {} },
     relatedCheckIds: { type: [String], default: [] },
     automationLevel: { type: String, enum: ['recommend'], default: 'recommend' },
+    source: { type: String, enum: ['audit', 'gsc'], default: 'audit', index: true },
+    demandBonus: { type: Number, default: 0 },
+    demandImpressions: { type: Number, default: 0 },
     status: { type: String, enum: ['open', 'resolved'], default: 'open', index: true },
     firstSeenRunId: { type: Schema.Types.ObjectId, ref: 'SeoAuditRun', required: true },
     lastSeenRunId: { type: Schema.Types.ObjectId, ref: 'SeoAuditRun', required: true },

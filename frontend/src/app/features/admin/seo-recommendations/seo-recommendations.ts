@@ -17,6 +17,12 @@ interface Recommendation {
   evidence: Record<string, unknown>;
   relatedCheckIds: string[];
   state: 'new' | 'persistent' | 'resolved';
+  // Phase 4 (GSC) — demand kept distinct from technical priority
+  source?: 'audit' | 'gsc';
+  confidence?: 'low' | 'medium' | 'high' | null;
+  demandImpressions?: number;
+  demandBonus?: number;
+  effectivePriority?: 'high' | 'medium' | 'low';
 }
 
 interface RecoReport {

@@ -30,6 +30,10 @@ import {
   startSeoAuditWorker,
   closeSeoAuditWorker,
 } from '../modules/seo/jobs/workers/seo-audit.worker';
+import {
+  startGscSyncWorker,
+  closeGscSyncWorker,
+} from '../modules/seo/jobs/workers/gsc-sync.worker';
 import { logger } from '../utils/logger';
 
 export const registerWorkers = (): void => {
@@ -41,6 +45,7 @@ export const registerWorkers = (): void => {
   startPromotionsWorker();
   startReviewsWorker();
   startSeoAuditWorker();
+  startGscSyncWorker(); // processes manual GSC syncs; idle unless GSC is configured
   logger.info('BullMQ workers registered');
 };
 
@@ -53,5 +58,6 @@ export const closeWorkers = async (): Promise<void> => {
   await closePromotionsWorker();
   await closeReviewsWorker();
   await closeSeoAuditWorker();
+  await closeGscSyncWorker();
   logger.info('BullMQ workers closed');
 };

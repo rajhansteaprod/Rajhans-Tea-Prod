@@ -3,6 +3,7 @@ import { SeoRecommendation, ISeoRecommendationDoc } from '../models/seo-recommen
 import { SeoAuditRun } from '../models/seo-audit-run.model';
 import { DetectedIssue, LinkResolution, PageObservation, RecommendationPriority } from '../seo.types';
 import { fingerprint } from '../seo.util';
+import { gscConfig } from '../gsc.config';
 import { buildInboundCounts } from './crosspage.service';
 import { generateDrafts, RecoContext } from './recommendation.generators';
 import { scoreRecommendation } from './recommendation.scoring';
@@ -77,6 +78,7 @@ export async function generateAndPersistRecommendations(opts: {
       await SeoRecommendation.create({
         fingerprint: fp,
         ...common,
+        source: 'audit',
         status: 'open',
         firstSeenRunId: runId,
         lastSeenRunId: runId,
@@ -95,9 +97,11 @@ export async function generateAndPersistRecommendations(opts: {
     }
   }
 
-  // ── Resolve open recommendations not regenerated this run (coverage-gated) ──
+  // ── Resolve open AUDIT recommendations not regenerated this run ──
+  // Scoped to non-GSC recs so the audit diff never resolves GSC opportunities
+  // (those have their own independent lifecycle in the opportunity service).
   if (allowResolution) {
-    const open = await SeoRecommendation.find({ status: 'open' }).exec();
+    const open = await SeoRecommendation.find({ status: 'open', source: { $ne: 'gsc' } }).exec();
     for (const rec of open) {
       if (detectedNow.has(rec.fingerprint)) continue;
       rec.status = 'resolved';
@@ -132,8 +136,23 @@ function toView(rec: ISeoRecommendationDoc, runId: string) {
     evidence: rec.evidence,
     relatedCheckIds: rec.relatedCheckIds,
     automationLevel: rec.automationLevel,
+    // Phase 4 fields (GSC): source, confidence, and the demand boost — kept
+    // distinct from technical priority. effectivePriority is the display priority
+    // after the CAPPED demand lift; base priority (technical) is unchanged.
+    source: rec.source ?? 'audit',
+    confidence: (rec.evidence as { confidence?: string })?.confidence ?? null,
+    demandImpressions: rec.demandImpressions ?? 0,
+    demandBonus: rec.demandBonus ?? 0,
+    effectivePriority: liftDisplayPriority(rec.priority, rec.demandBonus ?? 0),
     state,
   };
+}
+
+/** Display-only priority lift from the capped demand bonus (never changes severity). */
+function liftDisplayPriority(base: RecommendationPriority, bonus: number): RecommendationPriority {
+  const order: RecommendationPriority[] = ['low', 'medium', 'high'];
+  const levels = Math.min(gscConfig.demandBoost.maxPriorityLift, Math.floor(bonus / Math.max(1, gscConfig.demandBoost.maxBonus / 2)));
+  return order[Math.min(order.length - 1, order.indexOf(base) + levels)];
 }
 
 const PRIORITY_ORDER: Record<RecommendationPriority, number> = { high: 0, medium: 1, low: 2 };
@@ -146,7 +165,9 @@ export async function getRecommendationsReport(runIdArg?: string) {
   if (!run) return null;
   const runId = String(run._id);
 
-  const openThisRun = await SeoRecommendation.find({ lastSeenRunId: runId, status: 'open' }).exec();
+  // All currently-open recommendations (audit + GSC). GSC recs are touched on GSC
+  // syncs, not the audit run, so the board must not be scoped to lastSeenRunId.
+  const openThisRun = await SeoRecommendation.find({ status: 'open' }).exec();
   const resolvedThisRun = await SeoRecommendation.find({ resolvedRunId: runId, status: 'resolved' }).exec();
 
   const open = openThisRun.map((r) => toView(r, runId)).sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || b.score - a.score);
