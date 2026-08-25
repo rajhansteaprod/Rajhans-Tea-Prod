@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import { RedirectHop } from '../seo.types';
+import { ImageRef, InternalLinkRef, RedirectHop } from '../seo.types';
 
 /**
  * The observed state of one URL during one run — the raw evidence behind any
@@ -24,6 +24,8 @@ export interface ISeoPageSnapshotDoc extends Document {
   imagesTotal: number;
   imagesMissingAlt: number;
   internalLinks: string[];
+  internalLinkDetails: InternalLinkRef[];
+  images: ImageRef[];
   structuredDataTypes: string[];
   wordCount: number;
   contentHash: string | null;
@@ -57,6 +59,14 @@ const seoPageSnapshotSchema = new Schema<ISeoPageSnapshotDoc>(
     imagesTotal: { type: Number, default: 0 },
     imagesMissingAlt: { type: Number, default: 0 },
     internalLinks: { type: [String], default: [] },
+    internalLinkDetails: {
+      type: [new Schema<InternalLinkRef>({ href: String, target: String, anchor: String }, { _id: false })],
+      default: [],
+    },
+    images: {
+      type: [new Schema<ImageRef>({ src: { type: String, default: null }, alt: String }, { _id: false })],
+      default: [],
+    },
     structuredDataTypes: { type: [String], default: [] },
     wordCount: { type: Number, default: 0 },
     contentHash: { type: String, default: null },

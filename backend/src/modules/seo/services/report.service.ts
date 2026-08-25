@@ -1,5 +1,6 @@
 import { SeoAuditRun } from '../models/seo-audit-run.model';
 import { SeoIssue, ISeoIssueDoc } from '../models/seo-issue.model';
+import { RULE_REGISTRY } from './rules';
 
 const idEq = (a: unknown, b: unknown) => !!a && !!b && String(a) === String(b);
 
@@ -20,6 +21,7 @@ function toDrill(issue: ISeoIssueDoc, runId: string) {
   return {
     url: issue.url,
     checkId: issue.checkId,
+    category: RULE_REGISTRY[issue.checkId]?.category ?? 'page',
     severity: issue.severity,
     status: issue.status,
     why: issue.explanation,

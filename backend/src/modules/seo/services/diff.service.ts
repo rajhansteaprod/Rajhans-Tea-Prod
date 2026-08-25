@@ -32,10 +32,12 @@ export async function diffAndPersist(opts: {
 }): Promise<DiffResult> {
   const { runId, isBaseline, allowResolution, detectedIssues, fetchedNormalizedUrls } = opts;
 
-  // Dedupe detected by fingerprint (a check emits at most one per URL, but guard).
+  // Dedupe detected by fingerprint. The discriminator (empty for page-level
+  // checks) lets a cross-page check emit several independent findings on one page
+  // (one per target/image) without them colliding onto a single fingerprint.
   const detected = new Map<string, DetectedIssue>();
   for (const iss of detectedIssues) {
-    detected.set(fingerprint(iss.normalizedUrl, iss.checkId), iss);
+    detected.set(fingerprint(iss.normalizedUrl, iss.checkId, iss.discriminator ?? ''), iss);
   }
 
   const counts = { critical: 0, warning: 0, info: 0 };

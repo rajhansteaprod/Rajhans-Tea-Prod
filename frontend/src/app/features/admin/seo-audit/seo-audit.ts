@@ -16,14 +16,29 @@ interface RunSummary {
   delta: { new: number; resolved: number; regressions: number };
 }
 
+interface IssueEvidence {
+  extra?: {
+    target?: string;
+    finalUrl?: string | null;
+    anchor?: string;
+    duplicateUrls?: string[];
+    imageUrl?: string | null;
+    inboundLinks?: number;
+    [k: string]: unknown;
+  };
+  [k: string]: unknown;
+}
+
 interface Issue {
   url: string;
   checkId: string;
+  category?: 'page' | 'cross-page';
   severity: 'critical' | 'warning' | 'info';
   status: string;
   why: string;
   actual: unknown;
   expected: unknown;
+  evidence?: IssueEvidence;
   firstSeenRunId: string;
   lastSeenRunId: string;
   previousState: string;
@@ -124,5 +139,17 @@ export class SeoAuditComponent implements OnInit, OnDestroy {
     if (v === null || v === undefined) return '∅';
     if (typeof v === 'object') return JSON.stringify(v);
     return String(v);
+  }
+
+  /** The redirect/broken-link target (with its final URL) if this is a link finding. */
+  linkTarget(iss: Issue): { target: string; finalUrl?: string | null } | null {
+    const t = iss.evidence?.extra?.target;
+    return t ? { target: t, finalUrl: iss.evidence?.extra?.finalUrl } : null;
+  }
+
+  /** The set of URLs sharing a duplicate title/description, if applicable. */
+  duplicateGroup(iss: Issue): string[] | null {
+    const g = iss.evidence?.extra?.duplicateUrls;
+    return Array.isArray(g) && g.length ? g : null;
   }
 }
