@@ -70,6 +70,7 @@ function res(target: string, over: Partial<LinkResolution> = {}): LinkResolution
     redirectChain: [],
     redirects: false,
     transient: false,
+    finalCanonicalUrl: null,
     ...over,
   };
 }
@@ -325,6 +326,69 @@ describe('orphan-page + inbound counting (trailing-slash aware)', () => {
   it('does not flag pages that canonicalize elsewhere (intentional)', () => {
     const variant = page('/product/a-variant/', { canonical: abs('/product/a/') });
     expect(byCheck(run([variant]), 'orphan-page')).toHaveLength(0);
+  });
+
+  // ── query-variant canonical fold (the /contact/ false-positive fix) ──
+  it('folds a query-variant inbound link onto its declared canonical → NOT orphan', () => {
+    // Footer links /contact?reason=bulk → 301 → /contact/?reason=bulk, canonical /contact/.
+    const footerPage = page('/products/', { internalLinkDetails: [link('/contact?reason=bulk', 'Buy in Bulk')] });
+    const contact = page('/contact/'); // the canonical page, otherwise unlinked
+    const resolutions = new Map([
+      [abs('/contact?reason=bulk'), res('/contact?reason=bulk', {
+        finalUrl: `${BASE}/contact/?reason=bulk`,
+        finalNormalizedUrl: abs('/contact/?reason=bulk'),
+        redirectChain: [{ url: `${BASE}/contact?reason=bulk`, status: 301 }],
+        redirects: true,
+        finalCanonicalUrl: abs('/contact/'), // the query-variant page declares this
+      })],
+    ]);
+    const inbound = buildInboundCounts([footerPage, contact], resolutions, BASE);
+    expect(inbound.get(abs('/contact/'))).toBe(1); // attributed to the canonical
+    const orphans = byCheck(run([footerPage, contact], resolutions), 'orphan-page').map((i) => i.normalizedUrl);
+    expect(orphans).not.toContain(abs('/contact/'));
+  });
+
+  it('preserves identity for a self-canonical query URL (no blind query stripping)', () => {
+    // /search?q=tea self-canonicalizes → the inbound link must NOT fold onto /search/.
+    const src = page('/products/', { internalLinkDetails: [link('/search?q=tea')] });
+    const resolutions = new Map([
+      [abs('/search?q=tea'), res('/search?q=tea', {
+        finalUrl: `${BASE}/search?q=tea`,
+        finalNormalizedUrl: abs('/search?q=tea'),
+        finalCanonicalUrl: null, // self-canonical ⇒ no fold
+      })],
+    ]);
+    const inbound = buildInboundCounts([src], resolutions, BASE);
+    expect(inbound.get(abs('/search?q=tea'))).toBe(1); // identity preserved
+    expect(inbound.get(abs('/search/')) ?? 0).toBe(0);
+  });
+
+  it('attributes inbound to the target’s declared canonical even when it differs from the source', () => {
+    const src = page('/blog/', { internalLinkDetails: [link('/promo?ref=home')] });
+    const canonicalPage = page('/products/');
+    const resolutions = new Map([
+      [abs('/promo?ref=home'), res('/promo?ref=home', {
+        finalUrl: `${BASE}/promo?ref=home`,
+        finalNormalizedUrl: abs('/promo?ref=home'),
+        finalCanonicalUrl: abs('/products/'), // declares a different canonical
+      })],
+    ]);
+    const inbound = buildInboundCounts([src, canonicalPage], resolutions, BASE);
+    expect(inbound.get(abs('/products/'))).toBe(1);
+  });
+
+  it('resolveLinkTargets reads the declared canonical from a freshly fetched target', async () => {
+    const src = page('/products/', { internalLinkDetails: [link('/contact?reason=bulk')] });
+    const html = `<html><head><link rel="canonical" href="${BASE}/contact/"></head><body>x</body></html>`;
+    const fetchFn = async (): Promise<FetchResultLike> => ({
+      finalUrl: `${BASE}/contact/?reason=bulk`,
+      finalStatus: 200,
+      redirectChain: [{ url: `${BASE}/contact?reason=bulk`, status: 301 }],
+      transient: false,
+      html,
+    });
+    const resolutions = await resolveLinkTargets([src], ctxOf([src]).pagesByNormalizedUrl, BASE, fetchFn, 4);
+    expect(resolutions.get(abs('/contact?reason=bulk'))?.finalCanonicalUrl).toBe(abs('/contact/'));
   });
 });
 

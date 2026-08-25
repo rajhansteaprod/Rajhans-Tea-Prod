@@ -1,5 +1,6 @@
 import { AuditContext, DetectedIssue, FetchResultLike, LinkResolution, PageObservation } from '../seo.types';
 import { normalizeUrl } from '../seo.util';
+import { parseHtml } from './parser.service';
 import { makeIssue } from './rules';
 
 /**
@@ -112,15 +113,29 @@ export async function resolveLinkTargets(
   const resolutions = new Map<string, LinkResolution>();
   const toFetch: string[] = [];
 
-  const resolutionFrom = (target: string, finalUrl: string | null, finalStatus: number | null, chain: PageObservation['redirectChain'], transient: boolean): LinkResolution => ({
-    target,
-    finalUrl,
-    finalNormalizedUrl: normalizeUrl(finalUrl || target, baseUrl),
-    finalStatus,
-    redirectChain: chain,
-    redirects: chain.length > 0 || (finalStatus !== null && finalStatus >= 300 && finalStatus < 400),
-    transient,
-  });
+  const resolutionFrom = (
+    target: string,
+    finalUrl: string | null,
+    finalStatus: number | null,
+    chain: PageObservation['redirectChain'],
+    transient: boolean,
+    canonical: string | null,
+  ): LinkResolution => {
+    const finalNormalizedUrl = normalizeUrl(finalUrl || target, baseUrl);
+    // Only record a canonical when the target EXPLICITLY declares one that differs
+    // from itself (never fabricated by stripping query params).
+    const finalCanonicalUrl = canonical && canonical !== finalNormalizedUrl ? canonical : null;
+    return {
+      target,
+      finalUrl,
+      finalNormalizedUrl,
+      finalStatus,
+      redirectChain: chain,
+      redirects: chain.length > 0 || (finalStatus !== null && finalStatus >= 300 && finalStatus < 400),
+      transient,
+      finalCanonicalUrl,
+    };
+  };
 
   // Collect unique, page-like targets across all fetched sources.
   const unique = new Set<string>();
@@ -134,19 +149,26 @@ export async function resolveLinkTargets(
   for (const target of unique) {
     const obs = pagesByNormalizedUrl.get(target);
     if (obs && (obs.fetched || obs.transientFailure)) {
-      resolutions.set(target, resolutionFrom(target, obs.finalUrl, obs.finalStatus, obs.redirectChain, !obs.fetched && obs.transientFailure));
+      // Reuse the already-parsed observation, including its declared canonical.
+      resolutions.set(target, resolutionFrom(target, obs.finalUrl, obs.finalStatus, obs.redirectChain, !obs.fetched && obs.transientFailure, obs.canonical));
     } else {
       toFetch.push(target);
     }
   }
 
-  // Bounded-concurrency fetch of the not-yet-observed targets.
+  // Bounded-concurrency fetch of the not-yet-observed targets. Read the target's
+  // declared canonical from its final 200 HTML so orphan-page can fold a
+  // query-variant inbound link onto the canonical it explicitly points to.
   let cursor = 0;
   const workers = Array.from({ length: Math.min(concurrency, toFetch.length) }, async () => {
     while (cursor < toFetch.length) {
       const target = toFetch[cursor++];
       const res = await fetchFn(target);
-      resolutions.set(target, resolutionFrom(target, res.finalUrl, res.finalStatus, res.redirectChain, res.transient));
+      const canonical =
+        res.finalStatus === 200 && res.html
+          ? parseHtml(res.html, res.finalUrl || target, baseUrl).canonical
+          : null;
+      resolutions.set(target, resolutionFrom(target, res.finalUrl, res.finalStatus, res.redirectChain, res.transient, canonical));
       if (onFetch) await onFetch();
     }
   });
@@ -155,7 +177,15 @@ export async function resolveLinkTargets(
   return resolutions;
 }
 
-/** Count inbound internal links per FINAL (redirect-resolved) URL, excluding self-links. */
+/**
+ * Count inbound internal links per canonical target URL, excluding self-links.
+ * Attribution routes a link through, in order: (1) its redirect chain, so /x
+ * counts toward /x/; then (2) the resolved target page's DECLARED canonical, so a
+ * query-variant like /contact/?reason=bulk (which declares canonical /contact/)
+ * counts toward /contact/. The fold only happens when the target explicitly
+ * declares a different canonical — query params are never blindly stripped, so a
+ * self-canonical query page keeps its own identity.
+ */
 export function buildInboundCounts(
   observations: PageObservation[],
   linkResolutions: Map<string, LinkResolution>,
@@ -168,12 +198,12 @@ export function buildInboundCounts(
     const countedFromThisSource = new Set<string>();
     for (const link of o.internalLinkDetails) {
       const res = linkResolutions.get(link.target);
-      // Route through the redirect chain so /x counts toward its canonical /x/.
-      const finalNorm = res ? res.finalNormalizedUrl : link.target;
-      if (finalNorm === source) continue; // self-link doesn't count
-      if (countedFromThisSource.has(finalNorm)) continue; // one page → one inbound edge
-      countedFromThisSource.add(finalNorm);
-      inbound.set(finalNorm, (inbound.get(finalNorm) || 0) + 1);
+      // (1) redirect fold, then (2) declared-canonical fold.
+      const attributed = res ? res.finalCanonicalUrl ?? res.finalNormalizedUrl : link.target;
+      if (attributed === source) continue; // self-link doesn't count
+      if (countedFromThisSource.has(attributed)) continue; // one page → one inbound edge
+      countedFromThisSource.add(attributed);
+      inbound.set(attributed, (inbound.get(attributed) || 0) + 1);
     }
   }
   return inbound;
