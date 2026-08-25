@@ -1,5 +1,5 @@
 import { ApplicationConfig, APP_INITIALIZER } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, UrlSerializer } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideServerRendering, withRoutes } from '@angular/ssr';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -8,6 +8,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { routes } from './app.routes';
 import { serverRoutes } from './app.routes.server';
+import { TrailingSlashUrlSerializer } from './core/routing/trailing-slash-url-serializer';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { loadingInterceptor } from './core/interceptors/loading.interceptor';
 import { serverTimeoutInterceptor } from './core/interceptors/server-timeout.interceptor';
@@ -18,6 +19,7 @@ export const config: ApplicationConfig = {
     provideServerRendering(withRoutes(serverRoutes)),
     provideAnimations(),
     provideRouter(routes),
+    { provide: UrlSerializer, useClass: TrailingSlashUrlSerializer },
     provideHttpClient(withInterceptors([serverTimeoutInterceptor, authInterceptor, loadingInterceptor, errorInterceptor])),
     provideNzI18n(en_US),
     {

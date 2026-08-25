@@ -58,6 +58,14 @@ export interface LinkResolution {
   redirectChain: RedirectHop[];
   redirects: boolean; // true when the chain is non-empty / status is 3xx
   transient: boolean; // network/timeout/5xx — never treated as "broken"
+  /**
+   * The canonical URL the RESOLVED target page declares (normalized), when it is
+   * a 200 HTML page and explicitly different from finalNormalizedUrl. Powers the
+   * orphan-page fold: an inbound link to a query-variant (…/contact/?reason=bulk)
+   * whose page declares canonical /contact/ counts toward /contact/. Null when
+   * the page has no canonical or self-canonicalizes.
+   */
+  finalCanonicalUrl: string | null;
 }
 
 /** How a URL relates to the sitemap — surfaced as evidence on several checks. */
@@ -111,6 +119,8 @@ export interface FetchResultLike {
   finalStatus: number | null;
   redirectChain: RedirectHop[];
   transient: boolean;
+  /** Final 200 HTML body, when available — used to read the target's declared canonical. */
+  html?: string | null;
 }
 
 /** The normalized, parsed view of one fetched URL — the raw material for rules. */
