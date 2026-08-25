@@ -43,7 +43,7 @@ export class TeaFinderComponent implements OnInit {
     this.meta.updateTag({
       name: 'description',
       content:
-        "Answer a few quick questions and we'll match you to the right Rajhans loose-leaf CTC chai — by strength, aroma and how you brew. Find your tea in under a minute.",
+        "Answer a few questions and we'll match you to the right Rajhans loose-leaf CTC chai — by strength, aroma and how you brew. Find your tea in under a minute.",
     });
   }
 
