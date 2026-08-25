@@ -140,6 +140,20 @@ export class CmsService {
     // Homepage
     xml += `  <url><loc>${baseUrl}/</loc><priority>1.0</priority></url>\n`;
 
+    // Important static content/listing routes (not DB-derived): these are
+    // prerendered app routes that must be discoverable in the sitemap.
+    const STATIC_ROUTES = [
+      '/products/',
+      '/blog/',
+      '/page/about-us/',
+      '/tea-finder/',
+      '/contact/',
+      '/buy-in-bulk/',
+    ];
+    for (const path of STATIC_ROUTES) {
+      xml += `  <url><loc>${loc(path)}</loc><priority>0.6</priority></url>\n`;
+    }
+
     // Products
     for (const p of products) {
       if (!p.slug) continue;

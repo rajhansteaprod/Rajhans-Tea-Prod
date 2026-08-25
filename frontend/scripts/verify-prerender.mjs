@@ -44,6 +44,8 @@ function verify(routePrefix, slug, { requireJsonLdProduct = false, requireCards 
 verify('product', manifest.product[0], { requireJsonLdProduct: true });
 verify('catalog', manifest.catalog[0], { requireCards: true });
 if (manifest.blog[0]) verify('blog', manifest.blog[0]);
+// A DB-backed CMS page (content comes from the API at build, like the dynamic routes).
+verify('page', 'faq');
 
 if (failures.length) {
   console.error('\n[verify-prerender] FAILED — dynamic SEO routes are incomplete:\n' + failures.join('\n'));
