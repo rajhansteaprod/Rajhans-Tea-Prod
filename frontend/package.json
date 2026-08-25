@@ -5,6 +5,8 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "prerender:manifest": "node scripts/generate-route-manifest.mjs",
+    "prerender:verify": "node scripts/verify-prerender.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "build:ssr": "npm run build && npm run build:server",

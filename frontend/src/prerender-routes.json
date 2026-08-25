@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-08-25T06:31:16.627Z",
+  "source": "https://rajhanstea.com/api/v1",
+  "product": [
+    "rajhans-premium-nilgiri",
+    "rajhans-rajdoot-dooars",
+    "rajhans-royal-assam",
+    "rajhans-royal-darjeeling"
+  ],
+  "catalog": [
+    "balanced-flavourful",
+    "kadak-and-strong",
+    "smooth-aromatic"
+  ],
+  "blog": [
+    "art-of-perfect-tea-brewing",
+    "black-tea-health-benefits",
+    "garden-to-cup-tea-journey",
+    "modern-chai-recipes"
+  ]
+}

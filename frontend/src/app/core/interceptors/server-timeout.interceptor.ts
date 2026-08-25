@@ -18,7 +18,10 @@ import { PlatformService } from '../services/platform.service';
 export const serverTimeoutInterceptor: HttpInterceptorFn = (req, next) => {
   const platform = inject(PlatformService);
   if (platform.isServer) {
-    return next(req).pipe(timeout(6000));
+    // 15s: generous enough for a reachable-but-slow API to deliver real content
+    // into the prerendered HTML, while still bounding a truly unreachable API so
+    // the build fails fast (and the post-build verify gate then fails it safely).
+    return next(req).pipe(timeout(15000));
   }
   return next(req);
 };

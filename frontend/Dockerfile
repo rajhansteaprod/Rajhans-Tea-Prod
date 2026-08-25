@@ -9,6 +9,11 @@ RUN npm ci
 COPY frontend/ .
 RUN NODE_OPTIONS=--max-old-space-size=6144 npx ng build --configuration=production
 
+# SEO gate: fail the image build if representative dynamic routes were not
+# prerendered with real content (e.g. API unreachable at build). Prevents
+# shipping the homepage shell for /product, /catalog, /blog URLs.
+RUN node scripts/verify-prerender.mjs
+
 # Stage 2: Serve with nginx
 FROM nginx:alpine AS production
 

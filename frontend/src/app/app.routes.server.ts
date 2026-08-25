@@ -1,37 +1,41 @@
 import { RenderMode, ServerRoute } from '@angular/ssr';
+import routeManifest from '../prerender-routes.json';
 
-// Absolute API base used only at BUILD TIME to enumerate dynamic route params
-// (product slugs, category slugs, blog slugs) for prerendering. There is no
-// browser origin available during a build-time prerender pass, so this must
-// be an absolute URL. Override with PRERENDER_API_URL if building against a
-// staging backend; defaults to the live production API so prerendered pages
-// always reflect real, current catalog data.
-const PRERENDER_API_URL = process.env['PRERENDER_API_URL'] || 'https://rajhanstea.com/api/v1';
-
-interface ApiListResponse<T> {
-  success: boolean;
-  data: T[];
+/**
+ * Deterministic build-time prerendering.
+ *
+ * Dynamic SEO routes are enumerated from a COMMITTED, authoritative manifest
+ * (src/prerender-routes.json), generated from the API by
+ * `npm run prerender:manifest`. The build therefore does NOT depend on the API
+ * being reachable to DECIDE which routes exist — that decision is deterministic
+ * and identical on every build.
+ *
+ * If the manifest is missing or a required list is empty, getPrerenderParams
+ * THROWS, which fails the build. We never silently ship a build with zero/missing
+ * dynamic routes. (Page CONTENT is still rendered from the API during the build;
+ * a post-build check, scripts/verify-prerender.mjs, fails the build if the
+ * prerendered HTML is missing real content — so an unreachable API at build time
+ * fails safely instead of shipping empty shells.)
+ */
+interface RouteManifest {
+  generatedAt: string;
+  source: string;
+  product: string[];
+  catalog: string[];
+  blog: string[];
 }
 
-async function fetchSlugs(path: string): Promise<string[]> {
-  try {
-    // Short timeout so an unreachable/slow API at build time (CI runners, or a
-    // host that can't hairpin to its own domain) fails fast and the build still
-    // completes — the route extractor otherwise hangs until it aborts and the
-    // whole production build fails. Dynamic pages fall back to runtime rendering.
-    const res = await fetch(`${PRERENDER_API_URL}${path}`, {
-      signal: AbortSignal.timeout(4000),
-    });
-    if (!res.ok) {
-      console.warn(`[prerender] ${path} returned ${res.status}; skipping dynamic params for this route`);
-      return [];
-    }
-    const json = (await res.json()) as ApiListResponse<{ slug: string }>;
-    return (json.data || []).map((item) => item.slug).filter(Boolean);
-  } catch (err) {
-    console.warn(`[prerender] Failed to fetch ${path}, skipping dynamic params:`, err);
-    return [];
+const manifest = routeManifest as RouteManifest;
+
+function requireSlugs(kind: 'product' | 'catalog' | 'blog'): string[] {
+  const slugs = manifest?.[kind];
+  if (!Array.isArray(slugs) || slugs.length === 0) {
+    throw new Error(
+      `[prerender] Route manifest is missing or empty for "${kind}". Refusing to build an ` +
+        `incomplete SEO build. Regenerate it with "npm run prerender:manifest" (requires the API).`,
+    );
   }
+  return slugs;
 }
 
 export const serverRoutes: ServerRoute[] = [
@@ -44,39 +48,33 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'contact', renderMode: RenderMode.Prerender },
   { path: 'buy-in-bulk', renderMode: RenderMode.Prerender },
 
-  // ── Dynamic routes: enumerate real params from the live API, then prerender each ──
+  // ── Dynamic routes: enumerated deterministically from the committed manifest ──
   {
     path: 'product/:slug',
     renderMode: RenderMode.Prerender,
     async getPrerenderParams() {
-      // Dedicated endpoint returns ALL active product slugs (no 100 cap).
-      const slugs = await fetchSlugs('/catalog/product-slugs');
-      return slugs.map((slug) => ({ slug }));
+      return requireSlugs('product').map((slug) => ({ slug }));
     },
   },
   {
     path: 'catalog/:slug',
     renderMode: RenderMode.Prerender,
     async getPrerenderParams() {
-      const slugs = await fetchSlugs('/catalog/categories');
-      return slugs.map((slug) => ({ slug }));
+      return requireSlugs('catalog').map((slug) => ({ slug }));
     },
   },
   {
     path: 'blog/:slug',
     renderMode: RenderMode.Prerender,
     async getPrerenderParams() {
-      const slugs = await fetchSlugs('/blog');
-      return slugs.map((slug) => ({ slug }));
+      return requireSlugs('blog').map((slug) => ({ slug }));
     },
   },
   {
     path: 'page/:slug',
     renderMode: RenderMode.Prerender,
     async getPrerenderParams() {
-      // These 3 policy pages are hardcoded content in static-page.ts, not API-driven.
-      // terms-and-conditions is the canonical policy slug (terms-conditions 301s to
-      // it at the edge), so that is the one we prerender with real content.
+      // Hardcoded policy pages (content lives in static-page.ts, not the API).
       return [
         { slug: 'shipping-policy' },
         { slug: 'terms-and-conditions' },
