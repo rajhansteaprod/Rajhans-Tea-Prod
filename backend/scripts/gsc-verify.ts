@@ -12,6 +12,8 @@ import { GscSyncRun } from '../src/modules/seo/models/gsc-sync-run.model';
 import { GscPageDailyMetric } from '../src/modules/seo/models/gsc-page-daily-metric.model';
 import { GscQueryPageMetric } from '../src/modules/seo/models/gsc-query-page-metric.model';
 import { SeoRecommendation } from '../src/modules/seo/models/seo-recommendation.model';
+import { buildSeoContext } from '../src/modules/seo/services/gsc.sync.service';
+import { resolveGscUrl } from '../src/modules/seo/services/gsc.join';
 
 const line = (s = '') => console.log(s);
 
@@ -33,11 +35,26 @@ async function main() {
   const dupQp = await GscQueryPageMetric.aggregate([{ $group: { _id: { p: '$periodEnd', q: '$query', u: '$normalizedUrl' }, c: { $sum: 1 } } }, { $match: { c: { $gt: 1 } } }, { $count: 'n' }]);
   line(`  duplicate (date,url) page rows: ${dupPages[0]?.n ?? 0}  |  duplicate (periodEnd,query,url) rows: ${dupQp[0]?.n ?? 0}  (both must be 0)`);
 
-  line('\n=== CANONICAL/SYSTEM-EXCLUSION CHECK (query-page normalizedUrls) ===');
-  const urls: string[] = await GscQueryPageMetric.distinct('normalizedUrl');
-  const bad = urls.filter((u) => /\/(auth|dashboard|admin|checkout|track-order|cart)\b/.test(u) || /\/page\/(reseller|contact-us)\b/.test(u));
-  line(`  distinct canonical pages stored: ${urls.length}`);
-  line(`  system/obsolete URLs stored (should be 0): ${bad.length}${bad.length ? ' → ' + bad.join(', ') : ''}`);
+  line('\n=== CANONICAL-KEYING CHECK (against latest audit canonical set) ===');
+  const { canonicalSet } = await buildSeoContext();
+  const qpUrls: string[] = await GscQueryPageMetric.distinct('normalizedUrl');
+  const pdUrls: string[] = await GscPageDailyMetric.distinct('normalizedUrl');
+  const classify = (urls: string[]) => {
+    const canonical: string[] = [], invalid: string[] = [], miskeyed: string[] = [];
+    for (const u of urls) {
+      if (canonicalSet.has(u)) canonical.push(u);
+      else if (resolveGscUrl(u, canonicalSet).joined) miskeyed.push(u);
+      else invalid.push(u);
+    }
+    return { canonical, invalid, miskeyed };
+  };
+  const qp = classify(qpUrls), pd = classify(pdUrls);
+  line(`  canonicalSet size: ${canonicalSet.size}`);
+  line(`  query-page urls  → canonical ${qp.canonical.length} | system/obsolete ${qp.invalid.length} | mis-keyed ${qp.miskeyed.length}`);
+  if (qp.invalid.length) line(`     system/obsolete: ${qp.invalid.join(', ')}`);
+  if (qp.miskeyed.length) line(`     mis-keyed: ${qp.miskeyed.join(', ')}`);
+  line(`  page-daily urls  → canonical ${pd.canonical.length} | system/obsolete ${pd.invalid.length} | mis-keyed ${pd.miskeyed.length}`);
+  line(`  ✔ target after cleanup: system/obsolete 0, mis-keyed 0`);
 
   line('\n=== RECOMMENDATIONS BY SOURCE ===');
   const auditOpen = await SeoRecommendation.countDocuments({ status: 'open', source: { $ne: 'gsc' } });
