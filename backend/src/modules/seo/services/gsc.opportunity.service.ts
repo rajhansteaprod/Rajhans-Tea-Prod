@@ -102,6 +102,8 @@ export async function generateAndPersistOpportunities(
   runId: mongoose.Types.ObjectId,
   metrics: FetchedMetrics, // ALREADY resolved to canonical pages
   facts: Map<string, SeoJoinFacts>,
+  /** False on a degraded (incomplete) sync — never resolve recs we can't trust. */
+  allowResolution = true,
 ): Promise<{ opportunities: number; demandBoosted: number }> {
   const drafts = computeOpportunities(metrics, facts);
 
@@ -138,14 +140,17 @@ export async function generateAndPersistOpportunities(
     }
   }
 
-  // Resolve GSC recs not regenerated this sync (scoped to source 'gsc').
-  const openGsc = await SeoRecommendation.find({ status: 'open', source: 'gsc' }).exec();
-  for (const r of openGsc) {
-    if (detected.has(r.fingerprint)) continue;
-    r.status = 'resolved';
-    r.resolvedRunId = runId;
-    r.lastSeenRunId = runId;
-    await r.save();
+  // Resolve GSC recs not regenerated this sync (scoped to source 'gsc') — but
+  // NEVER on a degraded run: incomplete data must not resolve real opportunities.
+  if (allowResolution) {
+    const openGsc = await SeoRecommendation.find({ status: 'open', source: 'gsc' }).exec();
+    for (const r of openGsc) {
+      if (detected.has(r.fingerprint)) continue;
+      r.status = 'resolved';
+      r.resolvedRunId = runId;
+      r.lastSeenRunId = runId;
+      await r.save();
+    }
   }
 
   // Attach capped demand bonus to existing audit recs (severity untouched).
@@ -191,9 +196,12 @@ export async function runGscSync(trigger: GscSyncTrigger): Promise<IGscSyncRunDo
       unresolved: resolved.ignored.unresolved,
     };
 
+    // Degraded = a pull was truncated (incomplete data). Persist what we have but
+    // do NOT resolve opportunities from an incomplete run (false-positive guard).
+    const degraded = raw.truncated;
     const { pageRows, qpRows } = await persistMetrics(run._id, toPersist);
-    const { opportunities } = await generateAndPersistOpportunities(run._id, resolved.metrics, facts);
-    run.status = 'completed';
+    const { opportunities } = await generateAndPersistOpportunities(run._id, resolved.metrics, facts, !degraded);
+    run.status = degraded ? 'degraded' : 'completed';
     run.dateRange = { start: raw.backfill.start, end: raw.backfill.end };
     run.pageRowsUpserted = pageRows;
     run.queryPageRowsUpserted = qpRows;
@@ -201,7 +209,7 @@ export async function runGscSync(trigger: GscSyncTrigger): Promise<IGscSyncRunDo
     run.ignoredRows = ignored;
     run.finishedAt = new Date();
     await run.save();
-    logger.info({ runId: run._id.toString(), pageRows, qpRows, opportunities, ignored }, 'GSC sync completed');
+    logger.info({ runId: run._id.toString(), status: run.status, pageRows, qpRows, opportunities, ignored }, `GSC sync ${run.status}`);
     return run;
   } catch (err) {
     run.status = 'failed';

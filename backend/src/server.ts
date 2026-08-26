@@ -13,6 +13,7 @@ import { validateEnvironment } from './core/env-validator';
 import { scheduleCartCleanup } from './modules/cart/jobs/cleanup.job';
 import { scheduleWebhookRetry } from './modules/payments/jobs/webhook-retry.job';
 import { scheduleSeoAudit } from './modules/seo/jobs/seo-audit.job';
+import { scheduleGscSync } from './modules/seo/jobs/gsc-sync.job';
 
 // Force Node.js c-ares DNS to use Google DNS (IPv4 + IPv6)
 // Prevents local router DNS from blocking MongoDB Atlas SRV lookups
@@ -27,6 +28,7 @@ const startServer = async () => {
   scheduleCartCleanup();
   scheduleWebhookRetry();
   scheduleSeoAudit(); // daily 03:15 SEO audit → enqueues a BullMQ job (observe-only, no auto-fix)
+  scheduleGscSync(); // daily 03:45 GSC sync → enqueues runGscSync (observe/recommend-only; skipped if GSC unconfigured)
   registerEventHandlers();
 
   const httpServer = http.createServer(app);

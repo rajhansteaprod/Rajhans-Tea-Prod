@@ -19,6 +19,8 @@ export interface FetchedMetrics {
   pageDaily: PageDailyRow[];
   pageLatest: PageWindowMetric[];
   pagePrevious: PageWindowMetric[];
+  /** True when a pull hit the pagination cap → incomplete data → run is degraded. */
+  truncated: boolean;
 }
 
 /** Impression-weight daily rows into a single per-page rollup over a window. */
@@ -50,13 +52,13 @@ export async function fetchGscMetrics(today = new Date()): Promise<FetchedMetric
   const win = trendWindows(gscConfig.opportunityWindowDays, today);
   const backfill = backfillWindow(today);
 
-  const qpRows = await querySearchAnalytics({ startDate: win.latest.start, endDate: win.latest.end, dimensions: ['query', 'page'] });
-  const queryPage: QueryPageMetric[] = qpRows
+  const qp = await querySearchAnalytics({ startDate: win.latest.start, endDate: win.latest.end, dimensions: ['query', 'page'] });
+  const queryPage: QueryPageMetric[] = qp.rows
     .filter((r) => r.keys?.length >= 2)
     .map((r) => ({ query: r.keys[0], page: r.keys[1], normalizedUrl: normalizeUrl(r.keys[1]), clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position }));
 
-  const pdRows = await querySearchAnalytics({ startDate: backfill.start, endDate: backfill.end, dimensions: ['date', 'page'] });
-  const pageDaily: PageDailyRow[] = pdRows
+  const pd = await querySearchAnalytics({ startDate: backfill.start, endDate: backfill.end, dimensions: ['date', 'page'] });
+  const pageDaily: PageDailyRow[] = pd.rows
     .filter((r) => r.keys?.length >= 2)
     .map((r) => ({ date: r.keys[0], page: r.keys[1], normalizedUrl: normalizeUrl(r.keys[1]), clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position }));
 
@@ -68,6 +70,7 @@ export async function fetchGscMetrics(today = new Date()): Promise<FetchedMetric
     pageDaily,
     pageLatest: aggregateWindow(pageDaily, win.latest),
     pagePrevious: aggregateWindow(pageDaily, win.previous),
+    truncated: qp.truncated || pd.truncated,
   };
 }
 
