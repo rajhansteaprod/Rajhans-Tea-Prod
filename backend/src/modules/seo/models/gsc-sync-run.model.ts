@@ -9,6 +9,8 @@ export interface IGscSyncRunDoc extends Document {
   pageRowsUpserted: number;
   queryPageRowsUpserted: number;
   opportunitiesDetected: number;
+  /** Distinct GSC URLs dropped before persistence (never contaminate metrics). */
+  ignoredRows: { noindexSystem: number; obsoleteSoft404: number; unresolved: number };
   error: string | null;
   startedAt: Date;
   finishedAt: Date | null;
@@ -24,6 +26,11 @@ const gscSyncRunSchema = new Schema<IGscSyncRunDoc>(
     pageRowsUpserted: { type: Number, default: 0 },
     queryPageRowsUpserted: { type: Number, default: 0 },
     opportunitiesDetected: { type: Number, default: 0 },
+    ignoredRows: {
+      noindexSystem: { type: Number, default: 0 },
+      obsoleteSoft404: { type: Number, default: 0 },
+      unresolved: { type: Number, default: 0 },
+    },
     error: { type: String, default: null }, // sanitized only
     startedAt: { type: Date, default: Date.now },
     finishedAt: { type: Date, default: null },

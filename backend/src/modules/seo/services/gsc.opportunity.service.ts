@@ -6,7 +6,7 @@ import { OpportunityConfidence, OpportunityDraft, SeoJoinFacts } from '../gsc.ty
 import { RecommendationImpact, RecommendationPriority } from '../seo.types';
 import { AnalyzeInput, runAllAnalyzers } from './gsc.analyzers';
 import { FetchedMetrics, buildSeoContext, fetchGscMetrics, persistMetrics } from './gsc.sync.service';
-import { resolveMetrics } from './gsc.join';
+import { resolveMetrics, resolvePageDaily } from './gsc.join';
 import { SeoRecommendation } from '../models/seo-recommendation.model';
 import { GscSyncRun, IGscSyncRunDoc } from '../models/gsc-sync-run.model';
 import { GscSyncTrigger } from '../gsc.types';
@@ -100,11 +100,9 @@ export async function previewDemandBoost(metrics: FetchedMetrics): Promise<Deman
  */
 export async function generateAndPersistOpportunities(
   runId: mongoose.Types.ObjectId,
-  fetched?: FetchedMetrics,
+  metrics: FetchedMetrics, // ALREADY resolved to canonical pages
+  facts: Map<string, SeoJoinFacts>,
 ): Promise<{ opportunities: number; demandBoosted: number }> {
-  const raw = fetched ?? (await fetchGscMetrics());
-  const { canonicalSet, facts } = await buildSeoContext();
-  const { metrics } = resolveMetrics(raw, canonicalSet); // GSC URLs → canonical pages
   const drafts = computeOpportunities(metrics, facts);
 
   const detected = new Map<string, OpportunityDraft>();
@@ -179,17 +177,31 @@ export async function runGscSync(trigger: GscSyncTrigger): Promise<IGscSyncRunDo
   const run = await GscSyncRun.create({ trigger, status: 'running', startedAt: new Date() });
   try {
     if (!gscConfig.enabled) throw new Error('GSC is not configured (site URL / credential absent)');
-    const metrics = await fetchGscMetrics();
-    const { pageRows, qpRows } = await persistMetrics(run._id, metrics);
-    const { opportunities } = await generateAndPersistOpportunities(run._id, metrics);
+    const raw = await fetchGscMetrics();
+    const { canonicalSet, facts } = await buildSeoContext();
+
+    // Resolve/filter BEFORE persisting: only canonical, joined pages are stored;
+    // noindex-system / obsolete-soft404 / unresolved URLs are dropped (counted).
+    const resolved = resolveMetrics(raw, canonicalSet);
+    const daily = resolvePageDaily(raw.pageDaily, canonicalSet);
+    const toPersist: FetchedMetrics = { ...resolved.metrics, pageDaily: daily.merged };
+    const ignored = {
+      noindexSystem: resolved.ignored.noindexSystem,
+      obsoleteSoft404: resolved.ignored.obsoleteSoft404,
+      unresolved: resolved.ignored.unresolved,
+    };
+
+    const { pageRows, qpRows } = await persistMetrics(run._id, toPersist);
+    const { opportunities } = await generateAndPersistOpportunities(run._id, resolved.metrics, facts);
     run.status = 'completed';
-    run.dateRange = { start: metrics.backfill.start, end: metrics.backfill.end };
+    run.dateRange = { start: raw.backfill.start, end: raw.backfill.end };
     run.pageRowsUpserted = pageRows;
     run.queryPageRowsUpserted = qpRows;
     run.opportunitiesDetected = opportunities;
+    run.ignoredRows = ignored;
     run.finishedAt = new Date();
     await run.save();
-    logger.info({ runId: run._id.toString(), pageRows, qpRows, opportunities }, 'GSC sync completed');
+    logger.info({ runId: run._id.toString(), pageRows, qpRows, opportunities, ignored }, 'GSC sync completed');
     return run;
   } catch (err) {
     run.status = 'failed';
