@@ -7,19 +7,9 @@ import { SeoIssue } from '../models/seo-issue.model';
 import { SeoRecommendation } from '../models/seo-recommendation.model';
 import { gscConfig } from '../gsc.config';
 import { backfillWindow, DateWindow, trendWindows } from '../gsc.util';
-import { PageWindowMetric, QueryPageMetric, SeoJoinFacts } from '../gsc.types';
+import { PageDailyRow, PageWindowMetric, QueryPageMetric, SeoJoinFacts } from '../gsc.types';
 import { querySearchAnalytics } from './gsc.client';
 import { normalizeUrl } from '../seo.util';
-
-interface PageDailyRow {
-  date: string;
-  page: string;
-  normalizedUrl: string;
-  clicks: number;
-  impressions: number;
-  ctr: number;
-  position: number;
-}
 
 export interface FetchedMetrics {
   window: DateWindow; // latest complete opportunity window

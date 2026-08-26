@@ -33,6 +33,24 @@ export interface PageWindowMetric {
   position: number;
 }
 
+/** One page's metrics for one day (the GscPageDailyMetric fact, pre-persist). */
+export interface PageDailyRow {
+  date: string;
+  page: string;
+  normalizedUrl: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+/** Distinct GSC URLs dropped before persistence, by why they were ignored. */
+export interface IgnoredTally {
+  noindexSystem: number;
+  obsoleteSoft404: number;
+  unresolved: number;
+}
+
 /** What each URL contributes to a per-URL cross-reference join. */
 export interface SeoJoinFacts {
   inSnapshot: boolean;

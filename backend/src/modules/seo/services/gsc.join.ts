@@ -1,7 +1,7 @@
 import { canonicalPageSlug } from '../../cms/page-slug.util';
 import { normalizeUrl } from '../seo.util';
 import { FetchedMetrics } from './gsc.sync.service';
-import { PageWindowMetric, QueryPageMetric } from '../gsc.types';
+import { IgnoredTally, PageDailyRow, PageWindowMetric, QueryPageMetric } from '../gsc.types';
 
 /**
  * Evidence-based GSC-URL → canonical-page resolution/join layer.
@@ -143,31 +143,89 @@ export interface ResolvedMetrics {
   queryPageResolutions: (QueryPageMetric & { resolution: UrlResolution })[];
   /** Distinct URL resolutions across all rows (join classification report). */
   urlResolutions: UrlResolution[];
+  /** Distinct URLs dropped before persistence, by reason. */
+  ignored: IgnoredTally;
+}
+
+/** Count distinct non-joined URLs by classification (persistence diagnostics). */
+export function tallyIgnored(resolutions: UrlResolution[]): IgnoredTally {
+  const t: IgnoredTally = { noindexSystem: 0, obsoleteSoft404: 0, unresolved: 0 };
+  const seen = new Set<string>();
+  for (const r of resolutions) {
+    if (r.joined || seen.has(r.originalNormalized)) continue;
+    seen.add(r.originalNormalized);
+    if (r.classification === 'noindex-system') t.noindexSystem++;
+    else if (r.classification === 'obsolete-soft404') t.obsoleteSoft404++;
+    else t.unresolved++;
+  }
+  return t;
 }
 
 /**
- * Re-key fetched metrics onto canonical pages using the resolver. Joined rows'
- * `normalizedUrl` becomes the canonical page (demand attributed there); non-joined
- * rows are dropped from analysis but retained in the resolution report.
+ * Re-key fetched metrics onto canonical pages. Joined rows are merged onto the
+ * canonical page (demand summed); non-joined rows (noindex-system / soft-404 /
+ * unresolved) are DROPPED from the metrics — they must never be persisted as
+ * canonical SEO facts — and counted in the `ignored` tally instead.
  */
 export function resolveMetrics(raw: FetchedMetrics, canonicalSet: Set<string>): ResolvedMetrics {
   const queryPageResolutions = raw.queryPage.map((r) => ({ ...r, resolution: resolveGscUrl(r.page || r.normalizedUrl, canonicalSet) }));
-  const queryPage: QueryPageMetric[] = queryPageResolutions
-    .filter((r) => r.resolution.joined && r.resolution.canonicalUrl)
-    .map((r) => ({ ...r, normalizedUrl: r.resolution.canonicalUrl as string }));
+
+  // Merge joined query×page rows by (query, canonical) so two source forms of one
+  // page don't overwrite each other on upsert (they SUM).
+  const qpMap = new Map<string, QueryPageMetric & { posW: number }>();
+  for (const r of queryPageResolutions) {
+    if (!r.resolution.joined || !r.resolution.canonicalUrl) continue;
+    const canon = r.resolution.canonicalUrl;
+    const key = `${r.query} ${canon}`;
+    const a = qpMap.get(key) || { query: r.query, page: canon, normalizedUrl: canon, clicks: 0, impressions: 0, ctr: 0, position: 0, posW: 0 };
+    a.clicks += r.clicks;
+    a.impressions += r.impressions;
+    a.posW += r.position * r.impressions;
+    qpMap.set(key, a);
+  }
+  const queryPage: QueryPageMetric[] = Array.from(qpMap.values()).map((a) => ({
+    query: a.query, page: a.page, normalizedUrl: a.normalizedUrl, clicks: a.clicks, impressions: a.impressions,
+    ctr: a.impressions ? a.clicks / a.impressions : 0, position: a.impressions ? a.posW / a.impressions : 0,
+  }));
 
   const latest = mergePages(raw.pageLatest, canonicalSet);
   const previous = mergePages(raw.pagePrevious, canonicalSet);
 
-  // Distinct URL resolutions (dedupe by original normalized URL).
   const seen = new Map<string, UrlResolution>();
   for (const r of [...queryPageResolutions.map((x) => x.resolution), ...latest.resolutions, ...previous.resolutions]) {
     if (!seen.has(r.originalNormalized)) seen.set(r.originalNormalized, r);
   }
+  const urlResolutions = Array.from(seen.values());
 
   return {
     metrics: { ...raw, queryPage, pageLatest: latest.merged, pagePrevious: previous.merged },
     queryPageResolutions,
-    urlResolutions: Array.from(seen.values()),
+    urlResolutions,
+    ignored: tallyIgnored(urlResolutions),
   };
+}
+
+/**
+ * Resolve/merge per-day page rows onto canonical pages for GscPageDailyMetric.
+ * Non-joined rows are dropped (never persisted). Merges same (date, canonical).
+ */
+export function resolvePageDaily(rows: PageDailyRow[], canonicalSet: Set<string>): { merged: PageDailyRow[]; resolutions: UrlResolution[] } {
+  const byKey = new Map<string, PageDailyRow & { posW: number }>();
+  const resolutions: UrlResolution[] = [];
+  for (const d of rows) {
+    const res = resolveGscUrl(d.page || d.normalizedUrl, canonicalSet);
+    resolutions.push(res);
+    if (!res.joined || !res.canonicalUrl) continue;
+    const key = `${d.date} ${res.canonicalUrl}`;
+    const a = byKey.get(key) || { date: d.date, page: res.canonicalUrl, normalizedUrl: res.canonicalUrl, clicks: 0, impressions: 0, ctr: 0, position: 0, posW: 0 };
+    a.clicks += d.clicks;
+    a.impressions += d.impressions;
+    a.posW += d.position * d.impressions;
+    byKey.set(key, a);
+  }
+  const merged = Array.from(byKey.values()).map((a) => ({
+    date: a.date, page: a.page, normalizedUrl: a.normalizedUrl, clicks: a.clicks, impressions: a.impressions,
+    ctr: a.impressions ? a.clicks / a.impressions : 0, position: a.impressions ? a.posW / a.impressions : 0,
+  }));
+  return { merged, resolutions };
 }
