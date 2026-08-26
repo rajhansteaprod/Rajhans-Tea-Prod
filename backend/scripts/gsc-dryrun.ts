@@ -1,9 +1,9 @@
 /**
- * READ-ONLY Phase 4a GSC dry-run. Run this in an environment that has the real
- * credential (GSC_SA_KEY_BASE64) + GSC_SITE_URL + MONGO_URI. It authenticates,
- * pulls GSC data, joins it to the latest SEO audit snapshot, computes
- * opportunities, and prints a full report. It PERSISTS NOTHING and never prints
- * credential material (all errors are sanitized).
+ * READ-ONLY Phase 4a GSC dry-run. Run in an environment with the real credential
+ * (GSC_SA_KEY_BASE64) + GSC_SITE_URL + MONGO_URI. Authenticates, pulls GSC data,
+ * resolves GSC URLs to canonical pages, joins to the latest SEO audit, computes
+ * opportunities, and prints a full report. PERSISTS NOTHING; never prints
+ * credential material (all errors sanitized).
  *
  *   cd backend && npx ts-node scripts/gsc-dryrun.ts
  */
@@ -12,90 +12,77 @@ import { config } from '../src/config';
 import { gscConfig } from '../src/modules/seo/gsc.config';
 import { sanitizeGscError } from '../src/modules/seo/gsc.util';
 import { verifyAccess } from '../src/modules/seo/services/gsc.client';
-import { fetchGscMetrics, buildSeoJoin } from '../src/modules/seo/services/gsc.sync.service';
+import { fetchGscMetrics, buildSeoContext } from '../src/modules/seo/services/gsc.sync.service';
+import { resolveMetrics } from '../src/modules/seo/services/gsc.join';
 import { computeOpportunities, previewDemandBoost } from '../src/modules/seo/services/gsc.opportunity.service';
+import { queryPageEligibility } from '../src/modules/seo/services/gsc.analyzers';
 
 const line = (s = '') => console.log(s);
-const hr = () => line('─'.repeat(70));
+const hr = () => line('─'.repeat(74));
+const short = (u: string) => u.replace(gscConfig.siteUrl.replace('sc-domain:', 'https://'), '').replace('https://rajhanstea.com', '');
 
 async function main() {
   hr();
-  line('PHASE 4a — GSC READ-ONLY DRY-RUN (no writes, credentials never printed)');
+  line('PHASE 4a — GSC READ-ONLY DRY-RUN (no writes; credentials never printed)');
   hr();
+  line(`GSC configured: ${gscConfig.enabled ? 'YES' : 'NO'} | site=${gscConfig.siteUrl || '(unset)'} | key=${gscConfig.saKeyBase64 ? 'set(hidden)' : 'unset'}`);
+  if (!gscConfig.enabled) { line('\n✗ GSC not configured — set GSC_SITE_URL and GSC_SA_KEY_BASE64.'); process.exit(1); }
 
-  // ── config presence (never prints the key) ──
-  line(`GSC configured:        ${gscConfig.enabled ? 'YES' : 'NO'}`);
-  line(`GSC_SITE_URL set:      ${gscConfig.siteUrl ? 'YES (' + gscConfig.siteUrl + ')' : 'NO'}`);
-  line(`GSC_SA_KEY_BASE64 set: ${gscConfig.saKeyBase64 ? 'YES (hidden)' : 'NO'}`);
-  if (!gscConfig.enabled) {
-    line('\n✗ GSC is not configured — set GSC_SITE_URL and GSC_SA_KEY_BASE64 and retry.');
-    process.exit(1);
-  }
-
-  // ── 1) authentication ──
   const auth = await verifyAccess();
-  line(`\n1) API authentication: ${auth.ok ? '✓ success' : '✗ failed — ' + auth.detail}`);
+  line(`1) API authentication: ${auth.ok ? '✓ success' : '✗ ' + auth.detail}`);
   if (!auth.ok) process.exit(1);
 
-  // ── fetch (read-only) — also exercises property access + pagination ──
-  let metrics;
-  try {
-    metrics = await fetchGscMetrics();
-  } catch (e) {
-    line(`\n✗ GSC property access / fetch FAILED (sanitized): ${sanitizeGscError(e)}`);
-    process.exit(1);
-  }
-  line('2) GSC property access: ✓ (searchAnalytics.query returned)');
-  line(`3) Date range retrieved:`);
-  line(`     opportunity window: ${metrics.window.start} … ${metrics.window.end}`);
-  line(`     previous window:    ${metrics.previousWindow.start} … ${metrics.previousWindow.end}`);
-  line(`     page-daily backfill: ${metrics.backfill.start} … ${metrics.backfill.end}`);
-  line(`4) Page-daily rows:      ${metrics.pageDaily.length}`);
-  line(`5) Query-page rows:      ${metrics.queryPage.length}`);
-  line(`   pagination/quota:     rowLimit=${gscConfig.rowLimit}, maxRows=${gscConfig.maxRows}; ` +
-    `${metrics.queryPage.length >= gscConfig.rowLimit || metrics.pageDaily.length >= gscConfig.rowLimit ? 'PAGINATED (hit a page boundary)' : 'single page each'}; no 429s surfaced (retries handled internally)`);
+  let raw;
+  try { raw = await fetchGscMetrics(); } catch (e) { line(`✗ property access/fetch failed: ${sanitizeGscError(e)}`); process.exit(1); }
+  line('2) GSC property access: ✓');
+  line(`3) Windows — opportunity ${raw.window.start}…${raw.window.end} | previous ${raw.previousWindow.start}…${raw.previousWindow.end} | backfill ${raw.backfill.start}…${raw.backfill.end}`);
+  line(`4) Page-daily rows: ${raw.pageDaily.length}   5) Query-page rows: ${raw.queryPage.length}`);
 
-  // ── SEO join (needs Mongo) ──
   await mongoose.connect(config.mongo.uri);
-  const urls = new Set<string>([...metrics.queryPage.map((q) => q.normalizedUrl), ...metrics.pageLatest.map((p) => p.normalizedUrl)]);
-  const seo = await buildSeoJoin(urls);
-  const joined = [...urls].filter((u) => seo.get(u)?.inSnapshot);
-  const notJoined = [...urls].filter((u) => !seo.get(u)?.inSnapshot);
-  line(`\n6) Pages joined to SEO inventory:    ${joined.length}/${urls.size}`);
-  line(`7) Pages that did NOT join:          ${notJoined.length}`);
-  for (const u of notJoined.slice(0, 15)) line(`     · ${u}  — not in latest audit snapshot (query-variant/legacy/uncrawled)`);
-  if (notJoined.length > 15) line(`     …and ${notJoined.length - 15} more`);
+  const { canonicalSet, facts } = await buildSeoContext();
+  const { metrics, queryPageResolutions, urlResolutions } = resolveMetrics(raw, canonicalSet);
 
-  // ── opportunities ──
-  const opps = computeOpportunities(metrics, seo);
+  const joined = urlResolutions.filter((r) => r.joined);
+  line(`\n6) Canonical inventory pages: ${canonicalSet.size} | GSC URLs seen: ${urlResolutions.length} | JOINED: ${joined.length}/${urlResolutions.length}`);
+  line('\n=== URL RESOLUTION / CLASSIFICATION ===');
+  line('   originalUrl → canonical | classification (method)');
+  for (const r of urlResolutions.sort((a, b) => Number(b.joined) - Number(a.joined))) {
+    line(`   ${short(r.originalNormalized) || '/'} ${r.joined ? '→ ' + (short(r.canonicalUrl!) || '/') : '→ (not joined)'} | ${r.classification} (${r.method})`);
+  }
+
+  line('\n=== ALL QUERY×PAGE ROWS ===');
+  line('   query | page → canonical | clicks | impr | ctr | pos | joined | eligibility');
+  for (const r of queryPageResolutions) {
+    const el = queryPageEligibility({ ...r, normalizedUrl: r.resolution.canonicalUrl ?? r.normalizedUrl }, r.resolution.joined);
+    line(`   "${r.query}" | ${short(r.normalizedUrl)}${r.resolution.joined ? '→' + short(r.resolution.canonicalUrl!) : ''} | ${r.clicks} | ${r.impressions} | ${(r.ctr * 100).toFixed(1)}% | ${r.position.toFixed(1)} | ${r.resolution.joined ? 'Y' : 'N'} | ${el.reason}`);
+  }
+
+  line('\n=== TOP PAGE ROWS (resolved, by impressions) ===');
+  for (const p of [...metrics.pageLatest].sort((a, b) => b.impressions - a.impressions).slice(0, 15)) {
+    line(`   ${short(p.normalizedUrl) || '/'} | impr ${p.impressions} clicks ${p.clicks} ctr ${(p.ctr * 100).toFixed(1)}% pos ${p.position.toFixed(1)}`);
+  }
+
+  const opps = computeOpportunities(metrics, facts);
   const byType = new Map<string, number>();
   const byConf = { low: 0, medium: 0, high: 0 } as Record<string, number>;
   for (const o of opps) { byType.set(o.type, (byType.get(o.type) || 0) + 1); byConf[o.confidence]++; }
+  line(`\n=== OPPORTUNITIES: ${opps.length} ===`);
+  for (const [t, n] of [...byType].sort((a, b) => b[1] - a[1])) line(`   ${t}: ${n}`);
+  line(`   confidence: high ${byConf.high} · medium ${byConf.medium} · low ${byConf.low}`);
+  for (const o of opps.slice(0, 20)) line(`   [${o.score.toFixed(0)} · ${o.confidence}] ${o.type} — ${o.query ? '"' + o.query + '"' : short(o.normalizedUrl)}`);
 
-  line(`\n8) Opportunities by type (${opps.length} total):`);
-  for (const [t, n] of [...byType].sort((a, b) => b[1] - a[1])) line(`     ${t}: ${n}`);
-  line(`10) Confidence distribution: high ${byConf.high} · medium ${byConf.medium} · low ${byConf.low}`);
-
-  line(`\n9) Top 20 opportunities:`);
-  for (const o of opps.slice(0, 20)) {
-    const q = o.query ? `"${o.query}"` : o.normalizedUrl.replace(gscConfig.siteUrl, '');
-    const e = o.evidence;
-    line(`   [${o.score.toFixed(0)} · ${o.confidence}] ${o.type} — ${q}` +
-      (e.impressions !== undefined ? ` | impr=${e.impressions} clicks=${e.clicks ?? 0} pos=${(e.position ?? 0).toFixed(1)} ctr=${((e.ctr ?? 0) * 100).toFixed(1)}%` : ''));
-  }
-
-  // ── demand-driven priority changes on existing recs ──
   const boosts = await previewDemandBoost(metrics);
   const lifted = boosts.filter((b) => b.lifted);
-  line(`\n11) Existing recommendations with GSC demand: ${boosts.length}; priority CHANGED by demand: ${lifted.length}`);
-  for (const b of lifted.slice(0, 15)) line(`     · ${b.recommendationId} (${b.url}) impr=${b.impressions} → ${b.basePriority} ⇒ ${b.effectivePriority} (bonus ${b.bonus})`);
+  line(`\n=== DEMAND BOOSTS on existing recs: ${boosts.length}; priority changed: ${lifted.length} ===`);
+  for (const b of boosts.slice(0, 15)) line(`   ${b.recommendationId} (${short(b.url)}) impr ${b.impressions} → ${b.basePriority}${b.lifted ? ' ⇒ ' + b.effectivePriority : ''} (bonus ${b.bonus})`);
 
-  // ── 12) sanitized failure behavior demo ──
-  line(`\n12) Sanitized failure behavior:`);
-  line(`     ${sanitizeGscError(new Error('boom -----BEGIN PRIVATE KEY-----abc-----END PRIVATE KEY----- token=ya29.SECRET'))}`);
+  line('\n=== SANITIZER DEMONSTRATION ===');
+  const secretDemo = 'ERR -----BEGIN PRIVATE KEY-----MIIEvQIBADANBgkq...midbody...abc-----END PRIVATE KEY----- ' +
+    'Bearer abcTOKEN123 jwt=eyJhbGci.eyJzdWIi.SIGabc access_token=ya29.SECRETVALUE "private_key":"-----BEGIN PRIVATE KEY-----\\nLINE1\\nLINE2\\n-----END PRIVATE KEY-----\\n"';
+  line('   ' + sanitizeGscError(new Error(secretDemo)));
 
   hr();
-  line('DRY-RUN COMPLETE — nothing was written. Review before enabling the cron.');
+  line('DRY-RUN COMPLETE — nothing written. Review before enabling the cron.');
   hr();
   await mongoose.disconnect();
   process.exit(0);

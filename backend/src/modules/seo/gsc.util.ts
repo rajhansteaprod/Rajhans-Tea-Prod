@@ -2,16 +2,29 @@ import { gscConfig } from './gsc.config';
 
 /**
  * Redact any credential-shaped material from an error string BEFORE it is logged,
- * stored, or surfaced. Private keys, JWTs, and OAuth tokens must never leak.
+ * stored, or surfaced. Order matters: whole-block secrets (PEM, JSON key values,
+ * long base64 blobs) are removed first, then token/JWT patterns. The result must
+ * contain no recoverable credential fragment.
  */
 export function sanitizeGscError(err: unknown): string {
   let msg = err instanceof Error ? err.message : String(err);
   msg = msg
-    .replace(/-----BEGIN[\s\S]*?PRIVATE KEY-----/g, '[REDACTED_PRIVATE_KEY]')
-    .replace(/"private_key"\s*:\s*"[^"]*"/g, '"private_key":"[REDACTED]"')
-    .replace(/\bey[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{6,}\b/g, '[REDACTED_JWT]')
+    // Full PEM block — BEGIN marker + body + END marker, incl. escaped \n bodies.
+    .replace(/-----BEGIN[^-]*?PRIVATE KEY-----[\s\S]*?-----END[^-]*?PRIVATE KEY-----/g, '[REDACTED_PRIVATE_KEY]')
+    // A PEM that lost its END marker (defensive): from BEGIN to end of string.
+    .replace(/-----BEGIN[^-]*?PRIVATE KEY-----[\s\S]*/g, '[REDACTED_PRIVATE_KEY]')
+    // JSON credential fields: "private_key":"…", "client_secret":"…", etc.
+    .replace(/"(private_key|client_secret|refresh_token|access_token|id_token|assertion|client_email)"\s*:\s*"(?:\\.|[^"\\])*"/gi, '"$1":"[REDACTED]"')
+    // Bearer tokens.
+    .replace(/\bBearer\s+[A-Za-z0-9._~+/=-]+/gi, 'Bearer [REDACTED]')
+    // JWTs (three base64url segments starting `ey…`) — assertions, id tokens, etc.
+    .replace(/\bey[A-Za-z0-9_-]{2,}\.[A-Za-z0-9_-]{2,}\.[A-Za-z0-9_-]{2,}/g, '[REDACTED_JWT]')
+    // Google OAuth access tokens.
     .replace(/\bya29\.[A-Za-z0-9._-]+/g, '[REDACTED_TOKEN]')
-    .replace(/(access_token"?\s*[:=]\s*"?)[A-Za-z0-9._-]{10,}/gi, '$1[REDACTED]');
+    // token=… / access_token=… / refresh_token=… (query/kv form).
+    .replace(/\b((?:access_|refresh_|id_)?token|assertion|client_secret)\s*[:=]\s*"?[A-Za-z0-9._~+/=-]{8,}"?/gi, '$1=[REDACTED]')
+    // Long base64 blobs (e.g. a GSC_SA_KEY_BASE64 value) — credential-shaped, not prose.
+    .replace(/[A-Za-z0-9+/]{120,}={0,2}/g, '[REDACTED_BASE64]');
   return msg;
 }
 

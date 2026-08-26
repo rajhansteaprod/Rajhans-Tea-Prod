@@ -5,7 +5,8 @@ import { fingerprint, normalizeUrl } from '../seo.util';
 import { OpportunityConfidence, OpportunityDraft, SeoJoinFacts } from '../gsc.types';
 import { RecommendationImpact, RecommendationPriority } from '../seo.types';
 import { AnalyzeInput, runAllAnalyzers } from './gsc.analyzers';
-import { FetchedMetrics, buildSeoJoin, fetchGscMetrics, persistMetrics } from './gsc.sync.service';
+import { FetchedMetrics, buildSeoContext, fetchGscMetrics, persistMetrics } from './gsc.sync.service';
+import { resolveMetrics } from './gsc.join';
 import { SeoRecommendation } from '../models/seo-recommendation.model';
 import { GscSyncRun, IGscSyncRunDoc } from '../models/gsc-sync-run.model';
 import { GscSyncTrigger } from '../gsc.types';
@@ -101,10 +102,10 @@ export async function generateAndPersistOpportunities(
   runId: mongoose.Types.ObjectId,
   fetched?: FetchedMetrics,
 ): Promise<{ opportunities: number; demandBoosted: number }> {
-  const metrics = fetched ?? (await fetchGscMetrics());
-  const urls = new Set<string>([...metrics.queryPage.map((q) => q.normalizedUrl), ...metrics.pageLatest.map((p) => p.normalizedUrl)]);
-  const seo = await buildSeoJoin(urls);
-  const drafts = computeOpportunities(metrics, seo);
+  const raw = fetched ?? (await fetchGscMetrics());
+  const { canonicalSet, facts } = await buildSeoContext();
+  const { metrics } = resolveMetrics(raw, canonicalSet); // GSC URLs → canonical pages
+  const drafts = computeOpportunities(metrics, facts);
 
   const detected = new Map<string, OpportunityDraft>();
   for (const d of drafts) detected.set(recoFingerprint(`gsc-${d.type}`, d.key), d);

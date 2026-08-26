@@ -82,6 +82,34 @@ export async function fetchGscMetrics(today = new Date()): Promise<FetchedMetric
 }
 
 /**
+ * The canonical-page context from the latest audit: the set of indexable
+ * canonical URLs (for GSC-URL resolution) + facts (title/wordCount/open issues +
+ * recommendations) keyed by canonical URL. This is the join target for GSC demand.
+ */
+export async function buildSeoContext(): Promise<{ canonicalSet: Set<string>; facts: Map<string, SeoJoinFacts> }> {
+  const canonicalSet = new Set<string>();
+  const facts = new Map<string, SeoJoinFacts>();
+  const run = await SeoAuditRun.findOne({ status: { $in: ['completed', 'degraded'] } }).sort({ createdAt: -1 }).lean().exec();
+  if (!run) return { canonicalSet, facts };
+
+  const snaps = await SeoPageSnapshot.find({ runId: run._id }).select('normalizedUrl finalStatus redirectChain title wordCount').lean().exec();
+  for (const s of snaps) {
+    const indexable = s.finalStatus === 200 && (!s.redirectChain || s.redirectChain.length === 0);
+    if (!indexable) continue;
+    canonicalSet.add(s.normalizedUrl);
+    facts.set(s.normalizedUrl, { inSnapshot: true, title: s.title ?? null, wordCount: s.wordCount ?? 0, openIssueCheckIds: [], openRecommendationIds: [] });
+  }
+  const urls = Array.from(canonicalSet);
+  if (urls.length) {
+    const issues = await SeoIssue.find({ status: 'open', normalizedUrl: { $in: urls } }).select('normalizedUrl checkId').lean().exec();
+    for (const i of issues) facts.get(i.normalizedUrl)?.openIssueCheckIds.push(i.checkId);
+    const recs = await SeoRecommendation.find({ status: 'open', affectedUrls: { $in: urls } }).select('recommendationId affectedUrls').lean().exec();
+    for (const r of recs) for (const u of r.affectedUrls) if (facts.has(u)) facts.get(u)!.openRecommendationIds.push(r.recommendationId);
+  }
+  return { canonicalSet, facts };
+}
+
+/**
  * Build the SEO cross-reference join for a set of normalized URLs: latest
  * snapshot facts + open audit issues + open recommendations. This is what lets a
  * page's real demand be tied to its existing technical debt.
