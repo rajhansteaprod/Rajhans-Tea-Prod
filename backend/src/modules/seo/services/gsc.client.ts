@@ -103,13 +103,17 @@ export interface SearchAnalyticsQuery {
   dimensionFilterGroups?: unknown[];
 }
 
-/** Run one searchAnalytics.query, following pagination until exhausted or capped. */
-export async function querySearchAnalytics(q: SearchAnalyticsQuery): Promise<GscRow[]> {
+/**
+ * Run one searchAnalytics.query, following pagination until exhausted or the
+ * safety cap. `truncated` is true when the cap was hit before natural end — the
+ * data is incomplete and the run must be treated as degraded.
+ */
+export async function querySearchAnalytics(q: SearchAnalyticsQuery): Promise<{ rows: GscRow[]; truncated: boolean }> {
   if (!gscConfig.siteUrl) throw new Error('GSC site URL is not configured');
   const url = `${gscConfig.apiBase}/sites/${encodeURIComponent(gscConfig.siteUrl)}/searchAnalytics/query`;
   const rows: GscRow[] = [];
   let startRow = 0;
-  let pages = 0;
+  let truncated = false;
   for (;;) {
     const page = await requestPage(url, {
       startDate: q.startDate,
@@ -121,13 +125,13 @@ export async function querySearchAnalytics(q: SearchAnalyticsQuery): Promise<Gsc
       rowLimit: gscConfig.rowLimit,
       startRow,
     });
-    pages++;
     const batch = page.rows ?? [];
     rows.push(...batch);
-    if (batch.length < gscConfig.rowLimit || rows.length >= gscConfig.maxRows) break;
+    if (batch.length < gscConfig.rowLimit) break; // natural end
+    if (rows.length >= gscConfig.maxRows) { truncated = true; break; } // hit the cap → incomplete
     startRow += gscConfig.rowLimit;
   }
-  return rows;
+  return { rows, truncated };
 }
 
 /** Lightweight auth+access probe (no data) for the dry-run report. */

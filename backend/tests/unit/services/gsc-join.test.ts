@@ -84,7 +84,7 @@ describe('metric persistence filtering (BLOCKER: no invalid rows persisted)', ()
   const qp = (page: string, over: Partial<QueryPageMetric> = {}): QueryPageMetric =>
     ({ query: 'q', page, normalizedUrl: normalizeUrl(page), clicks: 1, impressions: 50, ctr: 0.02, position: 8, ...over });
   const raw = (queryPage: QueryPageMetric[], pageDaily: PageDailyRow[] = []): FetchedMetrics =>
-    ({ window: win, previousWindow: prev, backfill: win, queryPage, pageDaily, pageLatest: [], pagePrevious: [] });
+    ({ window: win, previousWindow: prev, backfill: win, queryPage, pageDaily, pageLatest: [], pagePrevious: [], truncated: false });
 
   it('excludes noindex-system / obsolete-soft404 / unresolved; retains query/host/legacy against canonical', () => {
     const rows = [
