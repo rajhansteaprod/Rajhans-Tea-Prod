@@ -268,6 +268,20 @@ export function analyzeContentGaps(rows: QueryPageMetric[], ctx: AnalyzerCtx & {
   return out;
 }
 
+/** Explain, per query×page row, which analyzers it qualifies for (and why not). */
+export function queryPageEligibility(r: QueryPageMetric, joined: boolean): { eligibleFor: string[]; reason: string } {
+  if (!joined) return { eligibleFor: [], reason: 'excluded: URL did not join to a canonical indexable page' };
+  const t = gscConfig.thresholds;
+  const eligibleFor: string[] = [];
+  const notes: string[] = [];
+  const exp = expectedCtr(r.position);
+  if (r.impressions >= t.lowCtrMinImpressions && r.ctr < exp * t.lowCtrRatio) eligibleFor.push('high-impression-low-ctr');
+  else notes.push(`low-ctr needs impr≥${t.lowCtrMinImpressions} & ctr<${(exp * t.lowCtrRatio * 100).toFixed(1)}% (have impr ${r.impressions}, ctr ${(r.ctr * 100).toFixed(1)}%)`);
+  if (r.position >= 4 && r.position <= 20 && r.impressions >= t.strikingMinImpressions) eligibleFor.push('striking-distance');
+  else notes.push(`striking needs pos 4-20 & impr≥${t.strikingMinImpressions} (have pos ${r.position.toFixed(1)}, impr ${r.impressions})`);
+  return { eligibleFor, reason: eligibleFor.length ? `eligible: ${eligibleFor.join(', ')}` : `excluded: ${notes.join('; ')}` };
+}
+
 export interface AnalyzeInput {
   queryPage: QueryPageMetric[];
   pageLatest: PageWindowMetric[];
