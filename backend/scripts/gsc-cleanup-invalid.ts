@@ -1,12 +1,19 @@
 /**
- * ONE-TIME, NARROWLY-SCOPED cleanup for the persistence bug where raw GSC URLs
- * (noindex-system / obsolete-soft404 / unresolved) were stored as canonical SEO
- * metric facts. Deletes ONLY rows whose stored normalizedUrl does NOT resolve to
- * a joined canonical page. Canonical/query/legacy/host-alias rows are UNTOUCHED.
+ * ONE-TIME cleanup for the persistence bug where raw GSC URLs were stored as SEO
+ * metric facts. A correctly-persisted row is keyed by a CANONICAL page
+ * (normalizedUrl ∈ canonicalSet). Everything else is a bug artifact, in two kinds:
  *
- * Dry preview by default; pass --apply to delete.
- *   cd backend && npx ts-node scripts/gsc-cleanup-invalid.ts          # preview
- *   cd backend && npx ts-node scripts/gsc-cleanup-invalid.ts --apply  # delete
+ *   • invalid   — noindex-system / obsolete-soft404 / unresolved (never a page)
+ *   • mis-keyed — a canonical/query/legacy/host variant stored under its RAW url
+ *                 instead of the canonical (the fixed sync has re-persisted the
+ *                 canonical version, so these are stale duplicates)
+ *
+ * Default deletes ONLY `invalid` (the narrow scope). Add --include-miskeyed to
+ * also remove the stale mis-keyed variants. Preview by default; --apply to delete.
+ *
+ *   npx ts-node scripts/gsc-cleanup-invalid.ts                         # preview both categories
+ *   npx ts-node scripts/gsc-cleanup-invalid.ts --apply                # delete invalid only
+ *   npx ts-node scripts/gsc-cleanup-invalid.ts --apply --include-miskeyed
  */
 import mongoose from 'mongoose';
 import { config } from '../src/config';
@@ -16,6 +23,9 @@ import { buildSeoContext } from '../src/modules/seo/services/gsc.sync.service';
 import { resolveGscUrl } from '../src/modules/seo/services/gsc.join';
 
 const APPLY = process.argv.includes('--apply');
+const INCLUDE_MISKEYED = process.argv.includes('--include-miskeyed');
+
+type Doomed = { id: mongoose.Types.ObjectId; url: string; note: string };
 
 async function main() {
   await mongoose.connect(config.mongo.uri);
@@ -25,26 +35,36 @@ async function main() {
     process.exit(1);
   }
 
-  const invalidClasses = new Set(['noindex-system', 'obsolete-soft404', 'unknown']);
   const scan = async (Model: typeof GscQueryPageMetric | typeof GscPageDailyMetric, label: string) => {
     const rows = await (Model as typeof GscQueryPageMetric).find().select('_id normalizedUrl').lean().exec();
-    const doomed: { id: unknown; url: string; cls: string }[] = [];
+    const invalid: Doomed[] = [];
+    const miskeyed: Doomed[] = [];
     for (const r of rows) {
+      if (canonicalSet.has(r.normalizedUrl)) continue; // correctly canonical → keep
       const res = resolveGscUrl(r.normalizedUrl, canonicalSet);
-      if (!res.joined && invalidClasses.has(res.classification)) doomed.push({ id: r._id, url: r.normalizedUrl, cls: res.classification });
+      const id = r._id as mongoose.Types.ObjectId;
+      if (!res.joined) invalid.push({ id, url: r.normalizedUrl, note: res.classification });
+      else miskeyed.push({ id, url: r.normalizedUrl, note: `→ ${res.canonicalUrl} (${res.classification})` });
     }
-    console.log(`\n${label}: ${rows.length} rows | INVALID to remove: ${doomed.length}`);
-    for (const d of doomed) console.log(`   - ${d.url}  [${d.cls}]`);
-    if (APPLY && doomed.length) {
-      const r = await (Model as typeof GscQueryPageMetric).deleteMany({ _id: { $in: doomed.map((d) => d.id) } });
-      console.log(`   ✓ deleted ${r.deletedCount}`);
+    console.log(`\n${label}: ${rows.length} rows | invalid ${invalid.length} | mis-keyed ${miskeyed.length}`);
+    for (const d of invalid) console.log(`   INVALID    ${d.url}  [${d.note}]`);
+    for (const d of miskeyed) console.log(`   MIS-KEYED  ${d.url}  ${d.note}`);
+
+    if (APPLY) {
+      const toDelete = INCLUDE_MISKEYED ? [...invalid, ...miskeyed] : invalid;
+      if (toDelete.length) {
+        const res = await (Model as typeof GscQueryPageMetric).deleteMany({ _id: { $in: toDelete.map((d) => d.id) } });
+        console.log(`   ✓ deleted ${res.deletedCount}`);
+      }
     }
-    return doomed.length;
+    return { invalid: invalid.length, miskeyed: miskeyed.length };
   };
 
   const q = await scan(GscQueryPageMetric, 'GscQueryPageMetric');
   const p = await scan(GscPageDailyMetric, 'GscPageDailyMetric');
-  console.log(`\n${APPLY ? 'APPLIED' : 'PREVIEW (no changes — pass --apply to delete)'} — invalid query-page: ${q}, invalid page-daily: ${p}`);
+  const mode = APPLY ? (INCLUDE_MISKEYED ? 'APPLIED (invalid + mis-keyed)' : 'APPLIED (invalid only)') : 'PREVIEW (no changes)';
+  console.log(`\n${mode} — invalid: qp ${q.invalid}, page ${p.invalid} | mis-keyed: qp ${q.miskeyed}, page ${p.miskeyed}`);
+  if (!APPLY) console.log('Re-run with --apply (invalid only) or --apply --include-miskeyed (also stale variants).');
   await mongoose.disconnect();
   process.exit(0);
 }
