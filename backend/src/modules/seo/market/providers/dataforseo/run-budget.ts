@@ -59,8 +59,12 @@ export class RunBudget {
     }
 
     // Check the CUMULATIVE projected total (this call + everything already
-    // committed this run), not just this call in isolation.
-    const projectedCumulative = Math.round((this.cumulativeRunUsd + estimate.usd) * 100) / 100;
+    // committed this run), not just this call in isolation. Deliberately NOT
+    // rounded to cents here — some providers price sub-cent per-item costs
+    // (e.g. $0.00012/item); rounding at every reservation would compound drift
+    // across many small calls. Full precision is kept internally; round only
+    // for display.
+    const projectedCumulative = this.cumulativeRunUsd + estimate.usd;
     const decision = assessRunCost({ usd: projectedCumulative, unknown: false }, this.monthToDateUsd);
     if (!decision.allowed) {
       return {

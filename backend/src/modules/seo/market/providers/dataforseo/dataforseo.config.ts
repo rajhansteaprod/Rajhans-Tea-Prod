@@ -25,9 +25,24 @@ export const dataForSeoConfig = {
   timeoutMs: Number(process.env.DATAFORSEO_TIMEOUT_MS || 15000),
   maxRetries: Number(process.env.DATAFORSEO_MAX_RETRIES || 2),
 
-  /** Pagination bounds for keyword_ideas/live — never fetch unbounded pages. */
-  maxPagesPerCall: Number(process.env.DATAFORSEO_MAX_PAGES_PER_CALL || 3),
-  pageSize: Number(process.env.DATAFORSEO_PAGE_SIZE || 100),
+  /**
+   * Batching (DataForSEO Labs Keyword Ideas): up to 200 seed keywords in ONE
+   * task. Never issue one request per seed when the provider supports batching.
+   */
+  maxSeedsPerTask: Number(process.env.DATAFORSEO_MAX_SEEDS_PER_TASK || 200),
+
+  /** Requested result cap per task. Provider max is 1000; keep the default
+   * conservative — callers can raise it explicitly via DiscoverKeywordsOptions. */
+  defaultResultLimit: Number(process.env.DATAFORSEO_DEFAULT_RESULT_LIMIT || 200),
+  maxResultLimit: Number(process.env.DATAFORSEO_MAX_RESULT_LIMIT || 1000),
+
+  /** Extra pages beyond the first (offset-based) — OFF by default; each page is
+   * its own billed task and is budgeted individually via RunBudget. */
+  maxPagesPerCall: Number(process.env.DATAFORSEO_MAX_PAGES_PER_CALL || 1),
+
+  /** No paid SERP/clickstream enrichment in 4b.2 — always false here. */
+  includeSerpInfo: false,
+  includeClickstreamData: false,
 
   /** Optional, licence-respecting raw payload retention. Default OFF until
    * DataForSEO's account-tier retention terms are confirmed. */

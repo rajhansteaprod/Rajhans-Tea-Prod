@@ -25,6 +25,18 @@ export interface DataForSeoKeywordIdeaItem {
   keyword_info?: DataForSeoKeywordInfo | null;
 }
 
+/** POST /v3/dataforseo_labs/google/keyword_ideas/live task payload (one task per
+ * call — up to 200 seed `keywords` batched into it, per DataForSEO Labs limits). */
+export interface DataForSeoKeywordIdeasTaskPayload {
+  keywords: string[];
+  location_code: number;
+  language_code: string;
+  limit: number;
+  offset?: number;
+  include_serp_info: boolean;
+  include_clickstream_data: boolean;
+}
+
 /** POST /v3/keywords_data/google_ads/search_volume/live result item. */
 export interface DataForSeoSearchVolumeItem {
   keyword: string;
