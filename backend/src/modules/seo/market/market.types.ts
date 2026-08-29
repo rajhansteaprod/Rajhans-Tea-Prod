@@ -65,6 +65,11 @@ export type AnyProvider = KeywordDemandProvider | SerpProvider | TrendProvider |
 export interface KeywordDemandResult {
   keyword: string;
   sourceKeywordId?: string | null;
+  /** Metrics embedded in the SAME discovery response, when the provider supplies
+   * them (e.g. DataForSEO's keyword_ideas). Lets callers avoid an automatic
+   * second paid getMetrics() call for every discovered keyword — refresh/backfill
+   * remains an explicit, separate decision. null/absent = provider didn't embed it. */
+  inlineMetrics?: KeywordMetrics | null;
 }
 export interface KeywordMetrics {
   keyword: string;
