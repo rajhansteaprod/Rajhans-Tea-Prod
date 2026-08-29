@@ -9,12 +9,16 @@
  * All 12 approved seeds are sent as ONE Keyword Ideas task (DataForSEO Labs
  * supports up to 200 seed keywords per task) — NOT 12 separate paid calls.
  *
- * Usage:
- *   npx ts-node backend/scripts/market-validate-dataforseo.ts
+ * Usage (from backend/ — uses tsconfig.scripts.json, NOT the main src tsconfig,
+ * since this file needs Node globals/types and lives outside rootDir "./src"):
+ *   npm run market:validate-dataforseo
  *     → prints the exact calculated estimate and stops (no call made).
  *
- *   npx ts-node backend/scripts/market-validate-dataforseo.ts --confirm
+ *   npm run market:validate-dataforseo -- --confirm
  *     → calls DataForSEO once for all 12 seeds, after the cost gate passes.
+ *
+ * Equivalent direct invocation:
+ *   npx ts-node --project tsconfig.scripts.json scripts/market-validate-dataforseo.ts [--confirm]
  *
  * Requires DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD in the environment.
  */
