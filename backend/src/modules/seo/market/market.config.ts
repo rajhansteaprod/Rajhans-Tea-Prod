@@ -41,4 +41,27 @@ export const marketConfig = {
     /** When a provider cannot estimate cost: 'approve' → require manual approval; 'refuse' → block. */
     onUnknownCost: (process.env.MARKET_ON_UNKNOWN_COST as 'approve' | 'refuse') || 'approve',
   },
+
+  /**
+   * Clustering (4b.3). Weights are RAW importances, not required to pre-sum to 1 —
+   * the engine renormalizes over whichever signals are actually available for a
+   * given pair (UNKNOWN/absent signals are excluded, never defaulted to 0). `serp`
+   * is documented for 4b.5 forward-compatibility only: 4b.3 never supplies SERP
+   * evidence, so that weight is inert until a real SerpOverlapProvider exists.
+   */
+  clustering: {
+    weights: {
+      lexical: Number(process.env.MARKET_CLUSTER_WEIGHT_LEXICAL || 0.25),
+      entity: Number(process.env.MARKET_CLUSTER_WEIGHT_ENTITY || 0.45),
+      modifier: Number(process.env.MARKET_CLUSTER_WEIGHT_MODIFIER || 0.15),
+      intent: Number(process.env.MARKET_CLUSTER_WEIGHT_INTENT || 0.15),
+      serp: Number(process.env.MARKET_CLUSTER_WEIGHT_SERP || 0.4),
+    },
+    /** Minimum combined score for a pair to be unioned — AND the anchor gate must also pass. */
+    minEdgeScore: Number(process.env.MARKET_CLUSTER_MIN_EDGE_SCORE || 0.55),
+    /** Post-hoc cap — never enforced by "stop while iterating" (would be input-order dependent). */
+    maxClusterSize: Number(process.env.MARKET_MAX_CLUSTER_SIZE || 40),
+    /** O(n²) pairwise-comparison safety valve; irrelevant at current run sizes (~200 keywords). */
+    maxKeywordsPerRun: Number(process.env.MARKET_MAX_KEYWORDS_PER_CLUSTER_RUN || 500),
+  },
 };
