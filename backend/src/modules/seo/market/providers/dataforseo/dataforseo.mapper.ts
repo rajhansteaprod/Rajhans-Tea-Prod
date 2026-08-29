@@ -1,5 +1,5 @@
 import { KeywordDemandResult, KeywordMetrics } from '../../market.types';
-import { DataForSeoKeywordIdeaItem, DataForSeoKeywordInfo, DataForSeoSearchVolumeItem, DataForSeoTaskResponse } from './dataforseo.types';
+import { DataForSeoKeywordIdeasResultWrapper, DataForSeoKeywordInfo, DataForSeoSearchVolumeItem, DataForSeoTaskResponse } from './dataforseo.types';
 
 /**
  * Raw → normalized mapping. UNKNOWN ≠ 0 (refinement 9): only fields DataForSEO
@@ -18,8 +18,15 @@ function mapMetricFields(info: DataForSeoKeywordInfo | DataForSeoSearchVolumeIte
   return { searchVolume, cpc, paidCompetition, paidCompetitionIndex };
 }
 
-export function mapKeywordIdeasResponse(resp: DataForSeoTaskResponse<DataForSeoKeywordIdeaItem>): { results: KeywordDemandResult[] } {
-  const items = (resp.tasks?.[0]?.result ?? []).filter((it): it is DataForSeoKeywordIdeaItem => !!it && !!it.keyword);
+/**
+ * Real Keyword Ideas response shape: tasks[0].result[0].items[] — `result` is a
+ * one-element array holding a WRAPPER object (seed_keywords/total_count/items),
+ * not the keyword items directly. Reading `result[]` as if it were the items
+ * array (the 4b.2 bug) silently drops every real response.
+ */
+export function mapKeywordIdeasResponse(resp: DataForSeoTaskResponse<DataForSeoKeywordIdeasResultWrapper>): { results: KeywordDemandResult[] } {
+  const wrapper = resp.tasks?.[0]?.result?.[0] ?? null;
+  const items = (wrapper?.items ?? []).filter((it): it is NonNullable<typeof it> => !!it && !!it.keyword);
   const results: KeywordDemandResult[] = items.map((it) => ({
     keyword: it.keyword,
     sourceKeywordId: null,

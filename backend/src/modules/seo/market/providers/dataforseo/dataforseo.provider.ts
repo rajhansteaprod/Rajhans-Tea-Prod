@@ -5,7 +5,7 @@ import { RunBudget } from './run-budget';
 import { postDataForSeoRequest } from './dataforseo.client';
 import { chunk, mapKeywordIdeasResponse, mapSearchVolumeResponse } from './dataforseo.mapper';
 import { sanitizeDataForSeoError } from './dataforseo.errors';
-import { DataForSeoKeywordIdeaItem, DataForSeoKeywordIdeasTaskPayload, DataForSeoSearchVolumeItem, DataForSeoTaskResponse } from './dataforseo.types';
+import { DataForSeoKeywordIdeasResultWrapper, DataForSeoKeywordIdeasTaskPayload, DataForSeoSearchVolumeItem, DataForSeoTaskResponse } from './dataforseo.types';
 
 export class NoActiveRunBudgetError extends Error {
   constructor(op: string) {
@@ -107,9 +107,9 @@ export class DataForSeoProvider implements KeywordDemandProvider {
           include_clickstream_data: dataForSeoConfig.includeClickstreamData,
         };
 
-        let raw: DataForSeoTaskResponse<DataForSeoKeywordIdeaItem>;
+        let raw: DataForSeoTaskResponse<DataForSeoKeywordIdeasResultWrapper>;
         try {
-          raw = await postDataForSeoRequest<DataForSeoTaskResponse<DataForSeoKeywordIdeaItem>>(
+          raw = await postDataForSeoRequest<DataForSeoTaskResponse<DataForSeoKeywordIdeasResultWrapper>>(
             '/v3/dataforseo_labs/google/keyword_ideas/live',
             [payload],
             {
