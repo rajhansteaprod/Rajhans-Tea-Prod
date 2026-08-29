@@ -17,7 +17,8 @@
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "typecheck": "tsc --noEmit",
     "seed": "ts-node src/seeds/index.ts",
-    "gsc:dryrun": "ts-node scripts/gsc-dryrun.ts"
+    "gsc:dryrun": "ts-node scripts/gsc-dryrun.ts",
+    "market:validate-dataforseo": "ts-node scripts/market-validate-dataforseo.ts"
   },
   "dependencies": {
     "@types/multer": "^2.1.0",
