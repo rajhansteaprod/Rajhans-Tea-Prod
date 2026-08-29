@@ -25,6 +25,23 @@ export interface DataForSeoKeywordIdeaItem {
   keyword_info?: DataForSeoKeywordInfo | null;
 }
 
+/**
+ * POST /v3/dataforseo_labs/google/keyword_ideas/live's `result` array holds ONE
+ * wrapper object (not the keyword items directly) — the actual keyword ideas are
+ * nested under `items`. Real response shape:
+ *   tasks[0].result[0].items[]
+ * NOT tasks[0].result[] (that was the 4b.2 bug — result[] IS the items wrapper
+ * array of length 1, each entry describing the whole task's result set).
+ */
+export interface DataForSeoKeywordIdeasResultWrapper {
+  seed_keywords?: string[] | null;
+  location_code?: number | null;
+  language_code?: string | null;
+  total_count?: number | null;
+  items_count?: number | null;
+  items?: DataForSeoKeywordIdeaItem[] | null;
+}
+
 /** POST /v3/dataforseo_labs/google/keyword_ideas/live task payload (one task per
  * call — up to 200 seed `keywords` batched into it, per DataForSEO Labs limits). */
 export interface DataForSeoKeywordIdeasTaskPayload {

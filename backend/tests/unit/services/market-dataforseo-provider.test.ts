@@ -13,8 +13,13 @@ function jsonResponse(status: number, body: unknown): Response {
   return { status, ok: status >= 200 && status < 300, json: async () => body } as unknown as Response;
 }
 
+/** Realistic Keyword Ideas shape: tasks[0].result[0].items[] — result is a
+ * one-element wrapper array, not the items directly (the 4b.2 bug fixed here). */
 function ideasResponse(items: { keyword: string; keyword_info?: unknown }[]) {
-  return jsonResponse(200, { status_code: 20000, tasks: [{ status_code: 20000, result: items }] });
+  return jsonResponse(200, {
+    status_code: 20000,
+    tasks: [{ status_code: 20000, result: [{ seed_keywords: [], total_count: items.length, items }] }],
+  });
 }
 
 const originalLogin = process.env.DATAFORSEO_LOGIN;

@@ -1,15 +1,46 @@
 import { chunk, diffMissingMetrics, mapKeywordIdeasResponse, mapSearchVolumeResponse } from '../../../src/modules/seo/market/providers/dataforseo/dataforseo.mapper';
-import { DataForSeoKeywordIdeaItem, DataForSeoSearchVolumeItem, DataForSeoTaskResponse } from '../../../src/modules/seo/market/providers/dataforseo/dataforseo.types';
+import {
+  DataForSeoKeywordIdeaItem,
+  DataForSeoKeywordIdeasResultWrapper,
+  DataForSeoSearchVolumeItem,
+  DataForSeoTaskResponse,
+} from '../../../src/modules/seo/market/providers/dataforseo/dataforseo.types';
 
 function taskResp<T>(result: T[]): DataForSeoTaskResponse<T> {
   return { status_code: 20000, status_message: 'Ok.', tasks: [{ status_code: 20000, status_message: 'Ok.', result }] };
 }
 
+/**
+ * Realistic Keyword Ideas fixture: tasks[0].result[0].items[] — `result` is a
+ * ONE-element array holding a wrapper object, NOT the keyword items directly.
+ * This shape is what makes the 4b.2 `tasks[0].result[]` regression reproducible;
+ * every keyword-ideas test below must go through this helper, never `taskResp`.
+ */
+function keywordIdeasResp(items: DataForSeoKeywordIdeaItem[] | null, seedKeywords: string[] = ['tea']): DataForSeoTaskResponse<DataForSeoKeywordIdeasResultWrapper> {
+  const wrapper: DataForSeoKeywordIdeasResultWrapper = {
+    seed_keywords: seedKeywords,
+    location_code: 2356,
+    language_code: 'en',
+    total_count: items?.length ?? 0,
+    items_count: items?.length ?? 0,
+    items,
+  };
+  return { status_code: 20000, status_message: 'Ok.', tasks: [{ status_code: 20000, status_message: 'Ok.', result: [wrapper] }] };
+}
+
 describe('mapKeywordIdeasResponse', () => {
-  it('maps keyword + embedded inline metrics (no second call needed)', () => {
-    const raw = taskResp<DataForSeoKeywordIdeaItem>([
+  it('reads keyword ideas from the NESTED tasks[0].result[0].items[] path, not tasks[0].result[]', () => {
+    const raw = keywordIdeasResp([
       { keyword: 'assam tea', keyword_info: { search_volume: 720, cpc: 0.5, competition: 0.3, competition_level: 'LOW' } },
+      { keyword: 'assam ctc tea', keyword_info: { search_volume: 320, cpc: 0.4, competition: 0.2, competition_level: 'LOW' } },
     ]);
+    const { results } = mapKeywordIdeasResponse(raw);
+    expect(results).toHaveLength(2);
+    expect(results.map((r) => r.keyword)).toEqual(['assam tea', 'assam ctc tea']);
+  });
+
+  it('maps keyword + embedded inline metrics (no second call needed)', () => {
+    const raw = keywordIdeasResp([{ keyword: 'assam tea', keyword_info: { search_volume: 720, cpc: 0.5, competition: 0.3, competition_level: 'LOW' } }]);
     const { results } = mapKeywordIdeasResponse(raw);
     expect(results).toHaveLength(1);
     expect(results[0].keyword).toBe('assam tea');
@@ -23,27 +54,47 @@ describe('mapKeywordIdeasResponse', () => {
   });
 
   it('preserves a genuine zero search volume, does not coerce it to null', () => {
-    const raw = taskResp<DataForSeoKeywordIdeaItem>([{ keyword: 'obscure phrase', keyword_info: { search_volume: 0, cpc: null, competition: null, competition_level: null } }]);
+    const raw = keywordIdeasResp([{ keyword: 'obscure phrase', keyword_info: { search_volume: 0, cpc: null, competition: null, competition_level: null } }]);
     const { results } = mapKeywordIdeasResponse(raw);
     expect(results[0].inlineMetrics?.searchVolume).toBe(0);
     expect(results[0].inlineMetrics?.cpc).toBeNull();
   });
 
   it('maps missing/null provider fields to null (UNKNOWN), never fabricates zero', () => {
-    const raw = taskResp<DataForSeoKeywordIdeaItem>([{ keyword: 'no data keyword', keyword_info: null }]);
+    const raw = keywordIdeasResp([{ keyword: 'no data keyword', keyword_info: null }]);
     const { results } = mapKeywordIdeasResponse(raw);
     expect(results[0].inlineMetrics).toBeNull();
   });
 
   it('drops malformed items with no keyword', () => {
-    const raw = taskResp<DataForSeoKeywordIdeaItem>([{ keyword: '', keyword_info: null } as unknown as DataForSeoKeywordIdeaItem]);
+    const raw = keywordIdeasResp([{ keyword: '', keyword_info: null } as unknown as DataForSeoKeywordIdeaItem]);
     const { results } = mapKeywordIdeasResponse(raw);
     expect(results).toHaveLength(0);
   });
 
-  it('handles an empty/absent task result gracefully', () => {
-    const raw: DataForSeoTaskResponse<DataForSeoKeywordIdeaItem> = { status_code: 20000, status_message: 'Ok.', tasks: [{ status_code: 20000, status_message: 'Ok.', result: null }] };
+  it('handles a null items array inside the wrapper gracefully', () => {
+    const raw = keywordIdeasResp(null);
     expect(mapKeywordIdeasResponse(raw).results).toEqual([]);
+  });
+
+  it('handles an empty/absent task result gracefully', () => {
+    const raw: DataForSeoTaskResponse<DataForSeoKeywordIdeasResultWrapper> = {
+      status_code: 20000,
+      status_message: 'Ok.',
+      tasks: [{ status_code: 20000, status_message: 'Ok.', result: null }],
+    };
+    expect(mapKeywordIdeasResponse(raw).results).toEqual([]);
+  });
+
+  it('does NOT read keyword items directly off tasks[0].result[] (regression guard for the 4b.2 bug)', () => {
+    // Malformed/legacy-shaped response: items placed directly on result[], no wrapper/items[].
+    const malformed = {
+      status_code: 20000,
+      status_message: 'Ok.',
+      tasks: [{ status_code: 20000, status_message: 'Ok.', result: [{ keyword: 'assam tea' }] as unknown as DataForSeoKeywordIdeasResultWrapper[] }],
+    };
+    // Because result[0] is treated as the wrapper, `.items` on a bare keyword object is undefined -> no results.
+    expect(mapKeywordIdeasResponse(malformed).results).toEqual([]);
   });
 });
 
