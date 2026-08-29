@@ -33,6 +33,15 @@ export function mapSearchVolumeResponse(resp: DataForSeoTaskResponse<DataForSeoS
   return items.map((it) => ({ keyword: it.keyword, ...mapMetricFields(it) }));
 }
 
+/** Split into provider-sized batches (e.g. DataForSEO's 200-seeds-per-task cap).
+ * Generic chunking — no provider-specific concept beyond the max size number. */
+export function chunk<T>(items: T[], maxSize: number): T[][] {
+  if (maxSize <= 0) throw new Error('chunk: maxSize must be > 0');
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += maxSize) out.push(items.slice(i, i + maxSize));
+  return out;
+}
+
 /** Keywords requested but absent from the provider's response = UNKNOWN metrics,
  * NOT rejected (refinement/requirement 7) and NOT zero. Caller classifies these
  * as `unknownMetrics`, distinct from `keywordsRejected` (intentional filtering). */

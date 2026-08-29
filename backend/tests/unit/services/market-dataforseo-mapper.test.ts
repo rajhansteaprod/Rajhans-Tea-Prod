@@ -1,4 +1,4 @@
-import { diffMissingMetrics, mapKeywordIdeasResponse, mapSearchVolumeResponse } from '../../../src/modules/seo/market/providers/dataforseo/dataforseo.mapper';
+import { chunk, diffMissingMetrics, mapKeywordIdeasResponse, mapSearchVolumeResponse } from '../../../src/modules/seo/market/providers/dataforseo/dataforseo.mapper';
 import { DataForSeoKeywordIdeaItem, DataForSeoSearchVolumeItem, DataForSeoTaskResponse } from '../../../src/modules/seo/market/providers/dataforseo/dataforseo.types';
 
 function taskResp<T>(result: T[]): DataForSeoTaskResponse<T> {
@@ -53,6 +53,29 @@ describe('mapSearchVolumeResponse', () => {
     const [m] = mapSearchVolumeResponse(raw);
     expect(m).toEqual({ keyword: 'ctc tea', searchVolume: 1200, cpc: { value: 1.2, currency: 'USD' }, paidCompetition: 'high', paidCompetitionIndex: 0.8 });
     expect(m).not.toHaveProperty('organicDifficulty');
+  });
+});
+
+describe('chunk', () => {
+  it('keeps a batch under the max size in a single chunk', () => {
+    expect(chunk(['a', 'b', 'c'], 200)).toEqual([['a', 'b', 'c']]);
+  });
+
+  it('splits a batch exceeding the max size into provider-sized chunks', () => {
+    const items = Array.from({ length: 250 }, (_, i) => i);
+    const out = chunk(items, 200);
+    expect(out).toHaveLength(2);
+    expect(out[0]).toHaveLength(200);
+    expect(out[1]).toHaveLength(50);
+  });
+
+  it('handles an exact multiple with no trailing empty chunk', () => {
+    const items = Array.from({ length: 400 }, (_, i) => i);
+    expect(chunk(items, 200)).toHaveLength(2);
+  });
+
+  it('returns an empty array for empty input', () => {
+    expect(chunk([], 200)).toEqual([]);
   });
 });
 

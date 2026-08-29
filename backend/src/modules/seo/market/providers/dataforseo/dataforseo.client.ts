@@ -9,6 +9,14 @@ export interface PostOptions {
   maxRetries?: number;
   /** Injected for tests — never the real network in unit tests. */
   fetchImpl?: typeof fetch;
+  /**
+   * Called before EVERY physical HTTP attempt, including retries. Lets the
+   * caller (the provider) reserve cost-governor budget per attempt — a retry is
+   * a new billed call as far as the budget is concerned, so it must be
+   * accounted for, not assumed free. Throwing here aborts before the network
+   * call is made.
+   */
+  onBeforeAttempt?: (attempt: number) => void | Promise<void>;
 }
 
 /**
@@ -24,6 +32,7 @@ export async function postDataForSeoRequest<T>(path: string, body: unknown[], op
 
   let attempt = 0;
   for (;;) {
+    if (opts.onBeforeAttempt) await opts.onBeforeAttempt(attempt);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {

@@ -40,10 +40,24 @@ export interface SearchProvider {
   estimateCost(op: ProviderOp): CostEstimate; // BEFORE any call
 }
 
+/** Vendor-neutral discovery options — "limit" is a generic result cap concept
+ * (most keyword-idea providers support one), never a DataForSEO-specific term. */
+export interface DiscoverKeywordsOptions {
+  limit?: number;
+}
+
 // ── Capability interfaces (adapters implemented in later sub-phases) ──
 export interface KeywordDemandProvider extends SearchProvider {
   kind: 'keyword-demand';
-  discoverKeywords(seed: string, market: Market): Promise<KeywordDemandResult[]>;
+  /**
+   * `seeds` is a BATCH (vendor-neutral): most keyword-idea providers accept many
+   * seed keywords in one call/task, and issuing one call per seed when the
+   * provider supports batching wastes both cost and quota. Since no production
+   * caller exists yet (4b is not integrated into any route/cron), the interface
+   * takes the batch shape directly rather than bolting on a provider-specific
+   * batch method alongside a single-seed one.
+   */
+  discoverKeywords(seeds: string[], market: Market, opts?: DiscoverKeywordsOptions): Promise<KeywordDemandResult[]>;
   getMetrics(keywords: string[], market: Market): Promise<KeywordMetrics[]>;
 }
 export interface SerpProvider extends SearchProvider {

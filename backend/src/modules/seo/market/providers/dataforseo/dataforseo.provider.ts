@@ -1,11 +1,11 @@
-import { CostEstimate, KeywordDemandProvider, KeywordDemandResult, KeywordMetrics, Market, ProviderOp } from '../../market.types';
+import { CostEstimate, DiscoverKeywordsOptions, KeywordDemandProvider, KeywordDemandResult, KeywordMetrics, Market, ProviderOp } from '../../market.types';
 import { dataForSeoConfig } from './dataforseo.config';
 import { estimateDataForSeoCost } from './dataforseo.pricing';
 import { RunBudget } from './run-budget';
 import { postDataForSeoRequest } from './dataforseo.client';
-import { mapKeywordIdeasResponse, mapSearchVolumeResponse } from './dataforseo.mapper';
+import { chunk, mapKeywordIdeasResponse, mapSearchVolumeResponse } from './dataforseo.mapper';
 import { sanitizeDataForSeoError } from './dataforseo.errors';
-import { DataForSeoKeywordIdeaItem, DataForSeoSearchVolumeItem, DataForSeoTaskResponse } from './dataforseo.types';
+import { DataForSeoKeywordIdeaItem, DataForSeoKeywordIdeasTaskPayload, DataForSeoSearchVolumeItem, DataForSeoTaskResponse } from './dataforseo.types';
 
 export class NoActiveRunBudgetError extends Error {
   constructor(op: string) {
@@ -30,7 +30,8 @@ export interface DataForSeoProviderOverrides {
  * unconfigured until DATAFORSEO_LOGIN/DATAFORSEO_PASSWORD are both set
  * (refinement 6). Every capability call requires an explicit, pre-approved
  * RunBudget (requirement 4) — the gate lives inside discoverKeywords/getMetrics
- * themselves, so calling this class directly cannot bypass it.
+ * themselves, so calling this class directly cannot bypass it. Reserves budget
+ * per PHYSICAL HTTP attempt (including retries), never just once per logical call.
  */
 export class DataForSeoProvider implements KeywordDemandProvider {
   readonly id = 'dataforseo';
@@ -60,51 +61,72 @@ export class DataForSeoProvider implements KeywordDemandProvider {
     return this.activeBudget;
   }
 
-  private reserveOrThrow(op: ProviderOp, description: string): void {
+  private reserveAttemptOrThrow(op: ProviderOp, description: string, attempt: number): void {
     const budget = this.requireBudget(description);
     const estimate = this.estimateCost(op);
-    const reservation = budget.reserve(estimate, description);
+    const label = attempt === 0 ? description : `${description} (retry attempt ${attempt})`;
+    const reservation = budget.reserve(estimate, label);
     if (!reservation.allowed) throw new CostGateRefusedError(reservation.reason);
   }
 
   /**
-   * Discovery via POST /v3/dataforseo_labs/google/keyword_ideas/live. Reuses the
-   * metrics EMBEDDED in this same response (KeywordDemandResult.inlineMetrics) —
-   * does NOT automatically fire a second paid getMetrics() call per requirement.
+   * Discovery via POST /v3/dataforseo_labs/google/keyword_ideas/live.
+   *
+   * `seeds` is BATCHED into provider-sized tasks (up to `maxSeedsPerTask`, e.g.
+   * 12 seeds → ONE task) — never one request per seed when the provider
+   * supports batching. Reuses the metrics EMBEDDED in the response
+   * (KeywordDemandResult.inlineMetrics) — does NOT automatically fire a second
+   * paid getMetrics() call.
+   *
+   * Cost is estimated using the REQUESTED result `limit` (conservative — we
+   * cannot know the actual returned count before paying), and every physical
+   * HTTP attempt (including retries and any extra offset page) is separately
+   * reserved against the run's cumulative budget.
    */
-  async discoverKeywords(seed: string, market: Market): Promise<KeywordDemandResult[]> {
+  async discoverKeywords(seeds: string[], market: Market, opts: DiscoverKeywordsOptions = {}): Promise<KeywordDemandResult[]> {
     if (!this.isConfigured()) throw new Error('dataforseo: not configured');
-    const pageSize = dataForSeoConfig.pageSize;
+    if (seeds.length === 0) return [];
+
+    const limit = Math.min(opts.limit ?? dataForSeoConfig.defaultResultLimit, dataForSeoConfig.maxResultLimit);
+    const seedBatches = chunk(seeds, dataForSeoConfig.maxSeedsPerTask);
     const results: KeywordDemandResult[] = [];
-    let offset = 0;
 
-    for (let page = 0; page < dataForSeoConfig.maxPagesPerCall; page++) {
-      const op: ProviderOp = { capability: 'keyword-demand', op: 'discoverKeywords', units: pageSize };
-      this.reserveOrThrow(op, `discoverKeywords("${seed}") page ${page}`);
+    for (const batch of seedBatches) {
+      let offset = 0;
+      for (let page = 0; page < dataForSeoConfig.maxPagesPerCall; page++) {
+        const op: ProviderOp = { capability: 'keyword-demand', op: 'discoverKeywords', units: limit };
+        const description = `discoverKeywords(${batch.length} seeds) page ${page}`;
 
-      let raw: DataForSeoTaskResponse<DataForSeoKeywordIdeaItem>;
-      try {
-        raw = await postDataForSeoRequest<DataForSeoTaskResponse<DataForSeoKeywordIdeaItem>>(
-          '/v3/dataforseo_labs/google/keyword_ideas/live',
-          [
+        const payload: DataForSeoKeywordIdeasTaskPayload = {
+          keywords: batch,
+          location_code: dataForSeoConfig.defaultLocationCode,
+          language_code: market.language || dataForSeoConfig.defaultLanguageCode,
+          limit,
+          offset,
+          include_serp_info: dataForSeoConfig.includeSerpInfo,
+          include_clickstream_data: dataForSeoConfig.includeClickstreamData,
+        };
+
+        let raw: DataForSeoTaskResponse<DataForSeoKeywordIdeaItem>;
+        try {
+          raw = await postDataForSeoRequest<DataForSeoTaskResponse<DataForSeoKeywordIdeaItem>>(
+            '/v3/dataforseo_labs/google/keyword_ideas/live',
+            [payload],
             {
-              keywords: [seed],
-              location_code: dataForSeoConfig.defaultLocationCode,
-              language_code: market.language || dataForSeoConfig.defaultLanguageCode,
-              limit: pageSize,
-              offset,
+              fetchImpl: this.overrides.fetchImpl,
+              onBeforeAttempt: (attempt) => this.reserveAttemptOrThrow(op, description, attempt),
             },
-          ],
-          { fetchImpl: this.overrides.fetchImpl },
-        );
-      } catch (e) {
-        throw new Error(sanitizeDataForSeoError(e));
-      }
+          );
+        } catch (e) {
+          if (e instanceof CostGateRefusedError || e instanceof NoActiveRunBudgetError) throw e;
+          throw new Error(sanitizeDataForSeoError(e));
+        }
 
-      const { results: pageResults } = mapKeywordIdeasResponse(raw);
-      results.push(...pageResults);
-      if (pageResults.length < pageSize) break; // last page
-      offset += pageSize;
+        const { results: pageResults } = mapKeywordIdeasResponse(raw);
+        results.push(...pageResults);
+        if (pageResults.length < limit) break; // last page for this batch
+        offset += limit;
+      }
     }
 
     return results;
@@ -113,24 +135,29 @@ export class DataForSeoProvider implements KeywordDemandProvider {
   /**
    * Explicit metrics refresh via POST /v3/keywords_data/google_ads/search_volume/live.
    * Only for: seed keywords needing metrics, missing metrics, stale metrics, or an
-   * explicit refresh/validation — callers decide WHICH keywords to pass in (e.g.
-   * via dataforseo.cache.partitionByFreshness); this method never auto-expands.
+   * explicit refresh/validation. NEVER called automatically after discoverKeywords
+   * for rows that already carry inlineMetrics — callers decide which keywords to
+   * pass in (e.g. via dataforseo.cache.partitionByFreshness).
    */
   async getMetrics(keywords: string[], market: Market): Promise<KeywordMetrics[]> {
     if (!this.isConfigured()) throw new Error('dataforseo: not configured');
     if (keywords.length === 0) return [];
 
     const op: ProviderOp = { capability: 'keyword-demand', op: 'getMetrics', units: keywords.length };
-    this.reserveOrThrow(op, `getMetrics(${keywords.length} keywords)`);
+    const description = `getMetrics(${keywords.length} keywords)`;
 
     try {
       const raw = await postDataForSeoRequest<DataForSeoTaskResponse<DataForSeoSearchVolumeItem>>(
         '/v3/keywords_data/google_ads/search_volume/live',
         [{ keywords, location_code: dataForSeoConfig.defaultLocationCode, language_code: market.language || dataForSeoConfig.defaultLanguageCode }],
-        { fetchImpl: this.overrides.fetchImpl },
+        {
+          fetchImpl: this.overrides.fetchImpl,
+          onBeforeAttempt: (attempt) => this.reserveAttemptOrThrow(op, description, attempt),
+        },
       );
       return mapSearchVolumeResponse(raw);
     } catch (e) {
+      if (e instanceof CostGateRefusedError || e instanceof NoActiveRunBudgetError) throw e;
       throw new Error(sanitizeDataForSeoError(e));
     }
   }
