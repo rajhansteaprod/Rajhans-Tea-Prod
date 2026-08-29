@@ -18,7 +18,7 @@
     "typecheck": "tsc --noEmit",
     "seed": "ts-node src/seeds/index.ts",
     "gsc:dryrun": "ts-node scripts/gsc-dryrun.ts",
-    "market:validate-dataforseo": "ts-node scripts/market-validate-dataforseo.ts"
+    "market:validate-dataforseo": "ts-node --project tsconfig.scripts.json scripts/market-validate-dataforseo.ts"
   },
   "dependencies": {
     "@types/multer": "^2.1.0",
