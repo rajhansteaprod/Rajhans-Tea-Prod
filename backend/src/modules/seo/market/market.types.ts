@@ -171,3 +171,17 @@ export interface KeywordClassification {
   hardNegative: boolean; // spam/adult/unrelated
   hardNegativeReason?: string;
 }
+
+// ── Clustering (4b.3) — SERP evidence is vendor-neutral and provider-supplied.
+// 4b.3 only CONSUMES this shape; it ships zero implementations. Absent/null is
+// "not checked", never a fabricated 0. ──
+export interface SerpPairEvidence {
+  score: number; // 0..1 — degree of SERP overlap between two keywords
+  sharedUrls?: string[];
+  sharedDomains?: string[];
+  reasons: string[];
+}
+export interface SerpOverlapProvider {
+  /** Returns real evidence, or null if not computed/available for this pair — never fabricated. */
+  getPairEvidence(normalizedKeywordA: string, normalizedKeywordB: string): SerpPairEvidence | null;
+}
