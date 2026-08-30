@@ -59,8 +59,8 @@ async function executeUnderLock(runId: mongoose.Types.ObjectId, label: string): 
   }
 }
 
-async function main() {
-  const args = process.argv.slice(2);
+export async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
+  const args = argv;
   const confirmed = args.includes('--confirm');
   const approveIdx = args.indexOf('--approve');
   const resumeIdx = args.indexOf('--resume');
@@ -199,7 +199,11 @@ async function main() {
   await executeUnderLock(run._id as mongoose.Types.ObjectId, '--confirm');
 }
 
-main().catch((e) => {
-  console.error('market-run failed:', e instanceof Error ? e.message : e);
-  process.exitCode = 1;
-});
+// CLI entrypoint guard — only runs when this file is executed directly (`ts-node scripts/market-run.ts ...`),
+// never when imported (e.g. by tests importing `main` for argv-driven integration coverage).
+if (require.main === module) {
+  main().catch((e) => {
+    console.error('market-run failed:', e instanceof Error ? e.message : e);
+    process.exitCode = 1;
+  });
+}
