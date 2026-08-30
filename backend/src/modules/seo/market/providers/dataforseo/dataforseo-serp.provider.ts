@@ -6,11 +6,13 @@ import { postDataForSeoRequest } from './dataforseo.client';
 import { mapSerpResponse, DataForSeoSerpResultWrapper } from './dataforseo-serp.mapper';
 import { sanitizeDataForSeoError } from './dataforseo.errors';
 import { DataForSeoTaskResponse } from './dataforseo.types';
-import { CostGateRefusedError, NoActiveRunBudgetError } from './dataforseo.provider';
+import { BeforePhysicalAttemptHook, CostGateRefusedError, DurableAttemptRefusedError, NoActiveRunBudgetError } from './dataforseo.provider';
 
 export interface DataForSeoSerpProviderOverrides {
   /** Injected for tests — never the real network in unit tests. */
   fetchImpl?: typeof fetch;
+  /** Injected only by the 4b.7 orchestrator — see `BeforePhysicalAttemptHook`. */
+  beforePhysicalAttempt?: BeforePhysicalAttemptHook;
 }
 
 /**
@@ -56,6 +58,20 @@ export class DataForSeoSerpProvider implements SerpProvider {
     if (!reservation.allowed) throw new CostGateRefusedError(reservation.reason);
   }
 
+  /** Durable-first, RunBudget-second attempt gate — see DataForSeoProvider.gateAttempt. */
+  private async gateAttempt(op: ProviderOp, description: string, attempt: number): Promise<void> {
+    if (this.overrides.beforePhysicalAttempt) {
+      const estimate = this.estimateCost(op);
+      await this.overrides.beforePhysicalAttempt({
+        estimatedCostUsd: estimate.usd ?? 0,
+        provider: this.id,
+        operation: description,
+        attemptNumber: attempt,
+      });
+    }
+    this.reserveAttemptOrThrow(op, description, attempt);
+  }
+
   /** POST /v3/serp/google/organic/live/advanced — India/English/desktop/depth-10 only. */
   async getSerp(keyword: string, market: Market): Promise<SerpResult> {
     if (!this.isConfigured()) throw new Error('dataforseo: not configured');
@@ -78,12 +94,12 @@ export class DataForSeoSerpProvider implements SerpProvider {
         ],
         {
           fetchImpl: this.overrides.fetchImpl,
-          onBeforeAttempt: (attempt) => this.reserveAttemptOrThrow(op, description, attempt),
+          onBeforeAttempt: (attempt) => this.gateAttempt(op, description, attempt),
         },
       );
       return mapSerpResponse(raw, keyword, new Date().toISOString());
     } catch (e) {
-      if (e instanceof CostGateRefusedError || e instanceof NoActiveRunBudgetError) throw e;
+      if (e instanceof CostGateRefusedError || e instanceof NoActiveRunBudgetError || e instanceof DurableAttemptRefusedError) throw e;
       throw new Error(sanitizeDataForSeoError(e));
     }
   }

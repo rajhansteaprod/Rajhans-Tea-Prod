@@ -20,9 +20,36 @@ export class CostGateRefusedError extends Error {
   }
 }
 
+/** Thrown when an injected `beforePhysicalAttempt` durable gate rejects an attempt. */
+export class DurableAttemptRefusedError extends Error {
+  constructor(public reason: string) {
+    super(`dataforseo request refused by durable cost gate: ${reason}`);
+    this.name = 'DurableAttemptRefusedError';
+  }
+}
+
+export interface BeforePhysicalAttemptContext {
+  estimatedCostUsd: number;
+  provider: string;
+  operation: string;
+  attemptNumber: number;
+}
+
+/**
+ * Optional 4b.7 orchestrator integration seam. When supplied, called exactly
+ * once before EACH physical HTTP attempt (including retries), before the
+ * existing in-memory RunBudget guard. Rejecting (throwing) prevents that
+ * attempt's HTTP call. When omitted, provider behavior is unchanged from
+ * pre-4b.7 (4b.2/4b.5 validated behavior) — this is what standalone
+ * validation scripts and any other non-orchestrated caller continue to get.
+ */
+export type BeforePhysicalAttemptHook = (ctx: BeforePhysicalAttemptContext) => Promise<void>;
+
 export interface DataForSeoProviderOverrides {
   /** Injected for tests — never the real network in unit tests. */
   fetchImpl?: typeof fetch;
+  /** Injected only by the 4b.7 orchestrator — see `BeforePhysicalAttemptHook`. */
+  beforePhysicalAttempt?: BeforePhysicalAttemptHook;
 }
 
 /**
@@ -70,6 +97,24 @@ export class DataForSeoProvider implements KeywordDemandProvider {
   }
 
   /**
+   * Durable-first, RunBudget-second attempt gate. When no `beforePhysicalAttempt`
+   * hook is supplied (the default — every existing caller), this is exactly
+   * `reserveAttemptOrThrow` and behavior is unchanged from pre-4b.7.
+   */
+  private async gateAttempt(op: ProviderOp, description: string, attempt: number): Promise<void> {
+    if (this.overrides.beforePhysicalAttempt) {
+      const estimate = this.estimateCost(op);
+      await this.overrides.beforePhysicalAttempt({
+        estimatedCostUsd: estimate.usd ?? 0,
+        provider: this.id,
+        operation: description,
+        attemptNumber: attempt,
+      });
+    }
+    this.reserveAttemptOrThrow(op, description, attempt);
+  }
+
+  /**
    * Discovery via POST /v3/dataforseo_labs/google/keyword_ideas/live.
    *
    * `seeds` is BATCHED into provider-sized tasks (up to `maxSeedsPerTask`, e.g.
@@ -114,11 +159,11 @@ export class DataForSeoProvider implements KeywordDemandProvider {
             [payload],
             {
               fetchImpl: this.overrides.fetchImpl,
-              onBeforeAttempt: (attempt) => this.reserveAttemptOrThrow(op, description, attempt),
+              onBeforeAttempt: (attempt) => this.gateAttempt(op, description, attempt),
             },
           );
         } catch (e) {
-          if (e instanceof CostGateRefusedError || e instanceof NoActiveRunBudgetError) throw e;
+          if (e instanceof CostGateRefusedError || e instanceof NoActiveRunBudgetError || e instanceof DurableAttemptRefusedError) throw e;
           throw new Error(sanitizeDataForSeoError(e));
         }
 
@@ -152,12 +197,12 @@ export class DataForSeoProvider implements KeywordDemandProvider {
         [{ keywords, location_code: dataForSeoConfig.defaultLocationCode, language_code: market.language || dataForSeoConfig.defaultLanguageCode }],
         {
           fetchImpl: this.overrides.fetchImpl,
-          onBeforeAttempt: (attempt) => this.reserveAttemptOrThrow(op, description, attempt),
+          onBeforeAttempt: (attempt) => this.gateAttempt(op, description, attempt),
         },
       );
       return mapSearchVolumeResponse(raw);
     } catch (e) {
-      if (e instanceof CostGateRefusedError || e instanceof NoActiveRunBudgetError) throw e;
+      if (e instanceof CostGateRefusedError || e instanceof NoActiveRunBudgetError || e instanceof DurableAttemptRefusedError) throw e;
       throw new Error(sanitizeDataForSeoError(e));
     }
   }
