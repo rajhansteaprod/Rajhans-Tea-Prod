@@ -23,7 +23,15 @@ jest.mock('../../../src/modules/seo/models/seo-issue.model', () => ({ SeoIssue: 
 jest.mock('../../../src/modules/seo/services/gsc.sync.service', () => ({
   buildSeoContext: jest.fn(async () => ({ canonicalSet: new Set<string>(), facts: new Map() })),
 }));
-jest.mock('../../../src/modules/seo/models/gsc-query-page-metric.model', () => ({ GscQueryPageMetric: { find: jest.fn(() => chain([])) } }));
+let gscIndexShouldThrow = false;
+jest.mock('../../../src/modules/seo/models/gsc-query-page-metric.model', () => ({
+  GscQueryPageMetric: {
+    find: jest.fn(() => {
+      if (gscIndexShouldThrow) throw new Error('gsc-query-page-metric read failed');
+      return chain([]);
+    }),
+  },
+}));
 
 let seedsOverride: (() => Promise<unknown[]>) | null = null;
 jest.mock('../../../src/modules/seo/market/services/seed.engine', () => {
@@ -105,9 +113,11 @@ jest.mock('../../../src/modules/seo/market/models/search-keyword.model', () => (
   },
 }));
 
+let searchClusterCreateShouldFail = false;
 jest.mock('../../../src/modules/seo/market/models/search-cluster.model', () => ({
   SearchCluster: {
     create: jest.fn(async (doc: Record<string, unknown>) => {
+      if (searchClusterCreateShouldFail) throw new Error('SearchCluster.create failed');
       createdClusters.push(doc);
       return { ...doc, _id: new mongoose.Types.ObjectId() };
     }),
@@ -128,6 +138,7 @@ jest.mock('../../../src/modules/seo/models/seo-recommendation.model', () => ({
   },
 }));
 
+let resolveShouldFailOnce = false;
 jest.mock('../../../src/modules/seo/market/services/market-recommendation.service', () => ({
   upsertMarketOpportunityDrafts: jest.fn(async (_runId: unknown, drafts: unknown[]) => {
     upsertCalls.push(drafts);
@@ -135,6 +146,10 @@ jest.mock('../../../src/modules/seo/market/services/market-recommendation.servic
     return { created: drafts.length, updated: 0, fingerprints };
   }),
   resolveMissingMarketOpportunities: jest.fn(async (_runId: unknown, fingerprints: string[]) => {
+    if (resolveShouldFailOnce) {
+      resolveShouldFailOnce = false;
+      throw new Error('resolution transiently failed');
+    }
     resolveCalls.push(fingerprints);
     return { resolved: 0 };
   }),
@@ -159,6 +174,9 @@ beforeEach(() => {
   createdClusters = [];
   upsertCalls = [];
   resolveCalls = [];
+  gscIndexShouldThrow = false;
+  searchClusterCreateShouldFail = false;
+  resolveShouldFailOnce = false;
 });
 afterAll(() => {
   process.env.DATAFORSEO_LOGIN = originalLogin;
@@ -309,5 +327,73 @@ describe('runFullPipeline — no active keywords is a fatal condition, not a sil
     await runFullPipeline(runDoc._id);
     expect(runDoc.status).toBe('failed');
     expect(runDoc.error).toContain('active keyword universe is empty');
+  });
+});
+
+describe('E1 — a FINAL SearchCluster persistence failure', () => {
+  it('the run cannot become completed, evaluationSnapshot never freezes, resolution is never attempted', async () => {
+    cachedKeywordDocs = [cachedKeyword('assam tea')];
+    searchClusterCreateShouldFail = true;
+
+    await runFullPipeline(runDoc._id);
+
+    expect(runDoc.status).toBe('failed');
+    expect(runDoc.evaluationSnapshot).toBeNull(); // never froze — resolution-capability could never exist
+    expect(upsertCalls).toHaveLength(0);
+    expect(resolveCalls).toHaveLength(0);
+  });
+});
+
+describe('E3 — GSC index load failure', () => {
+  it('a thrown GSC read fails the run — no final mapping/scoring/resolution, never a false completion', async () => {
+    cachedKeywordDocs = [cachedKeyword('assam tea')];
+    gscIndexShouldThrow = true;
+
+    await runFullPipeline(runDoc._id);
+
+    expect(runDoc.status).toBe('failed');
+    expect(createdClusters).toHaveLength(0); // never reached cluster persistence
+    expect(resolveCalls).toHaveLength(0);
+  });
+
+  it('control: a successfully-loaded ZERO-ROW GSC index is normal (UNKNOWN evidence), not a failure', async () => {
+    cachedKeywordDocs = [cachedKeyword('assam tea')];
+    gscIndexShouldThrow = false; // find() succeeds, returns zero rows (the existing default mock)
+
+    await runFullPipeline(runDoc._id);
+
+    expect(runDoc.status).not.toBe('failed');
+  });
+});
+
+describe('E5 — recommendation resolution failure, then resume', () => {
+  it('resolution throwing leaves persistenceStage=resolving, the run NOT completed, and evaluationSnapshot unchanged', async () => {
+    cachedKeywordDocs = [cachedKeyword('assam tea')];
+    resolveShouldFailOnce = true;
+
+    await expect(runFullPipeline(runDoc._id)).rejects.toThrow('resolution transiently failed');
+
+    expect(runDoc.persistenceStage).toBe('resolving');
+    expect(runDoc.status).not.toBe('completed');
+    expect(runDoc.status).not.toBe('degraded');
+    expect(runDoc.status).not.toBe('failed'); // not a fatal orchestration failure — a resumable persistence-stage failure
+    const snapshotAfterFailure = runDoc.evaluationSnapshot;
+    expect(snapshotAfterFailure).not.toBeNull();
+
+    // resolveMissingMarketOpportunities was called once (and threw) but resolveCalls
+    // only records SUCCESSFUL calls in this mock, so it must still be empty:
+    expect(resolveCalls).toHaveLength(0);
+    const clustersBeforeResume = createdClusters.length;
+    const upsertsBeforeResume = upsertCalls.length;
+
+    // --resume: evaluationSnapshot already exists -> runFullPipeline must short-circuit
+    // straight to staged persistence — no discovery/clustering/mapping/scoring recomputation.
+    await runFullPipeline(runDoc._id);
+
+    expect(createdClusters).toHaveLength(clustersBeforeResume); // zero NEW clusters persisted
+    expect(upsertCalls).toHaveLength(upsertsBeforeResume); // zero NEW upserts — not recomputed
+    expect(resolveCalls).toEqual([snapshotAfterFailure && (snapshotAfterFailure as { draftFingerprints: string[] }).draftFingerprints]); // exact frozen fingerprint set, retried
+    expect(runDoc.persistenceStage).toBe('done');
+    expect(runDoc.status).toBe('completed'); // successful retry finished the run
   });
 });
