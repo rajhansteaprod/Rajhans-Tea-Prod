@@ -170,6 +170,42 @@ export function scoreCommercialIntent(keyword: string, taxonomy: RelevanceTaxono
   return { score: Math.round(score * 100) / 100, band: band(score), signals: [...new Set(signals)] };
 }
 
+// The two catch-all single-word taxonomy terms — never sufficient as an anchor on their own.
+const GENERIC_ENTITY_TERMS = new Set(['tea', 'chai']);
+
+/**
+ * Specific (non-generic) core-taxonomy matches + matched businessChannel phrases.
+ * Shared by 4b.3's clustering engine AND 4b.4's URL mapper/cannibalization guard —
+ * a single anchor-extraction rule for the whole 4b pipeline (extracted here, not
+ * duplicated, so both consumers always agree on what counts as a "specific anchor").
+ */
+export function anchorTermsOf(keyword: string, taxonomy: RelevanceTaxonomy = BASE_TAXONOMY): Set<string> {
+  const anchors = new Set<string>();
+  const relevance = scoreBusinessRelevance(keyword, taxonomy);
+  for (const c of relevance.components) {
+    if (c.dimension === 'attribute') continue;
+    if (GENERIC_ENTITY_TERMS.has(c.term)) continue;
+    anchors.add(c.term);
+  }
+  const commercial = scoreCommercialIntent(keyword, taxonomy);
+  for (const s of commercial.signals) if (taxonomy.businessChannel.includes(s)) anchors.add(s);
+  return anchors;
+}
+
+/**
+ * commercialModifiers/informationalModifiers matches, EXCLUDING businessChannel
+ * (those are anchors, not generic modifiers — see anchorTermsOf). Shared by
+ * clustering.engine.ts and 4b.4's cannibalization-guard.ts.
+ */
+export function modifierEvidenceOf(keyword: string, taxonomy: RelevanceTaxonomy = BASE_TAXONOMY): Set<string> {
+  const evidence = new Set<string>();
+  const commercial = scoreCommercialIntent(keyword, taxonomy);
+  for (const s of commercial.signals) if (!taxonomy.businessChannel.includes(s)) evidence.add(s);
+  const k = norm(keyword);
+  for (const m of taxonomy.informationalModifiers) if (containsTerm(k, m)) evidence.add(m);
+  return evidence;
+}
+
 /** Full classification: relevance + commercial + competitor/hard-negative flags. */
 export function classifyKeyword(keyword: string, taxonomy: RelevanceTaxonomy = BASE_TAXONOMY): KeywordClassification {
   const k = norm(keyword);

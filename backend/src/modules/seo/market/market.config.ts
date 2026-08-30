@@ -64,4 +64,23 @@ export const marketConfig = {
     /** O(n²) pairwise-comparison safety valve; irrelevant at current run sizes (~200 keywords). */
     maxKeywordsPerRun: Number(process.env.MARKET_MAX_KEYWORDS_PER_CLUSTER_RUN || 500),
   },
+
+  /**
+   * URL mapping (4b.4). All thresholds are final per the approved plan — no
+   * placeholders. `matchMinScore` matches 4b.3's `minEdgeScore` (one consistent
+   * "real match" bar across the whole 4b pipeline); `gCoverageMinScore` is
+   * deliberately HIGHER (G is a stronger claim than an ordinary A/B match).
+   */
+  mapping: {
+    matchWeights: {
+      anchor: Number(process.env.MARKET_MAPPING_WEIGHT_ANCHOR || 0.6),
+      lexical: Number(process.env.MARKET_MAPPING_WEIGHT_LEXICAL || 0.4),
+    },
+    matchMinScore: Number(process.env.MARKET_MAPPING_MATCH_MIN_SCORE || 0.55),
+    gCoverageMinScore: Number(process.env.MARKET_MAPPING_G_COVERAGE_MIN_SCORE || 0.7),
+    minHealthyWordCount: Number(process.env.MARKET_MAPPING_MIN_HEALTHY_WORDCOUNT || 300),
+    newPageMinSearchVolume: Number(process.env.MARKET_MAPPING_NEW_PAGE_MIN_VOLUME || 100),
+    strongGscEvidenceMinImpressions: Number(process.env.MARKET_MAPPING_STRONG_GSC_MIN_IMPR || 50),
+    maxAlternativeCandidates: Number(process.env.MARKET_MAPPING_MAX_ALTERNATIVES || 3),
+  },
 };

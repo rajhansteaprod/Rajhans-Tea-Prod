@@ -1,5 +1,5 @@
 import { Intent, SerpOverlapProvider } from '../market.types';
-import { BASE_TAXONOMY, RelevanceTaxonomy, classifyKeyword, scoreBusinessRelevance, scoreCommercialIntent } from '../relevance.taxonomy';
+import { BASE_TAXONOMY, RelevanceTaxonomy, anchorTermsOf, classifyKeyword, modifierEvidenceOf } from '../relevance.taxonomy';
 import { finalizeIntents, KeywordIntentResult } from './intent-classifier';
 import { marketConfig } from '../market.config';
 
@@ -89,38 +89,6 @@ export interface ClusteringInput {
 
 // ── guards ──
 const safe01 = (x: number): number => (Number.isFinite(x) ? Math.min(1, Math.max(0, x)) : 0);
-
-// The two catch-all single-word taxonomy terms — never sufficient as an anchor on their own.
-const GENERIC_ENTITY_TERMS = new Set(['tea', 'chai']);
-
-const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
-const containsTerm = (hay: string, term: string): boolean =>
-  new RegExp(`(^|\\W)${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\W|$)`).test(hay);
-
-/** Specific (non-generic) core-taxonomy matches + matched businessChannel phrases. */
-function anchorsOf(keyword: string, taxonomy: RelevanceTaxonomy): Set<string> {
-  const anchors = new Set<string>();
-  const relevance = scoreBusinessRelevance(keyword, taxonomy);
-  for (const c of relevance.components) {
-    if (c.dimension === 'attribute') continue;
-    if (GENERIC_ENTITY_TERMS.has(c.term)) continue;
-    anchors.add(c.term);
-  }
-  const commercial = scoreCommercialIntent(keyword, taxonomy);
-  for (const s of commercial.signals) if (taxonomy.businessChannel.includes(s)) anchors.add(s);
-  return anchors;
-}
-
-/** commercialModifiers/informationalModifiers matches, EXCLUDING businessChannel
- * (those are anchors, not generic modifiers — see anchorsOf). */
-function modifierEvidenceOf(keyword: string, taxonomy: RelevanceTaxonomy): Set<string> {
-  const evidence = new Set<string>();
-  const commercial = scoreCommercialIntent(keyword, taxonomy);
-  for (const s of commercial.signals) if (!taxonomy.businessChannel.includes(s)) evidence.add(s);
-  const k = norm(keyword);
-  for (const m of taxonomy.informationalModifiers) if (containsTerm(k, m)) evidence.add(m);
-  return evidence;
-}
 
 function lexicalTokensOf(normalizedKeyword: string): Set<string> {
   return new Set(normalizedKeyword.split(/\s+/).filter(Boolean));
@@ -323,7 +291,7 @@ export function clusterKeywords(input: ClusteringInput): ClusteringOutput {
 
   const facts: KeywordFacts[] = sorted.map((kw) => ({
     input: kw,
-    anchors: anchorsOf(kw.keyword, taxonomy),
+    anchors: anchorTermsOf(kw.keyword, taxonomy),
     modifiers: modifierEvidenceOf(kw.keyword, taxonomy),
     tokens: lexicalTokensOf(kw.normalizedKeyword),
     intents: finalizeIntents(kw.keyword, taxonomy),
