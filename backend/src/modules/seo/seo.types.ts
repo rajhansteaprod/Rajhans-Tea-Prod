@@ -190,10 +190,15 @@ export type RecommendationCategory =
   | 'indexability'
   | 'crawl'
   | 'topical-authority'
-  | 'search-opportunity'; // Phase 4 — GSC-derived
+  | 'search-opportunity' // Phase 4 — GSC-derived
+  // Phase 4b.6 — market-evidence-derived (source:'market' only):
+  | 'existing-page-optimization'
+  | 'new-guide'
+  | 'new-landing-page'
+  | 'commercial-opportunity';
 
 /** Where a recommendation was synthesized from. */
-export type RecommendationSource = 'audit' | 'gsc';
+export type RecommendationSource = 'audit' | 'gsc' | 'market';
 
 export type RecommendationPriority = 'high' | 'medium' | 'low';
 export type RecommendationImpact = 'very-high' | 'high' | 'medium' | 'low';
