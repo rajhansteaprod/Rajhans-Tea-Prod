@@ -121,5 +121,30 @@ export const marketConfig = {
     demandSaturationVolume: Number(process.env.MARKET_OPPORTUNITY_DEMAND_SATURATION || 5000),
     /** cannibalization risk haircut — a risk adjustment, not a scoring dimension. */
     cannibalizationPenaltyMultiplier: Number(process.env.MARKET_OPPORTUNITY_CANNIBALIZATION_PENALTY || 0.7),
+    /** bumped whenever weights/formulas change — part of the evaluationSnapshot hash (4b.7). */
+    scoringConfigVersion: process.env.MARKET_OPPORTUNITY_SCORING_VERSION || '4b.6-v1',
+  },
+
+  /**
+   * Search Market Orchestrator (4b.7) — cadence, freshness, lock, and cost
+   * defaults. FROZEN design; see the approved 4b.7 plan.
+   */
+  orchestrator: {
+    lockHeartbeatIntervalSeconds: Number(process.env.MARKET_LOCK_HEARTBEAT_INTERVAL_SECONDS || 60),
+    staleRunTimeoutMinutes: Number(process.env.MARKET_STALE_RUN_TIMEOUT_MINUTES || 60),
+    pendingApprovalExpiryMinutes: Number(process.env.MARKET_PENDING_APPROVAL_EXPIRY_MINUTES || 1440),
+
+    discoveryIntervalDays: Number(process.env.MARKET_DISCOVERY_INTERVAL_DAYS || 30),
+    keywordFreshDays: Number(process.env.MARKET_KEYWORD_FRESH_DAYS || 30),
+    keywordStaleMaxDays: Number(process.env.MARKET_KEYWORD_STALE_MAX_DAYS || 90),
+
+    priorityMaxAgeDays: Number(process.env.MARKET_SERP_PRIORITY_MAX_AGE_DAYS || 7),
+    broadMaxAgeDays: Number(process.env.MARKET_SERP_BROAD_MAX_AGE_DAYS || 30),
+    serpStaleMaxAgeDays: Number(process.env.MARKET_SERP_STALE_MAX_AGE_DAYS || 60),
+
+    maxSerpCallsPerRun: Number(process.env.MARKET_MAX_SERP_CALLS_PER_RUN || 30),
+    clusterMatchThreshold: Number(process.env.MARKET_CLUSTER_MATCH_THRESHOLD || 0.5),
+
+    monthlySoftCeilingUsd: Number(process.env.MARKET_ORCHESTRATOR_MONTHLY_SOFT_CEILING_USD || 2),
   },
 };

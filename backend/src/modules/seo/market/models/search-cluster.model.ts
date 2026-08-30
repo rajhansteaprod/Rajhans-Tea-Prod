@@ -49,6 +49,14 @@ export interface ISearchClusterDoc extends Document {
   status: 'active' | 'superseded';
   version: number;
   runId: mongoose.Types.ObjectId | null;
+  /** 4b.7 — a persistent identity that survives re-clustering across runs
+   * (unlike this document's own `_id`, which is a new version every run).
+   * Assigned by cluster-identity.service.ts's one-to-one Jaccard matching
+   * against the most recent trustworthy (status:'completed', stage:'finished',
+   * persistenceStage:'done') run's final clusters; a brand-new cluster with no
+   * qualifying match gets a freshly generated one. NOT yet consumed by 4b.6's
+   * topicKey (deferred until validated across real runs). */
+  stableClusterId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -91,6 +99,7 @@ const schema = new Schema<ISearchClusterDoc>(
     status: { type: String, enum: ['active', 'superseded'], default: 'active' },
     version: { type: Number, default: 1 },
     runId: { type: Schema.Types.ObjectId, ref: 'SearchMarketRun', default: null },
+    stableClusterId: { type: String, default: null, index: true },
   },
   { timestamps: true },
 );

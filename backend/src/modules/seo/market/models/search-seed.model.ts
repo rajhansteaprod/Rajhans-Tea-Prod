@@ -4,6 +4,11 @@ import { Market } from '../market.types';
 export type SeedType = 'region' | 'processing' | 'consumption' | 'attribute' | 'commercial' | 'category' | 'product' | 'brand';
 
 /** A discovery seed derived from real Rajhans inventory / curated facets. */
+export interface IProviderDiscoveryState {
+  provider: string;
+  lastDiscoveredAt: Date | null;
+}
+
 export interface ISearchSeedDoc extends Document {
   term: string;
   normalizedTerm: string;
@@ -11,9 +16,19 @@ export interface ISearchSeedDoc extends Document {
   sourceRef: { kind: 'product' | 'category' | 'blog' | 'page' | 'facet'; id?: string; slug?: string } | null;
   market: Market;
   enabled: boolean;
+  /** Keyword-DISCOVERY freshness (4b.7) — distinct from keyword-METRIC freshness
+   * (SearchKeywordMetric.capturedAt). Only updated after discovery AND its
+   * normalized-evidence persistence both succeed — never on a partial/crashed
+   * discovery write. */
+  providerDiscoveryState: IProviderDiscoveryState[];
   createdAt: Date;
   updatedAt: Date;
 }
+
+const providerDiscoveryStateSchema = new Schema(
+  { provider: { type: String, required: true }, lastDiscoveredAt: { type: Date, default: null } },
+  { _id: false },
+);
 
 const schema = new Schema<ISearchSeedDoc>(
   {
@@ -23,6 +38,7 @@ const schema = new Schema<ISearchSeedDoc>(
     sourceRef: { type: Schema.Types.Mixed, default: null },
     market: { type: Schema.Types.Mixed, required: true },
     enabled: { type: Boolean, default: true },
+    providerDiscoveryState: { type: [providerDiscoveryStateSchema], default: [] },
   },
   { timestamps: true },
 );

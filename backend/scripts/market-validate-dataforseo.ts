@@ -110,6 +110,7 @@ async function main() {
   console.log('Run degraded:', degraded);
   if (errorMessage) console.log('Error:', errorMessage);
   console.log('Cumulative actual-run cost (estimate-based; DataForSEO billing API not queried here):', `$${budget.getCumulativeRunUsd()}`);
+  console.log('NOTE: this call is NOT tracked in the Phase 4b.7 orchestrator month-to-date accounting (SearchMarketRun-based). Do not schedule this script.');
 
   const withMetrics = retained.filter((r) => r.inlineMetrics).map((r) => r.inlineMetrics!);
   const returnedKeywordsMissingMetrics = diffMissingMetrics(retained.map((r) => r.keyword), withMetrics);

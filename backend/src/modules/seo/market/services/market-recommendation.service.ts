@@ -5,26 +5,18 @@ import { opportunityPriority } from '../../services/gsc.opportunity.service';
 import { MarketOpportunityDraft } from '../market.types';
 
 /**
- * Persistence for market-derived opportunities (4b.6) — mirrors the EXISTING
+ * Persistence for market-derived opportunities — mirrors the EXISTING
  * `gsc.opportunity.service.ts::generateAndPersistOpportunities()` pattern
  * exactly (fingerprint upsert, source-scoped resolution), reusing the exported
  * `opportunityPriority()` helper rather than duplicating its thresholds.
  *
- * CRITICAL: this file is a persistence-CAPABLE service, not a persistence-
- * ACTIVE one. `runId` is a real `SeoAuditRun`-referenced ObjectId required by
- * the existing SeoRecommendation schema (`firstSeenRunId`/`lastSeenRunId` are
- * schema-required, non-nullable) — 4b.6 does NOT fabricate one. No script or
- * bootstrap in this phase calls this function against a live database; that is
- * deferred until a future market-orchestration phase has a legitimate
- * persisted run identity to supply.
- *
- * Medoid/topicKey churn (documented, not silently accepted): if a later,
- * COMPLETE evaluation (allowResolution=true) no longer produces a fingerprint
- * that was previously open, that recommendation resolves normally via the
- * loop below, and a new one opens under the new fingerprint — this is
- * lifecycle churn, not duplicate-open accumulation. With allowResolution=false
- * (the only mode possible until activation), both could remain open
- * temporarily. No fuzzy identity matching is attempted here.
+ * 4b.7 staged-recovery refactor (additive, zero behavior change): the upsert
+ * and resolution phases are now separately exported primitives so the
+ * orchestrator can durably transition `persistenceStage` around each phase
+ * and resume safely after a crash. `generateAndPersistMarketOpportunities`
+ * keeps its EXACT original signature/behavior as a thin wrapper composed of
+ * the same two primitives — every existing 4b.6 test still exercises the same
+ * code path and passes unmodified.
  */
 
 const recoFingerprint = (recommendationId: string, discriminator = ''): string => fingerprint(recommendationId, 'reco', discriminator);
@@ -41,23 +33,23 @@ function estimatedEffortFor(draft: MarketOpportunityDraft): 'medium' | 'large' {
 }
 
 /**
- * Fingerprint-idempotent upsert of market opportunities, source-scoped exactly
- * like the GSC path (`source:'gsc'` there, `source:'market'` here) — audit and
- * GSC lifecycles are never touched or cross-resolved by this function.
+ * Fingerprint-idempotent upsert of exactly the given drafts. Returns the
+ * fingerprints it touched — the orchestrator passes this same list (or, on
+ * resume, the FROZEN `evaluationSnapshot.draftFingerprints`) into
+ * `resolveMissingMarketOpportunities` rather than letting resolution
+ * recompute its own detected set.
  */
-export async function generateAndPersistMarketOpportunities(
+export async function upsertMarketOpportunityDrafts(
   runId: mongoose.Types.ObjectId,
   drafts: MarketOpportunityDraft[],
-  opts: { allowResolution: boolean },
-): Promise<MarketPersistenceResult> {
+): Promise<{ created: number; updated: number; fingerprints: string[] }> {
   let created = 0;
   let updated = 0;
-  let resolved = 0;
-  const detected = new Map<string, MarketOpportunityDraft>();
+  const fingerprints: string[] = [];
 
   for (const d of drafts) {
     const fp = recoFingerprint(d.recommendationId, d.discriminator);
-    detected.set(fp, d);
+    fingerprints.push(fp);
     const { priority, impact } = opportunityPriority(d.score, d.confidence);
 
     const common = {
@@ -92,21 +84,43 @@ export async function generateAndPersistMarketOpportunities(
     }
   }
 
-  // Resolve previously-open market recs not redetected THIS evaluation —
-  // ONLY when the caller vouches the evaluation was complete (allowResolution).
-  // Scoped to source:'market' — never touches 'audit'/'gsc' recommendations.
-  if (opts.allowResolution) {
-    const openMarket = await SeoRecommendation.find({ status: 'open', source: 'market' }).exec();
-    for (const r of openMarket) {
-      if (detected.has(r.fingerprint)) continue;
-      r.status = 'resolved';
-      r.resolvedRunId = runId;
-      r.lastSeenRunId = runId;
-      await r.save();
-      resolved++;
-    }
-  }
+  return { created, updated, fingerprints };
+}
 
+/**
+ * Resolve previously-open `source:'market'` recommendations whose fingerprint
+ * is NOT in `frozenDetectedFingerprints` — a caller-supplied set, never
+ * recomputed here. Scoped to `source:'market'` — never touches 'audit'/'gsc'.
+ */
+export async function resolveMissingMarketOpportunities(
+  runId: mongoose.Types.ObjectId,
+  frozenDetectedFingerprints: string[],
+): Promise<{ resolved: number }> {
+  const detected = new Set(frozenDetectedFingerprints);
+  let resolved = 0;
+  const openMarket = await SeoRecommendation.find({ status: 'open', source: 'market' }).exec();
+  for (const r of openMarket) {
+    if (detected.has(r.fingerprint)) continue;
+    r.status = 'resolved';
+    r.resolvedRunId = runId;
+    r.lastSeenRunId = runId;
+    await r.save();
+    resolved++;
+  }
+  return { resolved };
+}
+
+/**
+ * UNCHANGED public signature/behavior — a thin wrapper over the two
+ * primitives above, preserved so every existing 4b.6 caller/test is unaffected.
+ */
+export async function generateAndPersistMarketOpportunities(
+  runId: mongoose.Types.ObjectId,
+  drafts: MarketOpportunityDraft[],
+  opts: { allowResolution: boolean },
+): Promise<MarketPersistenceResult> {
+  const { created, updated, fingerprints } = await upsertMarketOpportunityDrafts(runId, drafts);
+  const { resolved } = opts.allowResolution ? await resolveMissingMarketOpportunities(runId, fingerprints) : { resolved: 0 };
   return { created, updated, resolved };
 }
 
