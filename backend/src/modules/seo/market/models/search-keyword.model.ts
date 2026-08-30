@@ -7,6 +7,18 @@ import { Intent, Market, RelevanceBand, RelevanceConfidence } from '../market.ty
  * SearchKeywordMetric; raw provider payloads (optional) in SearchProviderRawResponse.
  * `clusterId` is a forward reference — clustering itself is Phase 4b.3.
  */
+export interface ISerpSnapshot {
+  provider: string;
+  locationCode: number;
+  languageCode: string;
+  device: 'desktop' | 'mobile';
+  depth: number;
+  schemaVersion: number;
+  retrievedAt: Date;
+  topUrls: string[];
+  topDomains: string[];
+}
+
 export interface ISearchKeywordDoc extends Document {
   keyword: string; // representative surface form
   normalizedKeyword: string; // identity/dedup key
@@ -24,6 +36,11 @@ export interface ISearchKeywordDoc extends Document {
 
   clusterId: mongoose.Types.ObjectId | null;
   currentRajhansUrl: string | null;
+
+  /** Normalized, context-safe cross-run SERP cache (4b.7). A cache hit requires
+   * an EXACT match on provider/locationCode/languageCode/device/depth — never
+   * reused across a context mismatch. No raw provider payload is stored here. */
+  serpSnapshot: ISerpSnapshot | null;
 
   discoveredAt: Date;
   lastCheckedAt: Date | null;
@@ -52,6 +69,7 @@ const schema = new Schema<ISearchKeywordDoc>(
     hardNegative: { type: Boolean, default: false },
     clusterId: { type: Schema.Types.ObjectId, ref: 'SearchCluster', default: null },
     currentRajhansUrl: { type: String, default: null },
+    serpSnapshot: { type: Schema.Types.Mixed, default: null },
     discoveredAt: { type: Date, default: Date.now },
     lastCheckedAt: { type: Date, default: null },
     sourceFreshness: { type: Date, default: null },

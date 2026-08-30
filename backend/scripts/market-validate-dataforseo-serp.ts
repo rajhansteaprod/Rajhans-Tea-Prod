@@ -100,6 +100,7 @@ async function main() {
   console.log(JSON.stringify(summarize(withSerp), null, 2));
 
   console.log('\nCumulative physical-attempt cost this run:', `$${budget.getCumulativeRunUsd()}`);
+  console.log('NOTE: this call is NOT tracked in the Phase 4b.7 orchestrator month-to-date accounting (SearchMarketRun-based). Do not schedule this script.');
   provider.endRun();
   console.log('\n=== Done. Nothing was written to the database. ===');
 }
