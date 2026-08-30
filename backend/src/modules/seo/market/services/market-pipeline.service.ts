@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { marketConfig } from '../market.config';
 import { Market, MarketOpportunityDraft } from '../market.types';
-import { SearchMarketRun, ISearchMarketRunDoc } from '../models/search-market-run.model';
+import { SearchMarketRun, ISearchMarketRunDoc, IPlanSnapshot } from '../models/search-market-run.model';
 import { SearchSeed } from '../models/search-seed.model';
 import { SearchKeyword, ISearchKeywordDoc } from '../models/search-keyword.model';
 import { SearchCluster } from '../models/search-cluster.model';
@@ -14,20 +14,20 @@ import { ensureKeywordIdentities, buildActiveKeywordUniverse, MemberCoverageStat
 import { loadLatestMetricsByKeywordIds } from './keyword-metric-selector';
 import { buildMappingKeywordEvidence, buildClusterGscDemandEvidence, buildMatchedPageGscEvidence } from './market-evidence-assembler';
 import { computeResolutionCoverage, allOpenRecommendationsCovered } from './resolution-coverage';
-import { clusterKeywords, ClusteringKeywordInput, ClusterResult } from './clustering.engine';
+import { clusterKeywords, scoreClusteringPairWithoutSerp, ClusteringKeywordInput, ClusterResult } from './clustering.engine';
 import { mapClusterToUrl, MappingClusterInput } from './url-mapper';
 import { applyCannibalizationGuard, CannibalizationEntry } from './cannibalization-guard';
 import { buildPageCandidates } from './page-candidate.builder';
 import { loadGscEvidenceIndex } from './gsc-evidence-index';
 import { buildOpportunityKeywordEvidence, scoreOpportunity } from './opportunity-scoring';
 import { matchClustersToStableIds, IdentityClusterInput } from './cluster-identity.service';
-import { buildEvaluationSnapshot, selectSerpCandidates, SerpCandidateUnit } from './market-orchestrator.service';
+import { buildEvaluationSnapshot, computePlanFingerprint, selectSerpCandidates, SerpCandidateUnit } from './market-orchestrator.service';
 import { reserveAttemptCost } from './market-cost-reservation.service';
 import { upsertMarketOpportunityDrafts, resolveMissingMarketOpportunities } from './market-recommendation.service';
 import { SerpOverlapCache } from './serp-overlap.provider';
 import { normalizeKeyword } from './keyword-normalize';
-import { DataForSeoProvider, DurableAttemptRefusedError, BeforePhysicalAttemptContext } from '../providers/dataforseo/dataforseo.provider';
-import { DataForSeoSerpProvider } from '../providers/dataforseo/dataforseo-serp.provider';
+import { DataForSeoProvider, DataForSeoProviderOverrides, DurableAttemptRefusedError, BeforePhysicalAttemptContext } from '../providers/dataforseo/dataforseo.provider';
+import { DataForSeoSerpProvider, DataForSeoSerpProviderOverrides } from '../providers/dataforseo/dataforseo-serp.provider';
 import { RunBudget } from '../providers/dataforseo/run-budget';
 import { monthToDateSpendUsd } from './cost-governor';
 
@@ -39,19 +39,99 @@ import { monthToDateSpendUsd } from './cost-governor';
  * Every paid provider call goes through a fresh provider instance carrying
  * the durable `beforePhysicalAttempt` hook (§5 of the approved seam plan) —
  * the process-wide `providerRegistry` instances (no hook) are never used for
- * orchestrated paid work.
+ * orchestrated paid work. `MarketPipelineDeps` lets tests inject a mocked
+ * `fetchImpl` into that SAME construction (the durable hook is always wired
+ * regardless of overrides) so integration tests exercise the real
+ * runFullPipeline -> provider -> beforePhysicalAttempt -> reserveAttemptCost
+ * -> RunBudget -> fetchImpl chain with zero network surface. The public
+ * `runFullPipeline(runId)` signature is unchanged; this is additive.
  */
+
+export interface MarketPipelineDeps {
+  keywordProviderOverrides?: DataForSeoProviderOverrides;
+  serpProviderOverrides?: DataForSeoSerpProviderOverrides;
+  now?: () => Date;
+}
+
+/**
+ * `DurableAttemptRefusedError.reasonCode === 'authorization-ceiling-exceeded'`
+ * is the ONLY category that triggers the pending-approval revival flow — a
+ * SEPARATE error class was deliberately NOT used here: both
+ * DataForSeoProvider/DataForSeoSerpProvider's own catch blocks only pass
+ * `CostGateRefusedError | NoActiveRunBudgetError | DurableAttemptRefusedError`
+ * through unchanged (everything else is wrapped into a generic sanitized
+ * Error), so a distinct class would have been silently swallowed there.
+ * Dispatching on `reasonCode` reuses that already-approved pass-through path.
+ */
+function isAuthorizationCeilingExhausted(e: unknown): e is DurableAttemptRefusedError {
+  return e instanceof DurableAttemptRefusedError && e.reasonCode === 'authorization-ceiling-exceeded';
+}
 
 function durableHook(runId: mongoose.Types.ObjectId) {
   return async (ctx: BeforePhysicalAttemptContext): Promise<void> => {
     const result = await reserveAttemptCost(runId, ctx.estimatedCostUsd);
-    if (!result.allowed) throw new DurableAttemptRefusedError(result.reason);
+    if (result.allowed) return;
+    throw new DurableAttemptRefusedError(result.reason, result.reasonCode);
   };
 }
 
 async function makeRunBudget(run: ISearchMarketRunDoc): Promise<RunBudget> {
   const monthToDateUsd = await monthToDateSpendUsd();
   return new RunBudget({ monthToDateUsd, approvedForManualThreshold: run.authorizationMode !== null });
+}
+
+const MARKET_KEYWORD_IDEAS_TASK_ESTIMATE_USD = 0.036; // real 4b.2-validated pricing shape (12 seeds, limit 200) — the single planner, reused by scripts/market-run.ts
+
+export interface MarketPlanResult {
+  dueSeedCount: number;
+  plannedDiscoveryTaskCount: number;
+  plannedSerpRequestCount: number;
+  estimatedCostUsd: number;
+}
+
+/** The ONE preflight/remaining-work planner — used for the initial preflight
+ * (scripts/market-run.ts) AND for recomputing remaining work after an
+ * authorization-ceiling revival (below). Never duplicated. */
+export async function computeMarketPlan(market: Market): Promise<MarketPlanResult> {
+  const seeds = await SearchSeed.find({ enabled: true, 'market.country': market.country, 'market.language': market.language }).lean().exec();
+  const dueSeeds = seeds.filter((s) => isSeedDiscoveryDue(s.providerDiscoveryState ?? [], 'dataforseo'));
+  const plannedDiscoveryTaskCount = dueSeeds.length > 0 ? 1 : 0;
+  const plannedSerpRequestCount = 0; // conservative preflight — real selection happens once clustering evidence exists
+  const estimatedCostUsd = plannedDiscoveryTaskCount * MARKET_KEYWORD_IDEAS_TASK_ESTIMATE_USD + plannedSerpRequestCount * 0.002;
+  return { dueSeedCount: dueSeeds.length, plannedDiscoveryTaskCount, plannedSerpRequestCount, estimatedCostUsd };
+}
+
+/**
+ * Case A revival (frozen §8): authorization ceiling exhausted while both hard
+ * caps still have room. SAME run returns to pending-approval — never
+ * completed/degraded/failed — with a freshly recomputed remaining-work
+ * planSnapshot. `--approve <sameRunId>` is required to continue.
+ */
+async function revertToPendingApproval(run: ISearchMarketRunDoc): Promise<void> {
+  const plan = await computeMarketPlan(run.market);
+  const now = new Date();
+  const planSnapshot: IPlanSnapshot = {
+    plannedDiscoveryTaskCount: plan.plannedDiscoveryTaskCount,
+    plannedSerpRequestCount: plan.plannedSerpRequestCount,
+    estimatedCostUsd: plan.estimatedCostUsd,
+    market: run.market,
+    plannedAt: now,
+    pricingVersion: marketConfig.opportunity.scoringConfigVersion,
+    evidenceFreshnessSnapshotAt: now,
+    planFingerprint: computePlanFingerprint({
+      plannedDiscoveryTaskCount: plan.plannedDiscoveryTaskCount,
+      plannedSerpRequestCount: plan.plannedSerpRequestCount,
+      estimatedCostUsd: plan.estimatedCostUsd,
+      pricingVersion: marketConfig.opportunity.scoringConfigVersion,
+      evidenceFreshnessSnapshotAt: now,
+    }),
+  };
+  // stage/persistenceStage/costActualUsd/already-persisted evidence are left exactly as they were.
+  run.status = 'pending-approval';
+  run.authorizationMode = null; // no longer authorizes further attempts
+  run.approvedCostUsd = null;
+  run.planSnapshot = planSnapshot;
+  await run.save();
 }
 
 interface MappingKeywordEvidenceRow {
@@ -70,7 +150,19 @@ async function failRun(run: ISearchMarketRunDoc, error: string): Promise<void> {
   await run.save();
 }
 
+/** Production entrypoint — unchanged public signature. */
 export async function runFullPipeline(runId: mongoose.Types.ObjectId): Promise<void> {
+  return runFullPipelineInternal(runId, {});
+}
+
+/**
+ * Test-only extension point (still exported, but `runFullPipeline` is the
+ * production-documented entrypoint). `deps` may override the provider
+ * `fetchImpl` for integration tests — the durable `beforePhysicalAttempt`
+ * hook is ALWAYS wired regardless of overrides, so no test can bypass the
+ * cost-reservation seam.
+ */
+export async function runFullPipelineInternal(runId: mongoose.Types.ObjectId, deps: MarketPipelineDeps): Promise<void> {
   const run = await SearchMarketRun.findById(runId).exec();
   if (!run) throw new Error(`runFullPipeline: run ${String(runId)} not found`);
 
@@ -80,10 +172,23 @@ export async function runFullPipeline(runId: mongoose.Types.ObjectId): Promise<v
     return;
   }
 
+  try {
+    await runEvaluation(run, deps);
+  } catch (e) {
+    if (isAuthorizationCeilingExhausted(e)) {
+      await revertToPendingApproval(run);
+      return;
+    }
+    throw e;
+  }
+}
+
+async function runEvaluation(run: ISearchMarketRunDoc, deps: MarketPipelineDeps): Promise<void> {
+  const now = deps.now ?? (() => new Date());
   const market: Market = run.market;
   const degradationReasons: string[] = [];
-  const keywordProvider = new DataForSeoProvider({ beforePhysicalAttempt: durableHook(run._id as mongoose.Types.ObjectId) });
-  const serpProvider = new DataForSeoSerpProvider({ beforePhysicalAttempt: durableHook(run._id as mongoose.Types.ObjectId) });
+  const keywordProvider = new DataForSeoProvider({ ...deps.keywordProviderOverrides, beforePhysicalAttempt: durableHook(run._id as mongoose.Types.ObjectId) });
+  const serpProvider = new DataForSeoSerpProvider({ ...deps.serpProviderOverrides, beforePhysicalAttempt: durableHook(run._id as mongoose.Types.ObjectId) });
 
   // ── 1-2: taxonomy/inventory ──
   let taxonomy: RelevanceTaxonomy;
@@ -153,12 +258,12 @@ export async function runFullPipeline(runId: mongoose.Types.ObjectId): Promise<v
       run.costActualUsd = Math.max(run.costActualUsd, budget.getCumulativeRunUsd());
       await run.save();
     } catch (e) {
+      if (isAuthorizationCeilingExhausted(e)) throw e; // propagate to top-level revival handler — SAME run returns to pending-approval
       if (e instanceof DurableAttemptRefusedError) {
-        // Authorization exhausted or hard-capped mid-discovery — stop new paid
-        // work, keep whatever was already fetched/persisted, degrade rather
-        // than fail (a scoped-down version of the full pending-approval
-        // revival flow — see delivery notes).
-        degradationReasons.push(`discovery-authorization-exhausted: ${e.reason}`);
+        // Hard-cap or other budget refusal mid-discovery — stop new paid work,
+        // keep whatever was already fetched/persisted, degrade (never revives
+        // to pending-approval — human approval cannot override a hard cap).
+        degradationReasons.push(`discovery-refused: ${e.reason}`);
       } else {
         await failRun(run, `discovery failed: ${e instanceof Error ? e.message : String(e)}`);
         return;
@@ -188,7 +293,7 @@ export async function runFullPipeline(runId: mongoose.Types.ObjectId): Promise<v
 
   // ── 10-11: active universe (current-run hardNegative/relevance recomputed inside) ──
   const universe = buildActiveKeywordUniverse({
-    seeds, discoveryKeywords: discoveryKeywordStrings, cachedKeywords, carryForwardKeywords, keywordIdentityMap: identityMap, taxonomy, now: new Date(),
+    seeds, discoveryKeywords: discoveryKeywordStrings, cachedKeywords, carryForwardKeywords, keywordIdentityMap: identityMap, taxonomy, now: now(),
   });
   if (universe.active.length === 0) {
     await failRun(run, 'active keyword universe is empty — nothing to evaluate');
@@ -198,7 +303,7 @@ export async function runFullPipeline(runId: mongoose.Types.ObjectId): Promise<v
   const metricsMap = await loadLatestMetricsByKeywordIds(universe.active.map((k) => new mongoose.Types.ObjectId(k.keywordId)), keywordProvider.id);
 
   // ── 12-13: MappingKeywordEvidence (records stale-demand degradation internally) ──
-  const { evidence: mappingEvidenceList, degradationReasons: demandDegradations } = buildMappingKeywordEvidence(universe.active, metricsMap, taxonomy, new Date());
+  const { evidence: mappingEvidenceList, degradationReasons: demandDegradations } = buildMappingKeywordEvidence(universe.active, metricsMap, taxonomy, now());
   degradationReasons.push(...demandDegradations);
   const mappingEvidenceByKeywordId = new Map<string, MappingKeywordEvidenceRow>(mappingEvidenceList.map((e) => [e.keywordId, e]));
 
@@ -266,10 +371,29 @@ export async function runFullPipeline(runId: mongoose.Types.ObjectId): Promise<v
       serpCandidates.push({ reason: 'cannibalization-disambiguation', keywordA: cluster.label, keywordB: risk.competingClusterLabel });
     }
   });
-  // NOTE: 'borderline-clustering' candidates are not generated in this pass —
-  // clusterKeywords() (4b.3, frozen) does not expose intermediate pairwise
-  // scores/threshold distances needed to compute them without reaching into
-  // clustering internals. See delivery notes.
+
+  // 'borderline-clustering' candidates: representative (medoid) pairs across
+  // DIFFERENT initial clusters whose no-SERP combinedScore sits within
+  // `borderlineClusteringBandWidth` of `minEdgeScore`, using the EXACT same
+  // pairwise scoring clusterKeywords() computes internally (the additive
+  // diagnostic seam) — never a duplicated formula. Anchor-gate failures are
+  // never candidates, matching clusterKeywords()'s own unconditional gate.
+  const inputByKeywordId = new Map(clusteringInputs.map((k) => [k.keywordId, k]));
+  const minEdge = marketConfig.clustering.minEdgeScore;
+  const band = marketConfig.orchestrator.borderlineClusteringBandWidth;
+  for (let i = 0; i < initialClusters.length; i++) {
+    const aInput = inputByKeywordId.get(initialClusters[i].medoidKeywordId);
+    if (!aInput) continue;
+    for (let j = i + 1; j < initialClusters.length; j++) {
+      const bInput = inputByKeywordId.get(initialClusters[j].medoidKeywordId);
+      if (!bInput) continue;
+      const diag = scoreClusteringPairWithoutSerp(aInput, bInput, taxonomy);
+      if (!diag.anchorGatePassed) continue;
+      const thresholdDistance = Math.abs(diag.combinedScore - minEdge);
+      if (thresholdDistance > band) continue;
+      serpCandidates.push({ reason: 'borderline-clustering', keywordA: aInput.normalizedKeyword, keywordB: bInput.normalizedKeyword, thresholdDistance });
+    }
+  }
 
   const isAlreadyCached = (kw: string) => {
     const doc = identityMap.get(normalizeKeyword(kw)) ?? cachedKeywords.find((c) => c.normalizedKeyword === normalizeKeyword(kw));
@@ -294,6 +418,7 @@ export async function runFullPipeline(runId: mongoose.Types.ObjectId): Promise<v
           await doc.save();
         }
       } catch (e) {
+        if (isAuthorizationCeilingExhausted(e)) throw e; // propagate — stop issuing further SERP attempts, revive to pending-approval
         const usableStale = doc?.serpSnapshot && ageClass === 'stale-but-usable';
         if (usableStale) {
           await serpCache.getOrFetch(kw, market, {

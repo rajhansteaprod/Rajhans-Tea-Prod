@@ -144,6 +144,11 @@ export const marketConfig = {
 
     maxSerpCallsPerRun: Number(process.env.MARKET_MAX_SERP_CALLS_PER_RUN || 30),
     clusterMatchThreshold: Number(process.env.MARKET_CLUSTER_MATCH_THRESHOLD || 0.5),
+    /** Additive (4b.7 completion pass): a no-SERP pairwise combinedScore within
+     * this distance of `clustering.minEdgeScore` is "borderline" — worth a
+     * paid SERP request to see if real evidence pushes it over/under the
+     * threshold. Does not touch minEdgeScore itself or any clustering weight. */
+    borderlineClusteringBandWidth: Number(process.env.MARKET_BORDERLINE_CLUSTERING_BAND_WIDTH || 0.1),
 
     monthlySoftCeilingUsd: Number(process.env.MARKET_ORCHESTRATOR_MONTHLY_SOFT_CEILING_USD || 2),
   },

@@ -19,9 +19,26 @@ import { monthToDateSpendUsd } from './cost-governor';
  * one run/process is active, so no cross-process locking is needed here.
  */
 
+/**
+ * Machine-distinguishable refusal category (additive — existing callers that
+ * only read `.allowed`/`.reason` are unaffected). `authorization-ceiling-
+ * exceeded` is the ONLY category eligible for the pending-approval revival
+ * flow (4b.7 completion pass) — hard caps are absolute and never revive a run
+ * to pending-approval, since human approval cannot override them.
+ */
+export type ReservationRefusalCode =
+  | 'run-not-authorized'
+  | 'invalid-approval-state'
+  | 'per-run-hard-cap'
+  | 'monthly-hard-cap'
+  | 'authorization-ceiling-exceeded'
+  | 'race-lost'
+  | 'run-not-found';
+
 export interface ReservationResult {
   allowed: boolean;
   reason: string;
+  reasonCode?: ReservationRefusalCode; // present only when allowed=false
 }
 
 // One FIFO queue per active runId — bounds the serialized critical section to
@@ -47,10 +64,10 @@ export function __resetReservationQueueForTests(runId?: mongoose.Types.ObjectId 
 export async function reserveAttemptCost(runId: mongoose.Types.ObjectId, attemptEstimateUsd: number): Promise<ReservationResult> {
   return enqueue(String(runId), async () => {
     const run = await SearchMarketRun.findById(runId).select('costActualUsd authorizationMode approvedCostUsd').lean().exec();
-    if (!run) return { allowed: false, reason: 'run not found' };
+    if (!run) return { allowed: false, reason: 'run not found', reasonCode: 'run-not-found' };
 
     if (run.authorizationMode === null) {
-      return { allowed: false, reason: 'run-not-authorized' };
+      return { allowed: false, reason: 'run-not-authorized', reasonCode: 'run-not-authorized' };
     }
 
     let ceiling: number;
@@ -59,7 +76,7 @@ export async function reserveAttemptCost(runId: mongoose.Types.ObjectId, attempt
     } else {
       // 'manual-approval'
       if (run.approvedCostUsd == null) {
-        return { allowed: false, reason: 'manual-approval mode with no approvedCostUsd — invalid state' };
+        return { allowed: false, reason: 'manual-approval mode with no approvedCostUsd — invalid state', reasonCode: 'invalid-approval-state' };
       }
       ceiling = run.approvedCostUsd;
     }
@@ -70,16 +87,25 @@ export async function reserveAttemptCost(runId: mongoose.Types.ObjectId, attempt
     // currentRun.costActualUsd to it again.
     const projectedMtd = (await monthToDateSpendUsd()) + attemptEstimateUsd;
 
-    if (projectedRun > ceiling) return { allowed: false, reason: `projected run cost $${projectedRun} exceeds authorization ceiling $${ceiling}` };
-    if (projectedRun > marketConfig.cost.perRunHardCapUsd) return { allowed: false, reason: `projected run cost $${projectedRun} exceeds per-run hard cap $${marketConfig.cost.perRunHardCapUsd}` };
-    if (projectedMtd > marketConfig.cost.monthlyHardCapUsd) return { allowed: false, reason: `projected month spend $${projectedMtd} exceeds monthly hard cap $${marketConfig.cost.monthlyHardCapUsd}` };
+    // Hard caps are ABSOLUTE and checked BEFORE the (overridable) authorization
+    // ceiling — human approval can never revive a run past a hard cap, so a
+    // hard-cap breach must never be miscategorized as a mere ceiling exhaustion.
+    if (projectedRun > marketConfig.cost.perRunHardCapUsd) {
+      return { allowed: false, reason: `projected run cost $${projectedRun} exceeds per-run hard cap $${marketConfig.cost.perRunHardCapUsd}`, reasonCode: 'per-run-hard-cap' };
+    }
+    if (projectedMtd > marketConfig.cost.monthlyHardCapUsd) {
+      return { allowed: false, reason: `projected month spend $${projectedMtd} exceeds monthly hard cap $${marketConfig.cost.monthlyHardCapUsd}`, reasonCode: 'monthly-hard-cap' };
+    }
+    if (projectedRun > ceiling) {
+      return { allowed: false, reason: `projected run cost $${projectedRun} exceeds authorization ceiling $${ceiling}`, reasonCode: 'authorization-ceiling-exceeded' };
+    }
 
     const updated = await SearchMarketRun.findOneAndUpdate(
       { _id: runId, costActualUsd: { $lte: ceiling - attemptEstimateUsd } },
       { $inc: { costActualUsd: attemptEstimateUsd } },
       { new: true },
     ).exec();
-    if (!updated) return { allowed: false, reason: 'race-lost (concurrent reservation exhausted the ceiling)' };
+    if (!updated) return { allowed: false, reason: 'race-lost (concurrent reservation exhausted the ceiling)', reasonCode: 'race-lost' };
 
     return { allowed: true, reason: 'reserved' };
   });

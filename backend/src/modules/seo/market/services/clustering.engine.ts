@@ -116,6 +116,16 @@ interface KeywordFacts {
   intents: KeywordIntentResult[];
 }
 
+function buildFacts(kw: ClusteringKeywordInput, taxonomy: RelevanceTaxonomy): KeywordFacts {
+  return {
+    input: kw,
+    anchors: anchorTermsOf(kw.keyword, taxonomy),
+    modifiers: modifierEvidenceOf(kw.keyword, taxonomy),
+    tokens: lexicalTokensOf(kw.normalizedKeyword),
+    intents: finalizeIntents(kw.keyword, taxonomy),
+  };
+}
+
 interface PairScore {
   signals: ClusterSignalScore[];
   combinedScore: number;
@@ -289,13 +299,7 @@ export function clusterKeywords(input: ClusteringInput): ClusteringOutput {
   // downstream tie-break's "first" truly content-derived).
   const sorted = [...activeInputs].sort((a, b) => a.normalizedKeyword.localeCompare(b.normalizedKeyword));
 
-  const facts: KeywordFacts[] = sorted.map((kw) => ({
-    input: kw,
-    anchors: anchorTermsOf(kw.keyword, taxonomy),
-    modifiers: modifierEvidenceOf(kw.keyword, taxonomy),
-    tokens: lexicalTokensOf(kw.normalizedKeyword),
-    intents: finalizeIntents(kw.keyword, taxonomy),
-  }));
+  const facts: KeywordFacts[] = sorted.map((kw) => buildFacts(kw, taxonomy));
 
   const n = facts.length;
   const pairCache = new Map<string, PairScore>();
@@ -398,4 +402,28 @@ export function clusterKeywords(input: ClusteringInput): ClusteringOutput {
     });
 
   return { clusters, excludedKeywords };
+}
+
+export interface ClusteringPairDiagnostic {
+  keywordA: string;
+  keywordB: string;
+  combinedScore: number;
+  anchorGatePassed: boolean;
+}
+
+/**
+ * Read-only diagnostic (4b.7, additive). Computes the EXACT SAME pairwise
+ * combinedScore/anchor-gate that `clusterKeywords()` uses internally for its
+ * initial (no-SERP) pass — same `buildFacts()`, same `computePairScore()`, no
+ * duplicated weights/constants. `clusterKeywords()` never calls this; it
+ * exists solely so 4b.7's orchestrator can identify which keyword PAIRS sit
+ * near `marketConfig.clustering.minEdgeScore` (borderline) without SERP
+ * evidence, to decide which pairs are worth spending a paid SERP request on.
+ * Never used to bypass or duplicate the anchor gate — it just reports it.
+ */
+export function scoreClusteringPairWithoutSerp(a: ClusteringKeywordInput, b: ClusteringKeywordInput, taxonomy: RelevanceTaxonomy = BASE_TAXONOMY): ClusteringPairDiagnostic {
+  const factsA = buildFacts(a, taxonomy);
+  const factsB = buildFacts(b, taxonomy);
+  const { combinedScore, gatePass } = computePairScore(factsA, factsB);
+  return { keywordA: a.normalizedKeyword, keywordB: b.normalizedKeyword, combinedScore, anchorGatePassed: gatePass };
 }

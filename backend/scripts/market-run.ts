@@ -20,27 +20,12 @@ import mongoose from 'mongoose';
 import { bootstrapMarketProviders } from '../src/modules/seo/market/providers/provider.bootstrap';
 import { marketConfig } from '../src/modules/seo/market/market.config';
 import { SearchMarketRun } from '../src/modules/seo/market/models/search-market-run.model';
-import { SearchSeed } from '../src/modules/seo/market/models/search-seed.model';
-import { isSeedDiscoveryDue } from '../src/modules/seo/market/services/evidence-freshness.service';
 import { computePlanFingerprint } from '../src/modules/seo/market/services/market-orchestrator.service';
 import { acquireOrReclaimLock, releaseLock, startHeartbeatLease, LeaseHandle } from '../src/modules/seo/market/services/market-run-lock.service';
-import { runFullPipeline } from '../src/modules/seo/market/services/market-pipeline.service';
+import { runFullPipeline, computeMarketPlan } from '../src/modules/seo/market/services/market-pipeline.service';
 
-const MARKET_KEYWORD_IDEAS_TASK_ESTIMATE_USD = 0.036; // documented, real 4b.2-validated pricing shape (12 seeds, limit 200)
-
-async function computePlan() {
-  const seeds = await SearchSeed.find({ enabled: true }).lean().exec();
-  const dueSeeds = seeds.filter((s) => isSeedDiscoveryDue(s.providerDiscoveryState ?? [], 'dataforseo'));
-  const plannedDiscoveryTaskCount = dueSeeds.length > 0 ? 1 : 0; // batched into one physical task per 4b.2's existing chunking
-  // SERP candidate selection requires a completed clustering/mapping pass — the
-  // default preflight reports 0 planned SERP requests conservatively (no
-  // speculative paid work is ever estimated before evidence is actually
-  // gathered); a real --confirm/--approve execution recomputes this once
-  // clustering/mapping evidence is available.
-  const plannedSerpRequestCount = 0;
-  const estimatedCostUsd = plannedDiscoveryTaskCount * MARKET_KEYWORD_IDEAS_TASK_ESTIMATE_USD + plannedSerpRequestCount * 0.002;
-  return { dueSeedCount: dueSeeds.length, plannedDiscoveryTaskCount, plannedSerpRequestCount, estimatedCostUsd };
-}
+// computeMarketPlan is the ONE preflight/remaining-work planner (market-pipeline.service.ts) —
+// reused here rather than duplicated, including for the pending-approval revival flow.
 
 function sanitizedPlanPrint(plan: { dueSeedCount: number; plannedDiscoveryTaskCount: number; plannedSerpRequestCount: number; estimatedCostUsd: number }) {
   console.log('=== Phase 4b.7 — Search Market Orchestrator: PLAN ===');
@@ -112,7 +97,7 @@ async function main() {
       process.exitCode = 1;
       return;
     }
-    const plan = await computePlan();
+    const plan = await computeMarketPlan(run.market);
     const evidenceFreshnessSnapshotAt = new Date();
     const newFingerprint = computePlanFingerprint({
       plannedDiscoveryTaskCount: plan.plannedDiscoveryTaskCount,
@@ -149,7 +134,7 @@ async function main() {
   }
 
   // Default / --confirm
-  const plan = await computePlan();
+  const plan = await computeMarketPlan(marketConfig.defaultMarket);
   sanitizedPlanPrint(plan);
 
   if (!confirmed) {
