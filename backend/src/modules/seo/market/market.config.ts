@@ -96,4 +96,30 @@ export const marketConfig = {
      * the pair's evidence is UNKNOWN (null), never a fabricated 0. */
     minValidOrganicResults: Number(process.env.MARKET_SERP_MIN_VALID_ORGANIC || 5),
   },
+
+  /**
+   * Opportunity scoring (4b.6). Raw importances, renormalized over whichever
+   * components are applicable/known for a given opportunity — never required to
+   * presum to 100 (same convention as clustering/mapping weights). serpDifficulty
+   * and trendMomentum are reserved at 0: no organic-difficulty evidence or trend
+   * provider exists yet.
+   */
+  opportunity: {
+    weights: {
+      searchDemand: 20,
+      businessRelevance: 20,
+      commercialValue: 12,
+      gscVisibilityGap: 14,
+      rankingProximity: 8,
+      existingPageFit: 12, // B only
+      contentGapStrength: 12, // C/D/E only
+      effortInverse: 4,
+      serpDifficulty: 0, // reserved — no organicDifficulty evidence yet
+      trendMomentum: 0, // reserved — no trend provider
+    },
+    /** log10 saturation reference so a single huge-volume keyword can't dominate. */
+    demandSaturationVolume: Number(process.env.MARKET_OPPORTUNITY_DEMAND_SATURATION || 5000),
+    /** cannibalization risk haircut — a risk adjustment, not a scoring dimension. */
+    cannibalizationPenaltyMultiplier: Number(process.env.MARKET_OPPORTUNITY_CANNIBALIZATION_PENALTY || 0.7),
+  },
 };

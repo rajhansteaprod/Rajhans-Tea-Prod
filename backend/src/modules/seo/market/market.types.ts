@@ -269,3 +269,58 @@ export interface MappingKeywordEvidence {
   businessRelevance: BusinessRelevanceResult; // scoreBusinessRelevance() — NOT classifyKeyword()
   demand: { searchVolume: number | null; metricsKnown: boolean; source: string | null; capturedAt: string | null } | null;
 }
+
+// ── Opportunity scoring (4b.6) ──
+/** 4b.6-local — does NOT mutate MappingKeywordEvidence. commercialIntent and the
+ * navigational/branded flags are computed fresh (reused pure functions, same
+ * enriched taxonomy instance), never assumed present on the 4b.4 evidence. */
+export interface OpportunityKeywordEvidence {
+  keywordId: string;
+  keyword: string;
+  normalizedKeyword: string;
+  businessRelevance: BusinessRelevanceResult;
+  commercialIntent: CommercialIntentResult;
+  demand: { searchVolume: number | null; metricsKnown: boolean; source: string | null; capturedAt: string | null } | null;
+  isNavigational: boolean;
+  isBranded: boolean;
+}
+
+export interface OpportunityScoreComponents {
+  searchDemand: { value: number; available: boolean };
+  businessRelevance: { value: number; available: boolean };
+  commercialValue: { value: number; available: boolean };
+  gscVisibilityGap: { value: number; available: boolean };
+  rankingProximity: { value: number; available: boolean };
+  existingPageFit: { value: number; available: boolean };
+  contentGapStrength: { value: number; available: boolean };
+  effortInverse: { value: number; available: boolean };
+}
+
+export interface MarketOpportunityEvidence {
+  clusterLabel: string;
+  memberKeywords: string[];
+  eligibleGrowthMemberKeywords: string[];
+  primaryIntent: Intent | null;
+  businessRelevanceScore: number | null;
+  demand: { maxKnownVolume: number | null; metricsKnown: boolean; descriptiveTotalVolume: number | null };
+  clusterGsc: { impressions: number | null; evidenceKnown: boolean };
+  matchedPageGsc: { impressions: number | null; avgPosition: number | null; evidenceKnown: boolean } | null;
+  mapping: { bucket: UrlMappingBucket; matchedUrl: string | null; matchScore: number };
+  cannibalizationRisk: boolean;
+  scoreComponents: OpportunityScoreComponents;
+  confidence: 'low' | 'medium' | 'high';
+  relatedRecommendationIds: string[];
+}
+
+export interface MarketOpportunityDraft {
+  recommendationId: string;
+  discriminator: string;
+  category: 'existing-page-optimization' | 'new-guide' | 'new-landing-page' | 'commercial-opportunity';
+  title: string;
+  why: string;
+  suggestedFix: string;
+  score: number; // 0..100
+  confidence: 'low' | 'medium' | 'high';
+  affectedUrls: string[];
+  evidence: MarketOpportunityEvidence;
+}
