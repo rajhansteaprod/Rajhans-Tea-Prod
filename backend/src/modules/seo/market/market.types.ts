@@ -185,3 +185,87 @@ export interface SerpOverlapProvider {
   /** Returns real evidence, or null if not computed/available for this pair — never fabricated. */
   getPairEvidence(normalizedKeywordA: string, normalizedKeywordB: string): SerpPairEvidence | null;
 }
+
+// ── URL mapping (4b.4) ──
+/** No 'collection' — confirmed no live public Collection page exists (route
+ * commented out in app.routes.ts). A collection-anchored cluster with no
+ * matching page becomes D_NEW_LANDING, never a mapping to a non-existent URL. */
+export type PageType = 'product' | 'category' | 'blog' | 'static' | 'home';
+
+export type PageHealth = 'GOOD' | 'NEEDS_OPT' | 'UNKNOWN';
+
+export interface PageCandidate {
+  url: string;
+  canonicalUrl: string;
+  pageType: PageType;
+  title: string | null;
+  slug: string;
+  indexable: boolean;
+  anchors: string[]; // sorted — anchorTermsOf(title/name, taxonomy)
+  normalizedTerms: string[]; // sorted — normalizeKeyword() tokens
+  pageHealth: PageHealth; // derived ONCE by page-candidate.builder.ts; the mapper never reinterprets raw audit state
+  healthReasons: string[];
+  qualityFacts: { wordCount: number | null; hasSnapshot: boolean; openCriticalIssueCount: number }; // explainability only
+}
+
+/** 4b.4 deliberately narrower than the (unimplemented) GscOverlay.state: no
+ * NO_VISIBILITY (would fabricate "confirmed zero" from mere row absence) and no
+ * DECLINING (would require a genuine two-window per-candidate comparison this
+ * phase does not build — safer to omit than to claim it). */
+export type CandidateGscState = 'UNKNOWN' | 'EMERGING' | 'STRIKING_DISTANCE' | 'WINNING';
+
+export interface CandidateGscEvidence {
+  state: CandidateGscState;
+  impressions: number | null;
+  clicks: number | null;
+  avgPosition: number | null;
+  matchedKeywords: string[];
+  evidenceKnown: boolean;
+}
+
+/** Cluster-wide demand evidence (no candidate URL involved) — used ONLY for
+ * D/E evidence sufficiency (§3), never as candidate-specific ranking evidence. */
+export interface ClusterGscDemandEvidence {
+  impressions: number | null;
+  evidenceKnown: boolean;
+  matchedKeywords: string[];
+}
+
+export type UrlMappingBucket =
+  | 'A_EXISTING_GOOD'
+  | 'B_EXISTING_NEEDS_OPT'
+  | 'C_CONTENT_SUPPORT'
+  | 'D_NEW_LANDING'
+  | 'E_NEW_ARTICLE'
+  | 'F_NOT_RELEVANT'
+  | 'G_ALREADY_COVERED';
+
+export interface UrlMappingAlternative {
+  url: string;
+  pageType: PageType;
+  score: number;
+  reason: string;
+}
+
+export interface UrlMapping {
+  bucket: UrlMappingBucket;
+  matchedUrl: string | null;
+  matchedPageType: PageType | null;
+  matchScore: number;
+  confidence: number;
+  reasons: string[];
+  actionable: boolean;
+  evidenceStatus: 'sufficient' | 'insufficient' | 'not-applicable'; // F/A/B are 'not-applicable' (evidence gate doesn't apply to them)
+  whyExistingPageInsufficient?: string; // mandatory (non-empty) whenever bucket is C/D/E
+  alternativeCandidates: UrlMappingAlternative[]; // capped, explainability only
+  possibleCannibalizationRisk?: { competingClusterLabel: string; sharedUrl: string; reason: string };
+}
+
+// ── Mapping input contract (4b.4) — never mutates ClusterResult ──
+export interface MappingKeywordEvidence {
+  keywordId: string;
+  keyword: string;
+  normalizedKeyword: string;
+  businessRelevance: BusinessRelevanceResult; // scoreBusinessRelevance() — NOT classifyKeyword()
+  demand: { searchVolume: number | null; metricsKnown: boolean; source: string | null; capturedAt: string | null } | null;
+}
