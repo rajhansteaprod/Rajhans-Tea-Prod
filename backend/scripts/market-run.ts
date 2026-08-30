@@ -22,7 +22,7 @@ import { marketConfig } from '../src/modules/seo/market/market.config';
 import { SearchMarketRun } from '../src/modules/seo/market/models/search-market-run.model';
 import { computePlanFingerprint } from '../src/modules/seo/market/services/market-orchestrator.service';
 import { acquireOrReclaimLock, releaseLock, startHeartbeatLease, LeaseHandle } from '../src/modules/seo/market/services/market-run-lock.service';
-import { runFullPipeline, computeMarketPlan } from '../src/modules/seo/market/services/market-pipeline.service';
+import { computeMarketPlan, createOwnershipGuard, runFullPipelineInternal } from '../src/modules/seo/market/services/market-pipeline.service';
 
 // computeMarketPlan is the ONE preflight/remaining-work planner (market-pipeline.service.ts) —
 // reused here rather than duplicated, including for the pending-approval revival flow.
@@ -37,20 +37,27 @@ function sanitizedPlanPrint(plan: { dueSeedCount: number; plannedDiscoveryTaskCo
 
 /**
  * Runs the pipeline while the caller-acquired lock is held: starts the
- * periodic heartbeat lease, invokes runFullPipeline(), and always stops the
- * heartbeat and releases the lock afterward (owner-checked — never releases
- * another run's lock, e.g. after an ownership-loss during execution). A
- * thrown pipeline error leaves the run in whatever state runFullPipeline
- * left it (never fabricates a terminal status) so --resume can continue it.
+ * periodic heartbeat lease, invokes the pipeline with a real ownership guard
+ * tied to that SAME lock, and always stops the heartbeat and releases the
+ * lock afterward (owner-checked — never releases another run's lock, e.g.
+ * after an ownership-loss during execution). `onOwnershipLost` synchronously
+ * marks the guard lost (`markLost()`) so the pipeline's very next guarded
+ * check — before any new paid attempt, provider-result write, or
+ * recommendation mutation — fails immediately, without waiting for its own
+ * next live re-verification. A thrown pipeline error leaves the run in
+ * whatever state it reached (never fabricates a terminal status) so
+ * --resume can continue it.
  */
 async function executeUnderLock(runId: mongoose.Types.ObjectId, label: string): Promise<void> {
   let ownershipLost = false;
+  const { guard, markLost } = createOwnershipGuard(runId);
   const lease: LeaseHandle = startHeartbeatLease(runId, () => {
     ownershipLost = true;
+    markLost();
     console.error(`${label}: lock ownership lost mid-run — no further paid work or recommendation mutation will occur.`);
   });
   try {
-    await runFullPipeline(runId);
+    await runFullPipelineInternal(runId, { ownershipGuard: guard });
   } catch (e) {
     console.error(`${label}: pipeline error — run left in its current persisted state for --resume:`, e instanceof Error ? e.message : e);
   } finally {

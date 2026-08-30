@@ -25,9 +25,11 @@ jest.mock('../../../src/modules/seo/services/gsc.sync.service', () => ({
 }));
 jest.mock('../../../src/modules/seo/models/gsc-query-page-metric.model', () => ({ GscQueryPageMetric: { find: jest.fn(() => chain([])) } }));
 jest.mock('../../../src/modules/seo/models/seo-recommendation.model', () => ({ SeoRecommendation: { find: jest.fn(() => chain([])) } }));
+const upsertMarketOpportunityDrafts = jest.fn<Promise<{ created: number; updated: number; fingerprints: string[] }>, [unknown, unknown]>(async (_r, drafts) => ({ created: (drafts as unknown[]).length, updated: 0, fingerprints: [] }));
+const resolveMissingMarketOpportunities = jest.fn<Promise<{ resolved: number }>, [unknown, unknown]>(async () => ({ resolved: 0 }));
 jest.mock('../../../src/modules/seo/market/services/market-recommendation.service', () => ({
-  upsertMarketOpportunityDrafts: jest.fn(async (_r: unknown, drafts: unknown[]) => ({ created: drafts.length, updated: 0, fingerprints: [] })),
-  resolveMissingMarketOpportunities: jest.fn(async () => ({ resolved: 0 })),
+  upsertMarketOpportunityDrafts: (r: unknown, d: unknown) => upsertMarketOpportunityDrafts(r, d as unknown[]),
+  resolveMissingMarketOpportunities: (r: unknown, f: unknown) => resolveMissingMarketOpportunities(r, f),
 }));
 
 interface FakeSeedDoc {
@@ -136,7 +138,17 @@ jest.mock('../../../src/modules/seo/market/models/search-market-run.model', () =
   },
 }));
 
-import { runFullPipelineInternal } from '../../../src/modules/seo/market/services/market-pipeline.service';
+import { runFullPipelineInternal, MarketPipelineOwnershipGuard } from '../../../src/modules/seo/market/services/market-pipeline.service';
+
+/** Deterministic fake ownership guard — `loseOwnership()` simulates the
+ * heartbeat lease's onOwnershipLost callback firing mid-run. */
+function makeFakeOwnershipGuard(): { guard: MarketPipelineOwnershipGuard; loseOwnership: () => void } {
+  let lost = false;
+  return {
+    guard: { isLost: () => lost, assertOwned: async () => { if (lost) throw new Error('ownership lost'); } },
+    loseOwnership: () => { lost = true; },
+  };
+}
 
 function makeRun(overrides: Partial<FakeRunDoc> = {}): FakeRunDoc {
   return {
@@ -164,6 +176,8 @@ beforeEach(() => {
   identityDocs.clear();
   persistedMetrics.length = 0;
   createdClusters = [];
+  upsertMarketOpportunityDrafts.mockClear();
+  resolveMissingMarketOpportunities.mockClear();
 });
 afterAll(() => {
   process.env.DATAFORSEO_LOGIN = originalLogin;
@@ -291,5 +305,52 @@ describe('D: SERP through runFullPipeline (real DataForSeoSerpProvider, mocked f
     // proving final mapping/scoring used the SERP-informed (merged) cluster, not the initial split.
     const mergedCluster = createdClusters.find((c) => (c.memberships as { keyword: string }[]).some((m) => m.keyword === 'assam tea') && (c.memberships as { keyword: string }[]).some((m) => m.keyword === 'how to buy assam ctc tea'));
     expect(mergedCluster).toBeDefined();
+  });
+});
+
+describe('E7 — lock ownership loss (fake deterministic guard injected via MarketPipelineDeps)', () => {
+  it('E7a: ownership already lost before the first guarded action blocks all new paid attempts and mutations, and the run never completes', async () => {
+    cachedKeywordDocs = [cachedKeyword('assam tea'), cachedKeyword('how to buy assam ctc tea')];
+    const { guard, loseOwnership } = makeFakeOwnershipGuard();
+    loseOwnership(); // lost from the very start
+    const fetchImpl = jest.fn().mockResolvedValue(serpResponse(['https://x.com/1', 'https://x.com/2', 'https://x.com/3', 'https://x.com/4', 'https://x.com/5']));
+
+    await runFullPipelineInternal(runDoc._id, { serpProviderOverrides: { fetchImpl }, ownershipGuard: guard });
+
+    expect(fetchImpl).not.toHaveBeenCalled(); // no NEW paid attempt started
+    expect(createdClusters).toHaveLength(0); // no NEW SearchCluster persistence
+    expect(upsertMarketOpportunityDrafts).not.toHaveBeenCalled(); // no NEW recommendation mutation
+    expect(resolveMissingMarketOpportunities).not.toHaveBeenCalled(); // resolution never starts
+    expect(runDoc.status).not.toBe('completed');
+    expect(runDoc.status).not.toBe('degraded'); // never claims a terminal ownership-bound outcome either
+  });
+
+  it('E7b: an already-issued SERP request that finishes AFTER ownership loss does not get its result persisted', async () => {
+    cachedKeywordDocs = [cachedKeyword('assam tea'), cachedKeyword('how to buy assam ctc tea')];
+    const { guard, loseOwnership } = makeFakeOwnershipGuard();
+    const urls = ['https://x.com/1', 'https://x.com/2', 'https://x.com/3', 'https://x.com/4', 'https://x.com/5'];
+    const fetchImpl = jest.fn().mockImplementation(async () => {
+      loseOwnership(); // simulate the heartbeat lease firing WHILE this HTTP call is in flight
+      return serpResponse(urls);
+    });
+
+    await runFullPipelineInternal(runDoc._id, { serpProviderOverrides: { fetchImpl }, ownershipGuard: guard });
+
+    expect(fetchImpl).toHaveBeenCalled(); // the request DID fire — ownership was fine when it started
+    expect(createdClusters).toHaveLength(0); // its returned evidence was never committed to a final cluster
+    expect(upsertMarketOpportunityDrafts).not.toHaveBeenCalled();
+    expect(resolveMissingMarketOpportunities).not.toHaveBeenCalled();
+    expect(runDoc.status).not.toBe('completed');
+  });
+
+  it('control: with ownership never lost, the same fixture completes normally (the guard itself adds no false positives)', async () => {
+    cachedKeywordDocs = [cachedKeyword('assam tea'), cachedKeyword('how to buy assam ctc tea')];
+    const { guard } = makeFakeOwnershipGuard(); // never loses ownership
+    const fetchImpl = jest.fn().mockResolvedValue(serpResponse(['https://x.com/1', 'https://x.com/2', 'https://x.com/3', 'https://x.com/4', 'https://x.com/5']));
+
+    await runFullPipelineInternal(runDoc._id, { serpProviderOverrides: { fetchImpl }, ownershipGuard: guard });
+
+    expect(runDoc.status).toBe('completed');
+    expect(resolveMissingMarketOpportunities).toHaveBeenCalled();
   });
 });

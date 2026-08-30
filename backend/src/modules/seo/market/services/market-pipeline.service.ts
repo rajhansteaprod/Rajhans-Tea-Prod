@@ -30,6 +30,7 @@ import { DataForSeoProvider, DataForSeoProviderOverrides, DurableAttemptRefusedE
 import { DataForSeoSerpProvider, DataForSeoSerpProviderOverrides } from '../providers/dataforseo/dataforseo-serp.provider';
 import { RunBudget } from '../providers/dataforseo/run-budget';
 import { monthToDateSpendUsd } from './cost-governor';
+import { refreshHeartbeat } from './market-run-lock.service';
 
 /**
  * Phase 4b.7 — the real integrated pipeline. Composes the existing, already
@@ -47,10 +48,42 @@ import { monthToDateSpendUsd } from './cost-governor';
  * `runFullPipeline(runId)` signature is unchanged; this is additive.
  */
 
+/**
+ * Minimal ownership-safety seam (4b.7 final hardening). Consulted before
+ * every NEW physical paid attempt, before persisting a provider result, and
+ * before every mutation phase that must not proceed once
+ * `SearchMarketLock` ownership is gone. Production wiring (market-run.ts)
+ * ties this to the real acquired lock; tests inject a deterministic fake.
+ * When omitted entirely (the default `runFullPipeline(runId)` entrypoint),
+ * an always-owned no-op guard is used — unchanged prior behavior.
+ */
+export interface MarketPipelineOwnershipGuard {
+  isLost(): boolean;
+  assertOwned(): Promise<void>;
+}
+
+export class OwnershipLostError extends Error {
+  constructor() {
+    super('market-lock-ownership-lost');
+    this.name = 'OwnershipLostError';
+  }
+}
+
+const alwaysOwnedGuard: MarketPipelineOwnershipGuard = {
+  isLost: () => false,
+  assertOwned: async () => undefined,
+};
+
+/** True for either guard-boundary failure mode — a direct `assertOwned()` throw, or the provider-seam's `DurableAttemptRefusedError` carrying the same reasonCode (needed because the providers' own catch blocks only pass a fixed set of error types through unchanged — see `isAuthorizationCeilingExhausted`). */
+function isOwnershipLost(e: unknown): boolean {
+  return e instanceof OwnershipLostError || (e instanceof DurableAttemptRefusedError && e.reasonCode === 'lock-ownership-lost');
+}
+
 export interface MarketPipelineDeps {
   keywordProviderOverrides?: DataForSeoProviderOverrides;
   serpProviderOverrides?: DataForSeoSerpProviderOverrides;
   now?: () => Date;
+  ownershipGuard?: MarketPipelineOwnershipGuard;
 }
 
 /**
@@ -67,8 +100,21 @@ function isAuthorizationCeilingExhausted(e: unknown): e is DurableAttemptRefused
   return e instanceof DurableAttemptRefusedError && e.reasonCode === 'authorization-ceiling-exceeded';
 }
 
-function durableHook(runId: mongoose.Types.ObjectId) {
+function durableHook(runId: mongoose.Types.ObjectId, ownershipGuard: MarketPipelineOwnershipGuard) {
   return async (ctx: BeforePhysicalAttemptContext): Promise<void> => {
+    // Ownership is revalidated BEFORE every new physical attempt (incl. retries —
+    // this hook fires once per physical HTTP attempt) and BEFORE reserveAttemptCost,
+    // so a lost lock blocks the reservation itself, not just the HTTP call. A raw
+    // OwnershipLostError is deliberately never let out of this function — it would
+    // be silently wrapped into a generic Error by the provider's own catch block
+    // (only CostGateRefusedError/NoActiveRunBudgetError/DurableAttemptRefusedError
+    // pass through unchanged) — so it's re-thrown as the already-approved type.
+    try {
+      if (ownershipGuard.isLost()) throw new OwnershipLostError();
+      await ownershipGuard.assertOwned();
+    } catch {
+      throw new DurableAttemptRefusedError('market-lock-ownership-lost', 'lock-ownership-lost');
+    }
     const result = await reserveAttemptCost(runId, ctx.estimatedCostUsd);
     if (result.allowed) return;
     throw new DurableAttemptRefusedError(result.reason, result.reasonCode);
@@ -156,6 +202,30 @@ export async function runFullPipeline(runId: mongoose.Types.ObjectId): Promise<v
 }
 
 /**
+ * Production ownership guard factory — reuses the EXISTING owner-checked
+ * `refreshHeartbeat()` for live re-verification (no duplicated lock-query
+ * logic), plus a synchronous `markLost()` the heartbeat lease's
+ * `onOwnershipLost` callback can call immediately, without waiting for the
+ * next `assertOwned()` call. `market-run.ts` (the CLI) wires both together;
+ * this module has no CLI dependency.
+ */
+export function createOwnershipGuard(runId: mongoose.Types.ObjectId): { guard: MarketPipelineOwnershipGuard; markLost: () => void } {
+  let lost = false;
+  const guard: MarketPipelineOwnershipGuard = {
+    isLost: () => lost,
+    async assertOwned() {
+      if (lost) throw new OwnershipLostError();
+      const stillOwner = await refreshHeartbeat(runId);
+      if (!stillOwner) {
+        lost = true;
+        throw new OwnershipLostError();
+      }
+    },
+  };
+  return { guard, markLost: () => { lost = true; } };
+}
+
+/**
  * Test-only extension point (still exported, but `runFullPipeline` is the
  * production-documented entrypoint). `deps` may override the provider
  * `fetchImpl` for integration tests — the durable `beforePhysicalAttempt`
@@ -166,17 +236,23 @@ export async function runFullPipelineInternal(runId: mongoose.Types.ObjectId, de
   const run = await SearchMarketRun.findById(runId).exec();
   if (!run) throw new Error(`runFullPipeline: run ${String(runId)} not found`);
 
-  // Resume case B — evaluationSnapshot already frozen: never recompute evidence/scoring, only resume staged persistence.
-  if (run.evaluationSnapshot) {
-    await runStagedPersistence(run);
-    return;
-  }
-
   try {
+    // Resume case B — evaluationSnapshot already frozen: never recompute evidence/scoring, only resume staged persistence.
+    if (run.evaluationSnapshot) {
+      await runStagedPersistence(run, deps.ownershipGuard ?? alwaysOwnedGuard);
+      return;
+    }
     await runEvaluation(run, deps);
   } catch (e) {
     if (isAuthorizationCeilingExhausted(e)) {
       await revertToPendingApproval(run);
+      return;
+    }
+    if (isOwnershipLost(e)) {
+      // Ownership is gone — never mark completed/degraded/failed here. The run is
+      // left in whatever persisted state it already reached (stage/persistenceStage/
+      // costActualUsd/evidence already written before the loss are untouched) so a
+      // future owner can safely --resume it. No further action is safe from here.
       return;
     }
     throw e;
@@ -185,10 +261,11 @@ export async function runFullPipelineInternal(runId: mongoose.Types.ObjectId, de
 
 async function runEvaluation(run: ISearchMarketRunDoc, deps: MarketPipelineDeps): Promise<void> {
   const now = deps.now ?? (() => new Date());
+  const ownershipGuard = deps.ownershipGuard ?? alwaysOwnedGuard;
   const market: Market = run.market;
   const degradationReasons: string[] = [];
-  const keywordProvider = new DataForSeoProvider({ ...deps.keywordProviderOverrides, beforePhysicalAttempt: durableHook(run._id as mongoose.Types.ObjectId) });
-  const serpProvider = new DataForSeoSerpProvider({ ...deps.serpProviderOverrides, beforePhysicalAttempt: durableHook(run._id as mongoose.Types.ObjectId) });
+  const keywordProvider = new DataForSeoProvider({ ...deps.keywordProviderOverrides, beforePhysicalAttempt: durableHook(run._id as mongoose.Types.ObjectId, ownershipGuard) });
+  const serpProvider = new DataForSeoSerpProvider({ ...deps.serpProviderOverrides, beforePhysicalAttempt: durableHook(run._id as mongoose.Types.ObjectId, ownershipGuard) });
 
   // ── 1-2: taxonomy/inventory ──
   let taxonomy: RelevanceTaxonomy;
@@ -221,6 +298,11 @@ async function runEvaluation(run: ISearchMarketRunDoc, deps: MarketPipelineDeps)
       const budget = await makeRunBudget(run);
       keywordProvider.beginRun(budget);
       const results = await keywordProvider.discoverKeywords(dueSeedDocs.map((s) => s.term), market);
+      // The HTTP call may have been in flight when ownership was lost — revalidate
+      // BEFORE persisting anything it returned. A successful response is never
+      // enough on its own to justify a write.
+      if (ownershipGuard.isLost()) throw new OwnershipLostError();
+      await ownershipGuard.assertOwned();
       discoveryKeywordStrings = results.map((r) => r.keyword);
 
       // Persist identities + inline metrics BEFORE marking discovery fresh.
@@ -258,6 +340,7 @@ async function runEvaluation(run: ISearchMarketRunDoc, deps: MarketPipelineDeps)
       run.costActualUsd = Math.max(run.costActualUsd, budget.getCumulativeRunUsd());
       await run.save();
     } catch (e) {
+      if (isOwnershipLost(e)) throw e; // propagate to top-level handler — no further paid work or mutation, run left resumable
       if (isAuthorizationCeilingExhausted(e)) throw e; // propagate to top-level revival handler — SAME run returns to pending-approval
       if (e instanceof DurableAttemptRefusedError) {
         // Hard-cap or other budget refusal mid-discovery — stop new paid work,
@@ -411,6 +494,10 @@ async function runEvaluation(run: ISearchMarketRunDoc, deps: MarketPipelineDeps)
       if (ageClass === 'fresh') continue; // reuse without a paid call — handled by isAlreadyCached, defensive re-check
       try {
         const fresh = await serpProvider.getSerp(kw, market);
+        // The HTTP call may have already been in flight when ownership was lost —
+        // revalidate BEFORE persisting the returned snapshot.
+        if (ownershipGuard.isLost()) throw new OwnershipLostError();
+        await ownershipGuard.assertOwned();
         // getOrFetch also populates serpCache's own in-memory map for asOverlapProvider().
         await serpCache.getOrFetch(kw, market, { id: serpProvider.id, kind: 'serp', isConfigured: () => true, estimateCost: (op) => serpProvider.estimateCost(op), getSerp: async () => fresh });
         if (doc) {
@@ -418,6 +505,7 @@ async function runEvaluation(run: ISearchMarketRunDoc, deps: MarketPipelineDeps)
           await doc.save();
         }
       } catch (e) {
+        if (isOwnershipLost(e)) throw e; // propagate — stop issuing further SERP attempts, run left resumable
         if (isAuthorizationCeilingExhausted(e)) throw e; // propagate — stop issuing further SERP attempts, revive to pending-approval
         const usableStale = doc?.serpSnapshot && ageClass === 'stale-but-usable';
         if (usableStale) {
@@ -485,6 +573,10 @@ async function runEvaluation(run: ISearchMarketRunDoc, deps: MarketPipelineDeps)
   const newClusterInputs: IdentityClusterInput[] = finalEntries.map((e, i) => ({ id: String(i), normalizedKeywords: e.cluster.members.map((m) => m.normalizedKeyword) }));
   const identityMatches = matchClustersToStableIds(oldClusters, newClusterInputs, marketConfig.orchestrator.clusterMatchThreshold);
 
+  // Ownership must hold before this run commits ANY final, persisted cluster state.
+  if (ownershipGuard.isLost()) throw new OwnershipLostError();
+  await ownershipGuard.assertOwned();
+
   try {
     for (let i = 0; i < finalEntries.length; i++) {
       const { cluster } = finalEntries[i];
@@ -539,24 +631,34 @@ async function runEvaluation(run: ISearchMarketRunDoc, deps: MarketPipelineDeps)
   const evaluationOutcome: 'completed' | 'degraded' = degradationReasons.length === 0 ? 'completed' : 'degraded';
 
   // ── 37: freeze evaluationSnapshot ──
+  // Ownership must hold before the snapshot (the resolution-capability gate) is written at all.
+  if (ownershipGuard.isLost()) throw new OwnershipLostError();
+  await ownershipGuard.assertOwned();
   const snapshot = buildEvaluationSnapshot(drafts, evaluationOutcome, degradationReasons);
   run.evaluationSnapshot = snapshot;
   run.stage = 'persisting';
   await run.save();
 
   // ── 38-39: staged persistence + terminalization ──
-  await runStagedPersistence(run);
+  await runStagedPersistence(run, ownershipGuard);
 }
 
-async function runStagedPersistence(run: ISearchMarketRunDoc): Promise<void> {
+async function runStagedPersistence(run: ISearchMarketRunDoc, ownershipGuard: MarketPipelineOwnershipGuard): Promise<void> {
   const snap = run.evaluationSnapshot!;
   const drafts = snap.drafts as unknown as MarketOpportunityDraft[];
 
+  const assertStillOwned = async (): Promise<void> => {
+    if (ownershipGuard.isLost()) throw new OwnershipLostError();
+    await ownershipGuard.assertOwned();
+  };
+
   if (run.persistenceStage === 'not-started') {
+    await assertStillOwned();
     run.persistenceStage = 'upserting';
     await run.save();
   }
   if (run.persistenceStage === 'upserting') {
+    await assertStillOwned(); // no NEW recommendation mutation may start after ownership loss
     const result = await upsertMarketOpportunityDrafts(run._id as mongoose.Types.ObjectId, drafts);
     run.counts.recommendationsCreated = result.created;
     run.counts.recommendationsUpdated = result.updated;
@@ -564,10 +666,15 @@ async function runStagedPersistence(run: ISearchMarketRunDoc): Promise<void> {
     await run.save();
   }
   if (run.persistenceStage === 'upserted') {
+    await assertStillOwned();
     run.persistenceStage = snap.allowResolution ? 'resolving' : 'done';
     await run.save();
   }
   if (run.persistenceStage === 'resolving') {
+    // Resolution is the highest-stakes mutation (it can close out real
+    // recommendations) — ownership is revalidated IMMEDIATELY before it starts,
+    // not relying on any earlier check in this function.
+    await assertStillOwned();
     // Never resolve using a freshly recomputed fingerprint list — always the frozen snapshot's.
     const result = await resolveMissingMarketOpportunities(run._id as mongoose.Types.ObjectId, snap.draftFingerprints);
     run.counts.recommendationsResolved = result.resolved;
@@ -575,6 +682,7 @@ async function runStagedPersistence(run: ISearchMarketRunDoc): Promise<void> {
     await run.save();
   }
 
+  await assertStillOwned(); // a stale owner must never claim successful completed/degraded terminalization
   run.status = snap.evaluationOutcome === 'completed' ? 'completed' : 'degraded';
   run.degradedReason = snap.evaluationOutcome === 'degraded' ? snap.degradationReasons.join('; ') : null;
   run.stage = 'finished';
