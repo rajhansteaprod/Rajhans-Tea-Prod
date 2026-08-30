@@ -23,7 +23,8 @@ import { SearchMarketRun } from '../src/modules/seo/market/models/search-market-
 import { SearchSeed } from '../src/modules/seo/market/models/search-seed.model';
 import { isSeedDiscoveryDue } from '../src/modules/seo/market/services/evidence-freshness.service';
 import { computePlanFingerprint } from '../src/modules/seo/market/services/market-orchestrator.service';
-import { acquireOrReclaimLock, releaseLock, startHeartbeatLease } from '../src/modules/seo/market/services/market-run-lock.service';
+import { acquireOrReclaimLock, releaseLock, startHeartbeatLease, LeaseHandle } from '../src/modules/seo/market/services/market-run-lock.service';
+import { runFullPipeline } from '../src/modules/seo/market/services/market-pipeline.service';
 
 const MARKET_KEYWORD_IDEAS_TASK_ESTIMATE_USD = 0.036; // documented, real 4b.2-validated pricing shape (12 seeds, limit 200)
 
@@ -47,6 +48,30 @@ function sanitizedPlanPrint(plan: { dueSeedCount: number; plannedDiscoveryTaskCo
   console.log('Planned discovery physical tasks:', plan.plannedDiscoveryTaskCount);
   console.log('Planned SERP physical requests (pre-clustering estimate):', plan.plannedSerpRequestCount);
   console.log('Estimated cost (USD):', plan.estimatedCostUsd);
+}
+
+/**
+ * Runs the pipeline while the caller-acquired lock is held: starts the
+ * periodic heartbeat lease, invokes runFullPipeline(), and always stops the
+ * heartbeat and releases the lock afterward (owner-checked — never releases
+ * another run's lock, e.g. after an ownership-loss during execution). A
+ * thrown pipeline error leaves the run in whatever state runFullPipeline
+ * left it (never fabricates a terminal status) so --resume can continue it.
+ */
+async function executeUnderLock(runId: mongoose.Types.ObjectId, label: string): Promise<void> {
+  let ownershipLost = false;
+  const lease: LeaseHandle = startHeartbeatLease(runId, () => {
+    ownershipLost = true;
+    console.error(`${label}: lock ownership lost mid-run — no further paid work or recommendation mutation will occur.`);
+  });
+  try {
+    await runFullPipeline(runId);
+  } catch (e) {
+    console.error(`${label}: pipeline error — run left in its current persisted state for --resume:`, e instanceof Error ? e.message : e);
+  } finally {
+    lease.stop();
+    if (!ownershipLost) await releaseLock(runId);
+  }
 }
 
 async function main() {
@@ -73,11 +98,9 @@ async function main() {
       process.exitCode = 1;
       return;
     }
-    console.log(`Resumed run ${resumeRunId} at stage=${run.stage} persistenceStage=${run.persistenceStage}.`);
-    console.log('Full stage-by-stage pipeline resumption is orchestrated by market-orchestrator.service.ts using the run\'s persisted stage/evaluationSnapshot — not re-implemented here.');
-    const lease = startHeartbeatLease(runId, () => console.error('Ownership lost mid-resume — stopping.'));
-    lease.stop();
-    await releaseLock(runId);
+    console.log(`Resuming run ${resumeRunId} at stage=${run.stage} persistenceStage=${run.persistenceStage}.`);
+    console.log(run.evaluationSnapshot ? 'evaluationSnapshot already frozen — resuming staged persistence only, no re-evaluation.' : 'No evaluationSnapshot yet — pure stages will safely recompute, reusing already-persisted evidence (no redundant paid calls).');
+    await executeUnderLock(runId, '--resume');
     return;
   }
 
@@ -114,7 +137,14 @@ async function main() {
     run.authorizationMode = 'manual-approval';
     run.status = 'running';
     await run.save();
-    console.log(`Approved run ${approveRunId}: approvedCostUsd=${run.approvedCostUsd}. Execution wiring is intentionally NOT invoked by this implementation pass (see IMPLEMENTATION SAFETY BOUNDARY).`);
+    const acquired = await acquireOrReclaimLock(runId);
+    if (!acquired) {
+      console.error('Could not acquire the execution lock — another process may still own it. Refusing.');
+      process.exitCode = 1;
+      return;
+    }
+    console.log(`Approved run ${approveRunId}: approvedCostUsd=${run.approvedCostUsd}. Executing.`);
+    await executeUnderLock(runId, '--approve');
     return;
   }
 
@@ -180,13 +210,8 @@ async function main() {
   run.authorizationMode = 'confirm-under-threshold';
   run.status = 'running';
   await run.save();
-  console.log(`\nRun ${run._id} authorized under the $${marketConfig.cost.manualApprovalUsd} confirm threshold.`);
-  console.log('Execution wiring is intentionally NOT invoked by this implementation pass (see IMPLEMENTATION SAFETY BOUNDARY) — no paid call is made.');
-  await releaseLock(run._id as mongoose.Types.ObjectId);
-  run.status = 'failed';
-  run.error = 'not-executed-during-implementation-safety-boundary';
-  run.finishedAt = new Date();
-  await run.save();
+  console.log(`\nRun ${run._id} authorized under the $${marketConfig.cost.manualApprovalUsd} confirm threshold. Executing.`);
+  await executeUnderLock(run._id as mongoose.Types.ObjectId, '--confirm');
 }
 
 main().catch((e) => {
