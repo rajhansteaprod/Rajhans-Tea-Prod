@@ -83,4 +83,17 @@ export const marketConfig = {
     strongGscEvidenceMinImpressions: Number(process.env.MARKET_MAPPING_STRONG_GSC_MIN_IMPR || 50),
     maxAlternativeCandidates: Number(process.env.MARKET_MAPPING_MAX_ALTERNATIVES || 3),
   },
+
+  /**
+   * Real SERP evidence (4b.5). Per-run, in-memory only — no persistent TTL here
+   * (a cross-run SERP cache is deferred until a real persistence phase exists).
+   */
+  serp: {
+    /** Bounded concurrency for SERP fetches — DataForSEO Live SERP allows only
+     * one task per call, so this bounds parallel HTTP calls, not batch size. */
+    maxConcurrency: Number(process.env.MARKET_SERP_MAX_CONCURRENCY || 5),
+    /** BOTH keywords in a pair need at least this many valid organic URLs, or
+     * the pair's evidence is UNKNOWN (null), never a fabricated 0. */
+    minValidOrganicResults: Number(process.env.MARKET_SERP_MIN_VALID_ORGANIC || 5),
+  },
 };
