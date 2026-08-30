@@ -15,10 +15,12 @@ import mongoose from 'mongoose';
 jest.mock('../../../src/modules/seo/market/providers/provider.bootstrap', () => ({ bootstrapMarketProviders: jest.fn() }));
 
 const computeMarketPlan = jest.fn<Promise<unknown>, [unknown]>();
-const runFullPipeline = jest.fn<Promise<void>, [unknown]>(async () => undefined);
+const runFullPipelineInternal = jest.fn<Promise<void>, [unknown, unknown]>(async () => undefined);
+const createOwnershipGuard = jest.fn((_runId: unknown) => ({ guard: { isLost: () => false, assertOwned: async () => undefined }, markLost: jest.fn() }));
 jest.mock('../../../src/modules/seo/market/services/market-pipeline.service', () => ({
   computeMarketPlan: (market: unknown) => computeMarketPlan(market),
-  runFullPipeline: (runId: unknown) => runFullPipeline(runId),
+  runFullPipelineInternal: (runId: unknown, deps: unknown) => runFullPipelineInternal(runId, deps),
+  createOwnershipGuard: (runId: unknown) => createOwnershipGuard(runId),
 }));
 
 const acquireOrReclaimLock = jest.fn<Promise<boolean>, [unknown]>();
@@ -95,7 +97,7 @@ describe('CLI --confirm', () => {
     expect(run.authorizationMode).toBe('confirm-under-threshold');
     expect(acquireOrReclaimLock).toHaveBeenCalledWith(run._id);
     expect(startHeartbeatLease).toHaveBeenCalledWith(run._id, expect.any(Function));
-    expect(runFullPipeline).toHaveBeenCalledWith(run._id);
+    expect(runFullPipelineInternal).toHaveBeenCalledWith(run._id, expect.anything());
     expect(heartbeatStop).toHaveBeenCalled(); // heartbeat stopped
     expect(releaseLock).toHaveBeenCalledWith(run._id); // owner-checked release
   });
@@ -105,7 +107,7 @@ describe('CLI --confirm', () => {
 
     await main(['--confirm']);
 
-    expect(runFullPipeline).not.toHaveBeenCalled();
+    expect(runFullPipelineInternal).not.toHaveBeenCalled();
     expect(createdRuns).toHaveLength(0);
   });
 
@@ -115,7 +117,7 @@ describe('CLI --confirm', () => {
     await main([]);
 
     expect(createdRuns).toHaveLength(0);
-    expect(runFullPipeline).not.toHaveBeenCalled();
+    expect(runFullPipelineInternal).not.toHaveBeenCalled();
     expect(acquireOrReclaimLock).not.toHaveBeenCalled();
   });
 });
@@ -134,7 +136,7 @@ describe('CLI --approve <runId>', () => {
     expect(run.authorizationMode).toBe('manual-approval');
     expect(run.approvedCostUsd).toBeCloseTo(0.3 + 0.05, 6); // cumulative: prior spend + newly-approved
     expect(acquireOrReclaimLock).toHaveBeenCalledWith(run._id);
-    expect(runFullPipeline).toHaveBeenCalledWith(run._id);
+    expect(runFullPipelineInternal).toHaveBeenCalledWith(run._id, expect.anything());
   });
 
   it('a stale plan fingerprint marks the OLD proposal failed and does NOT execute', async () => {
@@ -145,14 +147,14 @@ describe('CLI --approve <runId>', () => {
 
     expect(run.status).toBe('failed');
     expect(run.error).toBe('approval-plan-stale');
-    expect(runFullPipeline).not.toHaveBeenCalled();
+    expect(runFullPipelineInternal).not.toHaveBeenCalled();
     expect(acquireOrReclaimLock).not.toHaveBeenCalled();
   });
 
   it('refuses --approve for a run that is not pending-approval', async () => {
     const run = makeRun({ status: 'completed' });
     await main(['--approve', String(run._id)]);
-    expect(runFullPipeline).not.toHaveBeenCalled();
+    expect(runFullPipelineInternal).not.toHaveBeenCalled();
   });
 });
 
@@ -165,14 +167,14 @@ describe('CLI --resume <runId>', () => {
     expect(acquireOrReclaimLock).toHaveBeenCalledWith(run._id);
     // heartbeat starts only AFTER a successful reclaim — standard jest call-order comparison
     expect(acquireOrReclaimLock.mock.invocationCallOrder[0]).toBeLessThan(startHeartbeatLease.mock.invocationCallOrder[0]);
-    expect(runFullPipeline).toHaveBeenCalledWith(run._id);
+    expect(runFullPipelineInternal).toHaveBeenCalledWith(run._id, expect.anything());
     expect(createdRuns).toHaveLength(0);
   });
 
   it('refuses --resume for a run that is not status:running (not genuinely interrupted)', async () => {
     const run = makeRun({ status: 'completed' });
     await main(['--resume', String(run._id)]);
-    expect(runFullPipeline).not.toHaveBeenCalled();
+    expect(runFullPipelineInternal).not.toHaveBeenCalled();
     expect(acquireOrReclaimLock).not.toHaveBeenCalled();
   });
 
@@ -180,6 +182,6 @@ describe('CLI --resume <runId>', () => {
     const run = makeRun({ status: 'running' });
     acquireOrReclaimLock.mockResolvedValue(false);
     await main(['--resume', String(run._id)]);
-    expect(runFullPipeline).not.toHaveBeenCalled();
+    expect(runFullPipelineInternal).not.toHaveBeenCalled();
   });
 });
