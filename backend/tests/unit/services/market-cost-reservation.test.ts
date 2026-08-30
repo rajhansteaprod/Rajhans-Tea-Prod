@@ -98,6 +98,7 @@ describe('reserveAttemptCost — hard caps', () => {
     const result = await reserveAttemptCost(run._id, 0.01);
     expect(result.allowed).toBe(false);
     expect(result.reason).toContain('per-run hard cap');
+    expect(result.reasonCode).toBe('per-run-hard-cap');
   });
 
   it('monthly hard cap ($10) blocks even a tiny attempt once MTD is exhausted', async () => {
@@ -107,6 +108,34 @@ describe('reserveAttemptCost — hard caps', () => {
     const result = await reserveAttemptCost(run._id, 0.01);
     expect(result.allowed).toBe(false);
     expect(result.reason).toContain('monthly hard cap');
+    expect(result.reasonCode).toBe('monthly-hard-cap');
+  });
+});
+
+describe('reserveAttemptCost — reasonCode distinguishes refusal categories (4b.7 completion pass)', () => {
+  it('authorization-ceiling-exceeded is reported ONLY when hard caps still have room', async () => {
+    const run = makeRun({ authorizationMode: 'confirm-under-threshold', costActualUsd: 0.5 });
+    runs.push(run);
+    const result = await reserveAttemptCost(run._id, 0.001);
+    expect(result.allowed).toBe(false);
+    expect(result.reasonCode).toBe('authorization-ceiling-exceeded');
+  });
+
+  it('a hard-cap breach is NEVER miscategorized as authorization-ceiling-exceeded, even though it also exceeds the ceiling', async () => {
+    const run = makeRun({ authorizationMode: 'manual-approval', approvedCostUsd: 5, costActualUsd: 1.999 });
+    runs.push(run);
+    const result = await reserveAttemptCost(run._id, 0.01); // exceeds both the $2 per-run hard cap AND is within the $5 approved ceiling
+    expect(result.reasonCode).toBe('per-run-hard-cap');
+  });
+
+  it('run-not-authorized and invalid-approval-state get their own codes', async () => {
+    const unauthorized = makeRun({ authorizationMode: null });
+    runs.push(unauthorized);
+    expect((await reserveAttemptCost(unauthorized._id, 0.001)).reasonCode).toBe('run-not-authorized');
+
+    const invalid = makeRun({ authorizationMode: 'manual-approval', approvedCostUsd: null });
+    runs.push(invalid);
+    expect((await reserveAttemptCost(invalid._id, 0.001)).reasonCode).toBe('invalid-approval-state');
   });
 });
 

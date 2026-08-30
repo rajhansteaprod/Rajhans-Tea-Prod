@@ -22,7 +22,7 @@ export class CostGateRefusedError extends Error {
 
 /** Thrown when an injected `beforePhysicalAttempt` durable gate rejects an attempt. */
 export class DurableAttemptRefusedError extends Error {
-  constructor(public reason: string) {
+  constructor(public reason: string, public reasonCode?: string) {
     super(`dataforseo request refused by durable cost gate: ${reason}`);
     this.name = 'DurableAttemptRefusedError';
   }
