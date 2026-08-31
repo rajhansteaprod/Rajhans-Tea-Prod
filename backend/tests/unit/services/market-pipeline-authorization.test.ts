@@ -38,7 +38,30 @@ interface FakeSeedDoc {
 let dueSeedDoc: FakeSeedDoc;
 
 jest.mock('../../../src/modules/seo/market/models/search-seed.model', () => ({
-  SearchSeed: { find: jest.fn(() => ({ exec: async () => [dueSeedDoc], lean: () => ({ exec: async () => [dueSeedDoc] }) })) },
+  SearchSeed: {
+    find: jest.fn(() => ({
+      exec: async () => [dueSeedDoc],
+      lean: () => ({ exec: async () => [dueSeedDoc] }),
+    })),
+    findOneAndUpdate: jest.fn((filter: any, update: any) => ({
+      exec: async () => {
+        if (filter.normalizedTerm === dueSeedDoc.normalizedTerm) {
+          Object.assign(dueSeedDoc, update.$set);
+          return dueSeedDoc;
+        }
+        return {
+          term: update.$set.term,
+          normalizedTerm: filter.normalizedTerm,
+          type: update.$set.type,
+          sourceRef: update.$set.sourceRef,
+          market: update.$set.market,
+          enabled: true,
+          providerDiscoveryState: [],
+          save: jest.fn(async () => undefined),
+        };
+      },
+    })),
+  },
 }));
 
 interface FakeKeywordDoc {
