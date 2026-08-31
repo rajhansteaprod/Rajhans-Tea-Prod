@@ -618,6 +618,8 @@ async function runEvaluation(run: ISearchMarketRunDoc, deps: MarketPipelineDeps)
   if (keywordsToFetch.length > 0 && serpProvider.isConfigured()) {
     const budget = await makeRunBudget(run);
     serpProvider.beginRun(budget);
+    let successfulSerpFetches = 0;
+
     for (const kw of keywordsToFetch) {
       const doc = identityMap.get(normalizeKeyword(kw)) ?? cachedKeywords.find((c) => c.normalizedKeyword === normalizeKeyword(kw)) ?? null;
       const context = { provider: serpProvider.id, locationCode: 2356, languageCode: market.language, device: 'desktop' as const, depth: 10 };
@@ -635,6 +637,7 @@ async function runEvaluation(run: ISearchMarketRunDoc, deps: MarketPipelineDeps)
           doc.serpSnapshot = { provider: serpProvider.id, locationCode: context.locationCode, languageCode: context.languageCode, device: context.device, depth: context.depth, schemaVersion: 1, retrievedAt: new Date(), topUrls: fresh.topUrls, topDomains: fresh.topDomains };
           await doc.save();
         }
+        successfulSerpFetches += 1;
       } catch (e) {
         if (isOwnershipLost(e)) throw e; // propagate — stop issuing further SERP attempts, run left resumable
         if (isAuthorizationCeilingExhausted(e)) throw e; // propagate — stop issuing further SERP attempts, revive to pending-approval
@@ -654,7 +657,7 @@ async function runEvaluation(run: ISearchMarketRunDoc, deps: MarketPipelineDeps)
       }
     }
     run.costActualUsd = Math.max(run.costActualUsd, budget.getCumulativeRunUsd());
-    run.counts.serpsFetched = keywordsToFetch.length;
+    run.counts.serpsFetched = successfulSerpFetches;
     await run.save();
   } else if (keywordsToFetch.length > 0 && !serpProvider.isConfigured()) {
     degradationReasons.push('serp-selected-but-provider-unconfigured');

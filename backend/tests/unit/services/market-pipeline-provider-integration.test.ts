@@ -302,6 +302,7 @@ describe('D: SERP through runFullPipeline (real DataForSeoSerpProvider, mocked f
     expect(fetchImpl).toHaveBeenCalled(); // refresh WAS attempted despite an existing (stale) snapshot
     expect(a.serpSnapshot?.retrievedAt.getTime()).toBeGreaterThan(stale.retrievedAt.getTime());
     expect(runDoc.status).not.toBe('failed');
+    expect(runDoc.counts.serpsFetched).toBeGreaterThan(0);
   });
 
   it('D3: same stale snapshot, live refresh FAILS -> stale <=60d fallback used, run degraded, no resolution', async () => {
@@ -312,6 +313,7 @@ describe('D: SERP through runFullPipeline (real DataForSeoSerpProvider, mocked f
     await runFullPipelineInternal(runDoc._id, { serpProviderOverrides: { fetchImpl } });
 
     expect(runDoc.status).toBe('degraded');
+    expect(runDoc.counts.serpsFetched).toBe(0);
   });
 
   it('D5: mocked SERP 500 -> retry -> 200 produces exactly two physical attempts', async () => {
