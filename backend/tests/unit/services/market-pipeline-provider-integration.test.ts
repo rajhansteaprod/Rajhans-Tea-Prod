@@ -141,7 +141,9 @@ interface FakeRunDoc {
   persistenceStage: string;
   evaluationSnapshot: unknown | null;
   error: string | null;
+  startedAt: Date | null;
   finishedAt: Date | null;
+  providersUsed: string[];
   counts: Record<string, number>;
   save: () => Promise<void>;
 }
@@ -179,7 +181,7 @@ function makeFakeOwnershipGuard(): { guard: MarketPipelineOwnershipGuard; loseOw
 function makeRun(overrides: Partial<FakeRunDoc> = {}): FakeRunDoc {
   return {
     _id: new mongoose.Types.ObjectId(), market: { country: 'IN', language: 'en' }, authorizationMode: 'manual-approval', costActualUsd: 0,
-    status: 'running', stage: 'planning', persistenceStage: 'not-started', evaluationSnapshot: null, error: null, finishedAt: null,
+    status: 'running', stage: 'planning', persistenceStage: 'not-started', evaluationSnapshot: null, error: null, startedAt: null, finishedAt: null, providersUsed: [],
     counts: { keywordsDiscovered: 0, keywordsRetained: 0, keywordsRejected: 0, clusters: 0, opportunities: 0, cacheHits: 0, cacheMisses: 0, serpsFetched: 0, mappingsProduced: 0, recommendationsCreated: 0, recommendationsUpdated: 0, recommendationsResolved: 0 },
     save: jest.fn(async () => undefined),
     ...overrides,
@@ -234,6 +236,12 @@ describe('C: discovery through runFullPipeline (real DataForSeoProvider, mocked 
     expect(persistedMetrics.some((m) => m.searchVolume === 480)).toBe(true);
     expect(seed.providerDiscoveryState.find((s) => s.provider === 'dataforseo')?.lastDiscoveredAt).not.toBeNull();
     expect(seed.save).toHaveBeenCalled();
+
+    expect(runDoc.startedAt).toBeInstanceOf(Date);
+    expect(runDoc.providersUsed).toEqual(['dataforseo']);
+    expect(runDoc.counts.keywordsDiscovered).toBe(1);
+    expect(runDoc.counts.keywordsRetained).toBe(1);
+    expect(runDoc.counts.keywordsRejected).toBe(0);
   });
 
   it('C2: discovery provider failure -> no false providerDiscoveryState freshness update, run fails, no resolution attempted', async () => {
