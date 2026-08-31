@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import { fingerprint } from '../../seo.util';
 import mongoose from 'mongoose';
 import { marketConfig } from '../market.config';
 import { MarketOpportunityDraft } from '../market.types';
@@ -54,7 +55,9 @@ export function buildEvaluationSnapshot(
   degradationReasons: string[],
   version = 1,
 ): IEvaluationSnapshot {
-  const draftFingerprints = drafts.map((d) => `${d.recommendationId}::reco::${d.discriminator}`).sort();
+  const draftFingerprints = drafts
+    .map((d) => fingerprint(d.recommendationId, 'reco', d.discriminator))
+    .sort();
   const allowResolution = evaluationOutcome === 'completed'; // structural invariant — never computed any other way
   return {
     version,
