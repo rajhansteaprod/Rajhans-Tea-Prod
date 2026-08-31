@@ -13,6 +13,7 @@ import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartStore } from '../../../core/services/cart.store';
 import { CatalogService, Product, Category, Collection } from '../../../core/services/catalog.service';
+import { PlatformService } from '../../../core/services/platform.service';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { LogoComponent } from '../../../shared/components/logo/logo.component';
 @Component({
@@ -27,6 +28,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   readonly cart = inject(CartStore);
   private readonly router = inject(Router);
   private readonly catalog = inject(CatalogService);
+  private readonly platform = inject(PlatformService);
 
   readonly mobileOpen = signal(false);
   readonly shopSectionOpen = signal(true); // Drawer shop section - expanded by default
@@ -69,7 +71,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    document.body.style.overflow = '';
+    this.platform.runInBrowser(() => {
+      document.body.style.overflow = '';
+    });
   }
 
   // ── SEARCH ──
@@ -233,11 +237,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const filtered = recent.filter(s => s.toLowerCase() !== query.toLowerCase());
     const updated = [query, ...filtered].slice(0, 5);
     this.recentSearches.set(updated);
-    localStorage.setItem('recentSearches', JSON.stringify(updated));
+    this.platform.localStorage.setItem('recentSearches', JSON.stringify(updated));
   }
 
   private loadRecentSearches(): void {
-    const saved = localStorage.getItem('recentSearches');
+    const saved = this.platform.localStorage.getItem('recentSearches');
     if (saved) {
       try {
         this.recentSearches.set(JSON.parse(saved));

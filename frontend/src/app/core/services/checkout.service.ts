@@ -164,7 +164,7 @@ export class CheckoutService {
 
   constructor() {
     // Load address from localStorage on init
-    const saved = localStorage.getItem('checkout_address');
+    const saved = this.platform.localStorage.getItem('checkout_address');
     if (saved) {
       try {
         const data = JSON.parse(saved);

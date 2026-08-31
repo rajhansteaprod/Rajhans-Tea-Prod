@@ -11,6 +11,7 @@ import { serverRoutes } from './app.routes.server';
 import { TrailingSlashUrlSerializer } from './core/routing/trailing-slash-url-serializer';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { loadingInterceptor } from './core/interceptors/loading.interceptor';
+import { serverTimeoutInterceptor } from './core/interceptors/server-timeout.interceptor';
 import { AuthService } from './core/services/auth.service';
 import { errorInterceptor } from './interceptors/error.interceptor';
 export const config: ApplicationConfig = {
@@ -19,7 +20,7 @@ export const config: ApplicationConfig = {
     provideAnimations(),
     provideRouter(routes),
     { provide: UrlSerializer, useClass: TrailingSlashUrlSerializer },
-    provideHttpClient(withInterceptors([authInterceptor, loadingInterceptor, errorInterceptor])),
+    provideHttpClient(withInterceptors([serverTimeoutInterceptor, authInterceptor, loadingInterceptor, errorInterceptor])),
     provideNzI18n(en_US),
     {
       provide: APP_INITIALIZER,
