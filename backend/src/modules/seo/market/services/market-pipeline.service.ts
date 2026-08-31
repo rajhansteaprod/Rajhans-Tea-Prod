@@ -323,6 +323,15 @@ export async function runFullPipelineInternal(runId: mongoose.Types.ObjectId, de
   if (!run) throw new Error(`runFullPipeline: run ${String(runId)} not found`);
 
   try {
+    const ownershipGuard = deps.ownershipGuard ?? alwaysOwnedGuard;
+
+    if (!run.startedAt) {
+      if (ownershipGuard.isLost()) throw new OwnershipLostError();
+      await ownershipGuard.assertOwned();
+      run.startedAt = deps.now ? deps.now() : new Date();
+      await run.save();
+    }
+
     // Resume case B — evaluationSnapshot already frozen: never recompute evidence/scoring, only resume staged persistence.
     if (run.evaluationSnapshot) {
       await runStagedPersistence(run, deps.ownershipGuard ?? alwaysOwnedGuard);
@@ -440,6 +449,10 @@ async function runEvaluation(run: ISearchMarketRunDoc, deps: MarketPipelineDeps)
         await seedDoc.save();
       }
       run.costActualUsd = Math.max(run.costActualUsd, budget.getCumulativeRunUsd());
+      if (!Array.isArray(run.providersUsed)) run.providersUsed = [];
+      if (!run.providersUsed.includes(keywordProvider.id)) {
+        run.providersUsed.push(keywordProvider.id);
+      }
       await run.save();
     } catch (e) {
       if (isOwnershipLost(e)) throw e; // propagate to top-level handler — no further paid work or mutation, run left resumable
@@ -480,6 +493,22 @@ async function runEvaluation(run: ISearchMarketRunDoc, deps: MarketPipelineDeps)
   const universe = buildActiveKeywordUniverse({
     seeds, discoveryKeywords: discoveryKeywordStrings, cachedKeywords, carryForwardKeywords, keywordIdentityMap: identityMap, taxonomy, now: now(),
   });
+
+  const uniqueDiscovered = new Set(
+    discoveryKeywordStrings.map(normalizeKeyword).filter(Boolean),
+  );
+  const activeNormalized = new Set(
+    universe.active.map((k) => k.normalizedKeyword),
+  );
+  const retainedDiscovered = [...uniqueDiscovered].filter((nk) =>
+    activeNormalized.has(nk),
+  ).length;
+
+  run.counts.keywordsDiscovered = uniqueDiscovered.size;
+  run.counts.keywordsRetained = retainedDiscovered;
+  run.counts.keywordsRejected = uniqueDiscovered.size - retainedDiscovered;
+  await run.save();
+
   if (universe.active.length === 0) {
     await failRun(run, 'active keyword universe is empty — nothing to evaluate');
     return;
