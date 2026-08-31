@@ -94,7 +94,37 @@ jest.mock('../../../src/modules/seo/market/models/search-market-run.model', () =
 }));
 
 jest.mock('../../../src/modules/seo/market/models/search-seed.model', () => ({
-  SearchSeed: { find: jest.fn(() => ({ exec: async () => seedDocs })) },
+  SearchSeed: {
+    find: jest.fn(() => ({
+      exec: async () => seedDocs,
+      lean: () => ({ exec: async () => seedDocs }),
+    })),
+    findOneAndUpdate: jest.fn((filter: any, update: any) => ({
+      exec: async () => {
+        let doc: any = (seedDocs as any[]).find(
+          (s) => s.normalizedTerm === filter.normalizedTerm,
+        );
+        if (!doc) {
+          doc = {
+            term: update.$set.term,
+            normalizedTerm: filter.normalizedTerm,
+            type: update.$set.type,
+            sourceRef: update.$set.sourceRef,
+            market: update.$set.market,
+            enabled: true,
+            providerDiscoveryState: [
+              { provider: 'dataforseo', lastDiscoveredAt: new Date() },
+            ],
+            save: jest.fn(async () => undefined),
+          };
+          (seedDocs as any[]).push(doc);
+        } else {
+          Object.assign(doc, update.$set);
+        }
+        return doc;
+      },
+    })),
+  },
 }));
 
 jest.mock('../../../src/modules/seo/market/models/search-keyword.model', () => ({
