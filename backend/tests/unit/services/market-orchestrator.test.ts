@@ -1,5 +1,6 @@
 import { computeSnapshotHash, buildEvaluationSnapshot, selectSerpCandidates, computePlanFingerprint, computeApprovedCostUsd, SerpCandidateUnit } from '../../../src/modules/seo/market/services/market-orchestrator.service';
 import { MarketOpportunityDraft } from '../../../src/modules/seo/market/market.types';
+import { fingerprint } from '../../../src/modules/seo/seo.util';
 
 function draft(overrides: Partial<MarketOpportunityDraft> = {}): MarketOpportunityDraft {
   return {
@@ -40,6 +41,15 @@ describe('buildEvaluationSnapshot — structural invariant', () => {
     expect(completed.allowResolution).toBe(true);
     const degraded = buildEvaluationSnapshot([draft()], 'degraded', ['serp-refresh-failed']);
     expect(degraded.allowResolution).toBe(false);
+  });
+
+  it('freezes the exact same hashed recommendation fingerprint used by persistence', () => {
+    const d = draft();
+    const snapshot = buildEvaluationSnapshot([d], 'completed', []);
+
+    expect(snapshot.draftFingerprints).toEqual([
+      fingerprint(d.recommendationId, 'reco', d.discriminator),
+    ]);
   });
 });
 
