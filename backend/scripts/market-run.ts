@@ -17,6 +17,7 @@
  * unauthorized run regardless.
  */
 import mongoose from 'mongoose';
+import { config } from '../src/config';
 import { bootstrapMarketProviders } from '../src/modules/seo/market/providers/provider.bootstrap';
 import { marketConfig } from '../src/modules/seo/market/market.config';
 import { SearchMarketRun } from '../src/modules/seo/market/models/search-market-run.model';
@@ -209,8 +210,20 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 // CLI entrypoint guard — only runs when this file is executed directly (`ts-node scripts/market-run.ts ...`),
 // never when imported (e.g. by tests importing `main` for argv-driven integration coverage).
 if (require.main === module) {
-  main().catch((e) => {
-    console.error('market-run failed:', e instanceof Error ? e.message : e);
-    process.exitCode = 1;
-  });
+  (async () => {
+    try {
+      // Standalone CLI bootstrap: connect silently. Do not use the shared
+      // mongoose loader here because it logs the full MongoDB URI.
+      const mongoUri = config.env === 'development' ? config.mongo.testUri : config.mongo.uri;
+      await mongoose.connect(mongoUri);
+      await main();
+    } catch (e) {
+      console.error('market-run failed:', e instanceof Error ? e.message : e);
+      process.exitCode = 1;
+    } finally {
+      if (mongoose.connection.readyState !== 0) {
+        await mongoose.disconnect().catch(() => undefined);
+      }
+    }
+  })();
 }
