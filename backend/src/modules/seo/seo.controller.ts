@@ -17,6 +17,12 @@ import {
   recommendationExists,
   toChangeDraftView,
 } from './services/change-draft-generator.service';
+import {
+  executeApprovedChangeDraft,
+  listExecutionsForDraft,
+  getExecutionById,
+  toExecutionView,
+} from './services/change-execution.service';
 import { RULE_REGISTRY } from './services/rules';
 import { RunScope } from './seo.types';
 import { gscConfig } from './gsc.config';
@@ -177,6 +183,52 @@ export const getChangeDraft = async (req: Request, res: Response) => {
   const draft = await getChangeDraftById(draftId);
   if (!draft) return res.status(404).json({ success: false, statusCode: 404, message: 'Draft not found' });
   return sendSuccess(res, toChangeDraftView(draft));
+};
+
+/**
+ * Phase 5.3 — controlled execution. This is the ONLY endpoint in the SEO module
+ * that mutates production content. It MUTATES the live CMS page's
+ * metaTitle/metaDescription for one approved, valid, metadata-only draft —
+ * after re-checking every eligibility rule server-side. The draft/recommendation
+ * documents in Mongo are the sole source of truth: nothing from the request
+ * body is used as SEO input, so a caller cannot spoof the executor or the
+ * proposed values.
+ */
+export const executeChangeDraft = async (req: Request, res: Response) => {
+  const draftId = str(req.params.draftId) ?? '';
+  const result = await executeApprovedChangeDraft({ draftId, executorUserId: req.user!.userId });
+  if (!result.ok) {
+    const statusByError: Record<string, number> = {
+      invalid_id: 400,
+      not_found: 404,
+      recommendation_not_found: 404,
+      target_not_found: 404,
+    };
+    const statusCode = statusByError[result.error] ?? 409;
+    return res.status(statusCode).json({ success: false, statusCode, message: result.message });
+  }
+  return sendSuccess(res, toExecutionView(result.execution), 'Change executed', 201);
+};
+
+/** Execution history for one draft, newest first. */
+export const getChangeDraftExecutions = async (req: Request, res: Response) => {
+  const draftId = str(req.params.draftId) ?? '';
+  if (!mongoose.isValidObjectId(draftId)) {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'Invalid draft id' });
+  }
+  const executions = await listExecutionsForDraft(draftId);
+  return sendSuccess(res, (executions ?? []).map(toExecutionView));
+};
+
+/** A single execution record by its own id. */
+export const getChangeExecution = async (req: Request, res: Response) => {
+  const executionId = str(req.params.executionId) ?? '';
+  if (!mongoose.isValidObjectId(executionId)) {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'Invalid execution id' });
+  }
+  const execution = await getExecutionById(executionId);
+  if (!execution) return res.status(404).json({ success: false, statusCode: 404, message: 'Execution not found' });
+  return sendSuccess(res, toExecutionView(execution));
 };
 
 /**

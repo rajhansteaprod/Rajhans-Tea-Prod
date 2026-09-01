@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Types, ClientSession } from 'mongoose';
 import { Page, IPageDoc } from '../models/page.model';
 import { Blog, IBlogDoc } from '../models/blog.model';
 import { Product } from '../../catalog/models/product.model';
@@ -36,6 +36,26 @@ export class CmsService {
 
   async deletePage(id: string) {
     await Page.findByIdAndDelete(id).exec();
+  }
+
+  /**
+   * Phase 5.3 — controlled execution. Narrow whitelist write used ONLY by the
+   * SEO change-draft executor: accepts an explicit, already-validated
+   * {metaTitle?, metaDescription?} object built by the caller — never the raw
+   * draft or req.body — and never touches title/slug/content/status.
+   */
+  async updatePageSeoMetadata(
+    id: string,
+    data: { metaTitle?: string; metaDescription?: string },
+    adminUserId: string,
+    options: { session?: ClientSession } = {},
+  ): Promise<IPageDoc> {
+    const $set: Record<string, unknown> = { updatedBy: new Types.ObjectId(adminUserId) };
+    if (data.metaTitle !== undefined) $set['metaTitle'] = data.metaTitle;
+    if (data.metaDescription !== undefined) $set['metaDescription'] = data.metaDescription;
+    const page = await Page.findByIdAndUpdate(id, { $set }, { new: true, session: options.session }).exec();
+    if (!page) throw new NotFoundError('Page not found');
+    return page;
   }
 
   // ─── Blog ─────────────────────────────────────────────────────────────────

@@ -259,6 +259,57 @@
                       }
                     </div>
                   }
+
+                  <!-- Controlled execution (Phase 5.3) — metadata-only, CMS page targets -->
+                  @if (isDraftExecutable(draft)) {
+                    <div class="rec__execute-panel">
+                      @if (executionsFor(draft).length) {
+                        <p class="rec__execute-note">This change has already been executed and cannot be executed again.</p>
+                      } @else {
+                        <p class="rec__execute-warning">This will update live CMS page metadata.</p>
+                        <button class="rec__btn rec__btn--execute" [disabled]="isExecuting(draft)" (click)="executeDraft(draft)">
+                          {{ isExecuting(draft) ? 'Executing…' : 'Execute approved change' }}
+                        </button>
+                      }
+                      @if (executeError(draft)) { <div class="rec__execute-error">{{ executeError(draft) }}</div> }
+
+                      @if (executionsFor(draft).length) {
+                        <div class="rec__execution-history">
+                          <span class="rec__execution-history-label">Execution history</span>
+                          @for (ex of executionsFor(draft); track ex.id) {
+                            <div class="rec__execution-card">
+                              <div class="rec__execution-meta">
+                                <span class="rec__execution-status">{{ ex.status }}</span>
+                                <span>{{ ex.executedAt | date: 'MMM d, y HH:mm' }}</span>
+                                <span>executed by {{ ex.executorUserId }}</span>
+                              </div>
+                              @for (t of ex.targets; track t.targetUrl) {
+                                <div class="rec__execution-target">
+                                  <div class="rec__execution-target-url">
+                                    <a [href]="t.targetUrl" target="_blank" rel="noopener">{{ t.targetUrl }}</a>
+                                  </div>
+                                  @if (t.proposed.metaTitle !== undefined) {
+                                    <div class="rec__pc-field">
+                                      <span>Title</span>
+                                      <p class="rec__pc-current">Before: {{ t.before.metaTitle || '(none)' }}</p>
+                                      <p class="rec__pc-proposed">After: {{ t.after.metaTitle || '(none)' }}</p>
+                                    </div>
+                                  }
+                                  @if (t.proposed.metaDescription !== undefined) {
+                                    <div class="rec__pc-field">
+                                      <span>Meta description</span>
+                                      <p class="rec__pc-current">Before: {{ t.before.metaDescription || '(none)' }}</p>
+                                      <p class="rec__pc-proposed">After: {{ t.after.metaDescription || '(none)' }}</p>
+                                    </div>
+                                  }
+                                </div>
+                              }
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
                 </div>
               }
 
