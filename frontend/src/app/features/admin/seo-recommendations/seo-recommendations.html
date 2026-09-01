@@ -154,6 +154,132 @@
             <button class="rec__review-btn rec__review-btn--reset" [disabled]="isSubmitting(r)" (click)="resetToPending(r)">Reset to Pending</button>
           </div>
         </div>
+
+        <!-- Change-draft panel (Phase 5.2) — GENERATION ONLY, never publishes -->
+        <div class="rec__draft-panel">
+          <button class="rec__expand" (click)="toggleDraftPanel(r)">
+            {{ isDraftPanelOpen(r) ? '▾ Hide change draft' : '▸ Change draft' }}
+          </button>
+
+          @if (isDraftPanelOpen(r)) {
+            <div class="rec__draft">
+              <p class="rec__draft-disclaimer">Draft only — no website changes have been published.</p>
+
+              @if (r.reviewStatus !== 'approved') {
+                <p class="rec__draft-locked">Approval is required before a draft can be generated for this recommendation.</p>
+              } @else {
+                <div class="rec__draft-actions">
+                  <button class="rec__btn rec__btn--draft" [disabled]="isGeneratingDraft(r)" (click)="generateDraft(r)">
+                    {{ isGeneratingDraft(r) ? 'Generating…' : (activeDraft(r) ? 'Regenerate Draft' : 'Generate Draft') }}
+                  </button>
+                </div>
+              }
+              @if (draftError(r)) { <div class="rec__draft-error">{{ draftError(r) }}</div> }
+
+              @if (activeDraft(r); as draft) {
+                <div class="rec__draft-card">
+                  <div class="rec__draft-meta">
+                    <span class="rec__draft-status rec__draft-status--{{ draft.status }}">{{ draft.status }}</span>
+                    <span>generator {{ draft.generatorVersion }}</span>
+                    <span>generated {{ draft.generatedAt | date: 'MMM d, y HH:mm' }}</span>
+                    <span>target <a [href]="draft.targetUrl" target="_blank" rel="noopener">{{ draft.targetUrl }}</a></span>
+                  </div>
+
+                  @if (draft.validation.errors.length) {
+                    <div class="rec__draft-validation rec__draft-validation--errors">
+                      <span>Validation errors</span>
+                      <ul>@for (e of draft.validation.errors; track e) { <li>{{ e }}</li> }</ul>
+                    </div>
+                  }
+                  @if (draft.validation.warnings.length) {
+                    <div class="rec__draft-validation rec__draft-validation--warnings">
+                      <span>Validation warnings</span>
+                      <ul>@for (w of draft.validation.warnings; track w) { <li>{{ w }}</li> }</ul>
+                    </div>
+                  }
+
+                  @for (c of draft.proposedChanges; track $index) {
+                    <div class="rec__pc">
+                      @switch (c.kind) {
+                        @case ('metadata') {
+                          <div class="rec__pc-head">Metadata — <a [href]="c.targetUrl" target="_blank" rel="noopener">{{ c.targetUrl }}</a></div>
+                          @if (c.fields.title; as t) {
+                            <div class="rec__pc-field">
+                              <span>Title</span>
+                              <p class="rec__pc-current">Current: {{ t.current || '(none)' }}</p>
+                              <p class="rec__pc-proposed">Proposed: {{ t.proposed }} <em>({{ fieldChars(t) }} chars)</em></p>
+                            </div>
+                          }
+                          @if (c.fields.metaDescription; as d) {
+                            <div class="rec__pc-field">
+                              <span>Meta description</span>
+                              <p class="rec__pc-current">Current: {{ d.current || '(none)' }}</p>
+                              <p class="rec__pc-proposed">Proposed: {{ d.proposed }} <em>({{ fieldChars(d) }} chars)</em></p>
+                            </div>
+                          }
+                          @if (c.fields.h1; as h) {
+                            <div class="rec__pc-field">
+                              <span>H1</span>
+                              <p class="rec__pc-current">Current: {{ h.current || '(none)' }}</p>
+                              <p class="rec__pc-proposed">Proposed: {{ h.proposed }}</p>
+                            </div>
+                          }
+                        }
+                        @case ('structured_data') {
+                          <div class="rec__pc-head">Structured data ({{ c.schemaType }}) — <a [href]="c.targetUrl" target="_blank" rel="noopener">{{ c.targetUrl }}</a></div>
+                          <pre class="rec__pc-json">{{ json(c.jsonLd) }}</pre>
+                        }
+                        @case ('internal_link') {
+                          <div class="rec__pc-head">Internal link</div>
+                          <div class="rec__pc-field"><span>Source URL</span><p>{{ c.sourceUrl || 'Not determined — select manually' }}</p></div>
+                          <div class="rec__pc-field"><span>Target URL</span><p><a [href]="c.targetUrl" target="_blank" rel="noopener">{{ c.targetUrl }}</a></p></div>
+                          <div class="rec__pc-field"><span>Suggested anchor text</span><p>{{ c.anchorText || 'Not determined — choose manually' }}</p></div>
+                        }
+                        @case ('content') {
+                          <div class="rec__pc-head">Content outline — <a [href]="c.targetUrl" target="_blank" rel="noopener">{{ c.targetUrl }}</a></div>
+                          @for (b of c.blocks; track b.heading) {
+                            <div class="rec__pc-field"><span>{{ b.heading }}</span><p>{{ b.body || '(to be authored)' }}</p></div>
+                          }
+                        }
+                        @case ('faq') {
+                          <div class="rec__pc-head">FAQ — <a [href]="c.targetUrl" target="_blank" rel="noopener">{{ c.targetUrl }}</a></div>
+                          @if (c.items.length) {
+                            @for (item of c.items; track item.question) {
+                              <div class="rec__pc-field"><span>{{ item.question }}</span><p>{{ item.answer }}</p></div>
+                            }
+                          } @else {
+                            <p class="rec__pc-empty">No FAQ items — insufficient evidence to propose Q&A content.</p>
+                          }
+                        }
+                        @case ('generic') {
+                          <div class="rec__pc-head">{{ c.summary }}</div>
+                          <p class="rec__pc-instructions">{{ c.instructions }}</p>
+                          @if (c.targetUrl) { <p><a [href]="c.targetUrl" target="_blank" rel="noopener">{{ c.targetUrl }}</a></p> }
+                        }
+                      }
+                    </div>
+                  }
+                </div>
+              }
+
+              @if (draftsFor(r).length) {
+                <button class="rec__expand" (click)="toggleDraftHistory(r)">
+                  {{ isDraftHistoryOpen(r) ? '▾ Hide draft history' : '▸ Draft history (' + draftsFor(r).length + ')' }}
+                </button>
+                @if (isDraftHistoryOpen(r)) {
+                  <ul class="rec__draft-history">
+                    @for (d of draftsFor(r); track d.id) {
+                      <li>
+                        <span class="rec__draft-status rec__draft-status--{{ d.status }}">{{ d.status }}</span>
+                        {{ d.generatorVersion }} · {{ d.generatedAt | date: 'MMM d, y HH:mm' }}
+                      </li>
+                    }
+                  </ul>
+                }
+              }
+            </div>
+          }
+        </div>
       </div>
     }
 

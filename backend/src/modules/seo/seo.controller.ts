@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { sendSuccess } from '../../utils/api-response';
 import { SeoAuditRun } from './models/seo-audit-run.model';
 import { getSeoAuditQueue, SEO_RUN_JOB } from './jobs/queues/seo-audit.queue';
@@ -9,6 +10,13 @@ import {
   toView as toRecommendationView,
   RecommendationReviewStatus,
 } from './services/recommendation.service';
+import {
+  generateChangeDraft,
+  listChangeDrafts,
+  getChangeDraftById,
+  recommendationExists,
+  toChangeDraftView,
+} from './services/change-draft-generator.service';
 import { RULE_REGISTRY } from './services/rules';
 import { RunScope } from './seo.types';
 import { gscConfig } from './gsc.config';
@@ -123,6 +131,52 @@ export const reviewRecommendation = async (req: Request, res: Response) => {
   }
 
   return sendSuccess(res, toRecommendationView(updated, String(updated.lastSeenRunId)), 'Review updated');
+};
+
+/**
+ * Phase 5.2 — generate a new structured change-draft for an approved, OPEN
+ * recommendation. GENERATION ONLY: this never publishes, mutates, or executes
+ * any SEO change — it only persists a reviewable proposal document. Approval
+ * eligibility is re-checked server-side; nothing about the frontend's state
+ * is trusted. Regenerating supersedes the recommendation's previous active
+ * draft(s) rather than overwriting them (audit history is preserved).
+ */
+export const generateRecommendationDraft = async (req: Request, res: Response) => {
+  const id = str(req.params.id) ?? '';
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'Invalid recommendation id' });
+  }
+
+  const result = await generateChangeDraft({ recommendationId: id, generatedBy: req.user!.userId });
+  if (!result.ok) {
+    const statusCode = result.error === 'not_found' ? 404 : 409;
+    return res.status(statusCode).json({ success: false, statusCode, message: result.message });
+  }
+  return sendSuccess(res, toChangeDraftView(result.draft), 'Draft generated', 201);
+};
+
+/** Draft history for one recommendation, newest first. */
+export const getRecommendationDraftHistory = async (req: Request, res: Response) => {
+  const id = str(req.params.id) ?? '';
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'Invalid recommendation id' });
+  }
+  if (!(await recommendationExists(id))) {
+    return res.status(404).json({ success: false, statusCode: 404, message: 'Recommendation not found' });
+  }
+  const drafts = await listChangeDrafts(id);
+  return sendSuccess(res, (drafts ?? []).map(toChangeDraftView));
+};
+
+/** A single change draft by its own id. */
+export const getChangeDraft = async (req: Request, res: Response) => {
+  const draftId = str(req.params.draftId) ?? '';
+  if (!mongoose.isValidObjectId(draftId)) {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'Invalid draft id' });
+  }
+  const draft = await getChangeDraftById(draftId);
+  if (!draft) return res.status(404).json({ success: false, statusCode: 404, message: 'Draft not found' });
+  return sendSuccess(res, toChangeDraftView(draft));
 };
 
 /**
