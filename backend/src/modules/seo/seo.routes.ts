@@ -17,6 +17,9 @@ adminRouter.get('/seo/runs/:id/issues', ctrl.getIssues);
 adminRouter.get('/seo/checks', ctrl.getChecks);
 adminRouter.get('/seo/recommendations', ctrl.getRecommendations);
 adminRouter.patch('/seo/recommendations/:id/review', ctrl.reviewRecommendation);
+adminRouter.post('/seo/recommendations/:id/draft', ctrl.generateRecommendationDraft);
+adminRouter.get('/seo/recommendations/:id/drafts', ctrl.getRecommendationDraftHistory);
+adminRouter.get('/seo/change-drafts/:draftId', ctrl.getChangeDraft);
 adminRouter.get('/seo/gsc/summary', ctrl.getGscSummary);
 adminRouter.post('/seo/gsc/sync', ctrl.triggerGscSync);
 

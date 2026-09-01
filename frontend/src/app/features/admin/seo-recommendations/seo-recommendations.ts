@@ -65,6 +65,71 @@ interface RecoReport {
   resolved: Recommendation[];
 }
 
+// ── Phase 5.2 — change-draft types (mirrors backend SeoChangeDraft view) ──
+interface MetadataFieldChange {
+  current: string | null;
+  proposed: string;
+}
+interface MetadataProposedChange {
+  kind: 'metadata';
+  targetUrl: string;
+  fields: { title?: MetadataFieldChange; metaDescription?: MetadataFieldChange; h1?: MetadataFieldChange };
+}
+interface StructuredDataProposedChange {
+  kind: 'structured_data';
+  targetUrl: string;
+  schemaType: string;
+  jsonLd: Record<string, unknown>;
+}
+interface InternalLinkProposedChange {
+  kind: 'internal_link';
+  sourceUrl: string | null;
+  targetUrl: string;
+  anchorText: string | null;
+}
+interface ContentProposedChange {
+  kind: 'content';
+  targetUrl: string;
+  blocks: { heading: string; body: string }[];
+}
+interface FaqProposedChange {
+  kind: 'faq';
+  targetUrl: string;
+  items: { question: string; answer: string }[];
+}
+interface GenericProposedChange {
+  kind: 'generic';
+  targetUrl: string;
+  summary: string;
+  instructions: string;
+  details?: Record<string, unknown>;
+}
+type ProposedChange =
+  | MetadataProposedChange
+  | StructuredDataProposedChange
+  | InternalLinkProposedChange
+  | ContentProposedChange
+  | FaqProposedChange
+  | GenericProposedChange;
+
+interface ChangeDraft {
+  id: string;
+  recommendationId: string;
+  recommendationFingerprint: string;
+  targetUrl: string;
+  source: string;
+  type: string;
+  status: 'draft' | 'superseded';
+  generatorVersion: string;
+  generatedAt: string;
+  generatedBy: string;
+  inputSnapshot: Record<string, unknown>;
+  proposedChanges: ProposedChange[];
+  validation: { isValid: boolean; warnings: string[]; errors: string[] };
+  createdAt: string;
+  updatedAt: string;
+}
+
 /**
  * SEO growth recommendations (Phase 3A) plus a human review layer (Phase 5.1).
  * Synthesizes the latest audit into prioritized, actionable advice. Review is
@@ -96,6 +161,15 @@ export class SeoRecommendationsComponent implements OnInit {
   readonly reviewNoteDrafts = signal<Record<string, string>>({});
   readonly reviewSubmitting = signal<Record<string, boolean>>({});
   readonly reviewErrors = signal<Record<string, string>>({});
+
+  // ── Phase 5.2 — change-draft state, keyed by recommendation id. Draft
+  // generation is GENERATION ONLY: it never publishes, mutates, or executes
+  // any SEO change — it only creates a reviewable proposal document. ──
+  readonly drafts = signal<Record<string, ChangeDraft[]>>({});
+  readonly draftPanelOpen = signal<Set<string>>(new Set());
+  readonly draftHistoryOpen = signal<Set<string>>(new Set());
+  readonly draftGenerating = signal<Record<string, boolean>>({});
+  readonly draftErrors = signal<Record<string, string>>({});
 
   ngOnInit(): void {
     this.load();
@@ -239,6 +313,82 @@ export class SeoRecommendationsComponent implements OnInit {
         this.reviewSubmitting.set({ ...this.reviewSubmitting(), [r.id]: false });
         this.reviewErrors.set({ ...this.reviewErrors(), [r.id]: e?.error?.message || 'Failed to update review' });
       },
+    });
+  }
+
+  // ── Phase 5.2 — change-draft panel (generation-only; never publishes) ──
+  isDraftPanelOpen(r: Recommendation): boolean {
+    return this.draftPanelOpen().has(r.id);
+  }
+
+  toggleDraftPanel(r: Recommendation): void {
+    const set = new Set(this.draftPanelOpen());
+    if (set.has(r.id)) {
+      set.delete(r.id);
+    } else {
+      set.add(r.id);
+      if (!this.drafts()[r.id]) this.loadDraftHistory(r);
+    }
+    this.draftPanelOpen.set(set);
+  }
+
+  isDraftHistoryOpen(r: Recommendation): boolean {
+    return this.draftHistoryOpen().has(r.id);
+  }
+
+  toggleDraftHistory(r: Recommendation): void {
+    const set = new Set(this.draftHistoryOpen());
+    if (set.has(r.id)) set.delete(r.id);
+    else set.add(r.id);
+    this.draftHistoryOpen.set(set);
+  }
+
+  draftsFor(r: Recommendation): ChangeDraft[] {
+    return this.drafts()[r.id] ?? [];
+  }
+
+  activeDraft(r: Recommendation): ChangeDraft | null {
+    return this.draftsFor(r).find((d) => d.status === 'draft') ?? null;
+  }
+
+  supersededDrafts(r: Recommendation): ChangeDraft[] {
+    return this.draftsFor(r).filter((d) => d.status === 'superseded');
+  }
+
+  isGeneratingDraft(r: Recommendation): boolean {
+    return !!this.draftGenerating()[r.id];
+  }
+
+  draftError(r: Recommendation): string {
+    return this.draftErrors()[r.id] ?? '';
+  }
+
+  fieldChars(field: MetadataFieldChange | undefined): number {
+    return field?.proposed.length ?? 0;
+  }
+
+  generateDraft(r: Recommendation): void {
+    this.draftErrors.set({ ...this.draftErrors(), [r.id]: '' });
+    this.draftGenerating.set({ ...this.draftGenerating(), [r.id]: true });
+    this.http.post<{ data: ChangeDraft }>(`${this.base}/recommendations/${r.id}/draft`, {}).subscribe({
+      next: () => {
+        this.draftGenerating.set({ ...this.draftGenerating(), [r.id]: false });
+        const set = new Set(this.draftPanelOpen());
+        set.add(r.id);
+        this.draftPanelOpen.set(set);
+        this.loadDraftHistory(r); // Never claim success before the API confirms — refresh from the server.
+      },
+      error: (e) => {
+        this.draftGenerating.set({ ...this.draftGenerating(), [r.id]: false });
+        this.draftErrors.set({ ...this.draftErrors(), [r.id]: e?.error?.message || 'Failed to generate draft' });
+      },
+    });
+  }
+
+  private loadDraftHistory(r: Recommendation): void {
+    this.http.get<{ data: ChangeDraft[] }>(`${this.base}/recommendations/${r.id}/drafts`).subscribe({
+      next: (res) => this.drafts.set({ ...this.drafts(), [r.id]: res.data }),
+      error: (e) => this.draftErrors.set({ ...this.draftErrors(), [r.id]: e?.error?.message || 'Failed to load draft history' }),
     });
   }
 }
