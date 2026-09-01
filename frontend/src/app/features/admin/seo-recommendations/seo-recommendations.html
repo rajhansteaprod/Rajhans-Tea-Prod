@@ -304,6 +304,68 @@
                                   }
                                 </div>
                               }
+
+                              <!-- Post-execution verification (Phase 5.4A) — read-only forensics against the live public page -->
+                              <div class="rec__verify-panel">
+                                <button class="rec__btn rec__btn--verify" [disabled]="isVerifying(ex)" (click)="verifyLiveResult(ex)">
+                                  {{ isVerifying(ex) ? 'Verifying…' : 'Verify live result' }}
+                                </button>
+                                @if (verifyErrorFor(ex)) { <div class="rec__verify-error">{{ verifyErrorFor(ex) }}</div> }
+
+                                @if (latestVerification(ex); as v) {
+                                  <div class="rec__verify-card rec__verify-card--{{ v.status }}">
+                                    <div class="rec__verify-meta">
+                                      <span class="rec__verify-status rec__verify-status--{{ v.status }}">{{ verificationStatusLabel(v.status) }}</span>
+                                      <span>{{ v.verifiedAt | date: 'MMM d, y HH:mm' }}</span>
+                                      <span>verified by {{ v.verifierUserId }}</span>
+                                    </div>
+                                    @for (vt of v.targets; track vt.targetUrl) {
+                                      <div class="rec__execution-target">
+                                        <div class="rec__execution-target-url">
+                                          <a [href]="vt.targetUrl" target="_blank" rel="noopener">{{ vt.targetUrl }}</a>
+                                          <span class="rec__verify-status rec__verify-status--{{ vt.status }}">{{ verificationStatusLabel(vt.status) }}</span>
+                                        </div>
+                                        @if (vt.expected.renderedTitle !== undefined) {
+                                          <div class="rec__pc-field">
+                                            <span>Title{{ vt.matches.title === false ? ' — mismatch' : '' }}</span>
+                                            <p class="rec__pc-current">Expected: {{ vt.expected.renderedTitle }}</p>
+                                            <p class="rec__pc-proposed">Observed: {{ vt.observed.renderedTitle ?? '(not fetched)' }}</p>
+                                          </div>
+                                        }
+                                        @if (vt.expected.metaDescription !== undefined) {
+                                          <div class="rec__pc-field">
+                                            <span>Meta description{{ vt.matches.metaDescription === false ? ' — mismatch' : '' }}</span>
+                                            <p class="rec__pc-current">Expected: {{ vt.expected.metaDescription || '(none)' }}</p>
+                                            <p class="rec__pc-proposed">Observed: {{ vt.observed.metaDescription ?? '(not fetched)' }}</p>
+                                          </div>
+                                        }
+                                        @if (vt.status === 'fetch_failed') {
+                                          <p class="rec__verify-fetch-error">Fetch failed: {{ vt.fetch.error || ('HTTP ' + vt.fetch.finalStatus) }}</p>
+                                        }
+                                        @if (vt.mismatchFields.length) {
+                                          <p class="rec__verify-fetch-error">Mismatch: {{ vt.mismatchFields.join(', ') }}</p>
+                                        }
+                                      </div>
+                                    }
+                                  </div>
+                                }
+
+                                @if (verificationsFor(ex).length > 1) {
+                                  <button class="rec__expand" (click)="toggleVerificationHistory(ex)">
+                                    {{ isVerificationHistoryOpen(ex) ? '▾ Hide verification history' : '▸ Verification history (' + verificationsFor(ex).length + ')' }}
+                                  </button>
+                                  @if (isVerificationHistoryOpen(ex)) {
+                                    <ul class="rec__draft-history">
+                                      @for (v2 of olderVerifications(ex); track v2.id) {
+                                        <li>
+                                          <span class="rec__verify-status rec__verify-status--{{ v2.status }}">{{ verificationStatusLabel(v2.status) }}</span>
+                                          {{ v2.verifiedAt | date: 'MMM d, y HH:mm' }} · {{ v2.verifierVersion }}
+                                        </li>
+                                      }
+                                    </ul>
+                                  }
+                                }
+                              </div>
                             </div>
                           }
                         </div>

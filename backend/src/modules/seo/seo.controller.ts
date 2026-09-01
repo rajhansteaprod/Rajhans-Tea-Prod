@@ -23,6 +23,12 @@ import {
   getExecutionById,
   toExecutionView,
 } from './services/change-execution.service';
+import {
+  verifyExecution,
+  listVerificationsForExecution,
+  getVerificationById,
+  toVerificationView,
+} from './services/change-verification.service';
 import { RULE_REGISTRY } from './services/rules';
 import { RunScope } from './seo.types';
 import { gscConfig } from './gsc.config';
@@ -229,6 +235,54 @@ export const getChangeExecution = async (req: Request, res: Response) => {
   const execution = await getExecutionById(executionId);
   if (!execution) return res.status(404).json({ success: false, statusCode: 404, message: 'Execution not found' });
   return sendSuccess(res, toExecutionView(execution));
+};
+
+/**
+ * Phase 5.4A — post-execution verification. Manual admin action that re-checks
+ * a SUCCESSFUL Phase 5.3 execution against the LIVE PUBLIC page. Read-only
+ * with respect to Page/SeoChangeExecution/SeoChangeDraft/SeoRecommendation —
+ * the only thing this ever creates is a new, immutable SeoChangeVerification
+ * record. Does not require the recommendation to still be open/approved: the
+ * execution already happened, and this verifies THAT execution, forensically.
+ * The request body is never consulted — it cannot control the expected SEO
+ * values or spoof the verifier.
+ */
+export const verifyChangeExecution = async (req: Request, res: Response) => {
+  const executionId = str(req.params.executionId) ?? '';
+  const result = await verifyExecution({ executionId, verifierUserId: req.user!.userId });
+  if (!result.ok) {
+    const statusByError: Record<string, number> = {
+      invalid_id: 400,
+      not_found: 404,
+      unsupported_state: 409,
+    };
+    const statusCode = statusByError[result.error] ?? 409;
+    return res.status(statusCode).json({ success: false, statusCode, message: result.message });
+  }
+  return sendSuccess(res, toVerificationView(result.verification), 'Verification recorded', 201);
+};
+
+/** Verification history for one execution, newest first. Multiple attempts are expected. */
+export const getChangeExecutionVerifications = async (req: Request, res: Response) => {
+  const executionId = str(req.params.executionId) ?? '';
+  if (!mongoose.isValidObjectId(executionId)) {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'Invalid execution id' });
+  }
+  const verifications = await listVerificationsForExecution(executionId);
+  return sendSuccess(res, (verifications ?? []).map(toVerificationView));
+};
+
+/** A single verification record by its own id. */
+export const getChangeVerification = async (req: Request, res: Response) => {
+  const verificationId = str(req.params.verificationId) ?? '';
+  if (!mongoose.isValidObjectId(verificationId)) {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'Invalid verification id' });
+  }
+  const verification = await getVerificationById(verificationId);
+  if (!verification) {
+    return res.status(404).json({ success: false, statusCode: 404, message: 'Verification not found' });
+  }
+  return sendSuccess(res, toVerificationView(verification));
 };
 
 /**
