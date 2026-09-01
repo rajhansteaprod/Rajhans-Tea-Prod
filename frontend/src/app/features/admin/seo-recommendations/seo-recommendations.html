@@ -23,11 +23,44 @@
       {{ rep.summary.delta.new }} new · {{ rep.summary.delta.persistent }} persistent · {{ rep.summary.delta.resolved }} resolved
     </p>
 
+    <!-- Review summary cards (Phase 5.1) -->
+    <div class="rec__cards rec__cards--review">
+      <div class="rec__card rec__card--review-pending"><span>Pending Review</span><strong>{{ rep.summary.reviewSummary.pending }}</strong></div>
+      <div class="rec__card rec__card--review-approved"><span>Approved</span><strong>{{ rep.summary.reviewSummary.approved }}</strong></div>
+      <div class="rec__card rec__card--review-rejected"><span>Rejected</span><strong>{{ rep.summary.reviewSummary.rejected }}</strong></div>
+      <div class="rec__card rec__card--review-needs"><span>Needs Changes</span><strong>{{ rep.summary.reviewSummary.needsChanges }}</strong></div>
+    </div>
+
+    <!-- Filters (client-side, over the currently loaded list) -->
+    <div class="rec__filters">
+      <select class="rec__filter" [(ngModel)]="reviewStatusFilter">
+        <option value="all">All review statuses</option>
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+        <option value="needs_changes">Needs Changes</option>
+      </select>
+      <select class="rec__filter" [(ngModel)]="sourceFilter">
+        <option value="all">All sources</option>
+        <option value="audit">Audit</option>
+        <option value="gsc">GSC</option>
+        <option value="market">Market</option>
+      </select>
+      <select class="rec__filter" [(ngModel)]="priorityFilter">
+        <option value="all">All priorities</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+
     <!-- Recommendation list -->
     @if (rep.recommendations.length === 0) {
       <p class="rec__muted">No open recommendations. The site is in great shape. 🎉</p>
+    } @else if (filteredRecommendations(rep).length === 0) {
+      <p class="rec__muted">No recommendations match the current filters.</p>
     }
-    @for (r of rep.recommendations; track key(r)) {
+    @for (r of filteredRecommendations(rep); track key(r)) {
       <div class="rec__item rec__item--{{ r.priority }}">
         <div class="rec__item-top">
           <span class="rec__badge rec__badge--{{ r.priority }}">{{ r.priority }}</span>
@@ -35,8 +68,10 @@
           <span class="rec__cat">{{ r.category }}</span>
           <span class="rec__effort">{{ r.estimatedEffort }} effort</span>
           @if (r.source === 'gsc') { <span class="rec__scope">GSC</span> }
+          @if (r.source === 'market') { <span class="rec__scope rec__scope--market">Market</span> }
           @if (r.confidence) { <span class="rec__conf rec__conf--{{ r.confidence }}">{{ r.confidence }} confidence</span> }
           @if (r.state === 'new') { <span class="rec__tag rec__tag--new">new</span> }
+          <span class="rec__review-badge rec__review-badge--{{ r.reviewStatus }}">{{ reviewLabel(r.reviewStatus) }}</span>
           <span class="rec__score">score {{ r.score }}</span>
         </div>
         @if ((r.demandImpressions ?? 0) > 0) {
@@ -60,6 +95,22 @@
           </div>
         }
 
+        <!-- Readable market evidence (Phase 5.1) -->
+        @if (marketEvidence(r); as me) {
+          <div class="rec__market-evidence">
+            <div class="rec__me-row"><span>Keyword cluster</span><strong>{{ displayText(me.clusterLabel) }}</strong></div>
+            <div class="rec__me-row"><span>Primary intent</span><strong>{{ displayText(me.primaryIntent) }}</strong></div>
+            <div class="rec__me-row"><span>Business relevance</span><strong>{{ displayPercent(me.businessRelevanceScore) }}</strong></div>
+            <div class="rec__me-row"><span>Search demand</span><strong>{{ displayNumber(me.demand?.maxKnownVolume, !!me.demand?.metricsKnown) }}</strong></div>
+            <div class="rec__me-row"><span>GSC impressions</span><strong>{{ displayNumber(me.matchedPageGsc?.impressions, !!me.matchedPageGsc?.evidenceKnown) }}</strong></div>
+            <div class="rec__me-row"><span>Matched page</span><strong>{{ displayText(me.mapping?.matchedUrl) }}</strong></div>
+            <div class="rec__me-row"><span>Average position</span><strong>{{ displayNumber(me.matchedPageGsc?.avgPosition, !!me.matchedPageGsc?.evidenceKnown) }}</strong></div>
+            <div class="rec__me-row"><span>Mapping bucket</span><strong>{{ displayText(me.mapping?.bucket) }}</strong></div>
+            <div class="rec__me-row"><span>Cannibalization risk</span><strong>{{ me.cannibalizationRisk == null ? 'Unknown' : (me.cannibalizationRisk ? 'Yes' : 'No') }}</strong></div>
+            <div class="rec__me-row"><span>Confidence</span><strong>{{ displayText(me.confidence) }}</strong></div>
+          </div>
+        }
+
         <button class="rec__expand" (click)="toggle(r)">
           {{ isOpen(r) ? '▾ Hide evidence' : '▸ Evidence & related findings' }}
         </button>
@@ -74,6 +125,35 @@
             <pre>{{ json(r.evidence) }}</pre>
           </div>
         }
+
+        <!-- Human review panel (Phase 5.1) — review-only, never publishes or changes SEO -->
+        <div class="rec__review-panel">
+          <div class="rec__review-status">
+            Review: <strong class="rec__review-badge rec__review-badge--{{ r.reviewStatus }}">{{ reviewLabel(r.reviewStatus) }}</strong>
+            @if (r.reviewedAt) {
+              <span class="rec__reviewed-meta">
+                · reviewed {{ r.reviewedAt | date: 'MMM d, y HH:mm' }}@if (r.reviewedBy) {<span> by {{ r.reviewedBy }}</span>}
+              </span>
+            }
+          </div>
+          @if (r.reviewNote) { <p class="rec__review-note">“{{ r.reviewNote }}”</p> }
+
+          <textarea
+            class="rec__review-input"
+            rows="2"
+            placeholder="Optional note (required for Reject / Needs Changes)"
+            [ngModel]="noteDraft(r)"
+            (ngModelChange)="setNoteDraft(r, $event)"
+          ></textarea>
+          @if (reviewError(r)) { <div class="rec__review-error">{{ reviewError(r) }}</div> }
+
+          <div class="rec__review-actions">
+            <button class="rec__review-btn rec__review-btn--approve" [disabled]="isSubmitting(r)" (click)="approve(r)">Approve</button>
+            <button class="rec__review-btn rec__review-btn--reject" [disabled]="isSubmitting(r)" (click)="reject(r)">Reject</button>
+            <button class="rec__review-btn rec__review-btn--needs" [disabled]="isSubmitting(r)" (click)="needsChanges(r)">Needs Changes</button>
+            <button class="rec__review-btn rec__review-btn--reset" [disabled]="isSubmitting(r)" (click)="resetToPending(r)">Reset to Pending</button>
+          </div>
+        </div>
       </div>
     }
 

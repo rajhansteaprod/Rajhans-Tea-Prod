@@ -122,4 +122,64 @@
 
   &__section { margin-top: 24px; h2 { font-size: 17px; margin: 0 0 12px; } }
   &__count { color: #6b7280; font-weight: 500; }
+
+  // ── Phase 5.1 — human review layer ──
+  &__cards--review { margin: 16px 0 8px; }
+  &__card {
+    &--review-pending  { border-top: 3px solid #6b7280; }
+    &--review-approved { border-top: 3px solid #059669; }
+    &--review-rejected { border-top: 3px solid #dc2626; }
+    &--review-needs    { border-top: 3px solid #d97706; }
+  }
+
+  &__filters { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 16px; }
+  &__filter {
+    border: 1px solid #e5e7eb; border-radius: 6px; padding: 7px 10px; font-size: 13px; color: #374151; background: #fff;
+  }
+
+  &__scope--market { background: #f5f3ff; color: #6d28d9; }
+
+  &__review-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.03em;
+    &--pending       { background: #f3f4f6; color: #6b7280; }
+    &--approved      { background: #ecfdf5; color: #059669; }
+    &--rejected      { background: #fef2f2; color: #dc2626; }
+    &--needs_changes { background: #fffbeb; color: #b45309; }
+  }
+
+  &__market-evidence {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px;
+    background: #fafafa; border: 1px solid #f3f4f6; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;
+  }
+  &__me-row {
+    display: flex; flex-direction: column; gap: 2px;
+    span { font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.03em; }
+    strong { font-size: 13px; color: #111827; font-weight: 600; }
+  }
+
+  &__review-panel {
+    margin-top: 12px; border-top: 1px solid #f3f4f6; padding-top: 10px;
+  }
+  &__review-status { font-size: 12px; color: #374151; margin-bottom: 6px; }
+  &__reviewed-meta { color: #9ca3af; font-weight: 400; }
+  &__review-note {
+    margin: 0 0 8px; font-size: 13px; color: #374151; font-style: italic;
+    background: #f9fafb; border-radius: 6px; padding: 8px 10px;
+  }
+  &__review-input {
+    width: 100%; box-sizing: border-box; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 10px;
+    font-size: 13px; font-family: inherit; resize: vertical; margin-bottom: 6px;
+  }
+  &__review-error {
+    color: #b91c1c; font-size: 12px; margin-bottom: 6px;
+  }
+  &__review-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  &__review-btn {
+    border: 1px solid transparent; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
+    &:disabled { opacity: 0.6; cursor: default; }
+    &--approve { background: #ecfdf5; color: #059669; &:hover:not(:disabled) { background: #d1fae5; } }
+    &--reject  { background: #fef2f2; color: #dc2626; &:hover:not(:disabled) { background: #fee2e2; } }
+    &--needs   { background: #fffbeb; color: #b45309; &:hover:not(:disabled) { background: #fef3c7; } }
+    &--reset   { background: #f3f4f6; color: #374151; &:hover:not(:disabled) { background: #e5e7eb; } }
+  }
 }

@@ -16,6 +16,47 @@ export interface RecommendationDiff {
   delta: { new: number; resolved: number; persistent: number };
 }
 
+
+export type RecommendationReviewStatus = 'pending' | 'approved' | 'rejected' | 'needs_changes';
+
+/**
+ * Human review mutation — review-only, never touches production SEO. Keyed by
+ * the persisted Mongo `_id` (NOT `recommendationId`, which is not guaranteed
+ * globally unique once fingerprint discriminators are involved). Only OPEN
+ * recommendations may be reviewed; returns null (never throws) for an unknown
+ * id, a resolved recommendation, or a malformed id string.
+ */
+export async function updateRecommendationReview(opts: {
+  id: string;
+  reviewStatus: RecommendationReviewStatus;
+  reviewNote?: string | null;
+  reviewedBy: string;
+}) {
+  if (!mongoose.isValidObjectId(opts.id)) return null;
+
+  const rec = await SeoRecommendation.findOne({
+    _id: opts.id,
+    status: 'open',
+  }).exec();
+
+  if (!rec) return null;
+
+  if (opts.reviewStatus === 'pending') {
+    rec.reviewStatus = 'pending';
+    rec.reviewNote = null;
+    rec.reviewedAt = null;
+    rec.reviewedBy = null;
+  } else {
+    rec.reviewStatus = opts.reviewStatus;
+    rec.reviewNote = opts.reviewNote?.trim() || null;
+    rec.reviewedAt = new Date();
+    rec.reviewedBy = new mongoose.Types.ObjectId(opts.reviewedBy);
+  }
+
+  await rec.save();
+  return rec;
+}
+
 /**
  * Generate recommendations from a completed run's audit output, score them, and
  * reconcile against the persistent recommendation set — the same baseline-aware,
@@ -98,10 +139,10 @@ export async function generateAndPersistRecommendations(opts: {
   }
 
   // ── Resolve open AUDIT recommendations not regenerated this run ──
-  // Scoped to non-GSC recs so the audit diff never resolves GSC opportunities
-  // (those have their own independent lifecycle in the opportunity service).
+  // Strictly source-scoped: GSC and market recommendations have independent
+  // lifecycles and must never be resolved by a technical audit run.
   if (allowResolution) {
-    const open = await SeoRecommendation.find({ status: 'open', source: { $ne: 'gsc' } }).exec();
+    const open = await SeoRecommendation.find({ status: 'open', source: 'audit' }).exec();
     for (const rec of open) {
       if (detectedNow.has(rec.fingerprint)) continue;
       rec.status = 'resolved';
@@ -118,11 +159,12 @@ export async function generateAndPersistRecommendations(opts: {
 
 const idEq = (a: unknown, b: unknown) => !!a && !!b && String(a) === String(b);
 
-function toView(rec: ISeoRecommendationDoc, runId: string) {
+export function toView(rec: ISeoRecommendationDoc, runId: string) {
   let state: 'new' | 'persistent' | 'resolved' = 'persistent';
   if (rec.status === 'resolved' && idEq(rec.resolvedRunId, runId)) state = 'resolved';
   else if (idEq(rec.firstSeenRunId, runId)) state = 'new';
   return {
+    id: String(rec._id),
     recommendationId: rec.recommendationId,
     category: rec.category,
     priority: rec.priority,
@@ -144,6 +186,10 @@ function toView(rec: ISeoRecommendationDoc, runId: string) {
     demandImpressions: rec.demandImpressions ?? 0,
     demandBonus: rec.demandBonus ?? 0,
     effectivePriority: liftDisplayPriority(rec.priority, rec.demandBonus ?? 0),
+    reviewStatus: rec.reviewStatus ?? 'pending',
+    reviewNote: rec.reviewNote ?? null,
+    reviewedAt: rec.reviewedAt ?? null,
+    reviewedBy: rec.reviewedBy ? String(rec.reviewedBy) : null,
     state,
   };
 }
@@ -183,6 +229,14 @@ export async function getRecommendationsReport(runIdArg?: string) {
       new: open.filter((r) => r.state === 'new').length,
       persistent: open.filter((r) => r.state === 'persistent').length,
       resolved: resolvedThisRun.length,
+    },
+    // Phase 5.1 — human review counts over the currently open set. Never
+    // fabricated: derived from the same `open` view rows as everything above.
+    reviewSummary: {
+      pending: open.filter((r) => r.reviewStatus === 'pending').length,
+      approved: open.filter((r) => r.reviewStatus === 'approved').length,
+      rejected: open.filter((r) => r.reviewStatus === 'rejected').length,
+      needsChanges: open.filter((r) => r.reviewStatus === 'needs_changes').length,
     },
   };
 
