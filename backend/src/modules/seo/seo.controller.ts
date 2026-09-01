@@ -3,7 +3,12 @@ import { sendSuccess } from '../../utils/api-response';
 import { SeoAuditRun } from './models/seo-audit-run.model';
 import { getSeoAuditQueue, SEO_RUN_JOB } from './jobs/queues/seo-audit.queue';
 import { listRuns, getReport, getRunIssues } from './services/report.service';
-import { getRecommendationsReport } from './services/recommendation.service';
+import {
+  getRecommendationsReport,
+  updateRecommendationReview,
+  toView as toRecommendationView,
+  RecommendationReviewStatus,
+} from './services/recommendation.service';
 import { RULE_REGISTRY } from './services/rules';
 import { RunScope } from './seo.types';
 import { gscConfig } from './gsc.config';
@@ -63,6 +68,61 @@ export const getRecommendations = async (req: Request, res: Response) => {
   const report = await getRecommendationsReport(str(req.query.runId));
   if (!report) return res.status(404).json({ success: false, statusCode: 404, message: 'No completed audit run found' });
   return sendSuccess(res, report);
+};
+
+const REVIEW_STATUSES: RecommendationReviewStatus[] = ['pending', 'approved', 'rejected', 'needs_changes'];
+const REVIEW_NOTE_MAX_LENGTH = 5000;
+
+/**
+ * Phase 5.1 — human review of a recommendation. REVIEW ONLY: this never
+ * publishes, executes, or otherwise touches production SEO content — it only
+ * records an admin's approve/reject/needs-changes/pending decision, kept
+ * independent from the open/resolved opportunity lifecycle. Only OPEN
+ * recommendations may be reviewed, addressed by the persisted Mongo `_id`.
+ */
+export const reviewRecommendation = async (req: Request, res: Response) => {
+  const id = str(req.params.id) ?? '';
+  const reviewStatus = req.body?.reviewStatus as RecommendationReviewStatus | undefined;
+
+  if (!reviewStatus || !REVIEW_STATUSES.includes(reviewStatus)) {
+    return res.status(400).json({
+      success: false,
+      statusCode: 400,
+      message: `reviewStatus is required and must be one of: ${REVIEW_STATUSES.join(', ')}`,
+    });
+  }
+
+  const rawNote = req.body?.reviewNote;
+  if (rawNote != null && typeof rawNote !== 'string') {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'reviewNote must be a string' });
+  }
+  const trimmedNote = typeof rawNote === 'string' ? rawNote.trim() : '';
+  if (trimmedNote.length > REVIEW_NOTE_MAX_LENGTH) {
+    return res
+      .status(400)
+      .json({ success: false, statusCode: 400, message: `reviewNote must be ${REVIEW_NOTE_MAX_LENGTH} characters or fewer` });
+  }
+
+  if ((reviewStatus === 'rejected' || reviewStatus === 'needs_changes') && !trimmedNote) {
+    return res.status(400).json({
+      success: false,
+      statusCode: 400,
+      message: `A reviewNote is required when marking a recommendation as ${reviewStatus}`,
+    });
+  }
+
+  const updated = await updateRecommendationReview({
+    id,
+    reviewStatus,
+    reviewNote: trimmedNote || null,
+    reviewedBy: req.user!.userId,
+  });
+
+  if (!updated) {
+    return res.status(404).json({ success: false, statusCode: 404, message: 'Open recommendation not found' });
+  }
+
+  return sendSuccess(res, toRecommendationView(updated, String(updated.lastSeenRunId)), 'Review updated');
 };
 
 /**

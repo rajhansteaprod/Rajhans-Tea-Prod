@@ -35,6 +35,14 @@ export interface ISeoRecommendationDoc extends Document {
   demandBonus: number;
   demandImpressions: number;
   status: 'open' | 'resolved';
+
+  // Phase 5.1 — human review lifecycle. Deliberately independent from
+  // open/resolved, which describes whether the SEO opportunity still exists.
+  reviewStatus: 'pending' | 'approved' | 'rejected' | 'needs_changes';
+  reviewNote: string | null;
+  reviewedAt: Date | null;
+  reviewedBy: mongoose.Types.ObjectId | null;
+
   firstSeenRunId: mongoose.Types.ObjectId;
   lastSeenRunId: mongoose.Types.ObjectId;
   resolvedRunId: mongoose.Types.ObjectId | null;
@@ -62,6 +70,18 @@ const seoRecommendationSchema = new Schema<ISeoRecommendationDoc>(
     demandBonus: { type: Number, default: 0 },
     demandImpressions: { type: Number, default: 0 },
     status: { type: String, enum: ['open', 'resolved'], default: 'open', index: true },
+
+    // Human review does NOT execute or modify production SEO.
+    reviewStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected', 'needs_changes'],
+      default: 'pending',
+      index: true,
+    },
+    reviewNote: { type: String, default: null, maxlength: 5000 },
+    reviewedAt: { type: Date, default: null },
+    reviewedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+
     firstSeenRunId: { type: Schema.Types.ObjectId, ref: 'SeoAuditRun', required: true },
     lastSeenRunId: { type: Schema.Types.ObjectId, ref: 'SeoAuditRun', required: true },
     resolvedRunId: { type: Schema.Types.ObjectId, ref: 'SeoAuditRun', default: null },
@@ -70,6 +90,7 @@ const seoRecommendationSchema = new Schema<ISeoRecommendationDoc>(
 );
 
 seoRecommendationSchema.index({ status: 1, priority: 1 });
+seoRecommendationSchema.index({ status: 1, reviewStatus: 1, priority: 1 });
 seoRecommendationSchema.index({ lastSeenRunId: 1 });
 
 export const SeoRecommendation = mongoose.model<ISeoRecommendationDoc>(
