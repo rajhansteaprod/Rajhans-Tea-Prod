@@ -130,6 +130,33 @@ interface ChangeDraft {
   updatedAt: string;
 }
 
+// ── Phase 5.3 — controlled execution types (mirrors backend SeoChangeExecution view) ──
+interface ExecutedFieldSnapshot {
+  metaTitle?: string;
+  metaDescription?: string;
+}
+interface ExecutedTarget {
+  targetUrl: string;
+  targetDocumentId: string;
+  before: ExecutedFieldSnapshot;
+  proposed: ExecutedFieldSnapshot;
+  after: ExecutedFieldSnapshot;
+}
+interface ChangeExecution {
+  id: string;
+  draftId: string;
+  recommendationId: string;
+  recommendationFingerprint: string;
+  targetType: 'cms_page';
+  targets: ExecutedTarget[];
+  executorUserId: string;
+  executedAt: string;
+  status: 'succeeded';
+  generatorVersion: string;
+  executorVersion: string;
+  createdAt: string;
+}
+
 /**
  * SEO growth recommendations (Phase 3A) plus a human review layer (Phase 5.1).
  * Synthesizes the latest audit into prioritized, actionable advice. Review is
@@ -170,6 +197,13 @@ export class SeoRecommendationsComponent implements OnInit {
   readonly draftHistoryOpen = signal<Set<string>>(new Set());
   readonly draftGenerating = signal<Record<string, boolean>>({});
   readonly draftErrors = signal<Record<string, string>>({});
+
+  // ── Phase 5.3 — controlled execution state, keyed by draft id. Executing is
+  // the ONLY action in this component that mutates production; the backend
+  // re-checks eligibility server-side regardless of what this UI shows. ──
+  readonly executions = signal<Record<string, ChangeExecution[]>>({});
+  readonly executing = signal<Record<string, boolean>>({});
+  readonly executeErrors = signal<Record<string, string>>({});
 
   ngOnInit(): void {
     this.load();
@@ -387,8 +421,82 @@ export class SeoRecommendationsComponent implements OnInit {
 
   private loadDraftHistory(r: Recommendation): void {
     this.http.get<{ data: ChangeDraft[] }>(`${this.base}/recommendations/${r.id}/drafts`).subscribe({
-      next: (res) => this.drafts.set({ ...this.drafts(), [r.id]: res.data }),
+      next: (res) => {
+        this.drafts.set({ ...this.drafts(), [r.id]: res.data });
+        const active = res.data.find((d) => d.status === 'draft');
+        if (active) this.loadExecutions(active.id);
+      },
       error: (e) => this.draftErrors.set({ ...this.draftErrors(), [r.id]: e?.error?.message || 'Failed to load draft history' }),
+    });
+  }
+
+  // ── Phase 5.3 — controlled execution (metadata-only, CMS page targets) ──
+  // This UI check is advisory only, for a clean readiness display — the backend
+  // independently re-verifies every eligibility rule and is the sole authority
+  // on whether a draft may actually be executed.
+  isDraftExecutable(draft: ChangeDraft): boolean {
+    if (draft.status !== 'draft' || !draft.validation.isValid || !draft.proposedChanges.length) return false;
+    return draft.proposedChanges.every((c) => {
+      if (c.kind !== 'metadata') return false;
+      if (c.fields.h1) return false;
+      if (!c.fields.title && !c.fields.metaDescription) return false;
+      return this.isPageUrl(c.targetUrl);
+    });
+  }
+
+  // Advisory only — rejects the obviously-wrong cases (query string, fragment,
+  // embedded credentials, and, when a real browser origin is available, a
+  // foreign origin) so the button doesn't appear for targets that can never
+  // execute. This is never the source of truth: the backend independently
+  // re-resolves and re-validates the target regardless of what this returns.
+  private isPageUrl(url: string): boolean {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return false;
+    }
+    if (parsed.search || parsed.hash || parsed.username || parsed.password) return false;
+    // window.location.origin is only meaningful in an actual browser (this
+    // admin panel and the public storefront are the same SPA, so its origin
+    // matches the CMS page URLs) — skip the check under SSR/build, where
+    // `window` does not exist, rather than risk a false rejection there.
+    if (typeof window !== 'undefined' && parsed.origin !== window.location.origin) return false;
+    return /^\/page\/[^/]+\/?$/.test(parsed.pathname);
+  }
+
+  isExecuting(draft: ChangeDraft): boolean {
+    return !!this.executing()[draft.id];
+  }
+
+  executeError(draft: ChangeDraft): string {
+    return this.executeErrors()[draft.id] ?? '';
+  }
+
+  executionsFor(draft: ChangeDraft): ChangeExecution[] {
+    return this.executions()[draft.id] ?? [];
+  }
+
+  executeDraft(draft: ChangeDraft): void {
+    if (!confirm('This will update live CMS page metadata. Execute this approved change now?')) return;
+    this.executeErrors.set({ ...this.executeErrors(), [draft.id]: '' });
+    this.executing.set({ ...this.executing(), [draft.id]: true });
+    this.http.post<{ data: ChangeExecution }>(`${this.base}/change-drafts/${draft.id}/execute`, {}).subscribe({
+      next: () => {
+        this.executing.set({ ...this.executing(), [draft.id]: false });
+        this.loadExecutions(draft.id); // Never claim success before the API confirms — refresh from the server.
+      },
+      error: (e) => {
+        this.executing.set({ ...this.executing(), [draft.id]: false });
+        this.executeErrors.set({ ...this.executeErrors(), [draft.id]: e?.error?.message || 'Failed to execute change' });
+      },
+    });
+  }
+
+  private loadExecutions(draftId: string): void {
+    this.http.get<{ data: ChangeExecution[] }>(`${this.base}/change-drafts/${draftId}/executions`).subscribe({
+      next: (res) => this.executions.set({ ...this.executions(), [draftId]: res.data }),
+      error: () => undefined,
     });
   }
 }

@@ -12,6 +12,7 @@ import {
   FaqProposedChange,
   GenericProposedChange,
 } from '../models/seo-change-draft.model';
+import { seoConfig } from '../seo.config';
 
 /**
  * Phase 5.2 — deterministic, rule-based generator that turns an APPROVED, OPEN
@@ -230,6 +231,40 @@ function containsPlaceholder(value: unknown): boolean {
   return false;
 }
 
+// The technical audit records the RENDERED <title>, but a CMS Page's frontend
+// template appends this suffix at render time (never stored in Page.metaTitle).
+// Only ever strip one exact TRAILING occurrence — never a global replace, and
+// never anywhere but at the end of the string.
+const CMS_PAGE_TITLE_BRANDING_SUFFIX = ' — Rajhans Tea';
+const CMS_PAGE_TARGET_PATH_PATTERN = /^\/page\/([^/]+)\/?$/;
+
+/** True only for a canonical `/page/:slug/` URL on the configured public origin — the one target shape whose rendered <title> carries the frontend's appended branding suffix. */
+function isCmsPageTargetUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const base = new URL(seoConfig.baseUrl);
+    return parsed.origin.toLowerCase() === base.origin.toLowerCase() && CMS_PAGE_TARGET_PATH_PATTERN.test(parsed.pathname);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Convert a rendered <title> back to the CMS Page STORAGE representation
+ * (i.e. what is actually in Page.metaTitle) for CMS Page targets ONLY, so a
+ * generated draft's `current` — and any `proposed` built from it — truthfully
+ * reflects what Phase 5.3 will compare against and write. Product/blog/
+ * category/other targets are returned unchanged: their rendered title IS the
+ * stored value, with no frontend-appended suffix to reverse.
+ */
+function toStorageTitle(renderedTitle: string, targetUrl: string): string {
+  if (!isCmsPageTargetUrl(targetUrl)) return renderedTitle;
+  if (renderedTitle.endsWith(CMS_PAGE_TITLE_BRANDING_SUFFIX)) {
+    return renderedTitle.slice(0, -CMS_PAGE_TITLE_BRANDING_SUFFIX.length);
+  }
+  return renderedTitle;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 1) metadata — duplicate-metadata: current values come straight from stored
 // evidence; the proposed value is a mechanical differentiation (append the
@@ -263,7 +298,8 @@ function generateMetadataChanges(rec: ISeoRecommendationDoc): { proposedChanges:
 
     const currentTitle = titleByUrl.get(url);
     if (currentTitle) {
-      fields.title = { current: currentTitle, proposed: label ? `${currentTitle} — ${label}` : currentTitle };
+      const storageTitle = toStorageTitle(currentTitle, url);
+      fields.title = { current: storageTitle, proposed: label ? `${storageTitle} — ${label}` : storageTitle };
     }
     const currentDesc = descByUrl.get(url);
     if (currentDesc) {

@@ -336,6 +336,134 @@ describe('generateChangeDraft — metadata generation', () => {
 });
 
 // -----------------------------------------------------------------------------
+// Phase 5.2 → 5.3 fix: the audit records the RENDERED <title>, but a CMS Page's
+// frontend template appends " — Rajhans Tea" at render time — that suffix is
+// never stored in Page.metaTitle. For CMS Page targets only, `current` (and any
+// `proposed` built from it) must reflect the STORAGE representation, so Phase
+// 5.3's stale comparison and write are truthful about what is actually in the DB.
+// -----------------------------------------------------------------------------
+describe('generateChangeDraft — CMS Page rendered-title → storage-title normalization', () => {
+  const cmsPageUrl = 'https://rajhanstea.com/page/shipping-policy/';
+
+  it('strips the exact trailing " — Rajhans Tea" branding suffix, storing the storage-form value as current', async () => {
+    const rec = makeRec({
+      category: 'metadata',
+      recommendationId: 'duplicate-metadata',
+      affectedUrls: [cmsPageUrl],
+      evidence: {
+        sharedTitles: [{ value: 'Shipping Policy — Rajhans Tea', urls: [cmsPageUrl] }],
+        sharedDescriptions: [],
+      },
+    });
+    recStore.push(rec);
+
+    const result = await generateChangeDraft({ recommendationId: String(rec._id), generatedBy });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const changes = result.draft.proposedChanges as MetadataProposedChange[];
+    expect(changes[0].fields.title?.current).toBe('Shipping Policy');
+  });
+
+  it('builds the proposed title from the storage-form current, never from the rendered branded title', async () => {
+    const rec = makeRec({
+      category: 'metadata',
+      recommendationId: 'duplicate-metadata',
+      affectedUrls: [cmsPageUrl],
+      evidence: {
+        sharedTitles: [{ value: 'Shipping Policy — Rajhans Tea', urls: [cmsPageUrl] }],
+        sharedDescriptions: [],
+      },
+    });
+    recStore.push(rec);
+
+    const result = await generateChangeDraft({ recommendationId: String(rec._id), generatedBy });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const changes = result.draft.proposedChanges as MetadataProposedChange[];
+    expect(changes[0].fields.title?.proposed).toBe('Shipping Policy — Shipping Policy');
+    expect(changes[0].fields.title?.proposed).not.toContain('Rajhans Tea');
+  });
+
+  it('removes only ONE exact trailing occurrence of the suffix, never repeatedly', async () => {
+    const rec = makeRec({
+      category: 'metadata',
+      recommendationId: 'duplicate-metadata',
+      affectedUrls: [cmsPageUrl],
+      evidence: {
+        sharedTitles: [{ value: 'Shipping Policy — Rajhans Tea — Rajhans Tea', urls: [cmsPageUrl] }],
+        sharedDescriptions: [],
+      },
+    });
+    recStore.push(rec);
+
+    const result = await generateChangeDraft({ recommendationId: String(rec._id), generatedBy });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const changes = result.draft.proposedChanges as MetadataProposedChange[];
+    expect(changes[0].fields.title?.current).toBe('Shipping Policy — Rajhans Tea');
+  });
+
+  it('preserves a "Rajhans Tea" phrase that is not at the very end of the title', async () => {
+    const rec = makeRec({
+      category: 'metadata',
+      recommendationId: 'duplicate-metadata',
+      affectedUrls: [cmsPageUrl],
+      evidence: {
+        sharedTitles: [{ value: 'Rajhans Tea Shipping Policy — Rajhans Tea', urls: [cmsPageUrl] }],
+        sharedDescriptions: [],
+      },
+    });
+    recStore.push(rec);
+
+    const result = await generateChangeDraft({ recommendationId: String(rec._id), generatedBy });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const changes = result.draft.proposedChanges as MetadataProposedChange[];
+    expect(changes[0].fields.title?.current).toBe('Rajhans Tea Shipping Policy');
+  });
+
+  it('leaves a non-CMS-Page URL\'s rendered title evidence unchanged', async () => {
+    const productUrl = 'https://rajhanstea.com/product/darjeeling-gold/';
+    const rec = makeRec({
+      category: 'metadata',
+      recommendationId: 'duplicate-metadata',
+      affectedUrls: [productUrl],
+      evidence: {
+        sharedTitles: [{ value: 'Darjeeling Gold — Rajhans Tea', urls: [productUrl] }],
+        sharedDescriptions: [],
+      },
+    });
+    recStore.push(rec);
+
+    const result = await generateChangeDraft({ recommendationId: String(rec._id), generatedBy });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const changes = result.draft.proposedChanges as MetadataProposedChange[];
+    expect(changes[0].fields.title?.current).toBe('Darjeeling Gold — Rajhans Tea');
+  });
+
+  it('leaves metaDescription current/proposed behavior unchanged for a CMS Page target', async () => {
+    const rec = makeRec({
+      category: 'metadata',
+      recommendationId: 'duplicate-metadata',
+      affectedUrls: [cmsPageUrl],
+      evidence: {
+        sharedTitles: [],
+        sharedDescriptions: [{ value: 'Our shipping policy — Rajhans Tea ships fast.', urls: [cmsPageUrl] }],
+      },
+    });
+    recStore.push(rec);
+
+    const result = await generateChangeDraft({ recommendationId: String(rec._id), generatedBy });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const changes = result.draft.proposedChanges as MetadataProposedChange[];
+    expect(changes[0].fields.metaDescription?.current).toBe('Our shipping policy — Rajhans Tea ships fast.');
+    expect(changes[0].fields.metaDescription?.proposed).toBe('Our shipping policy — Rajhans Tea ships fast. Shipping Policy.');
+  });
+});
+
+// -----------------------------------------------------------------------------
 describe('generateChangeDraft — structured data generation', () => {
   it('produces a serializable JSON-LD skeleton with @context/@type', async () => {
     const rec = makeRec({

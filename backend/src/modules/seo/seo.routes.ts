@@ -5,7 +5,11 @@ import * as ctrl from './seo.controller';
 
 const router = Router();
 
-// All SEO endpoints are admin-only and read-only with respect to production SEO.
+// All SEO endpoints are admin-only. Audit/recommendation/review/change-draft
+// routes below are non-mutating with respect to production SEO/content. The
+// sole exception is Phase 5.3's POST .../change-drafts/:draftId/execute,
+// which is the only route permitted to write whitelisted live SEO metadata
+// (CMS Page metaTitle/metaDescription) after re-checking eligibility server-side.
 const adminRouter = Router();
 adminRouter.use(authenticate);
 adminRouter.use(authorize('admin'));
@@ -20,6 +24,9 @@ adminRouter.patch('/seo/recommendations/:id/review', ctrl.reviewRecommendation);
 adminRouter.post('/seo/recommendations/:id/draft', ctrl.generateRecommendationDraft);
 adminRouter.get('/seo/recommendations/:id/drafts', ctrl.getRecommendationDraftHistory);
 adminRouter.get('/seo/change-drafts/:draftId', ctrl.getChangeDraft);
+adminRouter.post('/seo/change-drafts/:draftId/execute', ctrl.executeChangeDraft);
+adminRouter.get('/seo/change-drafts/:draftId/executions', ctrl.getChangeDraftExecutions);
+adminRouter.get('/seo/change-executions/:executionId', ctrl.getChangeExecution);
 adminRouter.get('/seo/gsc/summary', ctrl.getGscSummary);
 adminRouter.post('/seo/gsc/sync', ctrl.triggerGscSync);
 
