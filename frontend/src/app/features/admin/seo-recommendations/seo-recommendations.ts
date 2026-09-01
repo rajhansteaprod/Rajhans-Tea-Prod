@@ -157,6 +157,51 @@ interface ChangeExecution {
   createdAt: string;
 }
 
+// ── Phase 5.4A — post-execution verification types (mirrors backend SeoChangeVerification view) ──
+type VerificationStatus = 'verified' | 'mismatch' | 'fetch_failed';
+interface VerificationFetchInfo {
+  requestedUrl: string;
+  finalUrl: string | null;
+  finalStatus: number | null;
+  redirectChain: { url: string; status: number }[];
+  error: string | null;
+  transient: boolean;
+}
+interface VerificationExpected {
+  renderedTitle?: string;
+  metaDescription?: string;
+}
+interface VerificationObserved {
+  renderedTitle?: string | null;
+  metaDescription?: string | null;
+}
+interface VerificationMatches {
+  title?: boolean;
+  metaDescription?: boolean;
+}
+interface VerifiedTarget {
+  targetUrl: string;
+  targetDocumentId: string;
+  fetch: VerificationFetchInfo;
+  expected: VerificationExpected;
+  observed: VerificationObserved;
+  matches: VerificationMatches;
+  status: VerificationStatus;
+  mismatchFields: string[];
+}
+interface ChangeVerification {
+  id: string;
+  executionId: string;
+  recommendationId: string;
+  draftId: string;
+  verifierUserId: string;
+  verifiedAt: string;
+  status: VerificationStatus;
+  verifierVersion: string;
+  targets: VerifiedTarget[];
+  createdAt: string;
+}
+
 /**
  * SEO growth recommendations (Phase 3A) plus a human review layer (Phase 5.1).
  * Synthesizes the latest audit into prioritized, actionable advice. Review is
@@ -204,6 +249,16 @@ export class SeoRecommendationsComponent implements OnInit {
   readonly executions = signal<Record<string, ChangeExecution[]>>({});
   readonly executing = signal<Record<string, boolean>>({});
   readonly executeErrors = signal<Record<string, string>>({});
+
+  // ── Phase 5.4A — post-execution verification state, keyed by execution id.
+  // Verification is READ-ONLY forensics: it never mutates Page/execution/
+  // draft/recommendation and never auto-resolves anything. Manual admin click
+  // only — the verify POST is never triggered automatically on page load
+  // (loading past verification history, a GET, is not the same thing). ──
+  readonly verifications = signal<Record<string, ChangeVerification[]>>({});
+  readonly verifying = signal<Record<string, boolean>>({});
+  readonly verifyErrors = signal<Record<string, string>>({});
+  readonly verificationHistoryOpen = signal<Set<string>>(new Set());
 
   ngOnInit(): void {
     this.load();
@@ -495,7 +550,78 @@ export class SeoRecommendationsComponent implements OnInit {
 
   private loadExecutions(draftId: string): void {
     this.http.get<{ data: ChangeExecution[] }>(`${this.base}/change-drafts/${draftId}/executions`).subscribe({
-      next: (res) => this.executions.set({ ...this.executions(), [draftId]: res.data }),
+      next: (res) => {
+        this.executions.set({ ...this.executions(), [draftId]: res.data });
+        for (const execution of res.data) this.loadVerifications(execution.id);
+      },
+      error: () => undefined,
+    });
+  }
+
+  // ── Phase 5.4A — post-execution verification (manual, admin-only, read-only
+  // forensics against the live public page) ──
+  verificationsFor(execution: ChangeExecution): ChangeVerification[] {
+    return this.verifications()[execution.id] ?? [];
+  }
+
+  /** Server returns verification history newest first — this is simply the first entry. */
+  latestVerification(execution: ChangeExecution): ChangeVerification | null {
+    return this.verificationsFor(execution)[0] ?? null;
+  }
+
+  olderVerifications(execution: ChangeExecution): ChangeVerification[] {
+    return this.verificationsFor(execution).slice(1);
+  }
+
+  isVerifying(execution: ChangeExecution): boolean {
+    return !!this.verifying()[execution.id];
+  }
+
+  verifyErrorFor(execution: ChangeExecution): string {
+    return this.verifyErrors()[execution.id] ?? '';
+  }
+
+  isVerificationHistoryOpen(execution: ChangeExecution): boolean {
+    return this.verificationHistoryOpen().has(execution.id);
+  }
+
+  toggleVerificationHistory(execution: ChangeExecution): void {
+    const set = new Set(this.verificationHistoryOpen());
+    if (set.has(execution.id)) set.delete(execution.id);
+    else set.add(execution.id);
+    this.verificationHistoryOpen.set(set);
+  }
+
+  verificationStatusLabel(status: VerificationStatus): string {
+    switch (status) {
+      case 'verified':
+        return 'Verified';
+      case 'mismatch':
+        return 'Mismatch';
+      case 'fetch_failed':
+        return 'Fetch failed';
+    }
+  }
+
+  /** Explicit admin click only — never called automatically on page load. */
+  verifyLiveResult(execution: ChangeExecution): void {
+    this.verifyErrors.set({ ...this.verifyErrors(), [execution.id]: '' });
+    this.verifying.set({ ...this.verifying(), [execution.id]: true });
+    this.http.post<{ data: ChangeVerification }>(`${this.base}/change-executions/${execution.id}/verify`, {}).subscribe({
+      next: () => {
+        this.verifying.set({ ...this.verifying(), [execution.id]: false });
+        this.loadVerifications(execution.id); // Never claim success before the API confirms — refresh from the server.
+      },
+      error: (e) => {
+        this.verifying.set({ ...this.verifying(), [execution.id]: false });
+        this.verifyErrors.set({ ...this.verifyErrors(), [execution.id]: e?.error?.message || 'Failed to verify live result' });
+      },
+    });
+  }
+
+  private loadVerifications(executionId: string): void {
+    this.http.get<{ data: ChangeVerification[] }>(`${this.base}/change-executions/${executionId}/verifications`).subscribe({
+      next: (res) => this.verifications.set({ ...this.verifications(), [executionId]: res.data }),
       error: () => undefined,
     });
   }

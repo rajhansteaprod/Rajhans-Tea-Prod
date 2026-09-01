@@ -274,5 +274,29 @@
     background: #dcfce7; color: #166534;
   }
   &__execution-target { border-top: 1px dashed #bbf7d0; padding-top: 6px; margin-top: 6px; &:first-of-type { border-top: none; margin-top: 0; padding-top: 0; } }
-  &__execution-target-url { font-size: 11px; margin-bottom: 4px; a { color: #166534; word-break: break-all; } }
+  &__execution-target-url { font-size: 11px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; a { color: #166534; word-break: break-all; } }
+
+  // ── Phase 5.4A — post-execution verification (read-only forensics) ──
+  &__verify-panel { margin-top: 10px; border-top: 1px dashed #bbf7d0; padding-top: 10px; }
+  &__btn--verify {
+    background: #1d4ed8; color: #fff; border: none; padding: 7px 12px; border-radius: 6px;
+    font-weight: 600; font-size: 12px; cursor: pointer;
+    &:hover:not(:disabled) { background: #1e40af; }
+    &:disabled { opacity: 0.6; cursor: default; }
+  }
+  &__verify-error { color: #b91c1c; font-size: 12px; margin-top: 6px; }
+  &__verify-card {
+    margin-top: 8px; border-radius: 8px; padding: 10px 12px; border: 1px solid #e5e7eb; background: #fafafa;
+    &--verified { border-color: #bbf7d0; background: #f0fdf4; }
+    &--mismatch { border-color: #fecaca; background: #fef2f2; }
+    &--fetch_failed { border-color: #fde68a; background: #fffbeb; }
+  }
+  &__verify-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: #374151; margin-bottom: 8px; }
+  &__verify-status {
+    font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 999px; text-transform: uppercase;
+    &--verified { background: #dcfce7; color: #166534; }
+    &--mismatch { background: #fee2e2; color: #991b1b; }
+    &--fetch_failed { background: #fef3c7; color: #92400e; }
+  }
+  &__verify-fetch-error { font-size: 11px; color: #991b1b; margin: 4px 0 0; }
 }
