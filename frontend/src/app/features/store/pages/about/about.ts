@@ -7,10 +7,9 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Title, Meta, DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { PlatformService } from '../../../../core/services/platform.service';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 interface Value {
   title: string;
@@ -30,6 +29,7 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
   private readonly titleService = inject(Title);
   private readonly metaService = inject(Meta);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly platform = inject(PlatformService);
   private ctx: gsap.Context | null = null;
 
   readonly values: Value[] = [
@@ -70,6 +70,12 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
+    // GSAP/ScrollTrigger requires real browser APIs (IntersectionObserver,
+    // scroll events, layout measurement) that aren't available during
+    // server-side rendering / build-time prerendering — skip entirely there.
+    if (!this.platform.isBrowser) return;
+
+    gsap.registerPlugin(ScrollTrigger);
     const root = this.el.nativeElement as HTMLElement;
 
     this.ctx = gsap.context(() => {

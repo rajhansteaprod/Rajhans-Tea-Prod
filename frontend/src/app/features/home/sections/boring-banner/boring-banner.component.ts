@@ -1,4 +1,5 @@
-import { Component, Input, signal, effect } from '@angular/core';
+import { Component, Input, signal, effect, inject } from '@angular/core';
+import { PlatformService } from '../../../../core/services/platform.service';
 
 @Component({
   selector: 'app-boring-banner',
@@ -10,9 +11,13 @@ export class BoringBannerComponent {
   @Input() desktopImage = '/static/Carousel Images/Boring Tea.png';
   @Input() mobileImage: string | null = null;
 
+  private readonly platform = inject(PlatformService);
+
   isMobile = signal(false);
 
   constructor() {
+    if (!this.platform.isBrowser) return;
+
     effect(() => {
       const checkIsMobile = () => {
         this.isMobile.set(window.innerWidth < 768);

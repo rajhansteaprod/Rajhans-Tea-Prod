@@ -1,16 +1,25 @@
 import { Types } from 'mongoose';
 import { StockReservation, IStockReservationDoc } from '../models/stock-reservation.model';
 
-// Extended from 15 to 45 minutes to match price snapshot TTL
-// Allows users 45 minutes to complete payment while stock and prices are frozen
+// Matches the price snapshot TTL — users get 45 minutes to complete payment
+// while stock and prices are frozen.
 const RESERVATION_TTL_MINUTES = 45;
 
 export class StockReservationRepository {
-  async reserve(sessionId: string, productId: string, qty: number): Promise<IStockReservationDoc> {
+  async reserve(
+    sessionId: string,
+    productId: string,
+    qty: number,
+    variantId?: string,
+  ): Promise<IStockReservationDoc> {
     const expiresAt = new Date(Date.now() + RESERVATION_TTL_MINUTES * 60 * 1000);
 
     return StockReservation.findOneAndUpdate(
-      { sessionId, productId: new Types.ObjectId(productId) },
+      {
+        sessionId,
+        productId: new Types.ObjectId(productId),
+        variantId: variantId ? new Types.ObjectId(variantId) : null,
+      },
       { qty, expiresAt },
       { new: true, upsert: true },
     ).exec() as Promise<IStockReservationDoc>;
@@ -21,12 +30,17 @@ export class StockReservationRepository {
   }
 
   /**
-   * Sum reserved qty for a product across all active (non-expired) reservations.
-   * Optionally exclude the caller's own session so they can re-check their own reservation.
+   * Sum reserved qty for a product (or a specific variant) across all active
+   * (non-expired) reservations. Optionally exclude the caller's own session.
    */
-  async sumReservedQty(productId: string, excludeSessionId?: string): Promise<number> {
+  async sumReservedQty(
+    productId: string,
+    excludeSessionId?: string,
+    variantId?: string,
+  ): Promise<number> {
     const match: Record<string, unknown> = {
       productId: new Types.ObjectId(productId),
+      variantId: variantId ? new Types.ObjectId(variantId) : null,
       expiresAt: { $gt: new Date() },
     };
     if (excludeSessionId) {

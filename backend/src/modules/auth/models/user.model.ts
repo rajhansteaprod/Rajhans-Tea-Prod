@@ -3,6 +3,8 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 export interface IAddressDoc {
   _id: Types.ObjectId;
   label: string;
+  name?: string;
+  phone?: string;
   address: string;
   landmark?: string;
   city: string;
@@ -32,6 +34,8 @@ export interface IUserDoc extends Document {
 const addressSchema = new Schema<IAddressDoc>(
   {
     label: { type: String, required: true },
+    name: { type: String, default: null },
+    phone: { type: String, default: null },
     address: { type: String, required: true },
     landmark: { type: String, default: null },
     city: { type: String, required: true },

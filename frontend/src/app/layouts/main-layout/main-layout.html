@@ -4,6 +4,8 @@
     <router-outlet />
   </main>
 
+  @if (!isCheckout()) {
   <app-footer />
+}
 </div>
 <app-cart-sidebar />

@@ -23,7 +23,7 @@ export class ComparisonTableComponent {
       icon: 'cup',
       name: 'Tea Consumption',
       rajhansText: 'Uses less tea per cup',
-      rajhansSubtext: '(saves ₹1248/yr)',
+      rajhansSubtext: '(Saves ~ Rs. 1400/year)',
       othersText: 'Needs more tea per cup',
       othersSubtext: '(costs more)',
     },

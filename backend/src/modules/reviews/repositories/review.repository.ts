@@ -159,6 +159,16 @@ export class ReviewRepository {
     return this.computeRatingSummary(productId);
   }
 
+  /** Batch lookup for listing pages: one indexed query for all visible product cards */
+  async getSummariesByProductIds(productIds: string[]) {
+    const ids = productIds
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+    return RatingSummary.find({ productId: { $in: ids } })
+      .select('productId averageRating totalReviews')
+      .exec();
+  }
+
   async findMostReported(query: { page?: number; limit?: number } = {}) {
     const { page, limit, skip } = parsePagination(query);
     const filter = { reportCount: { $gt: 0 } };

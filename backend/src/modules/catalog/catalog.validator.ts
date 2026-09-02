@@ -114,6 +114,22 @@ export const listProductsSchema = z.object({
 });
 
 const attributesSchema = z.record(z.string(), z.string()).optional();
+const regionSchema = z.enum(['Assam', 'Darjeeling', 'Nilgiri', 'Dooars']).nullable().optional();
+const bestTakenForSchema = z.enum(['Morning', 'Noon', 'Evening']).nullable().optional();
+// null = "clear the discount"; number = set it
+const discountedPriceSchema = z.number({ coerce: true }).min(0).nullable().optional();
+
+// Inline variant sent with the product create/update payload. Per-variant the
+// admin provides only value + base price + discounted price + stock; `_id` is
+// present when editing an existing variant so the backend can reconcile.
+const inlineVariantSchema = z.object({
+  _id: mongoId.optional(),
+  optionKey: z.string().trim().max(50).optional(),
+  optionValue: z.string().trim().min(1).max(50),
+  price: z.coerce.number().gt(0),
+  discountedPrice: discountedPriceSchema,
+  stock: z.coerce.number().int().min(0).optional(),
+});
 
 export const createProductSchema = z.object({
   body: z.object({
@@ -124,16 +140,23 @@ export const createProductSchema = z.object({
     categoryId: mongoId,
     collectionIds: z.array(mongoId).optional(),
     basePrice: z.coerce.number().min(0),
+    discountedPrice: discountedPriceSchema,
     images: z.array(z.string().url().or(z.string().startsWith('/'))).optional(),
     primaryImage: z.string().url().or(z.string().startsWith('/')).optional(),
     imageAltText: z.string().trim().max(300).optional(),
     reflectedImage: z.string().url().or(z.string().startsWith('/')).optional(),
     attributes: attributesSchema,
     tags: z.array(z.string().trim().max(50)).max(20).optional(),
+    region: regionSchema,
+    bestTakenFor: bestTakenForSchema,
     status: z.enum(['draft', 'active', 'archived']).optional(),
     isFeatured: z.boolean().optional(),
+    showBadge: z.boolean().optional(),
+    badgeText: z.string().trim().max(50).optional(),
     stock: z.coerce.number().int().min(0).optional(),
     trackInventory: z.boolean().optional(),
+    hasVariants: z.boolean().optional(),
+    variants: z.array(inlineVariantSchema).max(50).optional(),
   }),
 });
 
@@ -147,16 +170,64 @@ export const updateProductSchema = z.object({
     categoryId: z.preprocess((v) => (v === '' ? undefined : v), mongoId.optional()),
     collectionIds: z.array(mongoId).optional(),
     basePrice: z.coerce.number().min(0).optional(),
+    discountedPrice: discountedPriceSchema,
     images: z.array(z.string().url().or(z.string().startsWith('/'))).optional(),
     primaryImage: z.string().url().or(z.string().startsWith('/')).optional(),
     imageAltText: z.string().trim().max(300).optional(),
     reflectedImage: z.string().url().or(z.string().startsWith('/')).optional(),
     attributes: attributesSchema,
     tags: z.array(z.string().trim().max(50)).max(20).optional(),
+    region: regionSchema,
+    bestTakenFor: bestTakenForSchema,
     status: z.enum(['draft', 'active', 'archived']).optional(),
     isFeatured: z.boolean().optional(),
+    showBadge: z.boolean().optional(),
+    badgeText: z.string().trim().max(50).optional(),
     stock: z.coerce.number().int().min(0).optional(),
     trackInventory: z.boolean().optional(),
+    hasVariants: z.boolean().optional(),
+    variants: z.array(inlineVariantSchema).max(50).optional(),
+  }),
+});
+
+// ---------------------------------------------------------------------------
+// Product Variants
+// ---------------------------------------------------------------------------
+
+const variantBodySchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  sku: optStr(100),
+  price: z.number({ coerce: true }).gt(0),
+  discountedPrice: discountedPriceSchema,
+  cost: z.number({ coerce: true }).min(0).optional(),
+  stock: z.coerce.number().int().min(0).optional(),
+  trackInventory: z.boolean().optional(),
+  images: z.array(z.string().url().or(z.string().startsWith('/'))).optional(),
+  position: z.coerce.number().int().min(0).optional(),
+  isActive: z.boolean().optional(),
+  // Dictionary-driven option (e.g. optionKey "Weight", optionValue "250g")
+  optionKey: optStr(50),
+  optionValue: optStr(50),
+});
+
+export const createVariantSchema = z.object({
+  params: z.object({ productId: mongoId }),
+  body: variantBodySchema,
+});
+
+export const updateVariantSchema = z.object({
+  params: z.object({ productId: mongoId, variantId: mongoId }),
+  body: variantBodySchema.partial(),
+});
+
+export const variantIdSchema = z.object({
+  params: z.object({ productId: mongoId, variantId: mongoId }),
+});
+
+export const reorderVariantsSchema = z.object({
+  params: z.object({ productId: mongoId }),
+  body: z.object({
+    variantIds: z.array(mongoId).min(1).max(100),
   }),
 });
 
@@ -166,4 +237,31 @@ export const productIdSchema = z.object({
 
 export const productSlugSchema = z.object({
   params: z.object({ slug: z.string().min(1).max(220) }),
+});
+
+// ---------------------------------------------------------------------------
+// Variant Options (global dictionary)
+// ---------------------------------------------------------------------------
+
+export const createVariantOptionSchema = z.object({
+  body: z.object({
+    key: z.string().trim().min(1).max(50),
+    values: z.array(z.string().trim().max(50)).max(100).optional(),
+    isActive: z.boolean().optional(),
+    sortOrder: z.coerce.number().int().min(0).optional(),
+  }),
+});
+
+export const updateVariantOptionSchema = z.object({
+  params: z.object({ id: mongoId }),
+  body: z.object({
+    key: z.string().trim().min(1).max(50).optional(),
+    values: z.array(z.string().trim().max(50)).max(100).optional(),
+    isActive: z.boolean().optional(),
+    sortOrder: z.coerce.number().int().min(0).optional(),
+  }),
+});
+
+export const variantOptionIdSchema = z.object({
+  params: z.object({ id: mongoId }),
 });

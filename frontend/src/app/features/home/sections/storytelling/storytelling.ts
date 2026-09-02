@@ -6,10 +6,9 @@ import {
   inject,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { PlatformService } from '../../../../core/services/platform.service';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 @Component({
   selector: 'app-storytelling',
@@ -20,9 +19,14 @@ gsap.registerPlugin(ScrollTrigger);
 })
 export class StorytellingComponent implements AfterViewInit, OnDestroy {
   private readonly el = inject(ElementRef);
+  private readonly platform = inject(PlatformService);
   private ctx: gsap.Context | null = null;
 
   ngAfterViewInit(): void {
+    // GSAP/ScrollTrigger needs real browser APIs — skip during SSR/prerendering.
+    if (!this.platform.isBrowser) return;
+
+    gsap.registerPlugin(ScrollTrigger);
     const root = this.el.nativeElement as HTMLElement;
 
     this.ctx = gsap.context(() => {

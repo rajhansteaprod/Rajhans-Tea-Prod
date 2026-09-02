@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SearchStore } from '../../../core/services/search.store';
 import { CartStore } from '../../../core/services/cart.store';
+import { trackPixelEvent } from '../../../core/utils/meta-pixel';
 
 @Component({
   selector: 'app-search-page',
@@ -28,6 +29,10 @@ export class SearchPageComponent implements OnInit {
       const filters: any = {};
       if (categorySlug) filters.categorySlug = categorySlug;
       this.store.search(q, filters, params['sort'] || 'relevance', parseInt(params['page'] || '1', 10));
+      // Meta Pixel: only fire for an actual search query, not empty/category-only loads.
+      if (q) {
+        trackPixelEvent('Search', { search_string: q });
+      }
     });
   }
 

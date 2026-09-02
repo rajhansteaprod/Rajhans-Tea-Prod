@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { validate } from '../../middleware/validate.middleware';
 import { authenticate } from '../../middleware/auth.middleware';
 import { authRateLimiter } from '../../middleware/rate-limit.middleware';
@@ -22,13 +23,30 @@ const router = Router();
 
 // Public auth endpoints (rate-limited)
 router.post(
+  '/auth/verify-msg91-token',
+  authRateLimiter,
+  validate(z.object({ body: z.object({ accessToken: z.string() }) })),
+  authController.verifyMsg91Token,
+);
+
+router.post(
   '/auth/verify-token',
   authRateLimiter,
   validate(firebaseTokenSchema),
   authController.verifyFirebaseToken,
 );
 
-// OTP-based authentication endpoints (MSG91)
+// OTP-based authentication endpoints
+// Note: sendOtp, verifyOtp, resendOtp now handled by MSG91 Widget on client-side
+// Backend only issues tokens after widget verification
+router.post(
+  '/auth/otp-login',
+  authRateLimiter,
+  validate(z.object({ body: z.object({ phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits') }) })),
+  authController.loginViaOtp,
+);
+
+// Kept for backward compatibility (will be deprecated)
 router.post(
   '/auth/send-otp',
   authRateLimiter,

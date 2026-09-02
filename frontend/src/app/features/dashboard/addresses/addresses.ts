@@ -7,6 +7,8 @@ import { environment } from '../../../../environments/environment';
 interface Address {
   _id: string;
   label: string;
+  name?: string;
+  phone?: string;
   address: string;
   landmark: string;
   city: string;

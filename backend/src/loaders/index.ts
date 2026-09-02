@@ -5,12 +5,14 @@ import { initMetrics } from './metrics.loader';
 import { initFirebase } from './firebase.loader';
 import { initRazorpay } from './razorpay.loader';
 import { runSeeds } from './seeds.loader';
+import { migrateReviewIndexes } from '../modules/reviews/migrations/review-index.migration';
 import { logger } from '../utils/logger';
 
 export const initializeLoaders = async (): Promise<void> => {
   logger.info('Initializing application loaders...');
 
   await connectMongoDB();
+  await migrateReviewIndexes();
   connectRedis();
   connectBullMQ();
   initMetrics();

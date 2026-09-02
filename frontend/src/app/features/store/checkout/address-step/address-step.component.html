@@ -36,9 +36,15 @@
 
                 <div class="checkout__address-card-body">
                   <h4 class="checkout__address-title">{{ address.city }}, {{ address.state }}</h4>
+                  @if (address.name) {
+                    <p class="checkout__address-meta">{{ address.name }}</p>
+                  }
+                  @if (address.phone) {
+                    <p class="checkout__address-meta">{{ address.phone }}</p>
+                  }
                   <p class="checkout__address-text">{{ address.address }}</p>
                   @if (address.landmark) {
-                    <p class="checkout__address-meta">📍 {{ address.landmark }}</p>
+                    <p class="checkout__address-meta">{{ address.landmark }}</p>
                   }
                   <p class="checkout__address-meta">{{ address.pinCode }}</p>
                 </div>
@@ -110,6 +116,7 @@
         </div>
       }
 
+      @if (isNewAddress()) {
       <div class="checkout__form-section">
         <h3 class="checkout__section-heading">New Address Details</h3>
 
@@ -234,8 +241,9 @@
           </div>
         </div>
       </div>
+      }
 
-      <div class="checkout__button-group">
+      <div class="checkout__button-group desktop-only">
         <button type="button" class="checkout__btn-back" (click)="goBack()">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="checkout__icon-arrow">
             <path d="m12 19-7-7 7-7"></path>
@@ -305,7 +313,7 @@
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; flex-shrink: 0;">
       <path d="M19 12H5M12 19l-7-7 7-7"/>
     </svg>
-    <span>Back to<br>Cart</span>
+    <span>Back to Cart</span>
   </button>
   <app-button
     class="checkout__bottom-btn"
@@ -317,9 +325,9 @@
     @if (isSubmitting()) {
       SAVING...
     } @else if (isNewAddress()) {
-      SAVE & NEXT
+      SAVE ADDRESS & CONTINUE TO PAYMENT
     } @else {
-      NEXT
+      CONTINUE TO PAYMENT
     }
   </app-button>
 </div>

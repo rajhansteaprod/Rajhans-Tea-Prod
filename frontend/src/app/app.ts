@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ToastContainerComponent } from './shared/components/toast-container/toast-container';
 import { CanonicalService } from './core/services/canonical.service';
-
+import { AnalyticsService } from './core/analytics/analytics.service';
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, ToastContainerComponent],
@@ -10,7 +10,10 @@ import { CanonicalService } from './core/services/canonical.service';
   styleUrls: ['./app.scss'],
 })
 export class App {
-  constructor(private canonical: CanonicalService) {
+  constructor(
+    private canonical: CanonicalService,
+    private analytics: AnalyticsService,
+  ) {
     this.canonical.init();
   }
 }

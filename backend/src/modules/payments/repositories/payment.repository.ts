@@ -23,6 +23,25 @@ export class PaymentRepository {
     return Payment.findOne({ idempotencyKey: key }).exec();
   }
 
+  /**
+   * Atomically transition a payment between statuses.
+   * Returns the updated document only when THIS call performed the transition;
+   * returns null when the payment was not in one of `fromStatuses` (someone
+   * else already transitioned it — caller must treat that as "already done").
+   */
+  async transitionStatus(
+    id: string,
+    fromStatuses: PaymentStatus[],
+    toStatus: PaymentStatus,
+    extra: Record<string, unknown> = {},
+  ): Promise<IPaymentDoc | null> {
+    return Payment.findOneAndUpdate(
+      { _id: id, status: { $in: fromStatuses } },
+      { $set: { status: toStatus, ...extra } },
+      { new: true },
+    ).exec();
+  }
+
   async updateStatus(
     id: string,
     status: PaymentStatus,

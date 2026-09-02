@@ -6,6 +6,7 @@ import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../../ut
 import { BadRequestError } from '../../utils/api-error';
 import { config } from '../../config';
 import { OrderStatus } from './models/order.model';
+import { matchShiprocketStatus } from './services/shipping/shiprocket-status.util';
 import {logger} from '../../utils/logger';
 import { shipmentLogger } from '../../utils/shipment-logger';
 
@@ -100,13 +101,14 @@ export const handleShiprocketWebhook = async (req: Request, res: Response) => {
   if (orderNumber && currentStatus) {
     // Map Shiprocket status to our status
     const statusMap: Record<string, OrderStatus> = {
-      'PICKED UP': 'in_transit',
+      'OUT FOR PICKUP': 'shipped',
+      'PICKED UP': 'pickup_done',
       'IN TRANSIT': 'in_transit',
       'OUT FOR DELIVERY': 'out_for_delivery',
       DELIVERED: 'delivered',
     };
 
-    const newStatus = statusMap[currentStatus.toUpperCase()];
+    const newStatus = matchShiprocketStatus(currentStatus, statusMap);
     if (newStatus) {
       const { OrderRepository } = await import('./repositories/order.repository');
       const { ShipmentRepository } = await import('./repositories/shipment.repository');
@@ -154,7 +156,7 @@ export const handleShiprocketWebhook = async (req: Request, res: Response) => {
               'OUT FOR DELIVERY': 'out_for_delivery',
               'DELIVERED': 'delivered',
             };
-            const shipmentStatus = shipmentStatusMap[currentStatus.toUpperCase()];
+            const shipmentStatus = matchShiprocketStatus(currentStatus, shipmentStatusMap);
             if (shipmentStatus) {
               shipmentLogger.debug({
                 shipmentId: shipment._id,

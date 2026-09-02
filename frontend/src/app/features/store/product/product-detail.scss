@@ -29,9 +29,13 @@
 }
 
 .pd__body {
-  padding: $space-section clamp($space-lg, 5vw, $space-xxxl);
+  padding: 60px clamp($space-lg, 5vw, $space-xxxl);
   max-width: $max-width-wide;
   margin: 0 auto;
+
+   @media (max-width: 768px) {
+    padding: 40px clamp($space-md, 5vw, $space-xxxl);
+  }
 }
 
 // ═══════════════════════════════════════
@@ -47,11 +51,13 @@
 
   @include respond-to(lg) {
     gap: $space-xxl;
+    margin-bottom:20px;
   }
 
   @include respond-to(md) {
     grid-template-columns: 1fr;
     gap: $space-xxl;
+    margin-bottom:30px;
   }
 }
 
@@ -66,7 +72,7 @@
 .pd__zoom-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 4/5;
   background: rgb(249, 250, 251); // soft gray background
   cursor: pointer;
   overflow: hidden;
@@ -100,7 +106,7 @@
   z-index: 5;
   outline: none;
   padding: 0;
-  
+
   &:hover {
     background: #ffffff;
     color: #000000;
@@ -146,7 +152,7 @@
   scrollbar-width: none; // Firefox
   -ms-overflow-style: none; // IE/Edge
 
-  padding: 4px 36px; // Space for the absolute arrows on the sides
+  padding: 4px 0px; // Space for the absolute arrows on the sides
   box-sizing: border-box;
 }
 
@@ -247,7 +253,6 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  margin-left: -64px; // pull heart button into gutter
 
   @media (max-width: 1023px) {
     margin-left: 0;
@@ -527,8 +532,9 @@
     background-color: #be3718;
   }
 
-  @media (max-width: 639px) {
+  @media (max-width: 768px) {
     width: 100%;
+    flex:none;
   }
 }
 
@@ -555,6 +561,7 @@
 
   @media (max-width: 639px) {
     width: 100%;
+    flex:none;
   }
 }
 
@@ -723,6 +730,20 @@
   text-transform: uppercase;
 }
 
+.pd__review-author {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: #111827;
+}
+
+.pd__reviews-average {
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  color: #4b5563;
+  margin: 4px 0 16px 0;
+}
+
 .pd__review-title {
   font-family: $font-family-heading;
   font-size: $font-size-md;
@@ -753,6 +774,52 @@
   object-fit: cover;
   border-radius: 2px;
   border: 1px solid rgba($color-mono-dark, 0.1);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+// ── Review image lightbox ──
+.pd__lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  cursor: zoom-out;
+}
+
+.pd__lightbox-img {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 4px;
+  cursor: default;
+}
+
+.pd__lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
 }
 
 .pd__review-footer {

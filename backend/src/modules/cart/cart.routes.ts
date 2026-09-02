@@ -9,6 +9,8 @@ import {
   mergeCartSchema,
   toggleWishlistSchema,
   mergeWishlistSchema,
+  checkoutSummarySchema,
+  reserveStockSchema,
 } from './cart.validator';
 
 const router = Router();
@@ -40,8 +42,8 @@ router.post('/wishlist/:productId', authenticateOptional, validate(toggleWishlis
 // CHECKOUT — public (guest + logged-in, identified by userId or X-Session-ID)
 // ===========================================================================
 
-router.post('/checkout/summary', authenticateOptional, cart.getCheckoutSummary);
-router.post('/checkout/reserve', authenticateOptional, cart.reserveStock);
+router.post('/checkout/summary', authenticateOptional, validate(checkoutSummarySchema), cart.getCheckoutSummary);
+router.post('/checkout/reserve', authenticateOptional, validate(reserveStockSchema), cart.reserveStock);
 router.delete('/checkout/reserve', authenticateOptional, cart.releaseReservation);
 
 export default router;

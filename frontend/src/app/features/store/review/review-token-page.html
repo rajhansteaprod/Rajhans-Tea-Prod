@@ -1,0 +1,97 @@
+<section class="review-page">
+  @if (loading()) {
+    <div class="review-page__state">Loading your order…</div>
+  } @else if (loadError()) {
+    <div class="review-page__state review-page__state--error">
+      <h1>Review unavailable</h1>
+      <p>{{ loadError() }}</p>
+    </div>
+  } @else {
+    <div class="review-page__header">
+      <h1 class="review-page__title">Rate your order</h1>
+      <p class="review-page__subtitle">Order {{ orderNumber() }}</p>
+    </div>
+
+    @if (allDone) {
+      <div class="review-page__thanks">
+        <h2>Thank you! 🎉</h2>
+        <p>You’ve reviewed every product in this order.</p>
+      </div>
+    }
+
+    @for (form of forms(); track form.product.productId) {
+      <div class="review-card" [class.review-card--done]="form.submitted">
+        <div class="review-card__product">
+          @if (form.product.image) {
+            <img [src]="imgSrc(form.product.image)" [alt]="form.product.name" class="review-card__img" />
+          }
+          <div class="review-card__name">{{ form.product.name }}</div>
+        </div>
+
+        @if (form.submitted) {
+          <div class="review-card__done">✓ Review submitted</div>
+        } @else {
+          <!-- Rating (mandatory) -->
+          <div class="review-field">
+            <label class="review-field__label">Rating <span class="req">*</span></label>
+            <div class="review-stars">
+              @for (s of stars; track s) {
+                <button
+                  type="button"
+                  class="review-stars__star"
+                  [class.active]="s <= form.rating"
+                  (click)="setRating(form, s)"
+                  aria-label="Rate {{ s }}"
+                >★</button>
+              }
+            </div>
+          </div>
+
+          <!-- Name (optional) -->
+          <div class="review-field">
+            <label class="review-field__label">Your name <span class="opt">(optional)</span></label>
+            <input type="text" class="review-field__input" maxlength="100"
+                   [(ngModel)]="form.name" placeholder="e.g. Aarav" />
+          </div>
+
+          <!-- Comment (optional) -->
+          <div class="review-field">
+            <label class="review-field__label">Comment <span class="opt">(optional)</span></label>
+            <textarea class="review-field__textarea" maxlength="5000" rows="3"
+                      [(ngModel)]="form.comment" placeholder="Share your experience…"></textarea>
+          </div>
+
+          <!-- Images (optional) -->
+          <div class="review-field">
+            <label class="review-field__label">Photos <span class="opt">(optional)</span></label>
+            <div class="review-images">
+              @for (img of form.images; track img) {
+                <div class="review-images__thumb">
+                  <img [src]="imgSrc(img)" alt="Review photo" />
+                  <button type="button" class="review-images__remove" (click)="removeImage(form, img)">✕</button>
+                </div>
+              }
+              @if (form.images.length < 5) {
+                <label class="review-images__add">
+                  {{ form.uploading ? '…' : '+' }}
+                  <input type="file" accept="image/*" hidden
+                         [disabled]="form.uploading" (change)="onFileSelected(form, $event)" />
+                </label>
+              }
+            </div>
+          </div>
+
+          @if (form.error) {
+            <p class="review-card__error">{{ form.error }}</p>
+          }
+
+          <button type="button" class="review-card__submit"
+                  [disabled]="form.submitting || form.uploading"
+                  (click)="submit(form)">
+            {{ form.submitting ? 'Submitting…' : 'Submit review' }}
+          </button>
+        }
+      </div>
+    }
+  }
+</section>

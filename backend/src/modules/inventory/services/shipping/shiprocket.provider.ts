@@ -37,6 +37,7 @@ export class ShiprocketProvider implements ShippingProvider {
     }
 
     // Token expired or not found — re-authenticate
+    logger.info('Shiprocket token expired or not found, re-authenticating with credentials email and password as'+ config.shipping.shiprocket.email+" "+config.shipping.shiprocket.password );
     const res = await fetch(`${this.baseUrl}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -46,13 +47,10 @@ export class ShiprocketProvider implements ShippingProvider {
       }),
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      logger.error({ status: res.status, body: text }, 'Shiprocket auth failed');
-      throw new Error('Shiprocket authentication failed');
-    }
-
     const data = (await res.json()) as Record<string, any>;
+    if(!data.token){
+      throw new Error(`Shiprocket authentication failed: ${data.message || 'No token received'}`);
+    }
     this.token = data.token;
     // Shiprocket tokens last 10 days — refresh after 9
     this.tokenExpiry = new Date(Date.now() + 9 * 24 * 60 * 60 * 1000);
@@ -73,6 +71,7 @@ export class ShiprocketProvider implements ShippingProvider {
     body?: unknown,
   ): Promise<Record<string, any>> {
     const token = await this.getToken();
+    shipmentLogger.info({}, `📡 Shiprocket API request: ${method} ${path} Body: ${JSON.stringify(body, null, 2)} Token:${token}`);
     const res = await fetch(`${this.baseUrl}${path}`, {
       method,
       headers: {
@@ -81,13 +80,13 @@ export class ShiprocketProvider implements ShippingProvider {
       },
       body: body ? JSON.stringify(body) : undefined,
     });
-
     let data: Record<string, any> = {};
     try {
       data = (await res.json()) as Record<string, any>;
     } catch {
       data = {};
     }
+    shipmentLogger.info({ status: res.status, data }, 'Response recieved by shiprocket');
 
     // Check HTTP status
     if (!res.ok) {
@@ -166,10 +165,14 @@ export class ShiprocketProvider implements ShippingProvider {
         selling_price: item.unitPrice.toString(),
       })),
       payment_method: 'Prepaid',
-      sub_total: order.subtotal,
-      length: 20,
-      breadth: 15,
-      height: 10,
+      // Cart-level discount (coupon/offer) applies to the whole order, not per
+      // product — so the amount the customer actually paid lives in order.total
+      // (items − coupon + shipping, tax included), NOT order.subtotal (pre-tax,
+      // pre-coupon). Send order.total so Shiprocket reflects the paid amount.
+      sub_total: order.total,
+      length: 23,
+      breadth:8,
+      height: 26,
       weight: 0.5,
     });
 
@@ -246,7 +249,10 @@ export class ShiprocketProvider implements ShippingProvider {
       throw error;
     }
 
-    if (!data || !data.data || data.data.length === 0) {
+    // /courier/track returns a bare array ([{ tracking_data }]), not { data: [...] }
+    const records = Array.isArray(data) ? data : data?.data;
+
+    if (!records || records.length === 0) {
       shipmentLogger.warn({
         orderIdOrNumber,
         responseStatus: data?.status_code,
@@ -256,27 +262,36 @@ export class ShiprocketProvider implements ShippingProvider {
       return null;
     }
 
-    const tracking = data.data[0]; // First shipment for this order
+    const trackingData = records[0]?.tracking_data;
+    if (!trackingData || !trackingData.shipment_track || trackingData.shipment_track.length === 0) {
+      shipmentLogger.warn({
+        orderIdOrNumber,
+        record: records[0],
+      }, '⚠️ No tracking data found for order');
+      return null;
+    }
 
+    const tracking = trackingData.shipment_track[0]; // First shipment for this order
+    const all = trackingData.shipment_track_activities;
     shipmentLogger.info({
       orderIdOrNumber,
-      status: tracking?.shipment_status,
-      awb: tracking?.awb,
+      status: tracking?.current_status,
+      awb: tracking?.awb_code,
       courier: tracking?.courier_name,
     }, '✅ Tracking data retrieved from Shiprocket');
 
     shipmentLogger.debug({
-      fullTrackingData: tracking,
-      allActivities: tracking?.shipment_track_activities?.length || 0,
+      fullTrackingData: all,
+      allActivities: all.length||0
     }, '🔍 Full Shiprocket tracking response');
 
     return {
-      currentStatus: tracking?.shipment_status || 'unknown',
-      trackingUrl: tracking?.track_url || null,
-      estimatedDelivery: tracking?.etd ? new Date(tracking.etd) : null,
-      awbCode: tracking?.awb || null,
+      currentStatus: tracking?.current_status || 'unknown',
+      trackingUrl: trackingData?.track_url || null,
+      estimatedDelivery: trackingData?.etd ? new Date(trackingData.etd) : null,
+      awbCode: tracking?.awb_code || null,
       courierName: tracking?.courier_name || null,
-      activities: (tracking?.shipment_track_activities || []).map((a: any) => ({
+      activities: (all || []).map((a: any) => ({
         date: a.date,
         status: a.activity,
         location: a.location || 'N/A',

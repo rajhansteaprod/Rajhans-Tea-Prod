@@ -51,6 +51,7 @@ export const updateOrderStatusSchema = z.object({
       'confirmed',
       'processing',
       'shipped',
+      'pickup_done',
       'in_transit',
       'out_for_delivery',
       'delivered',

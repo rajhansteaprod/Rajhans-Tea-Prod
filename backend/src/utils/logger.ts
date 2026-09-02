@@ -4,40 +4,43 @@ import { config } from '../config';
 
 const logsDir = path.join(process.cwd(), 'logs', 'logs');
 
-export const logger = pino({
-  level: config.log.level,
-  timestamp: pino.stdTimeFunctions.isoTime,
-  transport: {
-    targets: [
-      ...(config.env === 'development'
-        ? [
+export const logger =
+  config.env === 'test'
+    ? pino({ level: 'silent' })
+    : pino({
+        level: config.log.level,
+        timestamp: pino.stdTimeFunctions.isoTime,
+        transport: {
+          targets: [
+            ...(config.env === 'development'
+              ? [
+                  {
+                    target: 'pino-pretty',
+                    options: {
+                      colorize: true,
+                      translateTime: 'SYS:standard',
+                      ignore: 'pid,hostname',
+                      singleLine: true,
+                    },
+                  },
+                ]
+              : [
+                  {
+                    target: 'pino/file',
+                    options: {
+                      destination: 1, // stdout
+                    },
+                  },
+                ]),
             {
-              target: 'pino-pretty',
+              target: 'pino-roll',
               options: {
-                colorize: true,
-                translateTime: 'SYS:standard',
-                ignore: 'pid,hostname',
-                singleLine: true,
+                file: path.join(logsDir, 'app'),
+                mkdir: true,
+                frequency: 'daily',
+                size: '10m',
               },
             },
-          ]
-        : [
-            {
-              target: 'pino/file',
-              options: {
-                destination: 1, // stdout
-              },
-            },
-          ]),
-      {
-        target: 'pino-roll',
-        options: {
-          file: path.join(logsDir, 'app'),
-          mkdir: true,
-          frequency: 'daily',
-          size: '10m',
+          ],
         },
-      },
-    ],
-  },
-});
+      });
