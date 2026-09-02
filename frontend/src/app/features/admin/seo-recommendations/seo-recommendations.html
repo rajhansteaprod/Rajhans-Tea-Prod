@@ -366,6 +366,84 @@
                                   }
                                 }
                               </div>
+
+                              <!-- Human completion + controlled rollback (Phase 5.4B). The current
+                                   implementation outcome is DERIVED from the immutable execution /
+                                   verification / completion / rollback records — never from the
+                                   recommendation's machine-owned status. These checks are advisory
+                                   display logic only; the backend re-checks every rule. -->
+                              <div class="rec__outcome-panel">
+                                <div class="rec__outcome-meta">
+                                  <span class="rec__outcome-badge rec__outcome-badge--{{ implementationState(ex) }}">
+                                    {{ implementationStateLabel(implementationState(ex)) }}
+                                  </span>
+                                </div>
+
+                                @if (canComplete(ex)) {
+                                  <button class="rec__btn rec__btn--complete" [disabled]="isCompleting(ex)" (click)="markCompleted(ex)">
+                                    {{ isCompleting(ex) ? 'Marking completed…' : 'Mark completed' }}
+                                  </button>
+                                }
+                                @if (completeErrorFor(ex)) { <div class="rec__outcome-error">{{ completeErrorFor(ex) }}</div> }
+
+                                @if (latestCompletion(ex); as c) {
+                                  <div class="rec__completion-card">
+                                    <div class="rec__outcome-meta">
+                                      <span class="rec__outcome-badge rec__outcome-badge--completed">Completed</span>
+                                      <span>{{ c.completedAt | date: 'MMM d, y HH:mm' }}</span>
+                                      <span>completed by {{ c.completedByUserId }}</span>
+                                    </div>
+                                    <p class="rec__outcome-detail">Verification used: {{ c.verificationId }}</p>
+                                    <p class="rec__outcome-detail">{{ c.completionVersion }} · recorded {{ c.createdAt | date: 'MMM d, y HH:mm' }}</p>
+                                  </div>
+                                }
+
+                                @if (canRollback(ex)) {
+                                  <p class="rec__rollback-warning">
+                                    Rollback restores the metadata values captured before this execution and updates the
+                                    live CMS page. It fails if the page has changed since the execution — later unrelated
+                                    edits are never overwritten.
+                                  </p>
+                                  <button class="rec__btn rec__btn--rollback" [disabled]="isRollingBack(ex)" (click)="rollbackExecution(ex)">
+                                    {{ isRollingBack(ex) ? 'Rolling back…' : 'Rollback' }}
+                                  </button>
+                                }
+                                @if (rollbackErrorFor(ex)) { <div class="rec__outcome-error">{{ rollbackErrorFor(ex) }}</div> }
+
+                                @if (latestRollback(ex); as rb) {
+                                  <div class="rec__rollback-card">
+                                    <div class="rec__outcome-meta">
+                                      <span class="rec__outcome-badge rec__outcome-badge--rolled_back">Rolled back</span>
+                                      <span>{{ rb.rolledBackAt | date: 'MMM d, y HH:mm' }}</span>
+                                      <span>rolled back by {{ rb.rollbackUserId }}</span>
+                                    </div>
+                                    @for (rt of rb.targets; track rt.targetUrl) {
+                                      <div class="rec__execution-target">
+                                        <div class="rec__execution-target-url">
+                                          <a [href]="rt.targetUrl" target="_blank" rel="noopener">{{ rt.targetUrl }}</a>
+                                        </div>
+                                        @if (rt.restored.metaTitle !== undefined) {
+                                          <div class="rec__pc-field">
+                                            <span>Title</span>
+                                            <p class="rec__pc-current">Before rollback: {{ rt.beforeRollback.metaTitle || '(none)' }}</p>
+                                            <p class="rec__pc-proposed">Restored: {{ rt.restored.metaTitle || '(none)' }}</p>
+                                            <p class="rec__pc-proposed">After rollback: {{ rt.afterRollback.metaTitle || '(none)' }}</p>
+                                          </div>
+                                        }
+                                        @if (rt.restored.metaDescription !== undefined) {
+                                          <div class="rec__pc-field">
+                                            <span>Meta description</span>
+                                            <p class="rec__pc-current">Before rollback: {{ rt.beforeRollback.metaDescription || '(none)' }}</p>
+                                            <p class="rec__pc-proposed">Restored: {{ rt.restored.metaDescription || '(none)' }}</p>
+                                            <p class="rec__pc-proposed">After rollback: {{ rt.afterRollback.metaDescription || '(none)' }}</p>
+                                          </div>
+                                        }
+                                      </div>
+                                    }
+                                    <p class="rec__outcome-detail">{{ rb.rollbackVersion }} · this execution cannot be rolled back again.</p>
+                                  </div>
+                                }
+                              </div>
                             </div>
                           }
                         </div>

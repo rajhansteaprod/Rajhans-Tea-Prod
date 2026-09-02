@@ -29,6 +29,18 @@ import {
   getVerificationById,
   toVerificationView,
 } from './services/change-verification.service';
+import {
+  completeExecution,
+  listCompletionsForExecution,
+  getCompletionById,
+  toCompletionView,
+} from './services/change-completion.service';
+import {
+  rollbackExecution,
+  listRollbacksForExecution,
+  getRollbackById,
+  toRollbackView,
+} from './services/change-rollback.service';
 import { RULE_REGISTRY } from './services/rules';
 import { RunScope } from './seo.types';
 import { gscConfig } from './gsc.config';
@@ -192,8 +204,9 @@ export const getChangeDraft = async (req: Request, res: Response) => {
 };
 
 /**
- * Phase 5.3 — controlled execution. This is the ONLY endpoint in the SEO module
- * that mutates production content. It MUTATES the live CMS page's
+ * Phase 5.3 — controlled execution. Together with Phase 5.4B's rollback
+ * endpoint, this is one of only two endpoints in the SEO module that mutate
+ * production content. It MUTATES the live CMS page's
  * metaTitle/metaDescription for one approved, valid, metadata-only draft —
  * after re-checking every eligibility rule server-side. The draft/recommendation
  * documents in Mongo are the sole source of truth: nothing from the request
@@ -283,6 +296,100 @@ export const getChangeVerification = async (req: Request, res: Response) => {
     return res.status(404).json({ success: false, statusCode: 404, message: 'Verification not found' });
   }
   return sendSuccess(res, toVerificationView(verification));
+};
+
+/**
+ * Phase 5.4B — human completion. Records that an admin intentionally marked a
+ * SUCCESSFUL, VERIFIED execution as implemented. Creates ONLY the immutable
+ * SeoChangeCompletion record: no Page write, and deliberately no write to
+ * SeoRecommendation.status/resolvedRunId, which belong to the machine/evidence
+ * lifecycle (audit/GSC/market reconciliation), not to a human decision. The
+ * request body is never consulted — it cannot pick the recommendation, draft or
+ * verification, nor spoof the completing admin.
+ */
+export const completeChangeExecution = async (req: Request, res: Response) => {
+  const executionId = str(req.params.executionId) ?? '';
+  const result = await completeExecution({ executionId, completedByUserId: req.user!.userId });
+  if (!result.ok) {
+    const statusByError: Record<string, number> = {
+      invalid_id: 400,
+      not_found: 404,
+    };
+    const statusCode = statusByError[result.error] ?? 409;
+    return res.status(statusCode).json({ success: false, statusCode, message: result.message });
+  }
+  return sendSuccess(res, toCompletionView(result.completion), 'Execution marked completed', 201);
+};
+
+/** Completion history for one execution, newest first. At most one entry today; an array for consistency/future extensibility. */
+export const getChangeExecutionCompletions = async (req: Request, res: Response) => {
+  const executionId = str(req.params.executionId) ?? '';
+  if (!mongoose.isValidObjectId(executionId)) {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'Invalid execution id' });
+  }
+  const completions = await listCompletionsForExecution(executionId);
+  return sendSuccess(res, (completions ?? []).map(toCompletionView));
+};
+
+/** A single completion record by its own id. */
+export const getChangeCompletion = async (req: Request, res: Response) => {
+  const completionId = str(req.params.completionId) ?? '';
+  if (!mongoose.isValidObjectId(completionId)) {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'Invalid completion id' });
+  }
+  const completion = await getCompletionById(completionId);
+  if (!completion) {
+    return res.status(404).json({ success: false, statusCode: 404, message: 'Completion not found' });
+  }
+  return sendSuccess(res, toCompletionView(completion));
+};
+
+/**
+ * Phase 5.4B — controlled rollback. Alongside Phase 5.3's execute endpoint,
+ * this is one of only two endpoints in the SEO module that mutate production
+ * content: it restores the live CMS page metadata fields the execution actually
+ * wrote to the values captured in that execution's immutable `before` snapshot.
+ * The execution record is the sole source of restore values — nothing from the
+ * request body is used as SEO input, so a caller cannot spoof the rollback user
+ * or the restored values. Rejects (409) rather than overwriting a page that has
+ * changed since the execution.
+ */
+export const rollbackChangeExecution = async (req: Request, res: Response) => {
+  const executionId = str(req.params.executionId) ?? '';
+  const result = await rollbackExecution({ executionId, rollbackUserId: req.user!.userId });
+  if (!result.ok) {
+    const statusByError: Record<string, number> = {
+      invalid_id: 400,
+      not_found: 404,
+      target_not_found: 404,
+    };
+    const statusCode = statusByError[result.error] ?? 409;
+    return res.status(statusCode).json({ success: false, statusCode, message: result.message });
+  }
+  return sendSuccess(res, toRollbackView(result.rollback), 'Execution rolled back', 201);
+};
+
+/** Rollback history for one execution, newest first. At most one entry today; an array for consistency/future extensibility. */
+export const getChangeExecutionRollbacks = async (req: Request, res: Response) => {
+  const executionId = str(req.params.executionId) ?? '';
+  if (!mongoose.isValidObjectId(executionId)) {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'Invalid execution id' });
+  }
+  const rollbacks = await listRollbacksForExecution(executionId);
+  return sendSuccess(res, (rollbacks ?? []).map(toRollbackView));
+};
+
+/** A single rollback record by its own id. */
+export const getChangeRollback = async (req: Request, res: Response) => {
+  const rollbackId = str(req.params.rollbackId) ?? '';
+  if (!mongoose.isValidObjectId(rollbackId)) {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'Invalid rollback id' });
+  }
+  const rollback = await getRollbackById(rollbackId);
+  if (!rollback) {
+    return res.status(404).json({ success: false, statusCode: 404, message: 'Rollback not found' });
+  }
+  return sendSuccess(res, toRollbackView(rollback));
 };
 
 /**
