@@ -1,157 +1,104 @@
 <div class="login">
-  <!-- Left: Hero Image Section (Desktop only) -->
-  <div class="login__hero">
-    <img [src]="heroImage" [alt]="heroTagline" class="login__hero-image" />
-    <div class="login__hero-overlay"></div>
-    <div class="login__hero-content">
-      <div class="login__hero-tagline">{{ heroTagline }}</div>
+  <!-- Visual (left on desktop, top on mobile) -->
+  <div class="login__visual">
+    <div class="login__visual-content">
+      <div class="login__visual-top">
+        <a routerLink="/" class="login__brand">Rajhans Tea</a>
+      </div>
+
+      <div class="login__hero">
+        <h2 class="login__headline">Your tea doesn&rsquo;t have to be boring anymore.</h2>
+        <p class="login__tagline">Switch to a cup that feels stronger, richer, and more satisfying every day.</p>
+      </div>
+
+      <p class="login__footnote">Freshly Sourced &nbsp;&bull;&nbsp; No Additives &nbsp;&bull;&nbsp; Since 1986</p>
     </div>
   </div>
 
-  <!-- Right: Login Card Section -->
-  <div class="login__card-wrapper">
-    <!-- Mobile Logo -->
-    <div class="login__logo-mobile">
-      <app-logo></app-logo>
-    </div>
+  <!-- Login panel (right on desktop, below on mobile) -->
+  <div class="login__panel">
+    <div class="login__card">
+      <h1 class="login__title">Sign In</h1>
+      <p class="login__subtitle">
+        {{ otpSent() ? 'Enter the OTP we sent to your mobile' : 'Enter your mobile number to continue' }}
+      </p>
 
-    <!-- Premium Login Card -->
-    <div class="login__card" [class.entered]="entered()">
-      <!-- Card Header -->
-      <div class="login__card-header">
-        <div class="login__logo-desktop">
-          <app-logo></app-logo>
-        </div>
-        <h1 class="login__card-title">Welcome back</h1>
-        <p class="login__card-subtitle">
-          {{ step() === 'phone'
-            ? 'Sign in to continue your journey'
-            : 'Verify your identity' }}
-        </p>
+      <p class="login__loading" *ngIf="isLoading()">Please wait&hellip;</p>
+
+      <div class="login__error" *ngIf="error()">
+        <p>{{ error() }}</p>
+        <button class="login__error-close" (click)="clearError()" aria-label="Dismiss">&times;</button>
       </div>
 
-      <!-- Error Message -->
-      @if (error()) {
-        <div class="login__error" (click)="error.set(null)">
-          <svg class="login__error-icon" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="8" fill="#C0392B" />
-            <path d="M5 5L11 11M11 5L5 11" stroke="white" stroke-width="1.5" stroke-linecap="round" />
-          </svg>
-          <span class="login__error-text">{{ error() }}</span>
-        </div>
-      }
-
-      <!-- Phone Step -->
-      @if (step() === 'phone') {
-        <div class="login__form-section">
-          <div class="login__form-group">
-            <label class="login__form-label">Phone number</label>
-            <div class="login__phone-input-group">
-              <div class="login__country-code">
-                <svg class="login__country-flag" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="900" height="200" fill="#FF9933" />
-                  <rect y="200" width="900" height="200" fill="#FFFFFF" />
-                  <rect y="400" width="900" height="200" fill="#138808" />
-                  <circle cx="450" cy="300" r="60" fill="#000080" />
-                  <circle cx="450" cy="300" r="50" fill="none" stroke="#000080" stroke-width="3" />
-                  <text x="450" y="310" text-anchor="middle" font-size="30" fill="#000080">⚙</text>
-                </svg>
-                <span class="login__country-code-text">+91</span>
-              </div>
-              <input
-                #phoneInput
-                type="tel"
-                class="login__phone-input"
-                placeholder="Enter your 10-digit number"
-                [value]="phone()"
-                (input)="onPhoneInput($event)"
-                maxlength="10"
-                (keyup.enter)="onSendOtp()"
-                autocomplete="tel"
-              />
-            </div>
+      <!-- Step 1 · Enter mobile number -->
+      <form class="login__form" *ngIf="!otpSent()" (ngSubmit)="sendOtp()">
+        <div class="login__field">
+          <label for="phone">Mobile number</label>
+          <div class="login__phone">
+            <span class="login__cc">+91</span>
+            <input
+              id="phone"
+              type="tel"
+              inputmode="numeric"
+              maxlength="10"
+              autocomplete="tel"
+              placeholder="10-digit mobile number"
+              name="phone"
+              [(ngModel)]="phoneNumber"
+              [disabled]="isLoading()"
+            />
           </div>
+        </div>
+        <button type="submit" class="login__btn" [disabled]="isLoading() || phoneNumber.length !== 10">
+          Send OTP
+        </button>
+      </form>
 
-          <button
-            class="login__primary-btn"
-            [class.loading]="loading()"
-            [disabled]="phone().length !== 10 || loading()"
-            (click)="onSendOtp()"
-          >
-            @if (!loading()) {
-              <span class="login__btn-text">Continue</span>
-              <svg class="login__btn-icon" viewBox="0 0 20 20" fill="none">
-                <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            } @else {
-              <div class="login__spinner"></div>
-            }
+      <!-- Step 2 · Enter OTP -->
+      <form class="login__form" *ngIf="otpSent()" (ngSubmit)="verifyOtp()">
+        <p class="login__sent-to">
+          OTP sent to <strong>+91 {{ phoneNumber }}</strong>
+        </p>
+        <div class="login__field">
+          <label for="otp">Enter OTP</label>
+          <input
+            id="otp"
+            type="tel"
+            inputmode="numeric"
+            maxlength="6"
+            autocomplete="one-time-code"
+            placeholder="6-digit OTP"
+            name="otp"
+            [(ngModel)]="otp"
+            [disabled]="isLoading()"
+          />
+        </div>
+        <button type="submit" class="login__btn" [disabled]="isLoading() || otp.length !== 6">
+          Verify OTP
+        </button>
+        <div class="login__actions">
+          <button type="button" class="login__link" (click)="changeMobile()" [disabled]="isLoading()">
+            Change number
+          </button>
+          <button type="button" class="login__link" (click)="resendOtp()" [disabled]="isLoading()">
+            Resend OTP
           </button>
         </div>
-      }
+      </form>
 
-      <!-- OTP Step -->
-      @if (step() === 'otp') {
-        <div class="login__form-section">
-          <p class="login__otp-hint">
-            Enter the 6-digit code sent to <strong>+91 {{ phone() }}</strong>
-          </p>
+      <p class="login__secure">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Powered by a trusted third-party OTP service — 100% safe.
+      </p>
 
-          <div class="login__otp-inputs">
-            @for (i of otpSlots; track i) {
-              <input
-                #otpInput
-                type="text"
-                inputmode="numeric"
-                class="login__otp-input"
-                maxlength="1"
-                [value]="otpDigits()[i]"
-                (input)="onOtpDigitInput($event, i)"
-                (keydown)="onOtpKeydown($event, i)"
-                (paste)="onOtpPaste($event)"
-                [class.filled]="otpDigits()[i]"
-              />
-            }
-          </div>
-
-          <button
-            class="login__primary-btn"
-            [class.loading]="loading()"
-            [disabled]="otp().length !== 6 || loading()"
-            (click)="onVerifyOtp()"
-          >
-            @if (!loading()) {
-              <span class="login__btn-text">Verify & Sign In</span>
-            } @else {
-              <div class="login__spinner"></div>
-            }
-          </button>
-
-          <div class="login__otp-actions">
-            <button
-              class="login__secondary-btn"
-              [disabled]="resendCooldown() > 0"
-              (click)="onSendOtp()"
-            >
-              {{ resendCooldown() > 0 ? 'Resend in ' + resendCooldown() + 's' : 'Resend code' }}
-            </button>
-            <button class="login__secondary-btn" (click)="changePhone()">
-              Change number
-            </button>
-          </div>
-        </div>
-      }
-
-      <!-- Terms & Privacy -->
-      <p class="login__legal">
+      <p class="login__terms">
         By continuing, you agree to our
-        <a routerLink="/page/terms-and-conditions" target="_blank" class="login__legal-link">Terms of Service</a>
-        &amp;
-        <a routerLink="/page/privacy-policy" target="_blank" class="login__legal-link">Privacy Policy</a>
+        <a routerLink="/page/terms-conditions">Terms</a> and
+        <a routerLink="/page/privacy-policy">Privacy Policy</a>
       </p>
     </div>
   </div>
-
-  <!-- Invisible reCAPTCHA container -->
-  <div id="recaptcha-container"></div>
 </div>

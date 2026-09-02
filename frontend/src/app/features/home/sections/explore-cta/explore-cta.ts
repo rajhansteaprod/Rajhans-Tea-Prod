@@ -10,10 +10,9 @@ import {
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CatalogService, Product } from '../../../../core/services/catalog.service';
+import { PlatformService } from '../../../../core/services/platform.service';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 @Component({
   selector: 'app-explore-cta',
@@ -25,6 +24,7 @@ gsap.registerPlugin(ScrollTrigger);
 export class ExploreCtaComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly el = inject(ElementRef);
   private readonly catalogService = inject(CatalogService);
+  private readonly platform = inject(PlatformService);
   private ctx: gsap.Context | null = null;
 
   readonly products = signal<Product[]>([]);
@@ -36,6 +36,10 @@ export class ExploreCtaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
+    // GSAP/ScrollTrigger needs real browser APIs — skip during SSR/prerendering.
+    if (!this.platform.isBrowser) return;
+
+    gsap.registerPlugin(ScrollTrigger);
     const root = this.el.nativeElement as HTMLElement;
 
     this.ctx = gsap.context(() => {

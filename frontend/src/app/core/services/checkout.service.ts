@@ -24,9 +24,13 @@ export interface CheckoutSummary {
   sessionId: string;
   items: any[];
   subtotal: number;
-  totalDiscount: number;
+  totalDiscount: number; // per-line rule discounts (excludes coupon)
   totalTax: number;
-  total: number;
+  itemsTotal?: number; // line totals before coupon
+  couponCode?: string | null;
+  couponDiscount?: number; // order-level coupon discount
+  shippingCost?: number;
+  total: number; // grand total — exactly what the backend will charge
   itemCount: number;
   promoError?: string;
 }
@@ -77,6 +81,9 @@ export class CheckoutService {
   private offersSignal = signal<Offer[]>([]);
   private offersLoadingSignal = signal(false);
 
+  // Applied promo code — single source shared by cart step, summary step and payment
+  private appliedPromoCodeSignal = signal<string>('');
+
   // Backend pricing sync signals
   private summaryDataSignal = signal<CheckoutSummary | null>(null);
   private summaryLoadingSignal = signal(false);
@@ -105,18 +112,22 @@ export class CheckoutService {
 
   readonly cartDiscount = computed(() => {
     const backendSummary = this.summaryDataSignal();
-    return backendSummary?.totalDiscount ?? 0;
+    if (!backendSummary) return 0;
+    return backendSummary.totalDiscount + (backendSummary.couponDiscount ?? 0);
   });
 
+  // Tax is ONLY ever calculated by the backend — no client-side estimates.
   readonly cartTax = computed(() => {
     const backendSummary = this.summaryDataSignal();
-    return backendSummary?.totalTax ?? this.cartSubtotal() * 0.18;
+    return backendSummary?.totalTax ?? 0;
   });
 
   readonly cartTotal = computed(() => {
     const backendSummary = this.summaryDataSignal();
     return backendSummary?.total ?? this.cartSubtotal() - this.cartDiscount();
   });
+
+  readonly appliedPromoCode = this.appliedPromoCodeSignal.asReadonly();
 
   readonly isPricingFromBackend = computed(() => !!this.summaryDataSignal());
 
@@ -205,16 +216,14 @@ export class CheckoutService {
 
   // Update cart items
   setCartItems(items: CartItem[]) {
-    console.log('✅ setCartItems called with:', items);
     this.cartItemsSignal.set([...items]);
-    console.log('💾 Signal updated, current items:', this.cartItems());
   }
 
   // Save address (called when user clicks Next on address step)
   saveAddress(address: CheckoutAddress) {
     this.addressSignal.set({ ...address });
     // Persist to localStorage for recovery on page reload
-    localStorage.setItem('checkout_address', JSON.stringify(address));
+    this.platform.localStorage.setItem('checkout_address', JSON.stringify(address));
   }
 
   // Get current address
@@ -224,12 +233,19 @@ export class CheckoutService {
 
   // Load pricing summary from backend with robust error handling and retry
   // forceRefresh: skip cache even if fresh data exists
-  async loadCheckoutSummary(forceRefresh = false, promoCode = ''): Promise<CheckoutSummary | null> {
+  // promoCode: undefined → keep currently applied code; '' → remove code
+  async loadCheckoutSummary(forceRefresh = false, promoCode?: string): Promise<CheckoutSummary | null> {
     const items = this.cartItems();
     if (items.length === 0) {
       this.summaryDataSignal.set(null);
       return null;
     }
+
+    // Resolve the promo code for this refresh and remember it so later
+    // refreshes (qty change, step change, payment) use the same code.
+    const effectivePromo = (promoCode === undefined ? this.appliedPromoCodeSignal() : promoCode)
+      .trim()
+      .toUpperCase();
 
     // Cache check: 25-minute TTL (payment window timeout)
     const now = Date.now();
@@ -256,11 +272,11 @@ export class CheckoutService {
         try {
           // Always send current items in body (temporary cart or updated quantities)
           const body: Record<string, any> = { items };
-          if (promoCode) {
-            body['promoCode'] = promoCode.trim().toUpperCase();
+          if (effectivePromo) {
+            body['promoCode'] = effectivePromo;
           }
           const selectedOfferId = this.getSelectedOfferId();
-          if (selectedOfferId) {
+          if (selectedOfferId && !effectivePromo) {
             body['offerId'] = selectedOfferId;
           }
 
@@ -274,6 +290,12 @@ export class CheckoutService {
             this.summaryDataSignal.set(response.data);
             this.lastSummaryFetchTime.set(now);
             this.summaryErrorSignal.set(null);
+            // Persist the promo only when the backend accepted it
+            if (effectivePromo && !response.data.promoError) {
+              this.appliedPromoCodeSignal.set(effectivePromo);
+            } else {
+              this.appliedPromoCodeSignal.set('');
+            }
             return response.data;
           }
         } catch (error) {
@@ -315,6 +337,7 @@ export class CheckoutService {
     this.addressSignal.set(emptyAddress());
     this.selectedOfferSignal.set(null);
     this.offersSignal.set([]);
+    this.appliedPromoCodeSignal.set('');
     this.resetPricingCache();
   }
 

@@ -65,37 +65,21 @@
             }
         </section>
 
-        <!-- Timeline Card -->
-        @if (getVisibleStatusHistory().length > 0) {
+        <!-- Tracking History Card -->
+        @if (getFullTrackingHistory().length > 0) {
             <section class="timeline-card">
                 <h3>Tracking History</h3>
                 <div class="timeline">
-                    @for (event of getVisibleStatusHistory(); let i = $index; track i) {
+                    @for (event of getFullTrackingHistory(); let i = $index; track i) {
                         <div class="step" [class.active]="i === 0">
                             <div class="dot"></div>
                             <div>
-                                <h4>{{ getStatusLabel(event.status) }}</h4>
+                                <h4>{{ event.label }}</h4>
                                 <span>{{ formatDate(event.timestamp) }}</span>
                             </div>
                         </div>
                     }
                 </div>
-            </section>
-        }
-
-        <!-- Activity Card -->
-        @if (tracking()?.shiprocket?.activities && (tracking()?.shiprocket?.activities?.length || 0) > 0) {
-            <section class="activity-card">
-                @for (activity of tracking()!.shiprocket!.activities; let i = $index; track i) {
-                    <div class="activity">
-                        <div class="activity-icon">—</div>
-                        <div>
-                            <h4>{{ activity.status }}</h4>
-                            <p>{{ activity.location }}</p>
-                            <span>{{ formatDate(activity.date) }}</span>
-                        </div>
-                    </div>
-                }
             </section>
         }
 

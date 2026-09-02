@@ -6,6 +6,9 @@ export type PriceSnapshotStatus = 'active' | 'used' | 'expired';
 
 export interface IPriceSnapshotItem {
   productId: string;
+  variantId: string | null;
+  variantName: string | null;
+  sku: string | null;
   name: string;
   qty: number;
   unitPrice: number; // finalPrice per unit (after discount + tax)
@@ -20,9 +23,17 @@ export interface IPriceSnapshotDoc extends Document {
   sessionId: string;
   items: IPriceSnapshotItem[];
   subtotal: number; // sum of (priceAfterDiscount * qty)
-  totalDiscount: number; // sum of (discountAmount * qty)
+  totalDiscount: number; // sum of rule discounts (excludes coupon)
   totalTax: number; // sum of (taxAmount * qty)
-  total: number; // THE frozen amount — only number charged to Razorpay
+  itemsTotal: number; // sum of line totals (before coupon)
+  couponCode: string | null;
+  couponId: Types.ObjectId | null;
+  couponType: 'promo_code' | 'offer' | null;
+  couponDiscount: number; // order-level coupon discount, applied once
+  shippingCost: number;
+  total: number; // THE frozen amount — the only number charged
+  currency: string;
+  pricingVersion: number;
   status: PriceSnapshotStatus;
   expiresAt: Date; // TTL field — MongoDB auto-deletes at this time
   usedByPaymentId: Types.ObjectId | null;
@@ -35,6 +46,9 @@ export interface IPriceSnapshotDoc extends Document {
 const priceSnapshotItemSchema = new Schema<IPriceSnapshotItem>(
   {
     productId: { type: String, required: true },
+    variantId: { type: String, default: null },
+    variantName: { type: String, default: null },
+    sku: { type: String, default: null },
     name: { type: String, required: true },
     qty: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true },
@@ -54,7 +68,15 @@ const priceSnapshotSchema = new Schema<IPriceSnapshotDoc>(
     subtotal: { type: Number, required: true },
     totalDiscount: { type: Number, default: 0 },
     totalTax: { type: Number, default: 0 },
+    itemsTotal: { type: Number, default: 0 },
+    couponCode: { type: String, default: null },
+    couponId: { type: Schema.Types.ObjectId, ref: 'Discount', default: null },
+    couponType: { type: String, enum: ['promo_code', 'offer', null], default: null },
+    couponDiscount: { type: Number, default: 0 },
+    shippingCost: { type: Number, default: 0 },
     total: { type: Number, required: true },
+    currency: { type: String, default: 'INR' },
+    pricingVersion: { type: Number, default: 1 },
     status: {
       type: String,
       enum: ['active', 'used', 'expired'],

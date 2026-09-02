@@ -1,5 +1,6 @@
 import { Product, IProductDoc } from '../../catalog/models/product.model';
 import { Category } from '../../catalog/models/category.model';
+import { ProductVariant } from '../../catalog/models/product-variant.model';
 import { parsePagination, buildPaginationMeta } from '../../../utils/pagination';
 
 export interface SearchParams {
@@ -14,6 +15,7 @@ export interface SearchParams {
   priceMax?: number;
   inStock?: boolean;
   tags?: string[];
+  optionValues?: string[]; // variant option values, e.g. ["250g", "500g"]
 }
 
 export interface SearchFacets {
@@ -54,6 +56,18 @@ export class SearchRepository {
     }
     if (params.inStock) matchFilter.stock = { $gt: 0 };
     if (params.tags && params.tags.length > 0) matchFilter.tags = { $in: params.tags };
+
+    // Variant option facet filter — keep only products that have an active
+    // variant whose optionValue is one of the selected values.
+    if (params.optionValues && params.optionValues.length > 0) {
+      const productIds = await ProductVariant.find({
+        isActive: true,
+        optionValue: { $in: params.optionValues },
+      })
+        .distinct('productId')
+        .exec();
+      matchFilter._id = { $in: productIds };
+    }
 
     // Try $text search first
     let products: IProductDoc[];

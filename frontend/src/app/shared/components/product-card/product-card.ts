@@ -15,8 +15,10 @@ export class ProductCardComponent {
   @Input() product!: Product;
   @Input() isHovering = false;
   @Input() isWishlisted = false;
-  @Input() getRating: () => number = () => 5;
-  @Input() getReviewCount: () => number = () => 0;
+  /** Real computed average rating for this product (0 when no reviews) */
+  @Input() averageRating = 0;
+  /** Real review count for this product (0 when no reviews) */
+  @Input() reviewCount = 0;
 
   @Output() imageHover = new EventEmitter<boolean>();
   @Output() toggleWishlistClick = new EventEmitter<Event>();
@@ -29,6 +31,11 @@ export class ProductCardComponent {
 
   // Carousel state
   currentImageIndex = signal<number>(0);
+
+  /** Whole-star fill count (nearest whole; the star icons don't support half fills) */
+  roundedRating(): number {
+    return Math.round(this.averageRating);
+  }
 
   ngOnInit(): void {
     // Default to first variant if available

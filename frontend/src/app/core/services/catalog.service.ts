@@ -56,6 +56,8 @@ export interface Collection {
 export interface ProductVariant {
   _id: string;
   name: string;
+  optionKey?: string;   // dictionary key, e.g. "Weight"
+  optionValue?: string; // chosen value, e.g. "250g"
   sku?: string;
   price: number;
   discountedPrice?: number;
@@ -69,13 +71,47 @@ export interface ProductVariant {
 
 export interface CreateVariantPayload {
   name: string;
+  optionKey?: string;
+  optionValue?: string;
   sku?: string;
   price: number;
-  discountedPrice?: number;
+  discountedPrice?: number | null; // null clears an existing discount
   stock: number;
   trackInventory?: boolean;
   isActive?: boolean;
 }
+
+// A variant sent inline with the product create/update payload. Per variant the
+// admin gives only value + base price + discounted price + stock; `_id` marks an
+// existing variant so the backend can reconcile on edit.
+export interface InlineVariant {
+  _id?: string;
+  optionKey?: string;
+  optionValue: string;
+  price: number;
+  discountedPrice?: number | null;
+  stock?: number;
+}
+
+// Global variant-options dictionary (e.g. Weight → [100g, 250g, 500g, 1kg])
+export interface VariantOption {
+  _id: string;
+  key: string;
+  values: string[];
+  isActive: boolean;
+  sortOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateVariantOptionPayload {
+  key: string;
+  values?: string[];
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export type UpdateVariantOptionPayload = Partial<CreateVariantOptionPayload>;
 
 export interface Product {
   _id: string;
@@ -93,6 +129,9 @@ export interface Product {
   reflectedImage?: string; // Image shown on hover in featured products
   attributes: Record<string, string>;
   tags: string[];
+  region?: 'Assam' | 'Darjeeling' | 'Nilgiri' | 'Dooars';
+  bestTakenFor?: 'Morning' | 'Noon' | 'Evening';
+  hasVariants?: boolean; // when true, basePrice/discountedPrice/stock are derived from variants
   variants?: ProductVariant[];
   // Admin-only (present in /admin/products, absent in /catalog/products)
   status?: 'draft' | 'active' | 'archived';
@@ -153,19 +192,23 @@ export interface CreateProductPayload {
   categoryId: string;
   collectionIds?: string[];
   basePrice: number;
-  discountedPrice?: number;
+  discountedPrice?: number | null; // null clears an existing discount
   images?: string[];
   primaryImage?: string;
   imageAltText?: string;
   reflectedImage?: string; // Image shown on hover in featured products
   attributes?: Record<string, string>;
   tags?: string[];
+  region?: 'Assam' | 'Darjeeling' | 'Nilgiri' | 'Dooars' | null; // null clears
+  bestTakenFor?: 'Morning' | 'Noon' | 'Evening' | null; // null clears
   status?: 'draft' | 'active' | 'archived';
   showBadge?: boolean;
   badgeText?: string;
   isFeatured?: boolean;
   stock?: number;
   trackInventory?: boolean;
+  hasVariants?: boolean; // true → pricing/stock come from variants, not these fields
+  variants?: InlineVariant[]; // inline variants created/reconciled with the product
 }
 
 export interface UpdateProductPayload extends Partial<CreateProductPayload> {}
@@ -307,6 +350,28 @@ export class CatalogService {
 
   deleteVariant(productId: string, variantId: string): Observable<void> {
     return this.http.delete<void>(`${this.adminUrl}/products/${productId}/variants/${variantId}`);
+  }
+
+  // --- Variant Options (global dictionary) ---
+
+  getVariantOptionsPublic(): Observable<ApiResponse<VariantOption[]>> {
+    return this.http.get<ApiResponse<VariantOption[]>>(`${this.publicUrl}/variant-options`);
+  }
+
+  getVariantOptions(): Observable<ApiResponse<VariantOption[]>> {
+    return this.http.get<ApiResponse<VariantOption[]>>(`${this.adminUrl}/variant-options`);
+  }
+
+  createVariantOption(payload: CreateVariantOptionPayload): Observable<ApiResponse<VariantOption>> {
+    return this.http.post<ApiResponse<VariantOption>>(`${this.adminUrl}/variant-options`, payload);
+  }
+
+  updateVariantOption(id: string, payload: UpdateVariantOptionPayload): Observable<ApiResponse<VariantOption>> {
+    return this.http.put<ApiResponse<VariantOption>>(`${this.adminUrl}/variant-options/${id}`, payload);
+  }
+
+  deleteVariantOption(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.adminUrl}/variant-options/${id}`);
   }
 
   // --- Image upload ---

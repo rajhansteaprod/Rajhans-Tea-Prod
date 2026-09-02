@@ -34,6 +34,7 @@ export class CartStepComponent {
   readonly promoSuccess = signal('');
   readonly isValidatingPromo = signal(false);
   readonly isPromoApplied = signal(false);
+  readonly showOffers = signal(false);
   private readonly productCache = signal<Map<string, Product>>(new Map());
 
   // Computed
@@ -174,6 +175,10 @@ export class CartStepComponent {
       this.isValidatingPromo.set(false);
       console.error('Failed to remove promo code:', error);
     });
+  }
+
+  toggleOffers() {
+    this.showOffers.update((v) => !v);
   }
 
   onOfferSelected(offer: Offer | null) {

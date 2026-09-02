@@ -125,32 +125,18 @@
   <!-- Footer -->
   @if (cart.cartItems().length > 0) {
     <div class="drawer-footer">
-      <!-- Free Shipping Progress -->
-      <div class="shipping-progress">
-        <div class="progress-header">
-          @if (cart.cartSubtotal() >= 500) {
-            <span class="progress-text success">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              Free shipping unlocked!
-            </span>
-          } @else {
-            <span class="progress-text">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 1v22M4.22 4.22l15.56 15.56M1 12h22"/>
-              </svg>
-              ₹{{ 500 - cart.cartSubtotal() }} to free shipping
-            </span>
-          }
-          <span class="progress-percent">{{ (cart.cartSubtotal() / 500) * 100 | number:'0.0-0' }}%</span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" [style.width.%]="(cart.cartSubtotal() / 500) * 100"></div>
-        </div>
+      <!-- Free Shipping Banner — shipping is free on every product and every
+           quantity (matches backend: shippingCost is always 0), so this is a
+           flat statement, not a spend-more-to-unlock threshold. -->
+      <div class="shipping-banner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <span>You unlocked free shipping!</span>
       </div>
 
-      <!-- Price Summary -->
+      <!-- Price Summary — Total is always exactly the subtotal (sum of each
+           item's discounted-or-base price × qty); shipping never changes it. -->
       <div class="price-summary">
         <div class="summary-row">
           <span class="summary-label">Subtotal</span>
@@ -158,18 +144,12 @@
         </div>
         <div class="summary-row">
           <span class="summary-label">Shipping</span>
-          <span class="summary-value" [class.free]="cart.cartSubtotal() >= 500">
-            @if (cart.cartSubtotal() >= 500) {
-              FREE
-            } @else {
-              ₹50
-            }
-          </span>
+          <span class="summary-value free">FREE</span>
         </div>
         <div class="summary-divider"></div>
         <div class="summary-row total">
           <span class="summary-label">Total</span>
-          <span class="summary-value">₹{{ (cart.cartSubtotal() >= 500 ? cart.cartSubtotal() : cart.cartSubtotal() + 50) | number:'1.0-0' }}</span>
+          <span class="summary-value">₹{{ cart.cartSubtotal() | number:'1.0-0' }}</span>
         </div>
       </div>
 
@@ -181,7 +161,7 @@
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
         </button>
-        <button class="btn-continue" (click)="cart.closeSidebar()" type="button">
+        <button class="btn-continue" (click)="redirectProducts()" type="button">
           Continue Shopping
         </button>
       </div>

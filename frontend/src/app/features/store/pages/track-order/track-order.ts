@@ -113,6 +113,8 @@ export class TrackOrderComponent implements OnInit {
         return '#10b981';
       case 'in_transit':
         return '#f59e0b';
+      case 'pickup_done':
+        return '#f59e0b';
       case 'out_for_delivery':
         return '#3b82f6';
       case 'shipped':
@@ -129,10 +131,11 @@ export class TrackOrderComponent implements OnInit {
     const statusMap: Record<string, string> = {
       'delivered': '✓ Delivered',
       'in_transit': 'In Transit',
+      'pickup_done': 'Pickup Done',
       'out_for_delivery': 'Out for Delivery',
       'shipped': 'Shipped',
       'in progress': 'Ready to Ship',
-      'confirmed': 'Ready to Ship',
+      'confirmed': 'Order Placed',
       'pending': 'Pending',
     };
     return statusMap[status?.toLowerCase()] || status || 'Unknown';
@@ -175,10 +178,29 @@ export class TrackOrderComponent implements OnInit {
   }
 
   getVisibleStatusHistory(): StatusHistoryEntry[] {
-    // Hide "confirmed" status from user view - only show from "In Progress" onwards
-    return this.tracking()?.statusHistory?.filter(
-      entry => entry.status?.toLowerCase() !== 'confirmed'
-    ) || [];
+    return this.tracking()?.statusHistory || [];
+  }
+
+  getFullTrackingHistory(): { label: string; timestamp: string }[] {
+    // Entries synced from Shiprocket just mirror an activity we already show below -
+    // keep only the pre-Shiprocket internal step (e.g. "Ready to Ship") to avoid duplicates.
+    const statusEntries = this.getVisibleStatusHistory()
+      .filter(entry => !entry.note?.startsWith('Synced from Shiprocket'))
+      .map(entry => ({
+        label: this.getStatusLabel(entry.status),
+        timestamp: entry.timestamp,
+      }));
+
+    const activityEntries = (this.tracking()?.shiprocket?.activities || [])
+      .filter(activity => activity.status?.toLowerCase() !== 'data received')
+      .map(activity => ({
+        label: activity.status,
+        timestamp: activity.date,
+      }));
+
+    return [...statusEntries, ...activityEntries]
+      .filter(entry => entry.timestamp)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
 
   getStatusClass(status: string): string {
@@ -186,6 +208,7 @@ export class TrackOrderComponent implements OnInit {
       case 'delivered':
         return 'delivered';
       case 'in_transit':
+      case 'pickup_done':
       case 'out_for_delivery':
         return 'processing';
       case 'cancelled':

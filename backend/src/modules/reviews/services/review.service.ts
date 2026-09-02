@@ -3,7 +3,13 @@ import { ReviewRepository } from '../repositories/review.repository';
 import { ReviewVote } from '../models/review-vote.model';
 import { ReviewReport } from '../models/review-report.model';
 import { Order } from '../../inventory/models/order.model';
-import { NotFoundError, ForbiddenError, ConflictError } from '../../../utils/api-error';
+import { reviewTokenService } from './review-token.service';
+import {
+  NotFoundError,
+  ForbiddenError,
+  ConflictError,
+  BadRequestError,
+} from '../../../utils/api-error';
 
 // Simple bad words filter
 const BAD_WORDS = ['scam', 'fraud', 'cheat', 'fake', 'spam'];
@@ -56,6 +62,64 @@ export class ReviewService {
     return review;
   }
 
+  // ─── Anonymous order-token reviews ─────────────────────────────────────────
+
+  /** Token payload for the review page: order number + products with reviewed flags. */
+  async getTokenInfo(token: string) {
+    const payload = await reviewTokenService.getPayload(token);
+    if (!payload) throw new NotFoundError('This review link is invalid or has expired');
+    return {
+      orderNumber: payload.orderNumber,
+      products: payload.products.map((p) => ({
+        productId: p.productId,
+        name: p.name,
+        image: p.image,
+        reviewed: p.reviewed,
+      })),
+    };
+  }
+
+  /**
+   * Submit one anonymous review for a product in a delivered order via its token.
+   * No auth: the token itself is the proof of a real, delivered purchase.
+   */
+  async submitTokenReview(
+    token: string,
+    productId: string,
+    data: { rating: number; name?: string; comment?: string; images?: string[] },
+  ) {
+    const payload = await reviewTokenService.getPayload(token);
+    if (!payload) throw new NotFoundError('This review link is invalid or has expired');
+
+    const product = payload.products.find((p) => p.productId === productId);
+    if (!product) throw new BadRequestError('This product is not part of the order');
+    if (product.reviewed) throw new ConflictError('You have already reviewed this product');
+
+    let review;
+    try {
+      review = await this.repo.create({
+        productId: new Types.ObjectId(productId),
+        orderId: new Types.ObjectId(payload.orderId),
+        orderNumber: payload.orderNumber,
+        reviewerName: data.name?.trim() || undefined,
+        rating: data.rating,
+        body: data.comment?.trim() || '',
+        images: data.images || [],
+        isVerifiedPurchase: true,
+        status: 'pending',
+      });
+    } catch (err: unknown) {
+      // Unique {orderId, productId} index — a concurrent submit already landed.
+      if (typeof err === 'object' && err !== null && (err as { code?: number }).code === 11000) {
+        throw new ConflictError('You have already reviewed this product');
+      }
+      throw err;
+    }
+
+    await reviewTokenService.markProductReviewed(token, productId);
+    return review;
+  }
+
   async getProductReviews(
     productId: string,
     query: { page?: number; limit?: number; sort?: string; rating?: number } = {},
@@ -65,6 +129,10 @@ export class ReviewService {
 
   async getRatingSummary(productId: string) {
     return this.repo.getRatingSummary(productId);
+  }
+
+  async getSummariesForProducts(productIds: string[]) {
+    return this.repo.getSummariesByProductIds(productIds);
   }
 
   async getMyReviews(userId: string, query: { page?: number; limit?: number } = {}) {
@@ -115,7 +183,7 @@ export class ReviewService {
   async deleteReview(userId: string, reviewId: string): Promise<void> {
     const review = await this.repo.findById(reviewId);
     if (!review) throw new NotFoundError('Review not found');
-    if (review.userId.toString() !== userId)
+    if (!review.userId || review.userId.toString() !== userId)
       throw new ForbiddenError("Cannot delete another user's review");
 
     const productId = review.productId.toString();
@@ -124,6 +192,38 @@ export class ReviewService {
   }
 
   // ─── Admin ────────────────────────────────────────────────────────────────
+
+  /**
+   * Admin manually enters a review (reviewer name + rating only).
+   * Uses a synthetic userId so the unique {userId, productId} index (one
+   * review per real user per product) never collides for admin entries.
+   * Approved immediately so it counts toward the rating summary.
+   */
+  async adminCreateReview(
+    productId: string,
+    data: { reviewerName: string; rating: number; reviewText?: string; images?: string[] },
+  ) {
+    const review = await this.repo.create({
+      userId: new Types.ObjectId(),
+      productId: new Types.ObjectId(productId),
+      reviewerName: data.reviewerName,
+      rating: data.rating,
+      body: data.reviewText?.trim() || '',
+      images: data.images || [],
+      status: 'approved',
+    });
+    await this.repo.computeRatingSummary(productId);
+    return review;
+  }
+
+  /** Admin deletes any review (no ownership check) and recomputes the summary */
+  async adminDeleteReview(reviewId: string): Promise<void> {
+    const review = await this.repo.findById(reviewId);
+    if (!review) throw new NotFoundError('Review not found');
+    const productId = review.productId.toString();
+    await this.repo.deleteById(reviewId);
+    await this.repo.computeRatingSummary(productId);
+  }
 
   async getModerationQueue(query: { page?: number; limit?: number; status?: string } = {}) {
     return this.repo.findModerationQueue(query as any);

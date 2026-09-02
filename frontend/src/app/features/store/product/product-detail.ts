@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { CatalogService, Product, ProductVariant } from '../../../core/services/catalog.service';
 import { CartStore } from '../../../core/services/cart.store';
-import { ReviewStore, RatingSummary, Review } from '../../../core/services/review.store';
+import { ReviewStore, RatingSummary, Review, ProductRatingSummary } from '../../../core/services/review.store';
 import { AuthService } from '../../../core/services/auth.service';
 import {
   PRODUCT_META_OVERRIDE,
@@ -13,6 +13,7 @@ import {
   breadcrumbJsonLd,
   injectJsonLd,
 } from '../../../core/seo/seo-content';
+import { trackPixelEvent } from '../../../core/utils/meta-pixel';
 
 @Component({
   selector: 'app-product-detail',
@@ -41,6 +42,9 @@ export class ProductDetailComponent implements OnInit {
   readonly quantity = signal(1);
   readonly loading = signal(true);
   readonly relatedProducts = signal<Product[]>([]);
+  readonly relatedSummaries = signal<Map<string, ProductRatingSummary>>(new Map());
+  /** Review image shown enlarged in a simple overlay; null = closed */
+  readonly lightboxImage = signal<string | null>(null);
   readonly selectedVariant = signal<ProductVariant | undefined>(undefined);
   readonly hoveredProductId = signal<string | null>(null);
   readonly activeTab = signal<'description' | 'brewing' | 'sourcing' | 'reviews'>('description');
@@ -179,6 +183,13 @@ export class ProductDetailComponent implements OnInit {
             this.selectedVariant.set(res.data.variants[0]);
           }
 
+          trackPixelEvent('ViewContent', {
+            content_ids: [res.data._id],
+            content_type: 'product',
+            value: this.effectivePrice(),
+            currency: 'INR',
+          });
+
           // SEO
           const pageTitle = `${res.data.name} — Rajhans Tea`;
           const pageDescription =
@@ -198,6 +209,7 @@ export class ProductDetailComponent implements OnInit {
           this.meta.updateTag({ name: 'twitter:title', content: res.data.name });
           this.meta.updateTag({ name: 'twitter:description', content: pageDescription });
 
+
           const toAbsoluteUrl = (path: string) =>
             path.startsWith('http')
               ? path
@@ -208,9 +220,12 @@ export class ProductDetailComponent implements OnInit {
             : undefined;
 
           if (absoluteImg) {
+
             this.meta.updateTag({ property: 'og:image', content: absoluteImg });
             this.meta.updateTag({ name: 'twitter:image', content: absoluteImg });
           }
+
+
 
           let canonical = this.document.querySelector('link[rel="canonical"]');
           if (!canonical) {
@@ -219,6 +234,7 @@ export class ProductDetailComponent implements OnInit {
             this.document.head.appendChild(canonical);
           }
           canonical.setAttribute('href', pageUrl);
+
 
           // Additive BreadcrumbList JSON-LD: Home → Category → Product.
           const cat = res.data.category;
@@ -236,6 +252,7 @@ export class ProductDetailComponent implements OnInit {
 
           // Load rating summary, then inject Product JSON-LD so prerendered HTML
           // contains aggregateRating when rating evidence is available.
+
           this.reviewStore.getRatingSummary(res.data._id).subscribe({
             next: (r) => {
               this.ratingSummary.set(r.data);
@@ -262,7 +279,9 @@ export class ProductDetailComponent implements OnInit {
                 const filtered = r.data.filter((p) => p._id !== res.data._id);
                 this.relatedProducts.set(filtered.slice(0, 8));
                 this.loading.set(false);
+                this.loadRelatedSummaries(this.relatedProducts().map((p) => p._id));
               },
+              error: () => this.loading.set(false),
             });
         },
         error: () => this.loading.set(false),
@@ -452,12 +471,45 @@ export class ProductDetailComponent implements OnInit {
     this.router.navigate(['/product', product.slug]);
   }
 
-  // ─ Helper methods for recommendation cards ─
-  getRating(): number {
-    return 5;
+
+  // ─ Real rating summaries for recommendation cards ─
+  private loadRelatedSummaries(ids: string[]): void {
+    if (!ids.length) return;
+    this.reviewStore.getSummaries(ids).subscribe({
+      next: (res) => {
+        const map = new Map(this.relatedSummaries());
+        for (const s of res.data || []) map.set(s.productId, s);
+        this.relatedSummaries.set(map);
+      },
+      error: () => { /* ratings are non-critical */ },
+    });
   }
 
-  getReviewCount(): number {
-    return this.ratingSummary()?.totalReviews ?? 0;
+  ratingFor(productId: string): number {
+    return this.relatedSummaries().get(productId)?.averageRating ?? 0;
+  }
+
+  roundedRatingFor(productId: string): number {
+    return Math.round(this.ratingFor(productId));
+  }
+
+  /** Whole-star fill for the main product's average rating */
+  mainRoundedRating(): number {
+    return Math.round(this.ratingSummary()?.averageRating ?? 0);
+  }
+
+  reviewCountFor(productId: string): number {
+    return this.relatedSummaries().get(productId)?.totalReviews ?? 0;
+  }
+
+  /** Display name for a review: admin-entered name, else the reviewer's account name */
+  reviewerNameFor(review: Review): string {
+    if (review.reviewerName) return review.reviewerName;
+    const u = review.userId;
+    if (u && typeof u === 'object') {
+      const name = [u.firstName, u.lastName].filter(Boolean).join(' ');
+      if (name) return name;
+    }
+    return 'Verified Customer';
   }
 }

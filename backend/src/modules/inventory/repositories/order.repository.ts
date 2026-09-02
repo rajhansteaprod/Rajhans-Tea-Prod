@@ -118,7 +118,10 @@ export class OrderRepository {
       confirmed: counts['confirmed'] ?? 0,
       processing: counts['processing'] ?? 0,
       shipped:
-        (counts['shipped'] ?? 0) + (counts['in_transit'] ?? 0) + (counts['out_for_delivery'] ?? 0),
+        (counts['shipped'] ?? 0) +
+        (counts['pickup_done'] ?? 0) +
+        (counts['in_transit'] ?? 0) +
+        (counts['out_for_delivery'] ?? 0),
       delivered: counts['delivered'] ?? 0,
       cancelled: counts['cancelled'] ?? 0,
     };
@@ -126,7 +129,7 @@ export class OrderRepository {
 
   async findActiveShipments(): Promise<IOrderDoc[]> {
     return Order.find({
-      status: { $in: ['shipped', 'in_transit', 'out_for_delivery'] },
+      status: { $in: ['shipped', 'pickup_done', 'in_transit', 'out_for_delivery'] },
       'shiprocket.shipmentId': { $ne: null },
     }).exec();
   }

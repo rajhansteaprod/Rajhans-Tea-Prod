@@ -1,9 +1,17 @@
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response, NextFunction } from 'express';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+
+// multer.diskStorage does NOT create the destination — on a fresh deploy a
+// missing uploads/ dir made every image upload fail with an unhandled ENOENT,
+// which blocked product creation entirely (the form requires an image).
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
 const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
 const ALLOWED_MIME = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 

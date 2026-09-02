@@ -72,6 +72,12 @@
             <span class="addresses__badge">Default</span>
           }
         </div>
+        @if (addr.name) {
+          <p class="addresses__card-line">{{ addr.name }}</p>
+        }
+        @if (addr.phone) {
+          <p class="addresses__card-line">📞 {{ addr.phone }}</p>
+        }
         <p class="addresses__card-line">{{ addr.address }}</p>
         @if (addr.landmark) {
           <p class="addresses__card-line">{{ addr.landmark }}</p>

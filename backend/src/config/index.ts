@@ -4,6 +4,11 @@ dotenv.config();
 export const config = {
   env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '3000', 10),
+  // Public base URL of the customer-facing frontend. Used to build absolute,
+  // shareable links (e.g. the anonymous review URL sent over WhatsApp).
+  app: {
+    frontendUrl: (process.env.FRONTEND_URL || 'http://localhost:4200').replace(/\/+$/, ''),
+  },
   mongo: {
     uri: process.env.MONGO_URI || 'mongodb://localhost:27017/rajhans-tea',
     testUri: process.env.MONGO_TEST_URI || 'mongodb://localhost:27018/rajhans-tea-test',
@@ -23,6 +28,12 @@ export const config = {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10),
     maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
     authMaxRequests: parseInt(process.env.AUTH_RATE_LIMIT_MAX_REQUESTS || '10', 10),
+  },
+  otp: {
+    // Max OTP sends allowed per phone number within the window below.
+    maxPerWindow: parseInt(process.env.OTP_MAX_PER_WINDOW || '4', 10),
+    // Rolling window for the OTP send limit (default 1 hour).
+    windowMs: parseInt(process.env.OTP_RATE_LIMIT_WINDOW_MS || '3600000', 10),
   },
   cors: {
     origin: (process.env.CORS_ORIGIN || 'http://localhost:4200').split(',').map(s => s.trim()),
@@ -51,6 +62,10 @@ export const config = {
       msg91: {
         authKey: process.env.MSG91_AUTH_KEY || '',
         senderId: process.env.MSG91_SENDER_ID || 'RAJHNS',
+      },
+      twoFactor: {
+        apiKey: process.env.TWO_FACTOR_API_KEY || '',
+        templateName: process.env.TWO_FACTOR_TEMPLATE_NAME || '',
       },
     },
   },

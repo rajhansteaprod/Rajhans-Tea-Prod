@@ -32,6 +32,51 @@ export class AuthService {
   }
 
   /**
+   * Verify MSG91 access token and exchange for our JWT tokens
+   * @param accessToken - JWT access token from MSG91 widget
+   * @param deviceInfo - Device/browser info extracted from HTTP request
+   */
+  async verifyMsg91Token(accessToken: string, deviceInfo: IDeviceInfo) {
+    logger.info('Auth: verifyMsg91Token called');
+
+    // Verify the access token server-side against MSG91 (not just decoded locally)
+    const verifiedIdentifier = await this.otpService.verifyWidgetAccessToken(accessToken);
+    const phone = verifiedIdentifier?.replace(/^\+?91/, '');
+
+    if (!phone || phone.length !== 10) {
+      throw new UnauthorizedError('Invalid phone number in MSG91 token');
+    }
+
+    // Find or create user with the phone number
+    let user = await this.userRepo.findByPhone(phone);
+    let isNewUser = false;
+
+    if (!user) {
+      user = await this.userRepo.create({
+        phone: phone,
+        isPhoneVerified: true,
+      } as never);
+      isNewUser = true;
+      logger.info({ phone, userId: user._id }, 'Auth: New user created via MSG91');
+    } else {
+      if (user.isBanned) {
+        throw new ForbiddenError('Your account has been suspended. Contact support for assistance.');
+      }
+      if (!user.isPhoneVerified) {
+        await this.userRepo.updateById(user._id.toString(), { isPhoneVerified: true });
+      }
+      await this.userRepo.updateLastLogin(user._id.toString());
+    }
+
+    const tokens = await this.generateTokens(
+      { userId: user._id.toString(), role: user.role },
+      deviceInfo,
+    );
+
+    return AuthDTO.fromLogin(user, tokens, isNewUser);
+  }
+
+  /**
    * Exchange a Firebase ID token for our JWT access + refresh token pair.
    * Creates a new user if this phone number hasn't been seen before.
    *
@@ -107,6 +152,49 @@ export class AuthService {
     );
 
     // AuthDTO.fromLogin shapes the response: minimal user embed + tokens + isNewUser flag
+    return AuthDTO.fromLogin(user, tokens, isNewUser);
+  }
+
+  /**
+   * Login via MSG91 OTP Widget verification
+   * OTP is already verified by widget client-side
+   * Backend creates/finds user and issues JWT tokens
+   *
+   * @param phone      - 10-digit phone number
+   * @param deviceInfo - Device/browser info extracted from the HTTP request
+   */
+  async loginViaOtp(phone: string, deviceInfo: IDeviceInfo) {
+    logger.info({ phone }, 'Auth: loginViaOtp called (widget verified)');
+
+    let user = await this.userRepo.findByPhone(phone);
+    let isNewUser = false;
+
+    if (!user) {
+      user = await this.userRepo.create({
+        phone: phone,
+        isPhoneVerified: true,
+      } as never);
+      isNewUser = true;
+      logger.info({ phone, userId: user._id }, 'Auth: New user created via OTP');
+    } else {
+      if (user.isBanned) {
+        logger.warn({ phone }, 'Auth: Banned user login attempt');
+        throw new ForbiddenError(
+          'Your account has been suspended. Contact support for assistance.',
+        );
+      }
+      if (!user.isPhoneVerified) {
+        await this.userRepo.updateById(user._id.toString(), { isPhoneVerified: true });
+      }
+      await this.userRepo.updateLastLogin(user._id.toString());
+      logger.info({ phone, userId: user._id }, 'Auth: Existing user login via OTP');
+    }
+
+    const tokens = await this.generateTokens(
+      { userId: user._id.toString(), role: user.role },
+      deviceInfo,
+    );
+
     return AuthDTO.fromLogin(user, tokens, isNewUser);
   }
 

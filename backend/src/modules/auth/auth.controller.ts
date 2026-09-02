@@ -6,28 +6,63 @@ import { BadRequestError } from '../../utils/api-error';
 
 const authService = new AuthService();
 
+export const verifyMsg91Token = async (req: Request, res: Response) => {
+  const { accessToken } = req.body;
+  if (!accessToken) throw new BadRequestError('Access token required');
+
+  const deviceInfo = extractDeviceInfo(req);
+  const result = await authService.verifyMsg91Token(accessToken, deviceInfo);
+
+  res.cookie('refreshToken', result.tokens.refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  const { refreshToken: _rt, ...safeTokens } = result.tokens;
+  sendCreated(res, { ...result, tokens: { accessToken: safeTokens.accessToken } }, result.isNewUser ? 'Account created successfully' : 'Login successful');
+};
+
 export const verifyFirebaseToken = async (req: Request, res: Response) => {
   console.log('📡 /verify-token endpoint called');
   const { idToken } = req.body;
   console.log('🔑 Received idToken:', idToken.substring(0, 50) + '...');
 
-  // Capture device info (browser, OS, IP) to store with the refresh token.
-  // This is what powers the "active sessions" feature.
   const deviceInfo = extractDeviceInfo(req);
   console.log('📱 Device info:', deviceInfo);
 
   const result = await authService.verifyFirebaseToken(idToken, deviceInfo);
   console.log('✅ Firebase verification successful');
 
-  // Set refresh token as httpOnly cookie — JS cannot read it (XSS protection)
   res.cookie('refreshToken', result.tokens.refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  // Strip refreshToken from response body — it's already in the httpOnly cookie
+  const { refreshToken: _rt, ...safeTokens } = result.tokens;
+  sendCreated(res, { ...result, tokens: { accessToken: safeTokens.accessToken } }, result.isNewUser ? 'Account created successfully' : 'Login successful');
+};
+
+export const loginViaOtp = async (req: Request, res: Response) => {
+  const { phone } = req.body;
+  if (!phone) throw new BadRequestError('Phone number is required');
+
+  // OTP already verified by MSG91 widget client-side
+  // Backend just creates/finds user and issues tokens
+  const deviceInfo = extractDeviceInfo(req);
+  const result = await authService.loginViaOtp(phone, deviceInfo);
+
+  // Set refresh token as httpOnly cookie
+  res.cookie('refreshToken', result.tokens.refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
   const { refreshToken: _rt, ...safeTokens } = result.tokens;
   sendCreated(res, { ...result, tokens: { accessToken: safeTokens.accessToken } }, result.isNewUser ? 'Account created successfully' : 'Login successful');
 };

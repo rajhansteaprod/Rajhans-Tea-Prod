@@ -693,3 +693,8 @@
   justify-content: center !important;
 }
 
+.desktop-only {
+  @media (max-width: 768px) {
+    display: none !important;
+  }
+}

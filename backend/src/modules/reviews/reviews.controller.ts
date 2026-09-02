@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ReviewService } from './services/review.service';
 import { QAService } from './services/qa.service';
 import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../../utils/api-response';
+import { BadRequestError } from '../../utils/api-error';
 
 const reviewService = new ReviewService();
 const qaService = new QAService();
@@ -25,6 +26,13 @@ export const getRatingSummary = async (req: Request, res: Response) => {
   sendSuccess(res, summary);
 };
 
+export const getRatingSummaries = async (req: Request, res: Response) => {
+  const idsParam = (req.query['productIds'] as string | undefined) ?? '';
+  const productIds = idsParam.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 100);
+  const summaries = await reviewService.getSummariesForProducts(productIds);
+  sendSuccess(res, summaries, 'Rating summaries');
+};
+
 export const getProductQA = async (req: Request, res: Response) => {
   const productId = req.params['productId'] as string;
   const { page, limit } = req.query as Record<string, string | undefined>;
@@ -33,6 +41,28 @@ export const getProductQA = async (req: Request, res: Response) => {
     limit: limit ? parseInt(limit, 10) : undefined,
   });
   sendPaginated(res, result.questions, result.meta, 'Q&A');
+};
+
+// ─── Anonymous order-token reviews (no auth) ─────────────────────────────────
+
+export const getReviewByToken = async (req: Request, res: Response) => {
+  const info = await reviewService.getTokenInfo(req.params['token'] as string);
+  sendSuccess(res, info);
+};
+
+export const submitTokenReview = async (req: Request, res: Response) => {
+  const token = req.params['token'] as string;
+  const productId = req.params['productId'] as string;
+  const review = await reviewService.submitTokenReview(token, productId, req.body);
+  sendCreated(res, review, 'Review submitted');
+};
+
+export const uploadTokenReviewImage = async (req: Request, res: Response) => {
+  if (!req.file || !req.file.filename) {
+    throw new BadRequestError('No file uploaded');
+  }
+  const url = `/uploads/${req.file.filename}`;
+  sendSuccess(res, { url }, 'Image uploaded successfully');
 };
 
 // ─── Authenticated ───────────────────────────────────────────────────────────
@@ -97,6 +127,23 @@ export const getMyReviews = async (req: Request, res: Response) => {
 };
 
 // ─── Admin ───────────────────────────────────────────────────────────────────
+
+export const adminCreateReview = async (req: Request, res: Response) => {
+  const productId = req.params['productId'] as string;
+  const { reviewerName, rating, reviewText, images } = req.body;
+  const review = await reviewService.adminCreateReview(productId, {
+    reviewerName,
+    rating,
+    reviewText,
+    images,
+  });
+  sendCreated(res, review, 'Review created');
+};
+
+export const adminDeleteReview = async (req: Request, res: Response) => {
+  await reviewService.adminDeleteReview(req.params['reviewId'] as string);
+  sendNoContent(res);
+};
 
 export const adminGetModeration = async (req: Request, res: Response) => {
   const { page, limit, type } = req.query as Record<string, string | undefined>;

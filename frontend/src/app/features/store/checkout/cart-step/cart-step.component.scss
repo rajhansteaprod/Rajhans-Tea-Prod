@@ -269,9 +269,9 @@
 }
 
 .checkout__product-price {
-  font-family: "Cormorant Garamond", serif;
+  font-family: "Inter", sans-serif;
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 600;
   color: #111111;
   line-height: 1.2;
 }
@@ -346,15 +346,15 @@
 
 // ─── Summary Card ──────────────────────────────────────────────
 .checkout__summary-card {
-  background: #ffffff;
+  background: #fdfbf7;
   border: 1px solid #ececec;
   border-radius: 12px;
-  padding: 32px;
-  margin-bottom: 24px;
+  padding: 24px 28px 28px;
+  margin-bottom: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 
   @media (max-width: 768px) {
-    padding: 24px;
+    padding: 20px;
   }
 }
 
@@ -363,8 +363,76 @@
   font-size: 20px;
   font-weight: 400;
   color: #111111;
-  margin: 0 0 24px 0;
+  margin: 0 0 16px 0;
   letter-spacing: -0.3px;
+}
+
+// ─── Your Order: Product Summary ────────────────────────────────
+.checkout__order-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 20px;
+  background: #ffffff;
+  border: 1px solid #ececec;
+  border-radius: 10px;
+}
+
+.checkout__order-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkout__order-item-image {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.checkout__order-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.checkout__order-item-name {
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111111;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkout__order-item-meta {
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  color: #888888;
+}
+
+.checkout__order-item-price {
+  flex-shrink: 0;
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111111;
 }
 
 // ─── Price Breakdown ──────────────────────────────────────────
@@ -419,11 +487,18 @@
 }
 
 .checkout__breakdown-value--total {
-  font-family: "Cormorant Garamond", serif;
+  font-family: "Inter", sans-serif;
   font-size: 20px;
-  font-weight: 500;
+  font-weight: 700;
   color: #111111;
   text-align: right;
+}
+
+.checkout__breakdown-note {
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+  color: #999999;
+  margin: 4px 0 0 0;
 }
 
 // ─── Offers Section ───────────────────────────────────────────
@@ -470,44 +545,48 @@
   margin-bottom: 24px;
 }
 
-.checkout__promo-label {
-  font-family: "Inter", sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  color: #111111;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  display: block;
-}
-
 .checkout__promo-input-group {
   display: flex;
+  align-items: center;
   gap: 8px;
+  border: 1px solid #f0c987;
+  border-radius: 6px;
+  padding: 4px 4px 4px 14px;
+  background: #ffffff;
+}
+
+.checkout__promo-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #2f6f3e;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .checkout__promo-input {
   flex: 1;
   font-family: "Inter", sans-serif;
   font-size: 13px;
-  padding: 10px 12px;
-  border: 1px solid #ececec;
-  border-radius: 6px;
-  background: #ffffff;
+  padding: 8px 0;
+  border: none;
+  background: transparent;
   color: #111111;
-  transition: all 150ms ease;
 
   &::placeholder {
-    color: #cccccc;
+    color: #b3b3b3;
   }
 
   &:focus {
     outline: none;
-    border-color: #111111;
-    background: #fafafa;
   }
 
   &:disabled {
-    background: #fafafa;
     color: #888888;
     opacity: 0.6;
   }
@@ -516,19 +595,17 @@
 .checkout__promo-action {
   flex-shrink: 0;
   font-family: "Inter", sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 10px 16px;
-  border: 1px solid #111111;
-  background: #111111;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 18px;
+  border: none;
+  background: #d8421f;
   color: #ffffff;
-  border-radius: 6px;
   cursor: pointer;
   transition: all 150ms ease;
 
   &:hover:not(:disabled) {
-    background: #222222;
-    border-color: #222222;
+    background: #be3718;
   }
 
   &:disabled {
@@ -538,14 +615,48 @@
 
   &--remove {
     background: transparent;
-    color: #111111;
-    border-color: #ececec;
+    color: #888888;
 
     &:hover:not(:disabled) {
-      background: #fafafa;
-      border-color: #cccccc;
+      color: #111111;
     }
   }
+}
+
+.checkout__unlock-coupons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 4px auto 0;
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #d97706;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+
+  &:hover {
+    color: #b45309;
+  }
+
+  svg {
+    transition: transform 150ms ease;
+  }
+
+  &-icon--open {
+    transform: rotate(90deg);
+  }
+}
+
+.checkout__promo-subtext {
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+  color: #999999;
+  text-align: center;
+  margin: -2px 0 0 0;
 }
 
 .checkout__promo-message {
@@ -564,28 +675,25 @@
   }
 }
 
-// ─── Trust Section ────────────────────────────────────────────
-.checkout__trust-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-top: 24px;
+// ─── Payment Methods ───────────────────────────────────────────
+.checkout__payment-methods {
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+  color: #888888;
+  text-align: center;
+  margin: 4px 0 0 0;
+  padding-top: 16px;
   border-top: 1px solid #ececec;
 }
 
-.checkout__trust-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+// ─── No Hidden Charges ─────────────────────────────────────────
+.checkout__no-hidden-charges {
   font-family: "Inter", sans-serif;
   font-size: 12px;
-  color: #888888;
-  font-weight: 400;
-}
-
-.checkout__trust-icon {
-  flex-shrink: 0;
-  color: #10b981;
+  font-weight: 500;
+  color: #2f6f3e;
+  text-align: center;
+  margin: 0 0 12px 0;
 }
 
 // ─── Checkout Button ──────────────────────────────────────────
@@ -597,22 +705,22 @@
   ::ng-deep .btn {
     width: 100% !important;
     padding: 14px 16px !important;
-    background-color: #111111 !important;
+    background-color: #d8421f !important;
     color: #ffffff !important;
     border: none !important;
     font-family: "Inter", sans-serif !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
     font-weight: 600 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.4px !important;
-    border-radius: 8px !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    border-radius: 0 !important;
     cursor: pointer !important;
     transition: all 200ms ease !important;
     height: auto !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
 
     &:hover:not(:disabled) {
-      background-color: #222222 !important;
+      background-color: #be3718 !important;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
       transform: translateY(-1px);
     }
@@ -633,6 +741,12 @@
   text-align: center;
   margin: 0;
   font-weight: 400;
+}
+
+.checkout__summary-terms--safe {
+  color: #666666;
+  font-weight: 500;
+  margin-bottom: 4px;
 }
 
 .checkout__terms-link {
@@ -713,6 +827,7 @@
     border-top: 1px solid #ececec !important;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06) !important;
     z-index: 999 !important;
+    margin-bottom: 62px !important;
   }
 }
 
@@ -732,9 +847,9 @@
 }
 
 .checkout__mobile-footer-amount {
-  font-family: "Cormorant Garamond", serif;
+  font-family: "Inter", sans-serif;
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 700;
   color: #111111;
 }
 
@@ -744,5 +859,11 @@
   ::ng-deep .btn {
     padding: 10px 20px !important;
     font-size: 12px !important;
+  }
+}
+
+.desktop-only{
+  @media (max-width: 768px) {
+    display: none !important;
   }
 }

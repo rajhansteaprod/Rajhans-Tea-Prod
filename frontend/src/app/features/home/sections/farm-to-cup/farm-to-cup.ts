@@ -6,10 +6,9 @@ import {
   inject,
 } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { PlatformService } from '../../../../core/services/platform.service';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 interface JourneyStep {
   id: number;
@@ -29,6 +28,7 @@ interface JourneyStep {
 export class FarmToCupComponent implements AfterViewInit, OnDestroy {
   private readonly el = inject(ElementRef);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly platform = inject(PlatformService);
   private ctx: gsap.Context | null = null;
 
   readonly steps: JourneyStep[] = [
@@ -76,6 +76,10 @@ export class FarmToCupComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
+    // GSAP/ScrollTrigger needs real browser APIs — skip during SSR/prerendering.
+    if (!this.platform.isBrowser) return;
+
+    gsap.registerPlugin(ScrollTrigger);
     const root = this.el.nativeElement as HTMLElement;
 
     this.ctx = gsap.context(() => {

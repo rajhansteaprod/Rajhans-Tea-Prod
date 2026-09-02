@@ -61,7 +61,7 @@
 
           <!-- Title Row with Wishlist Heart Button -->
           <div class="pd__title-row">
-            <button
+            <!-- <button
               class="pd__main-wishlist"
               [class.active]="isWishlisted(product()!._id)"
               (click)="toggleWishlist($event, product()!._id)"
@@ -71,29 +71,34 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pd__wishlist-icon">
                 <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
               </svg>
-            </button>
+            </button> -->
             <h1 class="pd__name">{{ product()?.name }}</h1>
           </div>
 
-          <!-- Rating row -->
-          <div class="pd__rating-row">
-            <div class="pd__stars">
-              @for (i of [1, 2, 3, 4, 5]; track i) {
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  [class.filled]="i <= (ratingSummary()?.averageRating ?? 5)"
-                  fill="currentColor"
-                >
-                  <path
-                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                  />
-                </svg>
-              }
+          <!-- Rating row (real data; hidden when no reviews) -->
+          @if ((ratingSummary()?.totalReviews ?? 0) > 0) {
+            <div class="pd__rating-row">
+              <div class="pd__stars">
+                @for (i of [1, 2, 3, 4, 5]; track i) {
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    [class.filled]="i <= mainRoundedRating()"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                    />
+                  </svg>
+                }
+              </div>
+              <span class="pd__rating-count">
+                {{ ratingSummary()!.averageRating | number: '1.1-1' }}
+                ({{ ratingSummary()!.totalReviews }} {{ ratingSummary()!.totalReviews === 1 ? 'review' : 'reviews' }})
+              </span>
             </div>
-            <span class="pd__rating-count">({{ ratingSummary()?.totalReviews || 120 }} verified reviews)</span>
-          </div>
+          }
 
           <!-- Price Section -->
           <div class="pd__price-container">
@@ -225,10 +230,16 @@
               <!-- Reviews List - FIRST -->
               <div class="pd__reviews-section">
                 <h3 class="pd__reviews-title">Customer Reviews ({{ reviews().length }})</h3>
+                @if ((ratingSummary()?.totalReviews ?? 0) > 0) {
+                  <p class="pd__reviews-average">
+                    {{ ratingSummary()!.averageRating | number: '1.1-1' }} —
+                    {{ ratingSummary()!.totalReviews }} {{ ratingSummary()!.totalReviews === 1 ? 'review' : 'reviews' }}
+                  </p>
+                }
                 @if (reviewsLoading()) {
                   <p>Loading reviews...</p>
                 } @else if (reviews().length === 0) {
-                  <p>No reviews yet. Be the first to review!</p>
+                  <p>No reviews yet.</p>
                 } @else {
                   <div class="pd__reviews-list">
                   @for (review of reviews(); track review._id) {
@@ -241,16 +252,22 @@
                             </svg>
                           }
                         </div>
+                        <span class="pd__review-author">{{ reviewerNameFor(review) }}</span>
                         @if (review.isVerifiedPurchase) {
                           <span class="pd__review-badge">Verified Purchase</span>
                         }
                       </div>
-                      <h4 class="pd__review-title">{{ review.title }}</h4>
-                      <p class="pd__review-body">{{ review.body }}</p>
+                      @if (review.title) {
+                        <h4 class="pd__review-title">{{ review.title }}</h4>
+                      }
+                      @if (review.body) {
+                        <p class="pd__review-body">{{ review.body }}</p>
+                      }
                       @if (review.images?.length) {
                         <div class="pd__review-images">
                           @for (img of review.images; track img) {
-                            <img [src]="img" [alt]="review.title" class="pd__review-img"/>
+                            <img [src]="img" [alt]="review.title || 'Review image'" class="pd__review-img"
+                              (click)="lightboxImage.set(img)" title="Click to enlarge" />
                           }
                         </div>
                       }
@@ -272,6 +289,7 @@
               <div class="pd__reviews-divider"></div>
 
               <!-- Review Form - SECOND -->
+               @if(false){
               <div class="pd__review-form-section">
                 <h3 class="pd__review-form-title">Share Your Review</h3>
 
@@ -335,14 +353,14 @@
                     <a href="/auth/login" class="pd__login-btn">Sign In</a>
                   </div>
                 }
-              </div>
+              </div>}
             </div>
           }
         </div>
       </div>
 
       <!-- Related products: You might also like -->
-      @if (relatedProducts().length > 0) {
+      @if (false) {
         <div class="pd__recos">
           <p class="pd__recos-label">You might also like</p>
           <h2 class="pd__recos-title">More from this category.</h2>
@@ -397,27 +415,27 @@
                     {{ p.description || p.shortDescription || p.category.name }}
                   </p>
 
-                  <!-- Rating -->
-                  <div class="card__rating">
-                    <div class="card__stars">
-                      @for (i of [1, 2, 3, 4, 5]; track i) {
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          [class.filled]="i <= getRating()"
-                          fill="currentColor"
-                        >
-                          <path
-                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                          />
-                        </svg>
-                      }
+                  <!-- Rating (real data; hidden when no reviews) -->
+                  @if (reviewCountFor(p._id) > 0) {
+                    <div class="card__rating">
+                      <div class="card__stars">
+                        @for (i of [1, 2, 3, 4, 5]; track i) {
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            [class.filled]="i <= roundedRatingFor(p._id)"
+                            fill="currentColor"
+                          >
+                            <path
+                              d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                            />
+                          </svg>
+                        }
+                      </div>
+                      <span class="card__reviews">({{ reviewCountFor(p._id) }})</span>
                     </div>
-                    @if (getReviewCount() > 0) {
-                      <span class="card__reviews">({{ getReviewCount() }})</span>
-                    }
-                  </div>
+                  }
 
                   <!-- Price -->
                   <div class="card__price">
@@ -453,6 +471,14 @@
           </div>
         </div>
       }
+    </div>
+  }
+
+  <!-- Review image lightbox (click-to-enlarge) -->
+  @if (lightboxImage()) {
+    <div class="pd__lightbox" (click)="lightboxImage.set(null)">
+      <button type="button" class="pd__lightbox-close" aria-label="Close">×</button>
+      <img [src]="lightboxImage()" class="pd__lightbox-img" alt="Review image" (click)="$event.stopPropagation()" />
     </div>
   }
 </div>

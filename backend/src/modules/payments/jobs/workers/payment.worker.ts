@@ -37,28 +37,32 @@ async function handleVerifyTimeout(job: Job): Promise<void> {
   const { paymentId } = job.data as { paymentId: string };
   logger.info({ paymentId, jobId: job.id }, 'Processing payment timeout');
 
-  const payment = await Payment.findById(paymentId).exec();
+  // Atomic transition: only succeeds if the payment is still 'created'.
+  // A concurrent capture (verify or webhook) makes this a no-op — no lock needed.
+  const payment = await Payment.findOneAndUpdate(
+    { _id: paymentId, status: 'created' },
+    { $set: { status: 'failed' } },
+    { new: true },
+  ).exec();
+
   if (!payment) {
-    logger.warn({ paymentId }, 'Payment not found for timeout job');
+    logger.info({ paymentId }, 'Payment already processed or missing, skipping timeout');
     return;
   }
 
-  // Don't release stock if payment was already captured or marked failed
-  if (payment.status !== 'created') {
-    logger.info({ paymentId, status: payment.status }, 'Payment already processed, skipping timeout');
-    return;
+  // Revert loyalty points deducted during order creation
+  if (payment.loyaltyPointsUsed > 0 && payment.userId) {
+    try {
+      const { LoyaltyService } = await import('../../../promotions/services/loyalty.service');
+      await new LoyaltyService().revertRedemption(
+        payment.userId.toString(),
+        payment.loyaltyPointsUsed,
+        payment._id.toString(),
+      );
+    } catch (err) {
+      logger.error({ paymentId, error: err }, 'Failed to revert loyalty points on timeout');
+    }
   }
-
-  // CRITICAL: Use locking to prevent race with concurrent verification
-  const isLocked = payment.lockedUntil && new Date(payment.lockedUntil) > new Date();
-  if (isLocked) {
-    // Verification is in progress, retry this job after lock expires
-    throw new Error('Payment is locked for verification, will retry');
-  }
-
-  // Mark payment as failed
-  payment.status = 'failed';
-  await payment.save();
 
   // Release stock reservation
   try {

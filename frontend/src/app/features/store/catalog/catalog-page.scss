@@ -103,10 +103,106 @@
 }
 
 
+// ═══ Layout with left filter panel ═══
+.catalog__layout {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+
+  @include respond-to(md) {
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+.catalog__filters {
+  width: 240px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 90px;
+
+  @include respond-to(md) {
+    width: 100%;
+    position: static;
+  }
+}
+
+.catalog__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.catalog__filters-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $space-md;
+}
+
+.catalog__filters-title {
+  font-family: $font-family-heading;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.catalog__filters-clear {
+  border: none;
+  background: none;
+  color: $color-primary;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover { text-decoration: underline; }
+}
+
+.catalog__filter-group {
+  padding: $space-md 0;
+  border-top: 1px solid $color-border-light;
+}
+
+.catalog__filter-name {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 $space-sm;
+  color: $color-text-secondary;
+}
+
+.catalog__filter-values {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  @include respond-to(md) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+.catalog__filter-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  color: $color-text-primary;
+
+  input {
+    accent-color: $color-primary;
+    cursor: pointer;
+  }
+
+  &.checked { font-weight: 600; }
+}
+
 // ═══ Product Grid ═══
 .catalog__grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
 
   @include respond-to(md) {

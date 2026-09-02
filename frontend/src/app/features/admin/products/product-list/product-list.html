@@ -110,14 +110,6 @@
                       <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
                     </svg>
                   </button>
-                  <button class="icon-btn variants" (click)="openVariants(product)" title="Manage Variants">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="5" r="2" stroke="currentColor" stroke-width="2"/>
-                      <circle cx="19" cy="12" r="2" stroke="currentColor" stroke-width="2"/>
-                      <circle cx="12" cy="19" r="2" stroke="currentColor" stroke-width="2"/>
-                      <circle cx="5" cy="12" r="2" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                  </button>
                   <button class="icon-btn edit" (click)="openEdit(product)" title="Edit">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -195,29 +187,195 @@
                 (ngModelChange)="form.update(f=>({...f,ratingOneLiner:$event}))"
                 placeholder="Comma-separated attributes" maxlength="300" />
             </div>
-            <div class="form-field">
-              <label class="form-label">Base Price (₹) *</label>
-              <input class="form-input" type="number" min="0" [ngModel]="form().basePrice"
-                (ngModelChange)="form.update(f=>({...f,basePrice:$event}))" placeholder="0" />
-            </div>
-            <div class="form-field">
-              <label class="form-label">Discounted Price (₹)</label>
-              <input class="form-input" type="number" min="0" [ngModel]="form().discountedPrice"
-                (ngModelChange)="form.update(f=>({...f,discountedPrice:$event}))" placeholder="Optional" />
-            </div>
-            <div class="form-field">
-              <label class="form-label">Stock Quantity</label>
-              <input class="form-input" type="number" min="0" [ngModel]="form().stock"
-                (ngModelChange)="form.update(f=>({...f,stock:$event}))" placeholder="0" />
-            </div>
-            <div class="form-field">
-              <label class="form-label">Inventory Tracking</label>
+
+            <!-- Reviews management (existing products only) -->
+            @if (editingId()) {
+              <div class="form-field span-3">
+                <label class="form-label">Reviews <span class="hint">(shown on the product page; average &amp; count update automatically)</span></label>
+
+                @if (productReviewsLoading()) {
+                  <p class="hint">Loading reviews…</p>
+                } @else if (productReviews().length === 0) {
+                  <p class="hint">No reviews yet.</p>
+                } @else {
+                  <div class="admin-reviews-list">
+                    @for (r of productReviews(); track r._id) {
+                      <div class="admin-review-row">
+                        <div class="admin-review-main">
+                          <div class="admin-review-line">
+                            <span class="admin-review-name">{{ reviewerDisplayName(r) }}</span>
+                            <span class="admin-review-stars">
+                              @for (i of [1,2,3,4,5]; track i) {<span [class.filled]="i <= r.rating">★</span>}
+                            </span>
+                            <span class="admin-review-date">{{ r.createdAt | date: 'MMM dd, yyyy' }}</span>
+                          </div>
+                          @if (r.body) {
+                            <p class="admin-review-text">{{ r.body }}</p>
+                          }
+                          @if (r.images?.length) {
+                            <div class="admin-review-thumbs">
+                              @for (img of r.images; track img) {
+                                <img [src]="img" class="admin-review-thumb" alt="Review image" />
+                              }
+                            </div>
+                          }
+                        </div>
+                        <button type="button" class="variant-inline__remove" (click)="deleteProductReview(r._id)" title="Delete review">×</button>
+                      </div>
+                    }
+                  </div>
+                }
+
+                <div class="admin-review-add">
+                  <input class="form-input" type="text" placeholder="Reviewer name"
+                    [ngModel]="newReviewerName()" (ngModelChange)="newReviewerName.set($event)" maxlength="100" />
+                  <select class="form-input" [ngModel]="newReviewRating()" (ngModelChange)="newReviewRating.set(+$event)">
+                    <option [value]="5">5 ★</option>
+                    <option [value]="4">4 ★</option>
+                    <option [value]="3">3 ★</option>
+                    <option [value]="2">2 ★</option>
+                    <option [value]="1">1 ★</option>
+                  </select>
+                  <button type="button" class="btn-add-attr" [disabled]="reviewSaving() || uploadingReviewImage()" (click)="addProductReview()">
+                    {{ reviewSaving() ? 'Adding…' : '+ Add review' }}
+                  </button>
+                </div>
+                <textarea class="form-input admin-review-textarea" rows="2" maxlength="1000"
+                  placeholder="Review text (optional)"
+                  [ngModel]="newReviewText()" (ngModelChange)="newReviewText.set($event)"></textarea>
+                <div class="admin-review-upload">
+                  <label class="upload-btn" [class.loading]="uploadingReviewImage()">
+                    <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden
+                      (change)="onReviewImageSelect($event)" [disabled]="uploadingReviewImage()" />
+                    {{ uploadingReviewImage() ? 'Uploading…' : 'Attach images (optional, max 4)' }}
+                  </label>
+                  @if (newReviewImages().length) {
+                    <div class="admin-review-thumbs">
+                      @for (img of newReviewImages(); track img; let i = $index) {
+                        <div class="admin-review-thumb-wrap">
+                          <img [src]="img" class="admin-review-thumb" alt="Attached image" />
+                          <button type="button" class="admin-review-thumb-remove" (click)="removeReviewImage(i)" title="Remove">×</button>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+                @if (reviewError()) {
+                  <p class="form-error">{{ reviewError() }}</p>
+                }
+              </div>
+            }
+
+            <!-- Does this product have variants? -->
+            <div class="form-field span-3">
               <label class="toggle-label">
-                <input type="checkbox" [ngModel]="form().trackInventory"
-                  (ngModelChange)="form.update(f=>({...f,trackInventory:$event}))" />
-                Enable
+                <input type="checkbox" [ngModel]="form().hasVariants"
+                  (ngModelChange)="form.update(f=>({...f,hasVariants:$event}))" />
+                This product has variants (e.g. different sizes / pack weights)
               </label>
+              <span class="hint">Turn on if price &amp; stock differ per size/pack — you'll set those per variant.</span>
             </div>
+
+            @if (!form().hasVariants) {
+              <div class="form-field">
+                <label class="form-label">Base Price (₹) *</label>
+                <input class="form-input" type="number" min="0" [ngModel]="form().basePrice"
+                  (ngModelChange)="form.update(f=>({...f,basePrice:$event}))" placeholder="0" />
+              </div>
+              <div class="form-field">
+                <label class="form-label">Discounted Price (₹)</label>
+                <input class="form-input" type="number" min="0" [ngModel]="form().discountedPrice"
+                  (ngModelChange)="form.update(f=>({...f,discountedPrice:$event}))" placeholder="Optional" />
+              </div>
+              <div class="form-field">
+                <label class="form-label">Stock Quantity</label>
+                <input class="form-input" type="number" min="0" [ngModel]="form().stock"
+                  (ngModelChange)="form.update(f=>({...f,stock:$event}))" placeholder="0" />
+              </div>
+              <div class="form-field">
+                <label class="form-label">Inventory Tracking</label>
+                <label class="toggle-label">
+                  <input type="checkbox" [ngModel]="form().trackInventory"
+                    (ngModelChange)="form.update(f=>({...f,trackInventory:$event}))" />
+                  Enable
+                </label>
+              </div>
+            } @else {
+              <!-- Inline variant editor: value (from dictionary) + base price + discounted + stock -->
+              <div class="form-field span-3 variant-inline">
+                @if (!hasVariantOptions()) {
+                  <div class="variant-inline__empty">
+                    No variant options defined yet. Create one under
+                    <strong>Admin → Variant Options</strong> (e.g. Weight → 100g, 250g), then come back.
+                  </div>
+                } @else {
+                  <div class="variant-inline__optionrow">
+                    <label class="form-label">Option Type *</label>
+                    <select class="form-select" [ngModel]="form().optionKey"
+                      (ngModelChange)="setOptionKey($event)">
+                      <option value="">Select option…</option>
+                      @for (opt of variantOptions(); track opt._id) {
+                        <option [value]="opt.key">{{ opt.key }}</option>
+                      }
+                    </select>
+                    <span class="hint">Which option (e.g. Weight) this product's variants vary by.</span>
+                  </div>
+
+                  @if (form().optionKey) {
+                    @if (variantsLoading()) {
+                      <p class="hint">Loading variants…</p>
+                    }
+                    <table class="variant-inline__table">
+                      <thead>
+                        <tr>
+                          <th>{{ form().optionKey }}</th>
+                          <th>Base Price (₹)</th>
+                          <th>Discounted (₹)</th>
+                          <th>Stock</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (row of form().variants; track $index; let i = $index) {
+                          <tr>
+                            <td>
+                              <select class="form-select" [ngModel]="row.optionValue"
+                                (ngModelChange)="updateVariantRow(i, { optionValue: $event })">
+                                <option value="">Select…</option>
+                                @for (val of selectedKeyValues(); track val) {
+                                  <option [value]="val" [disabled]="usedVariantValues(i).has(val)">{{ val }}</option>
+                                }
+                              </select>
+                            </td>
+                            <td>
+                              <input class="form-input" type="number" min="0" [ngModel]="row.price"
+                                (ngModelChange)="updateVariantRow(i, { price: $event })" placeholder="0" />
+                            </td>
+                            <td>
+                              <input class="form-input" type="number" min="0" [ngModel]="row.discountedPrice"
+                                (ngModelChange)="updateVariantRow(i, { discountedPrice: $event })" placeholder="—" />
+                            </td>
+                            <td>
+                              <input class="form-input" type="number" min="0" [ngModel]="row.stock"
+                                (ngModelChange)="updateVariantRow(i, { stock: $event })" placeholder="0" />
+                            </td>
+                            <td>
+                              <button type="button" class="variant-inline__remove" (click)="removeVariantRow(i)" title="Remove">×</button>
+                            </td>
+                          </tr>
+                        }
+                        @if (form().variants.length === 0) {
+                          <tr><td colspan="5" class="variant-inline__none">No variants yet — add one below.</td></tr>
+                        }
+                      </tbody>
+                    </table>
+                    <button type="button" class="btn-add-attr"
+                      [disabled]="form().variants.length >= selectedKeyValues().length"
+                      (click)="addVariantRow()">+ Add variant</button>
+                  }
+                }
+              </div>
+            }
             <div class="form-field span-3">
               <label class="form-label">Description</label>
               <textarea class="form-input" rows="4" [ngModel]="form().description"
@@ -419,149 +577,9 @@
       <div class="modal-footer">
         <button class="btn-cancel" (click)="closeForm()">Cancel</button>
         <button class="btn-save" (click)="saveForm()"
-          [disabled]="saving() || !form().name || !form().categoryId || form().basePrice === '' || form().images.length === 0">
+          [disabled]="saving() || !form().name || !form().categoryId || (!form().hasVariants && form().basePrice === '') || form().images.length === 0">
           {{ saving() ? (editingId() ? 'Saving…' : 'Creating…') : (editingId() ? 'Save Changes' : 'Create Product') }}
         </button>
-      </div>
-    </div>
-  </div>
-}
-
-<!-- Variant Management Modal -->
-@if (variantProduct()) {
-  <div class="modal-overlay" (click)="closeVariants()">
-    <div class="modal-box medium" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2 class="modal-title">Variants — {{ variantProduct()!.name }}</h2>
-        <button class="modal-close" (click)="closeVariants()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-
-      <div class="modal-body scrollable">
-        @if (variantLoading()) {
-          <div class="loading-state"><div class="spinner"></div></div>
-        } @else {
-          <!-- Variant List -->
-          @if (variants().length > 0) {
-            <table class="variant-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>SKU</th>
-                  <th>Price</th>
-                  <th>Stock</th>
-                  <th>Active</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (variant of variants(); track variant._id) {
-                  <tr>
-                    <td>{{ variant.name }}</td>
-                    <td>{{ variant.sku || '—' }}</td>
-                    <td class="price-cell">₹{{ variant.price | number }}</td>
-                    <td>{{ variant.stock }}</td>
-                    <td class="center-cell">@if (variant.isActive) { ✓ } @else { ✗ }</td>
-                    <td class="action-cell">
-                      <button class="icon-btn-sm edit" (click)="openVariantForm(variant)" title="Edit">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                      </button>
-                      <button class="icon-btn-sm delete" (click)="deleteVariant(variant._id)" title="Delete">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                          <polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                      </button>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          } @else {
-            <div class="empty-state">
-              <p>No variants yet. Click "Add Variant" to create one.</p>
-            </div>
-          }
-
-          <!-- Variant Form -->
-          @if (showVariantForm()) {
-            <div class="variant-form-section">
-              <div class="form-grid-3">
-                <div class="form-field span-2">
-                  <label class="form-label">Name *</label>
-                  <input class="form-input" type="text" [ngModel]="variantForm().name"
-                    (ngModelChange)="variantForm.update(f=>({...f,name:$event}))" placeholder="e.g., 100g, Red, Large" />
-                </div>
-                <div class="form-field">
-                  <label class="form-label">SKU</label>
-                  <input class="form-input" type="text" [ngModel]="variantForm().sku"
-                    (ngModelChange)="variantForm.update(f=>({...f,sku:$event}))" placeholder="Optional" />
-                </div>
-                <div class="form-field">
-                  <label class="form-label">Price (₹) *</label>
-                  <input class="form-input" type="number" min="0" [ngModel]="variantForm().price"
-                    (ngModelChange)="variantForm.update(f=>({...f,price:$event}))" placeholder="0" />
-                </div>
-                <div class="form-field">
-                  <label class="form-label">Discounted Price (₹)</label>
-                  <input class="form-input" type="number" min="0" [ngModel]="variantForm().discountedPrice"
-                    (ngModelChange)="variantForm.update(f=>({...f,discountedPrice:$event}))" placeholder="Optional" />
-                </div>
-                <div class="form-field">
-                  <label class="form-label">Stock</label>
-                  <input class="form-input" type="number" min="0" [ngModel]="variantForm().stock"
-                    (ngModelChange)="variantForm.update(f=>({...f,stock:$event}))" placeholder="0" />
-                </div>
-                <div class="form-field">
-                  <label class="form-label">Track Inventory</label>
-                  <label class="toggle-label">
-                    <input type="checkbox" [ngModel]="variantForm().trackInventory"
-                      (ngModelChange)="variantForm.update(f=>({...f,trackInventory:$event}))" />
-                    Enable
-                  </label>
-                </div>
-                <div class="form-field">
-                  <label class="form-label">Active</label>
-                  <label class="toggle-label">
-                    <input type="checkbox" [ngModel]="variantForm().isActive"
-                      (ngModelChange)="variantForm.update(f=>({...f,isActive:$event}))" />
-                    Enable
-                  </label>
-                </div>
-              </div>
-
-              @if (variantError()) {
-                <div class="form-error">{{ variantError() }}</div>
-              }
-
-              <div class="variant-form-actions">
-                <button class="btn-cancel" (click)="closeVariantForm()">Cancel</button>
-                <button class="btn-save" (click)="saveVariant()"
-                  [disabled]="variantSaving() || !variantForm().name || variantForm().price === ''">
-                  {{ variantSaving() ? 'Saving…' : (editingVariantId() ? 'Update Variant' : 'Add Variant') }}
-                </button>
-              </div>
-            </div>
-          }
-        }
-      </div>
-
-      <div class="modal-footer">
-        @if (!showVariantForm()) {
-          <button class="btn-primary-create" (click)="openVariantForm()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            Add Variant
-          </button>
-        }
-        <button class="btn-cancel" (click)="closeVariants()" style="margin-left: auto;">Close</button>
       </div>
     </div>
   </div>

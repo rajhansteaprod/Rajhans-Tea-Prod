@@ -6,6 +6,7 @@ import { CheckoutService } from '../../../../core/services/checkout.service';
 import { PaymentStore } from '../../../../core/services/payment.store';
 import { CartStore } from '../../../../core/services/cart.store';
 import { ButtonComponent } from '../../../../../shared/components/button/button.component';
+import { trackPixelEvent } from '../../../../core/utils/meta-pixel';
 
 @Component({
   selector: 'app-summary-step',
@@ -27,7 +28,6 @@ export class SummaryStepComponent {
   // Signals
   readonly isPlacing = signal(false);
   readonly orderError = signal('');
-  readonly promoCode = signal('');
 
   // Get data from service
   readonly cartItems = this.checkoutService.cartItems;
@@ -59,17 +59,26 @@ export class SummaryStepComponent {
 
     this.isPlacing.set(true);
 
+    // Meta Pixel: user committed to paying (fires before the Razorpay modal opens).
+    trackPixelEvent('AddPaymentInfo', {
+      value: this.cartTotal(),
+      currency: 'INR',
+      num_items: this.cartItems().reduce((sum, i) => sum + i.qty, 0),
+    });
+
     try {
       // ✅ Use PaymentStore.pay() which handles:
       // 1. Create order on backend
       // 2. Open Razorpay modal
       // 3. Verify payment signature (CRITICAL!)
       // 4. Update database
+      // The promo code the user applied in the cart step — the backend
+      // recalculates and freezes the exact same total before charging.
       const success = await this.payment.pay(
         this.address(),
         0, // walletAmount (can be added later)
         0, // loyaltyPoints (can be added later)
-        this.promoCode().trim(),
+        this.checkoutService.appliedPromoCode(),
         this.cartItems(), // Pass checkout items with updated quantities
       );
 

@@ -1,0 +1,150 @@
+<div class="page">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Variant Options</h1>
+      <p class="page-subtitle">
+        Reusable option keys &amp; values (e.g. Weight → 100g, 250g). Products pick from these; they also power catalog filters.
+      </p>
+    </div>
+    <button class="btn-primary-create" (click)="openCreate()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Add Option
+    </button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    @if (loading()) {
+      <div class="empty-state"><p>Loading…</p></div>
+    } @else if (options().length === 0) {
+      <div class="empty-state">
+        <p>No variant options yet. Add one like "Weight" with values 100g, 250g, 500g.</p>
+      </div>
+    } @else {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>Values</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (option of options(); track option._id) {
+            <tr>
+              <td class="key-cell">{{ option.key }}</td>
+              <td>
+                <div class="value-chips">
+                  @for (v of option.values; track v) {
+                    <span class="value-chip">{{ v }}</span>
+                  }
+                  @if (option.values.length === 0) {
+                    <span class="muted">—</span>
+                  }
+                </div>
+              </td>
+              <td>
+                <button class="status-toggle" [class.active]="option.isActive" (click)="toggleActive(option)">
+                  {{ option.isActive ? 'Active' : 'Inactive' }}
+                </button>
+              </td>
+              <td>
+                <div class="action-btns">
+                  <button class="icon-btn edit" (click)="openEdit(option)" title="Edit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                  <button class="icon-btn delete" (click)="deleteOption(option)" title="Delete">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>
+
+<!-- Create / Edit Modal -->
+@if (showForm()) {
+  <div class="modal-overlay" (click)="closeForm()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">{{ editingId() ? 'Edit Option' : 'Add Option' }}</h2>
+        <button class="modal-close" (click)="closeForm()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-field">
+          <label class="form-label">Option Key *</label>
+          <input class="form-input" type="text" [ngModel]="form().key"
+            (ngModelChange)="form.update(f=>({...f,key:$event}))" placeholder="e.g. Weight" maxlength="50" />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Values *</label>
+          <div class="value-input-row">
+            <input class="form-input" type="text" [ngModel]="form().newValue"
+              (ngModelChange)="form.update(f=>({...f,newValue:$event}))"
+              (keydown.enter)="$event.preventDefault(); addValue()"
+              placeholder="e.g. 250g — press Enter to add" maxlength="50" />
+            <button type="button" class="btn-add-value" (click)="addValue()">Add</button>
+          </div>
+          @if (form().values.length > 0) {
+            <div class="value-chips editable">
+              @for (v of form().values; track v; let i = $index) {
+                <span class="value-chip">
+                  {{ v }}
+                  <button type="button" class="chip-remove" (click)="removeValue(i)">×</button>
+                </span>
+              }
+            </div>
+          } @else {
+            <p class="muted small">No values yet. Add values like 100g, 250g, 500g.</p>
+          }
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label">Sort Order</label>
+            <input class="form-input" type="number" min="0" [ngModel]="form().sortOrder"
+              (ngModelChange)="form.update(f=>({...f,sortOrder:$event}))" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Status</label>
+            <label class="toggle-label">
+              <input type="checkbox" [ngModel]="form().isActive"
+                (ngModelChange)="form.update(f=>({...f,isActive:$event}))" />
+              Active
+            </label>
+          </div>
+        </div>
+      </div>
+
+      @if (formError()) {
+        <div class="modal-error">{{ formError() }}</div>
+      }
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeForm()">Cancel</button>
+        <button class="btn-save" (click)="save()" [disabled]="saving() || !form().key || form().values.length === 0">
+          {{ saving() ? 'Saving…' : (editingId() ? 'Save Changes' : 'Create Option') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

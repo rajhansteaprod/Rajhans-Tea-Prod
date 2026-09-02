@@ -23,6 +23,8 @@ export const searchSchema = z.object({
       .transform((v) => v === 'true')
       .optional(),
     tags: z.string().optional(),
+    // Comma-separated variant option values (e.g. "250g,500g") for facet filtering
+    optionValues: z.string().optional(),
   }),
 });
 

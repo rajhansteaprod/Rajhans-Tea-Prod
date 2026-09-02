@@ -40,6 +40,8 @@ export interface OrderView {
     status?: string | null;
     trackingActivities?: Array<{ date: string; status: string; location?: string }>;
   };
+  /** Absolute review URL — present only for delivered orders not yet fully reviewed */
+  reviewUrl?: string | null;
   createdAt: string;
 }
 

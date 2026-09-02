@@ -1,10 +1,12 @@
 import { OrderRepository } from '../repositories/order.repository';
 import { InventoryService } from './inventory.service';
 import { getShippingProvider } from './shipping/shipping.factory';
+import { matchShiprocketStatus } from './shipping/shiprocket-status.util';
 import { Payment } from '../../payments/models/payment.model';
 import { Product } from '../../catalog/models/product.model';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../../../utils/api-error';
 import { shipmentLogger } from '../../../utils/shipment-logger';
+import { reviewTokenService } from '../../reviews/services/review-token.service';
 import { OrderStatus, IOrderDoc } from '../models/order.model';
 import { Types } from 'mongoose';
 
@@ -12,7 +14,8 @@ import { Types } from 'mongoose';
 const VALID_TRANSITIONS: Record<string, OrderStatus[]> = {
   confirmed: ['In Progress', 'cancelled'],
   "In Progress": ['shipped', 'cancelled'],
-  shipped: ['in_transit'],
+  shipped: ['pickup_done', 'in_transit'],
+  pickup_done: ['in_transit'],
   in_transit: ['out_for_delivery'],
   out_for_delivery: ['delivered'],
   delivered: ['return_requested'],
@@ -21,7 +24,8 @@ const VALID_TRANSITIONS: Record<string, OrderStatus[]> = {
 
 // Map Shiprocket tracking statuses to local order statuses
 const SHIPROCKET_STATUS_MAP: Record<string, OrderStatus> = {
-  'PICKED UP': 'shipped',
+  'OUT FOR PICKUP': 'shipped',
+  'PICKED UP': 'pickup_done',
   'IN TRANSIT': 'in_transit',
   'OUT FOR DELIVERY': 'out_for_delivery',
   'DELIVERED': 'delivered',
@@ -29,6 +33,9 @@ const SHIPROCKET_STATUS_MAP: Record<string, OrderStatus> = {
   'RETURN INITIATED': 'return_requested',
   'RETURNED': 'returned',
 };
+
+const resolveShiprocketStatus = (rawStatus: string): OrderStatus | undefined =>
+  matchShiprocketStatus(rawStatus, SHIPROCKET_STATUS_MAP);
 
 export class OrderService {
   private orderRepo = new OrderRepository();
@@ -68,6 +75,8 @@ export class OrderService {
       snapshot.items.map(async (item) => {
         const enrichedItem: any = {
           productId: item.productId,
+          variantId: item.variantId ?? null,
+          variant: item.variantName ?? null,
           name: item.name,
           qty: item.qty,
           unitPrice: item.unitPrice,
@@ -76,18 +85,12 @@ export class OrderService {
         };
 
         try {
-          console.log(`[Order] Fetching product images for: ${item.productId}`);
           const product = await Product.findById(item.productId).select('images').lean<any>().exec();
-          console.log(`[Order] Product found:`, product);
-
           if (product?.images && product.images.length > 0) {
             enrichedItem.image = product.images[0];
-            console.log(`[Order] Image added:`, enrichedItem.image);
-          } else {
-            console.log(`[Order] No images found for product:`, item.productId);
           }
         } catch (err) {
-          console.log(`[Order] Error fetching product:`, err);
+          console.warn(`[Order] Failed to fetch image for product ${item.productId}:`, err);
         }
 
         return enrichedItem;
@@ -227,18 +230,25 @@ export class OrderService {
     );
 
     // Side effects
-    if (newStatus === 'cancelled') {
+    if (newStatus === 'cancelled' || newStatus === 'returned') {
       await this.inventoryService.restockFromReturn(
         orderId,
-        order.items.map((i) => ({ productId: i.productId, qty: i.qty })),
+        order.items.map((i) => ({ productId: i.productId, variantId: i.variantId, qty: i.qty })),
       );
     }
 
-    if (newStatus === 'returned') {
-      await this.inventoryService.restockFromReturn(
-        orderId,
-        order.items.map((i) => ({ productId: i.productId, qty: i.qty })),
-      );
+    // On delivery, mint the 2-month anonymous review token (eager path).
+    // Never let a Redis hiccup fail the status update — My Orders load mints
+    // lazily as a fallback.
+    if (newStatus === 'delivered' && updated) {
+      try {
+        await reviewTokenService.mintForOrder(updated);
+      } catch (err) {
+        shipmentLogger.warn(
+          { orderId, error: err instanceof Error ? err.message : String(err) },
+          '⚠️ Failed to mint review token on delivery',
+        );
+      }
     }
 
     return updated!;
@@ -279,7 +289,8 @@ export class OrderService {
 
     try {
       const provider = getShippingProvider();
-      const shiprocketId = order.shiprocket.orderId || order.orderNumber;
+      // Shiprocket's /courier/track only reliably resolves tracking data by order number
+      const shiprocketId: string = order.orderNumber || order.shiprocket.orderId!;
 
       shipmentLogger.debug({
         orderId: order._id,
@@ -293,7 +304,7 @@ export class OrderService {
 
       // Map Shiprocket status to local status
       const shiprocketStatus = tracking.currentStatus.toUpperCase();
-      const newStatus = SHIPROCKET_STATUS_MAP[shiprocketStatus] as OrderStatus | undefined;
+      const newStatus = resolveShiprocketStatus(shiprocketStatus);
 
       if (!newStatus) {
         shipmentLogger.warn({
@@ -395,7 +406,7 @@ export class OrderService {
           trackingWith: freshOrder.shiprocket.orderId ? 'shiprocketOrderId' : 'orderNumber',
         }, '📡 Fetching real-time tracking from Shiprocket');
 
-        const tracking = await provider.trackByOrderId(shiprocketId);
+        const tracking = await provider.trackByOrderId(freshOrder.orderNumber);
 
         if (tracking) {
           currentShiprocketStatus = tracking.currentStatus;
@@ -439,7 +450,6 @@ export class OrderService {
 
   async getOrderForUser(orderId: string, userId: string) {
     const order = await this.orderRepo.findById(orderId);
-    console.log("CHECK HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"+order);
     if (!order) throw new NotFoundError('Order not found');
     if (!order.userId || order.userId.toString() !== userId) throw new ForbiddenError('Access denied');
     return order;
@@ -449,7 +459,31 @@ export class OrderService {
     userId: string,
     query: { page?: number; limit?: number; status?: string } = {},
   ) {
-    return this.orderRepo.findByUserId(userId, query);
+    const result = await this.orderRepo.findByUserId(userId, query);
+
+    // Attach the anonymous review URL to delivered orders. Mints lazily if the
+    // eager (on-delivery) path didn't run — e.g. Redis was down at delivery.
+    const orders = await Promise.all(
+      result.orders.map(async (order) => {
+        const obj = order.toObject() as unknown as Record<string, unknown>;
+        obj['reviewUrl'] = null;
+        if (order.status === 'delivered') {
+          try {
+            let url = await reviewTokenService.getActiveUrlForOrder(order._id.toString());
+            if (!url) {
+              const token = await reviewTokenService.mintForOrder(order);
+              url = token ? reviewTokenService.buildUrl(token) : null;
+            }
+            obj['reviewUrl'] = url;
+          } catch {
+            // Redis unavailable — omit the review URL rather than break the list.
+          }
+        }
+        return obj;
+      }),
+    );
+
+    return { orders, meta: result.meta };
   }
 
   async adminListOrders(

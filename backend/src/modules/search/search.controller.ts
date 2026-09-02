@@ -19,12 +19,20 @@ export const searchProducts = async (req: Request, res: Response) => {
     priceMax,
     inStock,
     tags,
+    optionValues,
   } = req.query as Record<string, string | undefined>;
 
   const parsedTags = tags
     ? tags
         .split(',')
         .map((t) => t.trim())
+        .filter(Boolean)
+    : undefined;
+
+  const parsedOptionValues = optionValues
+    ? optionValues
+        .split(',')
+        .map((v) => v.trim())
         .filter(Boolean)
     : undefined;
 
@@ -41,6 +49,7 @@ export const searchProducts = async (req: Request, res: Response) => {
       priceMax: priceMax ? parseFloat(priceMax) : undefined,
       inStock: inStock === 'true',
       tags: parsedTags,
+      optionValues: parsedOptionValues,
     },
     {
       userId: req.user?.userId ?? null,
