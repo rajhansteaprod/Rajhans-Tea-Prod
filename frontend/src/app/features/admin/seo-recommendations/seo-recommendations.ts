@@ -202,6 +202,46 @@ interface ChangeVerification {
   createdAt: string;
 }
 
+// ── Phase 5.4B — human completion + controlled rollback types (mirrors the
+// backend SeoChangeCompletion / SeoChangeRollback views). Both are immutable
+// forensic records: completion never touches the page or the recommendation's
+// machine-owned status, and a later rollback never deletes the completion. ──
+interface ChangeCompletion {
+  id: string;
+  executionId: string;
+  recommendationId: string;
+  draftId: string;
+  verificationId: string;
+  completedByUserId: string;
+  completedAt: string;
+  status: 'completed';
+  completionVersion: string;
+  createdAt: string;
+}
+interface RolledBackTarget {
+  targetUrl: string;
+  targetDocumentId: string;
+  beforeRollback: ExecutedFieldSnapshot;
+  restored: ExecutedFieldSnapshot;
+  afterRollback: ExecutedFieldSnapshot;
+}
+interface ChangeRollback {
+  id: string;
+  executionId: string;
+  recommendationId: string;
+  draftId: string;
+  rollbackUserId: string;
+  rolledBackAt: string;
+  targetType: 'cms_page';
+  targets: RolledBackTarget[];
+  status: 'succeeded';
+  rollbackVersion: string;
+  createdAt: string;
+}
+
+/** Current human implementation outcome, derived only from the immutable records. */
+type ImplementationState = 'executed' | 'verified' | 'completed' | 'rolled_back';
+
 /**
  * SEO growth recommendations (Phase 3A) plus a human review layer (Phase 5.1).
  * Synthesizes the latest audit into prioritized, actionable advice. Review is
@@ -259,6 +299,19 @@ export class SeoRecommendationsComponent implements OnInit {
   readonly verifying = signal<Record<string, boolean>>({});
   readonly verifyErrors = signal<Record<string, string>>({});
   readonly verificationHistoryOpen = signal<Set<string>>(new Set());
+
+  // ── Phase 5.4B — completion + rollback state, keyed by execution id.
+  // Completing only records a human decision (no page/recommendation write);
+  // rolling back restores the metadata this execution captured before it ran
+  // and is the only action here besides execute that mutates production. Every
+  // eligibility check below is advisory display logic — the backend re-checks
+  // all of it and is the sole authority. ──
+  readonly completions = signal<Record<string, ChangeCompletion[]>>({});
+  readonly completing = signal<Record<string, boolean>>({});
+  readonly completeErrors = signal<Record<string, string>>({});
+  readonly rollbacks = signal<Record<string, ChangeRollback[]>>({});
+  readonly rollingBack = signal<Record<string, boolean>>({});
+  readonly rollbackErrors = signal<Record<string, string>>({});
 
   ngOnInit(): void {
     this.load();
@@ -552,7 +605,11 @@ export class SeoRecommendationsComponent implements OnInit {
     this.http.get<{ data: ChangeExecution[] }>(`${this.base}/change-drafts/${draftId}/executions`).subscribe({
       next: (res) => {
         this.executions.set({ ...this.executions(), [draftId]: res.data });
-        for (const execution of res.data) this.loadVerifications(execution.id);
+        for (const execution of res.data) {
+          this.loadVerifications(execution.id);
+          this.loadCompletions(execution.id);
+          this.loadRollbacks(execution.id);
+        }
       },
       error: () => undefined,
     });
@@ -622,6 +679,149 @@ export class SeoRecommendationsComponent implements OnInit {
   private loadVerifications(executionId: string): void {
     this.http.get<{ data: ChangeVerification[] }>(`${this.base}/change-executions/${executionId}/verifications`).subscribe({
       next: (res) => this.verifications.set({ ...this.verifications(), [executionId]: res.data }),
+      error: () => undefined,
+    });
+  }
+
+  // ── Phase 5.4B — human completion (immutable record only) and controlled
+  // rollback (restores the pre-execution metadata) ──
+  completionsFor(execution: ChangeExecution): ChangeCompletion[] {
+    return this.completions()[execution.id] ?? [];
+  }
+
+  /** Server returns completion history newest first — at most one entry today. */
+  latestCompletion(execution: ChangeExecution): ChangeCompletion | null {
+    return this.completionsFor(execution)[0] ?? null;
+  }
+
+  rollbacksFor(execution: ChangeExecution): ChangeRollback[] {
+    return this.rollbacks()[execution.id] ?? [];
+  }
+
+  latestRollback(execution: ChangeExecution): ChangeRollback | null {
+    return this.rollbacksFor(execution)[0] ?? null;
+  }
+
+  hasVerifiedVerification(execution: ChangeExecution): boolean {
+    return this.verificationsFor(execution).some((v) => v.status === 'verified');
+  }
+
+  /**
+   * The current human implementation outcome, derived purely from the
+   * immutable records — never from a mutated recommendation status. A rollback
+   * outranks an earlier completion, which is kept and still displayed.
+   */
+  implementationState(execution: ChangeExecution): ImplementationState {
+    if (this.latestRollback(execution)) return 'rolled_back';
+    if (this.latestCompletion(execution)) return 'completed';
+    if (this.hasVerifiedVerification(execution)) return 'verified';
+    return 'executed';
+  }
+
+  implementationStateLabel(state: ImplementationState): string {
+    switch (state) {
+      case 'executed':
+        return 'Executed';
+      case 'verified':
+        return 'Verified';
+      case 'completed':
+        return 'Completed';
+      case 'rolled_back':
+        return 'Rolled back';
+    }
+  }
+
+  /** Advisory display check only — the backend independently re-checks every rule. */
+  canComplete(execution: ChangeExecution): boolean {
+    return (
+      execution.status === 'succeeded' &&
+      this.hasVerifiedVerification(execution) &&
+      !this.latestCompletion(execution) &&
+      !this.latestRollback(execution)
+    );
+  }
+
+  /** Advisory display check only — the backend independently re-checks every rule. */
+  canRollback(execution: ChangeExecution): boolean {
+    return execution.status === 'succeeded' && !this.latestRollback(execution);
+  }
+
+  isCompleting(execution: ChangeExecution): boolean {
+    return !!this.completing()[execution.id];
+  }
+
+  completeErrorFor(execution: ChangeExecution): string {
+    return this.completeErrors()[execution.id] ?? '';
+  }
+
+  isRollingBack(execution: ChangeExecution): boolean {
+    return !!this.rollingBack()[execution.id];
+  }
+
+  rollbackErrorFor(execution: ChangeExecution): string {
+    return this.rollbackErrors()[execution.id] ?? '';
+  }
+
+  /** Explicit admin click only — never called automatically on page load. */
+  markCompleted(execution: ChangeExecution): void {
+    if (!confirm('Mark this verified change as completed? This records an immutable implementation record and cannot be undone.')) {
+      return;
+    }
+    this.completeErrors.set({ ...this.completeErrors(), [execution.id]: '' });
+    this.completing.set({ ...this.completing(), [execution.id]: true });
+    this.http.post<{ data: ChangeCompletion }>(`${this.base}/change-executions/${execution.id}/complete`, {}).subscribe({
+      next: () => {
+        this.completing.set({ ...this.completing(), [execution.id]: false });
+        this.loadCompletions(execution.id); // Never claim success before the API confirms — refresh from the server.
+      },
+      error: (e) => {
+        this.completing.set({ ...this.completing(), [execution.id]: false });
+        this.completeErrors.set({
+          ...this.completeErrors(),
+          [execution.id]: e?.error?.message || 'Failed to mark this execution completed',
+        });
+      },
+    });
+  }
+
+  /** Explicit admin click only, behind a strong confirmation — this rewrites live CMS metadata. */
+  rollbackExecution(execution: ChangeExecution): void {
+    const confirmed = confirm(
+      'Roll back this execution?\n\n' +
+        '• This restores the metadata values captured BEFORE this execution ran.\n' +
+        '• The rollback will FAIL if the page has changed since the execution.\n' +
+        '• Later unrelated edits will never be overwritten.\n\n' +
+        'This updates live CMS page metadata and cannot be repeated.',
+    );
+    if (!confirmed) return;
+
+    this.rollbackErrors.set({ ...this.rollbackErrors(), [execution.id]: '' });
+    this.rollingBack.set({ ...this.rollingBack(), [execution.id]: true });
+    this.http.post<{ data: ChangeRollback }>(`${this.base}/change-executions/${execution.id}/rollback`, {}).subscribe({
+      next: () => {
+        this.rollingBack.set({ ...this.rollingBack(), [execution.id]: false });
+        this.loadRollbacks(execution.id); // Never claim success before the API confirms — refresh from the server.
+      },
+      error: (e) => {
+        this.rollingBack.set({ ...this.rollingBack(), [execution.id]: false });
+        this.rollbackErrors.set({
+          ...this.rollbackErrors(),
+          [execution.id]: e?.error?.message || 'Failed to roll back this execution',
+        });
+      },
+    });
+  }
+
+  private loadCompletions(executionId: string): void {
+    this.http.get<{ data: ChangeCompletion[] }>(`${this.base}/change-executions/${executionId}/completions`).subscribe({
+      next: (res) => this.completions.set({ ...this.completions(), [executionId]: res.data }),
+      error: () => undefined,
+    });
+  }
+
+  private loadRollbacks(executionId: string): void {
+    this.http.get<{ data: ChangeRollback[] }>(`${this.base}/change-executions/${executionId}/rollbacks`).subscribe({
+      next: (res) => this.rollbacks.set({ ...this.rollbacks(), [executionId]: res.data }),
       error: () => undefined,
     });
   }
