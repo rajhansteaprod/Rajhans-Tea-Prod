@@ -130,6 +130,47 @@ interface ChangeDraft {
   updatedAt: string;
 }
 
+// ── Phase 5.5 — execution quality-control types (mirrors the backend
+// ChangeExecutionPreflightService view). A preflight result is ADVISORY: the
+// backend reruns the identical evaluation inside its transaction before writing,
+// so nothing displayed here is ever authorization to execute. ──
+type PreflightRiskLevel = 'low' | 'medium' | 'high';
+type PreflightCheckStatus = 'pass' | 'warn' | 'fail';
+interface PreflightFinding {
+  code: string;
+  message: string;
+  targetUrl?: string;
+}
+interface PreflightCheck {
+  code: string;
+  status: PreflightCheckStatus;
+  message: string;
+  targetUrl?: string;
+}
+interface PreflightChangedFields {
+  targetUrl: string;
+  fields: string[];
+}
+interface ChangeDraftPreflight {
+  executable: boolean;
+  riskLevel: PreflightRiskLevel;
+  blockers: PreflightFinding[];
+  warnings: PreflightFinding[];
+  checks: PreflightCheck[];
+  changedFields: PreflightChangedFields[];
+  evaluatedAt: string;
+  evaluatorVersion: string;
+}
+/** Immutable evidence of the evaluation that authorized one execution. Null for pre-Phase-5.5 executions. */
+interface ExecutionQualityControl {
+  preflightVersion: string;
+  riskLevel: PreflightRiskLevel;
+  warnings: PreflightFinding[];
+  checks: PreflightCheck[];
+  changedFields: PreflightChangedFields[];
+  evaluatedAt: string;
+}
+
 // ── Phase 5.3 — controlled execution types (mirrors backend SeoChangeExecution view) ──
 interface ExecutedFieldSnapshot {
   metaTitle?: string;
@@ -154,6 +195,7 @@ interface ChangeExecution {
   status: 'succeeded';
   generatorVersion: string;
   executorVersion: string;
+  qualityControl: ExecutionQualityControl | null;
   createdAt: string;
 }
 
@@ -289,6 +331,16 @@ export class SeoRecommendationsComponent implements OnInit {
   readonly executions = signal<Record<string, ChangeExecution[]>>({});
   readonly executing = signal<Record<string, boolean>>({});
   readonly executeErrors = signal<Record<string, string>>({});
+
+  // ── Phase 5.5 — execution quality controls, keyed by draft id. Running a
+  // preflight is a manual, read-only preview: it writes nothing and is NEVER
+  // authorization. The execute request re-derives the same evaluation
+  // server-side, so a stale result shown here can only ever be informative —
+  // which is why a failed execute discards it and asks for a fresh run. ──
+  readonly preflights = signal<Record<string, ChangeDraftPreflight>>({});
+  readonly preflighting = signal<Record<string, boolean>>({});
+  readonly preflightErrors = signal<Record<string, string>>({});
+  readonly preflightDetailOpen = signal<Set<string>>(new Set());
 
   // ── Phase 5.4A — post-execution verification state, keyed by execution id.
   // Verification is READ-ONLY forensics: it never mutates Page/execution/
@@ -586,19 +638,134 @@ export class SeoRecommendationsComponent implements OnInit {
   }
 
   executeDraft(draft: ChangeDraft): void {
-    if (!confirm('This will update live CMS page metadata. Execute this approved change now?')) return;
+    if (!confirm(this.executeConfirmationMessage(draft))) return;
     this.executeErrors.set({ ...this.executeErrors(), [draft.id]: '' });
     this.executing.set({ ...this.executing(), [draft.id]: true });
     this.http.post<{ data: ChangeExecution }>(`${this.base}/change-drafts/${draft.id}/execute`, {}).subscribe({
       next: () => {
         this.executing.set({ ...this.executing(), [draft.id]: false });
+        this.clearPreflight(draft.id);
         this.loadExecutions(draft.id); // Never claim success before the API confirms — refresh from the server.
       },
       error: (e) => {
         this.executing.set({ ...this.executing(), [draft.id]: false });
         this.executeErrors.set({ ...this.executeErrors(), [draft.id]: e?.error?.message || 'Failed to execute change' });
+        // The server rejected this on state it re-derived itself, so whatever
+        // the last preview said is now known to be out of date. Discard it
+        // rather than keep showing a reassuring, stale verdict.
+        this.clearPreflight(draft.id);
       },
     });
+  }
+
+  /**
+   * Surfaces the last preflight's risk and warnings when one exists, while
+   * stating plainly that the browser result is not authoritative.
+   */
+  private executeConfirmationMessage(draft: ChangeDraft): string {
+    const preflight = this.preflightFor(draft);
+    if (!preflight) {
+      return (
+        'Execute this approved change now?\n\n' +
+        '• This updates live CMS page metadata.\n' +
+        '• No preflight check has been run for this draft.\n\n' +
+        'The server re-checks every eligibility and quality rule before writing.'
+      );
+    }
+    const warnings = preflight.warnings.length
+      ? `• ${preflight.warnings.length} quality warning(s):\n` +
+        preflight.warnings.map((w) => `    – ${w.message}`).join('\n') +
+        '\n'
+      : '• No quality warnings were raised.\n';
+    return (
+      'Execute this approved change now?\n\n' +
+      '• This updates live CMS page metadata.\n' +
+      `• Last preflight: ${preflight.executable ? 'executable' : 'BLOCKED'}, ${this.riskLabel(preflight.riskLevel)}.\n` +
+      warnings +
+      '\nThat preflight result is advisory only — the server re-runs the identical check before writing, and may still reject this.'
+    );
+  }
+
+  // ── Phase 5.5 — manual, read-only preflight preview ──
+  preflightFor(draft: ChangeDraft): ChangeDraftPreflight | null {
+    return this.preflights()[draft.id] ?? null;
+  }
+
+  isPreflighting(draft: ChangeDraft): boolean {
+    return !!this.preflighting()[draft.id];
+  }
+
+  preflightErrorFor(draft: ChangeDraft): string {
+    return this.preflightErrors()[draft.id] ?? '';
+  }
+
+  isPreflightDetailOpen(draft: ChangeDraft): boolean {
+    return this.preflightDetailOpen().has(draft.id);
+  }
+
+  togglePreflightDetail(draft: ChangeDraft): void {
+    const set = new Set(this.preflightDetailOpen());
+    if (set.has(draft.id)) set.delete(draft.id);
+    else set.add(draft.id);
+    this.preflightDetailOpen.set(set);
+  }
+
+  riskLabel(level: PreflightRiskLevel): string {
+    switch (level) {
+      case 'low':
+        return 'Low risk';
+      case 'medium':
+        return 'Medium risk';
+      case 'high':
+        return 'High risk';
+    }
+  }
+
+  preflightVerdictLabel(preflight: ChangeDraftPreflight): string {
+    return preflight.executable ? 'Executable' : 'Blocked';
+  }
+
+  checkStatusLabel(status: PreflightCheckStatus): string {
+    switch (status) {
+      case 'pass':
+        return 'Pass';
+      case 'warn':
+        return 'Warning';
+      case 'fail':
+        return 'Blocked';
+    }
+  }
+
+  changedFieldsLabel(entry: PreflightChangedFields): string {
+    return entry.fields.join(', ');
+  }
+
+  /** Explicit admin click only — never triggered automatically on page load. Read-only on the server. */
+  runPreflight(draft: ChangeDraft): void {
+    this.preflightErrors.set({ ...this.preflightErrors(), [draft.id]: '' });
+    this.preflighting.set({ ...this.preflighting(), [draft.id]: true });
+    this.http
+      .post<{ data: ChangeDraftPreflight }>(`${this.base}/change-drafts/${draft.id}/preflight`, {})
+      .subscribe({
+        next: (res) => {
+          this.preflighting.set({ ...this.preflighting(), [draft.id]: false });
+          this.preflights.set({ ...this.preflights(), [draft.id]: res.data });
+        },
+        error: (e) => {
+          this.preflighting.set({ ...this.preflighting(), [draft.id]: false });
+          this.clearPreflight(draft.id);
+          this.preflightErrors.set({
+            ...this.preflightErrors(),
+            [draft.id]: e?.error?.message || 'Failed to run the preflight check',
+          });
+        },
+      });
+  }
+
+  private clearPreflight(draftId: string): void {
+    const next = { ...this.preflights() };
+    delete next[draftId];
+    this.preflights.set(next);
   }
 
   private loadExecutions(draftId: string): void {

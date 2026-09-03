@@ -266,6 +266,85 @@
                       @if (executionsFor(draft).length) {
                         <p class="rec__execute-note">This change has already been executed and cannot be executed again.</p>
                       } @else {
+                        <!-- Execution quality controls (Phase 5.5). Read-only preview:
+                             running this writes nothing, and the result is never
+                             authorization — the server re-runs the identical
+                             evaluation inside its transaction before writing. -->
+                        <div class="rec__preflight">
+                          <button class="rec__btn rec__btn--preflight" [disabled]="isPreflighting(draft)" (click)="runPreflight(draft)">
+                            {{ isPreflighting(draft) ? 'Checking…' : 'Run preflight check' }}
+                          </button>
+                          @if (preflightErrorFor(draft)) { <div class="rec__preflight-error">{{ preflightErrorFor(draft) }}</div> }
+
+                          @if (preflightFor(draft); as pf) {
+                            <div class="rec__preflight-card rec__preflight-card--{{ pf.executable ? 'executable' : 'blocked' }}">
+                              <div class="rec__preflight-meta">
+                                <span class="rec__preflight-verdict rec__preflight-verdict--{{ pf.executable ? 'executable' : 'blocked' }}">
+                                  {{ preflightVerdictLabel(pf) }}
+                                </span>
+                                <span class="rec__preflight-risk rec__preflight-risk--{{ pf.riskLevel }}">{{ riskLabel(pf.riskLevel) }}</span>
+                                <span>checked {{ pf.evaluatedAt | date: 'MMM d, y HH:mm' }}</span>
+                                <span>{{ pf.evaluatorVersion }}</span>
+                              </div>
+
+                              @if (pf.blockers.length) {
+                                <div class="rec__preflight-group rec__preflight-group--blockers">
+                                  <span>Blockers — this change cannot be executed</span>
+                                  <ul>
+                                    @for (b of pf.blockers; track $index) {
+                                      <li><code>{{ b.code }}</code> {{ b.message }}</li>
+                                    }
+                                  </ul>
+                                </div>
+                              }
+
+                              @if (pf.warnings.length) {
+                                <div class="rec__preflight-group rec__preflight-group--warnings">
+                                  <span>Quality warnings — advisory, these do not block execution</span>
+                                  <ul>
+                                    @for (w of pf.warnings; track $index) {
+                                      <li><code>{{ w.code }}</code> {{ w.message }}</li>
+                                    }
+                                  </ul>
+                                </div>
+                              }
+
+                              @if (pf.changedFields.length) {
+                                <div class="rec__preflight-group">
+                                  <span>Fields this execution would write</span>
+                                  <ul>
+                                    @for (cf of pf.changedFields; track cf.targetUrl) {
+                                      <li><a [href]="cf.targetUrl" target="_blank" rel="noopener">{{ cf.targetUrl }}</a> — {{ changedFieldsLabel(cf) }}</li>
+                                    }
+                                  </ul>
+                                </div>
+                              }
+
+                              @if (pf.checks.length) {
+                                <button class="rec__expand" (click)="togglePreflightDetail(draft)">
+                                  {{ isPreflightDetailOpen(draft) ? '▾ Hide check detail' : '▸ Check detail (' + pf.checks.length + ')' }}
+                                </button>
+                                @if (isPreflightDetailOpen(draft)) {
+                                  <ul class="rec__preflight-checks">
+                                    @for (c of pf.checks; track $index) {
+                                      <li class="rec__preflight-check rec__preflight-check--{{ c.status }}">
+                                        <span class="rec__preflight-check-status">{{ checkStatusLabel(c.status) }}</span>
+                                        <code>{{ c.code }}</code>
+                                        <span>{{ c.message }}</span>
+                                      </li>
+                                    }
+                                  </ul>
+                                }
+                              }
+
+                              <p class="rec__preflight-note">
+                                Advisory preview only. Executing re-runs this identical evaluation on the server, against
+                                live data, inside the write transaction — and may still reject the change.
+                              </p>
+                            </div>
+                          }
+                        </div>
+
                         <p class="rec__execute-warning">This will update live CMS page metadata.</p>
                         <button class="rec__btn rec__btn--execute" [disabled]="isExecuting(draft)" (click)="executeDraft(draft)">
                           {{ isExecuting(draft) ? 'Executing…' : 'Execute approved change' }}
@@ -282,7 +361,26 @@
                                 <span class="rec__execution-status">{{ ex.status }}</span>
                                 <span>{{ ex.executedAt | date: 'MMM d, y HH:mm' }}</span>
                                 <span>executed by {{ ex.executorUserId }}</span>
+                                @if (ex.qualityControl; as qc) {
+                                  <span class="rec__preflight-risk rec__preflight-risk--{{ qc.riskLevel }}">{{ riskLabel(qc.riskLevel) }}</span>
+                                }
                               </div>
+                              <!-- Immutable quality-control evidence captured at execution time
+                                   (Phase 5.5). Absent on executions recorded before Phase 5.5. -->
+                              @if (ex.qualityControl; as qc) {
+                                <div class="rec__preflight-group">
+                                  <span>Quality control at execution — {{ qc.preflightVersion }}, evaluated {{ qc.evaluatedAt | date: 'MMM d, y HH:mm' }}</span>
+                                  @if (qc.warnings.length) {
+                                    <ul>
+                                      @for (w of qc.warnings; track $index) {
+                                        <li><code>{{ w.code }}</code> {{ w.message }}</li>
+                                      }
+                                    </ul>
+                                  } @else {
+                                    <p class="rec__pc-empty">No quality warnings were raised at execution time.</p>
+                                  }
+                                </div>
+                              }
                               @for (t of ex.targets; track t.targetUrl) {
                                 <div class="rec__execution-target">
                                   <div class="rec__execution-target-url">

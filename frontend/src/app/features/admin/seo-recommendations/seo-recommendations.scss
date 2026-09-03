@@ -335,4 +335,55 @@
   &__rollback-card {
     margin-top: 8px; border: 1px solid #fecaca; background: #fef2f2; border-radius: 8px; padding: 10px 12px;
   }
+
+  // ── Phase 5.5 — execution quality controls (advisory preflight preview) ──
+  &__preflight { margin: 10px 0; }
+  &__btn--preflight {
+    background: #475569; color: #fff; border: none; padding: 7px 12px; border-radius: 6px;
+    font-weight: 600; font-size: 12px; cursor: pointer;
+    &:hover:not(:disabled) { background: #334155; }
+    &:disabled { opacity: 0.6; cursor: default; }
+  }
+  &__preflight-error { color: #b91c1c; font-size: 12px; margin-top: 6px; }
+  &__preflight-card {
+    margin-top: 8px; border-radius: 8px; padding: 10px 12px; border: 1px solid #e5e7eb; background: #f9fafb;
+    &--executable { border-color: #bbf7d0; background: #f0fdf4; }
+    &--blocked { border-color: #fecaca; background: #fef2f2; }
+  }
+  &__preflight-meta {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    font-size: 11px; color: #6b7280;
+  }
+  &__preflight-verdict, &__preflight-risk {
+    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+  }
+  &__preflight-verdict {
+    &--executable { background: #dcfce7; color: #166534; }
+    &--blocked { background: #fee2e2; color: #991b1b; }
+  }
+  &__preflight-risk {
+    &--low { background: #e0f2fe; color: #075985; }
+    &--medium { background: #fef3c7; color: #92400e; }
+    &--high { background: #fee2e2; color: #991b1b; }
+  }
+  &__preflight-group {
+    margin-top: 8px; font-size: 12px;
+    > span { display: block; font-weight: 600; color: #374151; margin-bottom: 4px; }
+    ul { margin: 0; padding-left: 18px; }
+    li { margin-bottom: 3px; word-break: break-word; }
+    &--blockers > span { color: #991b1b; }
+    &--warnings > span { color: #92400e; }
+  }
+  &__preflight-checks { list-style: none; margin: 6px 0 0; padding: 0; font-size: 11px; }
+  &__preflight-check {
+    display: flex; gap: 6px; align-items: baseline; padding: 3px 0; border-top: 1px solid #e5e7eb;
+    &--pass > span:first-child { color: #166534; }
+    &--warn > span:first-child { color: #92400e; }
+    &--fail > span:first-child { color: #991b1b; }
+  }
+  &__preflight-check-status { font-weight: 700; min-width: 56px; }
+  &__preflight-card code {
+    background: #e5e7eb; border-radius: 4px; padding: 0 4px; font-size: 11px; margin-right: 4px;
+  }
+  &__preflight-note { margin: 8px 0 0; font-size: 11px; color: #6b7280; font-style: italic; }
 }

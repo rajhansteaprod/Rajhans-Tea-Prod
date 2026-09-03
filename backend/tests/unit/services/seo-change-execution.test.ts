@@ -2,10 +2,16 @@
 // UNIT TESTS — SEO Phase 5.3 controlled execution service
 // Mocks SeoRecommendation/SeoChangeDraft/SeoChangeExecution/Page the same way
 // the Phase 5.2 generator tests do (plain in-memory `store` arrays), plus a fake
-// mongoose ClientSession whose startTransaction()/abortTransaction() snapshot
-// and restore the Page/execution stores — so these tests genuinely exercise
-// the all-or-nothing guarantee (a rejected multi-target draft leaves NOTHING
-// written), not just the eligibility branching. No real DB is needed.
+// mongoose ClientSession that tracks the writes made through it and undoes
+// exactly those (and no other session's) on abortTransaction() — so these tests
+// genuinely exercise the all-or-nothing guarantee (a rejected multi-target draft
+// leaves NOTHING written) and real transaction isolation under concurrency, not
+// just the eligibility branching. No real DB is needed.
+//
+// Phase 5.5 note: execution's Pass 1 is now the shared preflight evaluator
+// (change-execution-preflight.service.ts), so these tests exercise it through
+// the real execute entry point — the eligibility contract asserted here is the
+// Phase 5.3 contract, unchanged.
 // =============================================================================
 
 import mongoose from 'mongoose';
@@ -139,26 +145,47 @@ function metadataChange(overrides: Partial<MetadataProposedChange> = {}): Metada
   } as MetadataProposedChange;
 }
 
-// ── Fake mongoose ClientSession — snapshots/restores pageStore + execStore on
-// startTransaction()/abortTransaction(), so an aborted transaction genuinely
-// undoes any writes the code performed before the failure. ──
-function makeSession() {
-  let pageSnapshot: FakePage[] = [];
-  let execSnapshot: FakeExecution[] = [];
-  return {
-    startTransaction: jest.fn(() => {
-      pageSnapshot = pageStore.map((p) => ({ ...p }));
-      execSnapshot = execStore.map((e) => ({ ...e }));
-    }),
-    commitTransaction: jest.fn(async () => undefined),
-    abortTransaction: jest.fn(async () => {
-      pageStore.length = 0;
-      pageStore.push(...pageSnapshot);
-      execStore.length = 0;
-      execStore.push(...execSnapshot);
-    }),
-    endSession: jest.fn(),
+// ── Fake mongoose ClientSession. Writes performed through a session are tagged
+// with it (the Page/execution mocks below read `options.session`), and
+// abortTransaction() undoes ONLY that session's own writes — never another
+// session's. That models real Mongo transaction isolation, so the concurrency
+// test can assert the genuine safety property (exactly one persisted execution)
+// instead of depending on how two interleaved runs happen to be scheduled. ──
+interface FakeSession {
+  createdExecutionIds: string[];
+  pageBackups: Map<string, FakePage>;
+  startTransaction: jest.Mock;
+  commitTransaction: jest.Mock;
+  abortTransaction: jest.Mock;
+  endSession: jest.Mock;
+}
+
+function makeSession(): FakeSession {
+  const session = {
+    createdExecutionIds: [] as string[],
+    pageBackups: new Map<string, FakePage>(),
+  } as FakeSession;
+
+  const forget = () => {
+    session.createdExecutionIds.length = 0;
+    session.pageBackups.clear();
   };
+
+  session.startTransaction = jest.fn(forget);
+  session.commitTransaction = jest.fn(async () => forget());
+  session.abortTransaction = jest.fn(async () => {
+    for (const [id, backup] of session.pageBackups) {
+      const page = pageStore.find((p) => String(p._id) === id);
+      if (page) Object.assign(page, backup);
+    }
+    for (const id of session.createdExecutionIds) {
+      const index = execStore.findIndex((e) => String(e._id) === id);
+      if (index >= 0) execStore.splice(index, 1);
+    }
+    forget();
+  });
+  session.endSession = jest.fn();
+  return session;
 }
 
 jest.mock('mongoose', () => {
@@ -211,17 +238,59 @@ jest.mock('../../../src/modules/seo/models/seo-change-execution.model', () => ({
             .sort((a, b) => b.executedAt.getTime() - a.executedAt.getTime()),
       }),
     })),
-    create: jest.fn(async (docs: Partial<FakeExecution>[]) => {
+    create: jest.fn(async (docs: Partial<FakeExecution>[], options?: { session?: FakeSession }) => {
       const doc = docs[0];
       if (execStore.some((d) => String(d.draftId) === String(doc.draftId))) {
         throw Object.assign(new Error('E11000 duplicate key error: draftId'), { code: 11000 });
       }
       const created = makeExecution(doc);
       execStore.push(created);
+      options?.session?.createdExecutionIds.push(String(created._id));
       return [created];
     }),
   },
 }));
+
+// ── Phase 5.5 duplicate-metadata lookup emulation ──
+interface DuplicateQuery {
+  _id?: { $ne?: unknown };
+  status?: string;
+  $or?: ({ metaTitle?: string } | { metaDescription?: string })[];
+}
+
+interface ChainQuery {
+  select: jest.Mock;
+  limit: jest.Mock;
+  session: jest.Mock;
+  exec: () => Promise<FakePage[]>;
+}
+
+function makeDuplicateQuery(query: DuplicateQuery): ChainQuery {
+  let cap = Number.POSITIVE_INFINITY;
+  const chain: ChainQuery = {
+    select: jest.fn(),
+    limit: jest.fn(),
+    session: jest.fn(),
+    exec: async () =>
+      pageStore
+        .filter((p) => {
+          if (query._id?.$ne !== undefined && String(p._id) === String(query._id.$ne)) return false;
+          if (query.status !== undefined && p.status !== query.status) return false;
+          if (!query.$or?.length) return true;
+          return query.$or.some((clause) =>
+            Object.entries(clause).every(([field, value]) => (p as unknown as Record<string, unknown>)[field] === value),
+          );
+        })
+        .slice(0, cap),
+  };
+  chain.select.mockImplementation(() => chain);
+  chain.limit.mockImplementation((n: number) => {
+    cap = n;
+    return chain;
+  });
+  chain.session.mockImplementation(() => chain);
+  return chain;
+}
 
 jest.mock('../../../src/modules/cms/models/page.model', () => ({
   Page: {
@@ -233,19 +302,37 @@ jest.mock('../../../src/modules/cms/models/page.model', () => ({
           ) ?? null,
       ),
     ),
-    findByIdAndUpdate: jest.fn((id: unknown, update: { $set: Record<string, unknown> }) => ({
-      exec: async () => {
-        const page = pageStore.find((p) => String(p._id) === String(id));
-        if (!page) return null;
-        Object.assign(page, update.$set);
-        page.updatedAt = new Date();
-        return page;
-      },
-    })),
+    // Phase 5.5 — the bounded duplicate-metadata lookup. Emulates the exact
+    // filter shape the preflight evaluator uses ({ _id: { $ne }, status, $or })
+    // plus the select/limit/session/exec chain, over the same in-memory store.
+    find: jest.fn((query: DuplicateQuery) => makeDuplicateQuery(query)),
+    findByIdAndUpdate: jest.fn(
+      (id: unknown, update: { $set: Record<string, unknown> }, options?: { session?: FakeSession }) => ({
+        exec: async () => {
+          const page = pageStore.find((p) => String(p._id) === String(id));
+          if (!page) return null;
+          const key = String(page._id);
+          if (options?.session && !options.session.pageBackups.has(key)) {
+            options.session.pageBackups.set(key, { ...page });
+          }
+          Object.assign(page, update.$set);
+          page.updatedAt = new Date();
+          return page;
+        },
+      }),
+    ),
   },
 }));
 
-import { executeApprovedChangeDraft, resolveCmsPageTarget } from '../../../src/modules/seo/services/change-execution.service';
+import {
+  executeApprovedChangeDraft,
+  resolveCmsPageTarget,
+  toExecutionView,
+} from '../../../src/modules/seo/services/change-execution.service';
+import {
+  evaluateExecutionPreflight,
+  PREFLIGHT_VERSION,
+} from '../../../src/modules/seo/services/change-execution-preflight.service';
 import { SeoChangeExecution } from '../../../src/modules/seo/models/seo-change-execution.model';
 import { Page } from '../../../src/modules/cms/models/page.model';
 
@@ -969,5 +1056,244 @@ describe('executeApprovedChangeDraft — idempotency index initialization', () =
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toBe('invalid_draft');
     expect(mockInit).toHaveBeenCalledTimes(1);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Phase 5.5 — execution quality controls. The execute path runs the SAME
+// authoritative evaluator the advisory preflight endpoint runs, rerun
+// session-pinned inside the transaction immediately before Pass 2, and records
+// the resulting evaluation as immutable evidence on success.
+// -----------------------------------------------------------------------------
+describe('executeApprovedChangeDraft — Phase 5.5 quality controls', () => {
+  const GOOD_TITLE = 'A Clearly Different Page Title';
+  const GOOD_DESCRIPTION =
+    'A genuinely descriptive meta description for this page, comfortably inside the guideline band.';
+
+  it('records immutable quality-control evidence on a successful execution', async () => {
+    const { draft } = setupApprovedDraft({
+      proposedChanges: [metadataChange({ fields: { title: { current: 'Old Title', proposed: GOOD_TITLE } } })],
+      page: { metaTitle: 'Old Title' },
+    });
+
+    const result = await executeApprovedChangeDraft({ draftId: String(draft._id), executorUserId });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const qc = result.execution.qualityControl;
+    expect(qc).toBeDefined();
+    expect(qc!.preflightVersion).toBe(PREFLIGHT_VERSION);
+    expect(qc!.riskLevel).toBe('low');
+    expect(qc!.warnings).toEqual([]);
+    expect(qc!.checks.length).toBeGreaterThan(0);
+    expect(qc!.changedFields).toEqual([{ targetUrl: pageUrl('about-us'), fields: ['metaTitle'] }]);
+    expect(qc!.evaluatedAt).toBeInstanceOf(Date);
+  });
+
+  it('executes a warning-only change and records the warnings and risk level as evidence', async () => {
+    const { draft } = setupApprovedDraft({
+      proposedChanges: [metadataChange({ fields: { title: { current: 'Old Title', proposed: 'Tea' } } })],
+      page: { metaTitle: 'Old Title' },
+    });
+
+    const result = await executeApprovedChangeDraft({ draftId: String(draft._id), executorUserId });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(pageStore[0].metaTitle).toBe('Tea');
+    expect(result.execution.qualityControl!.riskLevel).toBe('medium');
+    expect(result.execution.qualityControl!.warnings.map((w) => w.code)).toEqual(['title_too_short']);
+  });
+
+  it('rejects a no-op proposal before any write', async () => {
+    const { draft } = setupApprovedDraft({
+      proposedChanges: [metadataChange({ fields: { title: { current: GOOD_TITLE, proposed: GOOD_TITLE } } })],
+      page: { metaTitle: GOOD_TITLE },
+    });
+
+    const result = await executeApprovedChangeDraft({ draftId: String(draft._id), executorUserId });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('no_effective_change');
+    expect(mockFindByIdAndUpdate).not.toHaveBeenCalled();
+    expect(execStore).toHaveLength(0);
+  });
+
+  it('rejects a malformed proposed value before any write', async () => {
+    const { draft } = setupApprovedDraft({
+      proposedChanges: [
+        metadataChange({
+          fields: { title: { current: 'Old Title', proposed: 42 } } as unknown as MetadataProposedChange['fields'],
+        }),
+      ],
+      page: { metaTitle: 'Old Title' },
+    });
+
+    const result = await executeApprovedChangeDraft({ draftId: String(draft._id), executorUserId });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('malformed_value');
+    expect(mockFindByIdAndUpdate).not.toHaveBeenCalled();
+    expect(execStore).toHaveLength(0);
+  });
+
+  it('a single no-op target in a multi-target draft leaves ZERO pages written', async () => {
+    const rec = makeRec();
+    recStore.push(rec);
+    pageStore.push(makePage({ slug: 'page-one', metaTitle: 'Title One' }));
+    pageStore.push(makePage({ slug: 'page-two', metaTitle: GOOD_TITLE }));
+    const draft = makeDraft({
+      recommendationId: rec._id,
+      recommendationFingerprint: rec.fingerprint,
+      proposedChanges: [
+        metadataChange({ targetUrl: pageUrl('page-one'), fields: { title: { current: 'Title One', proposed: GOOD_TITLE } } }),
+        metadataChange({ targetUrl: pageUrl('page-two'), fields: { title: { current: GOOD_TITLE, proposed: GOOD_TITLE } } }),
+      ],
+    });
+    draftStore.push(draft);
+
+    const result = await executeApprovedChangeDraft({ draftId: String(draft._id), executorUserId });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('no_effective_change');
+    expect(mockFindByIdAndUpdate).not.toHaveBeenCalled();
+    expect(pageStore.find((p) => p.slug === 'page-one')!.metaTitle).toBe('Title One');
+    expect(execStore).toHaveLength(0);
+  });
+
+  it('rejects two targets resolving to the same CMS page, writing nothing', async () => {
+    const rec = makeRec();
+    recStore.push(rec);
+    pageStore.push(makePage({ slug: 'about-us', metaTitle: 'Old Title' }));
+    const draft = makeDraft({
+      recommendationId: rec._id,
+      recommendationFingerprint: rec.fingerprint,
+      proposedChanges: [
+        metadataChange({ targetUrl: pageUrl('about-us'), fields: { title: { current: 'Old Title', proposed: GOOD_TITLE } } }),
+        metadataChange({
+          targetUrl: pageUrl('about-us', false),
+          fields: { title: { current: 'Old Title', proposed: 'Another Perfectly Fine Title' } },
+        }),
+      ],
+    });
+    draftStore.push(draft);
+
+    const result = await executeApprovedChangeDraft({ draftId: String(draft._id), executorUserId });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('ambiguous_target');
+    expect(mockFindByIdAndUpdate).not.toHaveBeenCalled();
+  });
+
+  it('reruns the evaluation at execution time — an earlier clean preflight is never trusted', async () => {
+    const { draft } = setupApprovedDraft({
+      proposedChanges: [metadataChange({ fields: { title: { current: 'Old Title', proposed: GOOD_TITLE } } })],
+      page: { metaTitle: 'Old Title' },
+    });
+
+    // Preview: clean and executable.
+    const preview = await evaluateExecutionPreflight({ draftId: String(draft._id) });
+    expect(preview.result.executable).toBe(true);
+
+    // Live state then changes underneath the operator.
+    pageStore[0].metaTitle = 'Someone Else Edited This';
+
+    const result = await executeApprovedChangeDraft({ draftId: String(draft._id), executorUserId });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('stale');
+    expect(mockFindByIdAndUpdate).not.toHaveBeenCalled();
+    expect(execStore).toHaveLength(0);
+  });
+
+  it('derives risk and warnings server-side — nothing in the draft can dictate them', async () => {
+    const { draft } = setupApprovedDraft({
+      proposedChanges: [metadataChange({ fields: { title: { current: 'Old Title', proposed: 'Tea' } } })],
+      page: { metaTitle: 'Old Title' },
+    });
+    // A draft claiming to be low risk with no warnings must not be believed.
+    (draft as unknown as Record<string, unknown>).qualityControl = { riskLevel: 'low', warnings: [] };
+    (draft as unknown as Record<string, unknown>).riskLevel = 'low';
+
+    const result = await executeApprovedChangeDraft({ draftId: String(draft._id), executorUserId });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.execution.qualityControl!.riskLevel).toBe('medium');
+    expect(result.execution.qualityControl!.warnings.map((w) => w.code)).toEqual(['title_too_short']);
+  });
+
+  it('records evidence for a duplicate-metadata warning without blocking the execution', async () => {
+    const rec = makeRec();
+    recStore.push(rec);
+    pageStore.push(makePage({ slug: 'about-us', metaTitle: 'Old Title' }));
+    pageStore.push(makePage({ slug: 'shipping-policy', metaTitle: GOOD_TITLE }));
+    const draft = makeDraft({
+      recommendationId: rec._id,
+      recommendationFingerprint: rec.fingerprint,
+      proposedChanges: [metadataChange({ fields: { title: { current: 'Old Title', proposed: GOOD_TITLE } } })],
+    });
+    draftStore.push(draft);
+
+    const result = await executeApprovedChangeDraft({ draftId: String(draft._id), executorUserId });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.execution.qualityControl!.riskLevel).toBe('high');
+    expect(result.execution.qualityControl!.warnings.map((w) => w.code)).toEqual(['duplicate_title']);
+    expect(pageStore.find((p) => p.slug === 'about-us')!.metaTitle).toBe(GOOD_TITLE);
+  });
+
+  it('records the full mutation scope when both fields are written', async () => {
+    const { draft } = setupApprovedDraft({
+      proposedChanges: [
+        metadataChange({
+          fields: {
+            title: { current: 'Old Title', proposed: GOOD_TITLE },
+            metaDescription: { current: 'Old description.', proposed: GOOD_DESCRIPTION },
+          },
+        }),
+      ],
+      page: { metaTitle: 'Old Title', metaDescription: 'Old description.' },
+    });
+
+    const result = await executeApprovedChangeDraft({ draftId: String(draft._id), executorUserId });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.execution.qualityControl!.changedFields).toEqual([
+      { targetUrl: pageUrl('about-us'), fields: ['metaTitle', 'metaDescription'] },
+    ]);
+    expect(result.execution.qualityControl!.riskLevel).toBe('medium');
+  });
+});
+
+// -----------------------------------------------------------------------------
+describe('toExecutionView — backward compatibility with pre-Phase-5.5 records', () => {
+  it('serializes an execution recorded before Phase 5.5 (no qualityControl) without throwing', () => {
+    const legacy = makeExecution({
+      targets: [
+        {
+          targetUrl: pageUrl('about-us'),
+          targetDocumentId: new mongoose.Types.ObjectId(),
+          before: { metaTitle: 'Old' },
+          proposed: { metaTitle: 'New' },
+          after: { metaTitle: 'New' },
+        },
+      ],
+    });
+
+    const view = toExecutionView(legacy as unknown as Parameters<typeof toExecutionView>[0]);
+    expect(view.qualityControl).toBeNull();
+    expect(view.targets).toHaveLength(1);
+  });
+
+  it('serializes a Phase 5.5 execution with its quality-control evidence intact', () => {
+    const modern = makeExecution({});
+    (modern as unknown as Record<string, unknown>).qualityControl = {
+      preflightVersion: PREFLIGHT_VERSION,
+      riskLevel: 'medium',
+      warnings: [{ code: 'title_too_short', message: 'short' }],
+      checks: [{ code: 'draft_valid', status: 'pass', message: 'ok' }],
+      changedFields: [{ targetUrl: pageUrl('about-us'), fields: ['metaTitle'] }],
+      evaluatedAt: new Date(),
+    };
+
+    const view = toExecutionView(modern as unknown as Parameters<typeof toExecutionView>[0]);
+    expect(view.qualityControl).not.toBeNull();
+    expect(view.qualityControl!.riskLevel).toBe('medium');
+    expect(view.qualityControl!.preflightVersion).toBe(PREFLIGHT_VERSION);
   });
 });
