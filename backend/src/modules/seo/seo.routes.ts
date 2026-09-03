@@ -13,6 +13,15 @@ const router = Router();
 //   - Phase 5.4B POST .../change-executions/:executionId/rollback (restores the
 //     values that execution captured in its immutable `before` snapshot)
 // Every other SEO route is non-mutating with respect to production SEO/content.
+// In particular Phase 5.5's preflight route is READ-ONLY: it evaluates the same
+// authoritative quality/eligibility rules the execute route enforces, but writes
+// nothing at all (not even a preview record), and its result is advisory — it is
+// never accepted back as authorization for a later execute request. It is POST
+// rather than GET deliberately: it is an explicit operator-triggered evaluation
+// of live state that must never be cached, prefetched or link-triggered, and it
+// matches the shape of every other action route here (/execute, /verify,
+// /complete, /rollback are all POST with an empty body), while every GET route
+// in this module is a pure history read.
 // In particular, Phase 5.4A verification and Phase 5.4B completion only ever
 // create their own immutable forensic records (SeoChangeVerification /
 // SeoChangeCompletion) — they never touch Page, and never write
@@ -31,6 +40,7 @@ adminRouter.patch('/seo/recommendations/:id/review', ctrl.reviewRecommendation);
 adminRouter.post('/seo/recommendations/:id/draft', ctrl.generateRecommendationDraft);
 adminRouter.get('/seo/recommendations/:id/drafts', ctrl.getRecommendationDraftHistory);
 adminRouter.get('/seo/change-drafts/:draftId', ctrl.getChangeDraft);
+adminRouter.post('/seo/change-drafts/:draftId/preflight', ctrl.preflightChangeDraft);
 adminRouter.post('/seo/change-drafts/:draftId/execute', ctrl.executeChangeDraft);
 adminRouter.get('/seo/change-drafts/:draftId/executions', ctrl.getChangeDraftExecutions);
 adminRouter.get('/seo/change-executions/:executionId', ctrl.getChangeExecution);

@@ -23,6 +23,7 @@ import {
   getExecutionById,
   toExecutionView,
 } from './services/change-execution.service';
+import { evaluateExecutionPreflight, toPreflightView } from './services/change-execution-preflight.service';
 import {
   verifyExecution,
   listVerificationsForExecution,
@@ -201,6 +202,39 @@ export const getChangeDraft = async (req: Request, res: Response) => {
   const draft = await getChangeDraftById(draftId);
   if (!draft) return res.status(404).json({ success: false, statusCode: 404, message: 'Draft not found' });
   return sendSuccess(res, toChangeDraftView(draft));
+};
+
+/**
+ * Phase 5.5 — execution quality controls. ADVISORY, READ-ONLY preflight for one
+ * change draft: runs the SAME authoritative evaluator the execute endpoint runs,
+ * and returns the blockers, quality warnings, per-check detail and deterministic
+ * risk level it produces. Writes nothing — no Page, no execution, and
+ * deliberately no persisted preflight record, so a preview can never mutate
+ * production or create noisy database history.
+ *
+ * The result is a point-in-time snapshot and is NEVER authorization: executing
+ * reruns the whole evaluation server-side inside the transaction. The request
+ * body is never consulted, so a caller cannot supply metadata values, the
+ * target, the recommendation, the risk level, the warnings, the check results,
+ * or the user — `draftId` comes from the URL and the admin from `req.user`.
+ *
+ * Only an unaddressable draft is an HTTP error (400 invalid id / 404 missing).
+ * Every other outcome is a completed evaluation and returns 200 with
+ * `executable: false` and structured blockers — reporting blockers as DATA is
+ * this endpoint's entire purpose, which is why it does not mirror the execute
+ * endpoint's 404/409 mapping.
+ */
+export const preflightChangeDraft = async (req: Request, res: Response) => {
+  const draftId = str(req.params.draftId) ?? '';
+  if (!mongoose.isValidObjectId(draftId)) {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'Invalid draft id' });
+  }
+
+  const evaluation = await evaluateExecutionPreflight({ draftId });
+  if (!evaluation.draft) {
+    return res.status(404).json({ success: false, statusCode: 404, message: 'Draft not found' });
+  }
+  return sendSuccess(res, toPreflightView(evaluation.result), 'Preflight evaluated');
 };
 
 /**

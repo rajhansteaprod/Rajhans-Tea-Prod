@@ -29,6 +29,47 @@ export interface ExecutedTarget {
   after: ExecutedFieldSnapshot;
 }
 
+/**
+ * Phase 5.5 — immutable quality-control evidence captured at execution time, so
+ * a successful execution can later answer: what evaluator version ran, what risk
+ * level it reported, what warnings existed, what checks passed, and which
+ * metadata fields were written.
+ *
+ * OPTIONAL by design: every Phase 5.3/5.4 execution recorded before Phase 5.5
+ * has no `qualityControl` and must keep loading and serializing safely. Old
+ * records are never rewritten, and nothing here is a mutable "latest score" —
+ * it is a snapshot of the evaluation that authorized this one execution.
+ *
+ * Codes are stored as plain strings rather than enums so that adding a future
+ * check/warning code can never invalidate an existing historical record.
+ */
+export interface ExecutionQualityWarning {
+  code: string;
+  message: string;
+  targetUrl?: string;
+}
+
+export interface ExecutionQualityCheck {
+  code: string;
+  status: string;
+  message: string;
+  targetUrl?: string;
+}
+
+export interface ExecutionQualityChangedFields {
+  targetUrl: string;
+  fields: string[];
+}
+
+export interface ExecutionQualityControl {
+  preflightVersion: string;
+  riskLevel: 'low' | 'medium' | 'high';
+  warnings: ExecutionQualityWarning[];
+  checks: ExecutionQualityCheck[];
+  changedFields: ExecutionQualityChangedFields[];
+  evaluatedAt: Date;
+}
+
 export interface ISeoChangeExecutionDoc extends Document {
   draftId: mongoose.Types.ObjectId;
   recommendationId: mongoose.Types.ObjectId;
@@ -42,6 +83,8 @@ export interface ISeoChangeExecutionDoc extends Document {
   executorVersion: string;
   errorCode: string | null;
   errorMessage: string | null;
+  /** Phase 5.5+. Absent on every execution recorded before Phase 5.5. */
+  qualityControl?: ExecutionQualityControl;
   createdAt: Date;
 }
 
@@ -64,6 +107,45 @@ const executedTargetSchema = new Schema<ExecutedTarget>(
   { _id: false },
 );
 
+const executionQualityWarningSchema = new Schema<ExecutionQualityWarning>(
+  {
+    code: { type: String, required: true },
+    message: { type: String, required: true },
+    targetUrl: { type: String },
+  },
+  { _id: false },
+);
+
+const executionQualityCheckSchema = new Schema<ExecutionQualityCheck>(
+  {
+    code: { type: String, required: true },
+    status: { type: String, required: true },
+    message: { type: String, required: true },
+    targetUrl: { type: String },
+  },
+  { _id: false },
+);
+
+const executionQualityChangedFieldsSchema = new Schema<ExecutionQualityChangedFields>(
+  {
+    targetUrl: { type: String, required: true },
+    fields: { type: [String], required: true },
+  },
+  { _id: false },
+);
+
+const executionQualityControlSchema = new Schema<ExecutionQualityControl>(
+  {
+    preflightVersion: { type: String, required: true },
+    riskLevel: { type: String, enum: ['low', 'medium', 'high'], required: true },
+    warnings: { type: [executionQualityWarningSchema], default: [] },
+    checks: { type: [executionQualityCheckSchema], default: [] },
+    changedFields: { type: [executionQualityChangedFieldsSchema], default: [] },
+    evaluatedAt: { type: Date, required: true },
+  },
+  { _id: false },
+);
+
 const seoChangeExecutionSchema = new Schema<ISeoChangeExecutionDoc>(
   {
     draftId: { type: Schema.Types.ObjectId, ref: 'SeoChangeDraft', required: true },
@@ -78,6 +160,9 @@ const seoChangeExecutionSchema = new Schema<ISeoChangeExecutionDoc>(
     executorVersion: { type: String, required: true },
     errorCode: { type: String, default: null },
     errorMessage: { type: String, default: null },
+    // No `default` — a pre-Phase-5.5 record must hydrate with qualityControl
+    // undefined rather than being silently given a fabricated empty evaluation.
+    qualityControl: { type: executionQualityControlSchema, required: false },
   },
   { timestamps: { createdAt: true, updatedAt: false } },
 );

@@ -1,16 +1,11 @@
-import mongoose, { ClientSession } from 'mongoose';
-import { SeoRecommendation } from '../models/seo-recommendation.model';
-import { SeoChangeDraft, MetadataProposedChange } from '../models/seo-change-draft.model';
+import mongoose from 'mongoose';
 import {
   SeoChangeExecution,
   ISeoChangeExecutionDoc,
-  ExecutedFieldSnapshot,
   ExecutedTarget,
 } from '../models/seo-change-execution.model';
-import { Page, IPageDoc } from '../../cms/models/page.model';
-import { CANONICAL_PAGE_SLUG } from '../../cms/page-slug.util';
 import { CmsService } from '../../cms/services/cms.service';
-import { seoConfig } from '../seo.config';
+import { evaluateExecutionPreflight, PreflightBlockerCode } from './change-execution-preflight.service';
 
 /**
  * Phase 5.3 — controlled execution. Takes one APPROVED, OPEN recommendation's
@@ -21,26 +16,21 @@ import { seoConfig } from '../seo.config';
  * module that mutates production content. Deliberately narrow: only
  * kind:'metadata' changes targeting a live `/page/:slug/` CMS page URL are
  * executable; every other kind/target causes the WHOLE draft to be rejected.
+ *
+ * Phase 5.5 — every one of those eligibility rules, target resolutions and the
+ * exact stale comparison now live in ChangeExecutionPreflightService, which is
+ * ALSO what the advisory admin preflight endpoint calls. There is exactly one
+ * implementation, so a preview can never say "safe" while the executor applies
+ * materially different rules. The evaluation is rerun here, session-pinned
+ * inside the transaction, immediately before Pass 2 — a preflight result
+ * returned to a browser earlier is never trusted as authorization.
  */
 export const EXECUTOR_VERSION = '5.3.0-metadata-page-v1';
 
 const cmsService = new CmsService();
 
-export type ExecuteChangeDraftError =
-  | 'invalid_id'
-  | 'not_found'
-  | 'recommendation_not_found'
-  | 'not_draft'
-  | 'not_open'
-  | 'not_approved'
-  | 'fingerprint_mismatch'
-  | 'invalid_draft'
-  | 'unsupported_kind'
-  | 'unsupported_field'
-  | 'unsupported_target'
-  | 'target_not_found'
-  | 'stale'
-  | 'already_executed';
+/** Unchanged Phase 5.3 vocabulary; Phase 5.5 added no_effective_change/malformed_value/ambiguous_target, which map to 409 like every other eligibility conflict. */
+export type ExecuteChangeDraftError = PreflightBlockerCode;
 
 export type ExecuteChangeDraftResult =
   | { ok: true; execution: ISeoChangeExecutionDoc }
@@ -60,103 +50,24 @@ function isDuplicateKeyError(err: unknown): boolean {
   return !!err && typeof err === 'object' && (err as { code?: number }).code === 11000;
 }
 
-/** Mongo stores metaTitle/metaDescription as '' by default, never null/undefined — normalize accordingly for comparison only. */
-function normalizeForCompare(value: string | null | undefined): string {
-  return value ?? '';
-}
-
-type FieldCheckResult = { ok: true } | { ok: false; message: string };
-
-const ALLOWED_METADATA_FIELD_KEYS = ['title', 'metaDescription'];
-
-/** v1 may only execute title/metaDescription. h1 (or any other field) disqualifies the whole change. */
-function checkMetadataFields(fields: MetadataProposedChange['fields']): FieldCheckResult {
-  const keys = Object.keys(fields ?? {});
-  const unknownKeys = keys.filter((k) => k !== 'h1' && !ALLOWED_METADATA_FIELD_KEYS.includes(k));
-  if (unknownKeys.length) {
-    return { ok: false, message: `Unsupported metadata field(s): ${unknownKeys.join(', ')}` };
-  }
-  if (fields?.h1 !== undefined) {
-    return { ok: false, message: 'h1 changes cannot be executed in this phase' };
-  }
-  if (!fields?.title && !fields?.metaDescription) {
-    return { ok: false, message: 'No executable field (title/metaDescription) was proposed' };
-  }
-  return { ok: true };
-}
-
-type StaleCheckResult = { ok: true } | { ok: false; message: string };
-
-/** Compares the draft's recorded `current` value against the live Page value, at execution time. */
-function checkStale(fields: MetadataProposedChange['fields'], page: IPageDoc): StaleCheckResult {
-  if (fields.title && normalizeForCompare(fields.title.current) !== normalizeForCompare(page.metaTitle)) {
-    return { ok: false, message: `Live metaTitle for "${page.slug}" has changed since this draft was generated` };
-  }
-  if (
-    fields.metaDescription &&
-    normalizeForCompare(fields.metaDescription.current) !== normalizeForCompare(page.metaDescription)
-  ) {
-    return { ok: false, message: `Live metaDescription for "${page.slug}" has changed since this draft was generated` };
-  }
-  return { ok: true };
-}
-
-export type TargetResolutionFailureReason = 'unsupported_host' | 'unsupported_path' | 'not_found';
-export type TargetResolution = { ok: true; page: IPageDoc } | { ok: false; reason: TargetResolutionFailureReason };
-
-/** Only `/page/:slug/` (or without the trailing slash) on the configured public origin resolves — everything else (other hosts, /blog/, /product/, /catalog/, the homepage, admin/api paths) is unsupported. */
-const CMS_PAGE_PATH_PATTERN = /^\/page\/([^/]+)\/?$/;
-
-export async function resolveCmsPageTarget(targetUrl: string, session?: ClientSession): Promise<TargetResolution> {
-  let parsed: URL;
-  let base: URL;
-  try {
-    parsed = new URL(targetUrl);
-    base = new URL(seoConfig.baseUrl);
-  } catch {
-    return { ok: false, reason: 'unsupported_path' };
-  }
-
-  // Only a bare canonical page URL is executable — a query string, a fragment,
-  // or embedded userinfo credentials each change what the URL actually
-  // addresses (or imply context this phase never accounts for), so any of
-  // them disqualifies the target even when the origin/path would otherwise
-  // match.
-  if (parsed.search !== '' || parsed.hash !== '' || parsed.username !== '' || parsed.password !== '') {
-    return { ok: false, reason: 'unsupported_path' };
-  }
-
-  if (parsed.origin.toLowerCase() !== base.origin.toLowerCase()) {
-    return { ok: false, reason: 'unsupported_host' };
-  }
-
-  const match = CMS_PAGE_PATH_PATTERN.exec(parsed.pathname);
-  const urlSlug = match?.[1];
-  if (!urlSlug) {
-    return { ok: false, reason: 'unsupported_path' };
-  }
-
-  // A CMS page may still be stored under a legacy slug that 301s to the
-  // canonical URL slug at the edge — try both, canonical first. Only a
-  // PUBLISHED page is executable — v1 is explicitly about live CMS metadata,
-  // so a draft/unpublished page must resolve as not_found (execution fails
-  // before any write), the same as if no page existed at all.
-  const legacySlug = Object.keys(CANONICAL_PAGE_SLUG).find((k) => CANONICAL_PAGE_SLUG[k] === urlSlug);
-  const candidates = legacySlug ? [urlSlug, legacySlug] : [urlSlug];
-  for (const slug of candidates) {
-    const page = await Page.findOne({ slug, status: 'published' }).session(session ?? null).exec();
-    if (page) return { ok: true, page };
-  }
-  return { ok: false, reason: 'not_found' };
-}
+// Target resolution moved into the preflight evaluator in Phase 5.5 (it is a
+// pre-write eligibility concern shared by preview and execution). Re-exported
+// here so Phase 5.4B rollback — which must resolve targets by exactly the same
+// rules — keeps its existing import path.
+export {
+  resolveCmsPageTarget,
+  type TargetResolution,
+  type TargetResolutionFailureReason,
+} from './change-execution-preflight.service';
 
 /**
  * Execute one draft's metadata changes, addressed by the draft's own Mongo
  * `_id`. Every eligibility rule is re-checked against fresh, session-pinned
  * reads immediately before any write. All targets are resolved and validated
- * (including the stale-current comparison) before a single Page is touched;
- * if every check passes, all Page writes plus the immutable execution record
- * commit together in one Mongo transaction, or none of them do.
+ * (including the stale-current comparison and the Phase 5.5 quality blockers)
+ * before a single Page is touched; if every check passes, all Page writes plus
+ * the immutable execution record commit together in one Mongo transaction, or
+ * none of them do.
  */
 export async function executeApprovedChangeDraft(opts: {
   draftId: string;
@@ -186,73 +97,22 @@ export async function executeApprovedChangeDraft(opts: {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const draft = await SeoChangeDraft.findById(draftId).session(session).exec();
-    if (!draft) throw new ExecutionRejected('not_found', 'Draft not found');
-    if (draft.status !== 'draft') {
-      throw new ExecutionRejected('not_draft', 'Only an active (non-superseded) draft can be executed');
-    }
+    // PASS 1 — the authoritative preflight evaluation, session-pinned against
+    // fresh data. Resolves and validates EVERY target and performs NO WRITES.
+    // If anything blocks, the whole draft is rejected with zero attempted Page
+    // writes — a real property of the code, not something left to the
+    // transaction to paper over.
+    const { result, prepared, draft, recommendation } = await evaluateExecutionPreflight({ draftId, session });
 
-    const recommendation = await SeoRecommendation.findById(draft.recommendationId).session(session).exec();
-    if (!recommendation) throw new ExecutionRejected('recommendation_not_found', 'Recommendation not found');
-    if (recommendation.status !== 'open') {
-      throw new ExecutionRejected('not_open', 'Only an open recommendation can be executed');
+    if (!result.executable) {
+      // Blockers are collected in Phase 5.3's original evaluation order, so the
+      // first one is exactly the error Phase 5.3 would have returned.
+      const [blocker] = result.blockers;
+      throw new ExecutionRejected(blocker.code, blocker.message);
     }
-    if (recommendation.reviewStatus !== 'approved') {
-      throw new ExecutionRejected('not_approved', 'Only an approved recommendation can be executed');
-    }
-    if (draft.recommendationFingerprint !== recommendation.fingerprint) {
-      throw new ExecutionRejected(
-        'fingerprint_mismatch',
-        'The recommendation has changed since this draft was generated',
-      );
-    }
-    if (!draft.validation.isValid) {
-      throw new ExecutionRejected('invalid_draft', 'This draft failed validation and cannot be executed');
-    }
-    if (!draft.proposedChanges.length) {
-      throw new ExecutionRejected('invalid_draft', 'This draft has no proposed changes');
-    }
-
-    const metadataChanges: MetadataProposedChange[] = [];
-    for (const change of draft.proposedChanges) {
-      if (change.kind !== 'metadata') {
-        throw new ExecutionRejected(
-          'unsupported_kind',
-          `Change kind "${change.kind}" cannot be executed in this phase`,
-        );
-      }
-      const fieldCheck = checkMetadataFields(change.fields);
-      if (!fieldCheck.ok) throw new ExecutionRejected('unsupported_field', fieldCheck.message);
-      metadataChanges.push(change);
-    }
-
-    // PASS 1 — resolve, validate, and stale-check EVERY target. NO WRITES.
-    // If any target fails, the whole draft is rejected with zero attempted
-    // Page writes — this is a real property of the code, not something left
-    // to the transaction to paper over.
-    const prepared: { targetUrl: string; page: IPageDoc; before: ExecutedFieldSnapshot; proposed: ExecutedFieldSnapshot }[] = [];
-    for (const change of metadataChanges) {
-      const target = await resolveCmsPageTarget(change.targetUrl, session);
-      if (!target.ok) {
-        if (target.reason === 'not_found') {
-          throw new ExecutionRejected('target_not_found', `No CMS page found for ${change.targetUrl}`);
-        }
-        throw new ExecutionRejected('unsupported_target', `${change.targetUrl} is not an executable CMS page URL`);
-      }
-
-      const staleCheck = checkStale(change.fields, target.page);
-      if (!staleCheck.ok) throw new ExecutionRejected('stale', staleCheck.message);
-
-      const proposed: ExecutedFieldSnapshot = {};
-      if (change.fields.title) proposed.metaTitle = change.fields.title.proposed;
-      if (change.fields.metaDescription) proposed.metaDescription = change.fields.metaDescription.proposed;
-
-      const before: ExecutedFieldSnapshot = {
-        metaTitle: target.page.metaTitle,
-        metaDescription: target.page.metaDescription,
-      };
-
-      prepared.push({ targetUrl: change.targetUrl, page: target.page, before, proposed });
+    // Unreachable when executable — a defensive narrow, never a silent success.
+    if (!draft || !recommendation) {
+      throw new ExecutionRejected('not_found', 'Draft not found');
     }
 
     // PASS 2 — every target passed Pass 1; only now perform the writes.
@@ -286,6 +146,16 @@ export async function executeApprovedChangeDraft(opts: {
           executorVersion: EXECUTOR_VERSION,
           errorCode: null,
           errorMessage: null,
+          // Immutable quality-control evidence for THIS execution: the exact
+          // evaluation that authorized it, never a mutable running score.
+          qualityControl: {
+            preflightVersion: result.evaluatorVersion,
+            riskLevel: result.riskLevel,
+            warnings: result.warnings,
+            checks: result.checks,
+            changedFields: result.changedFields,
+            evaluatedAt: result.evaluatedAt,
+          },
         },
       ],
       { session },
@@ -320,6 +190,7 @@ export async function getExecutionById(executionId: string): Promise<ISeoChangeE
 }
 
 export function toExecutionView(doc: ISeoChangeExecutionDoc) {
+  const qc = doc.qualityControl;
   return {
     id: String(doc._id),
     draftId: String(doc.draftId),
@@ -338,6 +209,18 @@ export function toExecutionView(doc: ISeoChangeExecutionDoc) {
     status: doc.status,
     generatorVersion: doc.generatorVersion,
     executorVersion: doc.executorVersion,
+    // Null for every execution recorded before Phase 5.5 — those records are
+    // never rewritten and must keep serializing safely.
+    qualityControl: qc
+      ? {
+          preflightVersion: qc.preflightVersion,
+          riskLevel: qc.riskLevel,
+          warnings: qc.warnings,
+          checks: qc.checks,
+          changedFields: qc.changedFields,
+          evaluatedAt: qc.evaluatedAt,
+        }
+      : null,
     createdAt: doc.createdAt,
   };
 }
