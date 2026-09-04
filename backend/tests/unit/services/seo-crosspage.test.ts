@@ -10,6 +10,7 @@ import {
   resolveLinkTargets,
   runCrossPageRules,
 } from '../../../src/modules/seo/services/crosspage.service';
+import { EXTRACTOR_VERSION } from '../../../src/modules/seo/services/parser.service';
 import { AuditContext, FetchResultLike, LinkResolution, PageObservation } from '../../../src/modules/seo/seo.types';
 import { fingerprint, normalizeUrl } from '../../../src/modules/seo/seo.util';
 
@@ -42,6 +43,14 @@ function page(path: string, over: Partial<PageObservation> = {}): PageObservatio
     structuredDataTypes: [],
     wordCount: 100,
     contentHash: 'hash',
+    h2: [],
+    h3: [],
+    headingOutline: [{ level: 1, text: 'Heading' }],
+    normalizedText: '',
+    normalizedTextChars: 0,
+    normalizedTextTruncated: false,
+    faqSignals: { questionHeadings: 0, faqHeadingPresent: false, faqSchemaPresent: false },
+    extractorVersion: EXTRACTOR_VERSION,
     inSitemap: true,
     fetchError: null,
     ...over,

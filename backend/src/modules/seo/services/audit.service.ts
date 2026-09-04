@@ -56,6 +56,17 @@ async function observe(url: string, sitemapUrls: Set<string>): Promise<PageObser
       structuredDataTypes: [],
       wordCount: 0,
       contentHash: null,
+      // A page that was never fetched has no content signals to report. The
+      // extractor version stays null so downstream analysis sees "not
+      // captured" rather than "captured and empty".
+      h2: [],
+      h3: [],
+      headingOutline: [],
+      normalizedText: '',
+      normalizedTextChars: 0,
+      normalizedTextTruncated: false,
+      faqSignals: null,
+      extractorVersion: null,
       inSitemap,
       fetchError: res.error,
     };
@@ -84,6 +95,17 @@ async function observe(url: string, sitemapUrls: Set<string>): Promise<PageObser
     structuredDataTypes: parsed?.structuredDataTypes ?? [],
     wordCount: parsed?.wordCount ?? 0,
     contentHash: parsed?.contentHash ?? null,
+    // Content signals exist only when the response actually parsed as HTML —
+    // a 200 non-HTML body yields `parsed === null` and, correctly, a null
+    // extractorVersion rather than an empty-but-captured structure.
+    h2: parsed?.h2 ?? [],
+    h3: parsed?.h3 ?? [],
+    headingOutline: parsed?.headingOutline ?? [],
+    normalizedText: parsed?.normalizedText ?? '',
+    normalizedTextChars: parsed?.normalizedTextChars ?? 0,
+    normalizedTextTruncated: parsed?.normalizedTextTruncated ?? false,
+    faqSignals: parsed?.faqSignals ?? null,
+    extractorVersion: parsed?.extractorVersion ?? null,
     inSitemap,
     fetchError: res.error,
   };

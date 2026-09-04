@@ -53,6 +53,32 @@ export interface InternalLinkRef {
 }
 
 /**
+ * One heading occurrence in DOCUMENT order (Phase 6.1). The flat `h1`/`h2`/`h3`
+ * arrays lose the interleaving; this keeps it, so hierarchy questions (does the
+ * body have any H2 at all? does an H3 appear before any H2?) are answerable
+ * from stored state without re-crawling.
+ */
+export interface HeadingRef {
+  level: 1 | 2 | 3;
+  text: string;
+}
+
+/**
+ * Raw, deterministic FAQ indicators captured at parse time (Phase 6.1). These
+ * are OBSERVATIONS, not a verdict — whether a page "has an FAQ" is a judgement
+ * the analysis layer makes from these counts, so that rule can be revised
+ * later without recrawling the site.
+ */
+export interface FaqSignals {
+  /** Headings ending in a question mark. */
+  questionHeadings: number;
+  /** A heading literally naming an FAQ section. */
+  faqHeadingPresent: boolean;
+  /** FAQPage / Question JSON-LD was present. */
+  faqSchemaPresent: boolean;
+}
+
+/**
  * The resolved state of a single internal link target (fetched once per unique
  * URL). Powers broken-internal-link / internal-link-to-redirect and the
  * trailing-slash-aware inbound graph used by orphan-page.
@@ -156,6 +182,20 @@ export interface PageObservation {
   structuredDataTypes: string[];
   wordCount: number;
   contentHash: string | null;
+  // ── Phase 6.1 content signals ──
+  // Present on every observation produced by this build. On a snapshot READ
+  // back from the database they may be absent, because snapshots written
+  // before Phase 6.1 never carried them — `extractorVersion === null` is the
+  // authoritative "structure was never captured" marker, and analysis must
+  // degrade explicitly rather than read absence as "the page has no headings".
+  h2: string[];
+  h3: string[];
+  headingOutline: HeadingRef[];
+  normalizedText: string;
+  normalizedTextChars: number;
+  normalizedTextTruncated: boolean;
+  faqSignals: FaqSignals | null;
+  extractorVersion: string | null;
   // Sitemap relationship (filled by the analyzer, not the fetcher)
   inSitemap: boolean;
   fetchError: string | null;

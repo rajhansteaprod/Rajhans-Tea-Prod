@@ -16,6 +16,7 @@ import {
 import { scoreRecommendation, classifyUrl } from '../../../src/modules/seo/services/recommendation.scoring';
 import { DetectedIssue, PageObservation } from '../../../src/modules/seo/seo.types';
 import { normalizeUrl, fingerprint } from '../../../src/modules/seo/seo.util';
+import { EXTRACTOR_VERSION } from '../../../src/modules/seo/services/parser.service';
 
 const BASE = 'https://rajhanstea.com';
 const abs = (p: string) => normalizeUrl(`${BASE}${p}`);
@@ -28,7 +29,10 @@ function page(path: string, over: Partial<PageObservation> = {}): PageObservatio
     redirectChain: [], finalUrl: url, finalStatus: 200, title: 'Title', metaDescription: 'Desc that is reasonably long enough here.',
     robotsMeta: null, canonical: normalizedUrl, h1: ['H1'], imagesTotal: 0, imagesMissingAlt: 0,
     internalLinks: [], internalLinkDetails: [], images: [], structuredDataTypes: [], wordCount: 800,
-    contentHash: 'h', inSitemap: true, fetchError: null, ...over,
+    contentHash: 'h', h2: [], h3: [], headingOutline: [{ level: 1, text: 'H1' }], normalizedText: '',
+    normalizedTextChars: 0, normalizedTextTruncated: false,
+    faqSignals: { questionHeadings: 0, faqHeadingPresent: false, faqSchemaPresent: false },
+    extractorVersion: EXTRACTOR_VERSION, inSitemap: true, fetchError: null, ...over,
   };
 }
 
