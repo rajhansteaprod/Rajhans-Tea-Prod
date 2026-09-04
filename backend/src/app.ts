@@ -15,6 +15,7 @@ import apiV1Routes from './api/v1/routes';
 import metricsRoutes from './api/v1/routes/metrics.routes';
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Security & parsing
 app.use(helmet());
