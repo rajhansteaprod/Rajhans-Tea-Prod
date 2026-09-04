@@ -20,11 +20,14 @@ export class AdminSettingsComponent implements OnInit {
   readonly referralSettings = signal<any>(null);
   readonly saving = signal(false);
   readonly saved = signal(false);
+  /** Trust strip content, edited as one point per line. */
+  readonly trustPointsText = signal('');
 
   ngOnInit(): void {
     this.http.get<{ data: any }>(`${this.api}/admin/settings`).subscribe({
       next: (res) => {
         this.settings.set(res.data);
+        this.trustPointsText.set((res.data?.trustPoints ?? []).join('\n'));
       },
     });
     this.http.get<{ data: any }>(`${this.api}/admin/promotions/loyalty/settings`).subscribe({
@@ -46,6 +49,9 @@ export class AdminSettingsComponent implements OnInit {
 
     if (ls) ls.isActive = s.features.loyaltyEnabled;
     if (rs) rs.isActive = s.features.referralEnabled;
+
+    // Trust strip: split the textarea into a clean list of points
+    s.trustPoints = this.trustPointsText().split('\n').map((t) => t.trim()).filter(Boolean);
 
     // Save all three in parallel
     let pending = 3;

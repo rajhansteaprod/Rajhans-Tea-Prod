@@ -16,6 +16,12 @@ import metricsRoutes from './api/v1/routes/metrics.routes';
 
 const app = express();
 
+// Behind exactly one reverse proxy (tea-nginx). Lets Express derive the real
+// client IP from X-Forwarded-For so rate limiting keys per-user (not per-proxy)
+// and express-rate-limit stops rejecting the header. One hop only — nothing
+// runs in front of tea-nginx — so a spoofed X-Forwarded-For can't be trusted.
+app.set('trust proxy', 1);
+
 // Security & parsing
 app.use(helmet());
 app.use(cors({ origin: config.cors.origin, credentials: true }));
@@ -41,7 +47,13 @@ import { observabilityMiddleware } from './middleware/observability.middleware';
 app.use(observabilityMiddleware);
 
 // Static file serving for uploaded images
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+// helmet() defaults Cross-Origin-Resource-Policy to same-origin, which blocks
+// <img> loads from a different origin (e.g. Angular dev server on :4200).
+app.use(
+  '/uploads',
+  helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }),
+  express.static(path.join(process.cwd(), 'uploads')),
+);
 
 // Routes
 app.use('/api/v1', apiV1Routes);

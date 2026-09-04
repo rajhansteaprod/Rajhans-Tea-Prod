@@ -1,4 +1,75 @@
+import { environment } from '../../../environments/environment';
+
 declare const fbq: ((...args: unknown[]) => void) | undefined;
+
+/**
+ * Generates a UUID for a single event occurrence, used as Meta's `eventID`
+ * (browser) and, later, the CAPI `event_id`, so the two collapse into one.
+ * Falls back to a random string where `crypto.randomUUID` is unavailable.
+ */
+export function generateEventId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'evt-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+}
+
+/**
+ * Fires a Meta Pixel STANDARD event with a controlled `eventID` and returns it,
+ * so the same id can later be sent as the CAPI `event_id` for deduplication.
+ * Pass an explicit `eventId` for events whose id must be deterministic (e.g.
+ * Purchase = order id). No-ops firing the pixel during SSR / when the script is
+ * blocked, but still returns an id.
+ */
+export function trackStandardEvent(
+  eventName: string,
+  params?: Record<string, unknown>,
+  eventId?: string,
+): string {
+  const id = eventId ?? generateEventId();
+  if (typeof fbq !== 'undefined') {
+    fbq('track', eventName, params ?? {}, { eventID: id });
+  }
+  return id;
+}
+
+function readCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return m ? decodeURIComponent(m[1]) : undefined;
+}
+
+/**
+ * Mirrors a standard event to the server (Conversions API) using the SAME
+ * eventId the pixel used, so Meta deduplicates the browser + server events.
+ * Sends only fbp/fbc from the browser — no PII (the server derives PII from the
+ * authenticated session). Fire-and-forget; never surfaces errors to the user.
+ */
+export function sendCapiBeacon(
+  eventName: string,
+  eventId: string,
+  customData?: Record<string, unknown>,
+): void {
+  if (typeof fetch === 'undefined') return; // SSR guard
+  try {
+    fetch(`${environment.apiUrl}/catalog/meta/track`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      keepalive: true,
+      body: JSON.stringify({
+        eventName,
+        eventId,
+        customData,
+        eventSourceUrl: typeof location !== 'undefined' ? location.href : undefined,
+        fbp: readCookie('_fbp'),
+        fbc: readCookie('_fbc'),
+      }),
+    }).catch(() => {});
+  } catch {
+    /* never break the page on analytics */
+  }
+}
 
 /**
  * Fires a Meta Pixel STANDARD event (ViewContent, AddToCart, AddPaymentInfo,

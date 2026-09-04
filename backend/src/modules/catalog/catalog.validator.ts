@@ -115,7 +115,15 @@ export const listProductsSchema = z.object({
 
 const attributesSchema = z.record(z.string(), z.string()).optional();
 const regionSchema = z.enum(['Assam', 'Darjeeling', 'Nilgiri', 'Dooars']).nullable().optional();
-const bestTakenForSchema = z.enum(['Morning', 'Noon', 'Evening']).nullable().optional();
+// Accepts an array of times (multi-select). A single string or null is coerced
+// to an array / [] so older clients and "clear the field" still work.
+const bestTakenForSchema = z
+  .preprocess(
+    (v) => (v == null ? v : Array.isArray(v) ? v : [v]),
+    z.array(z.enum(['Morning', 'Noon', 'Evening'])),
+  )
+  .nullable()
+  .optional();
 // null = "clear the discount"; number = set it
 const discountedPriceSchema = z.number({ coerce: true }).min(0).nullable().optional();
 
@@ -129,6 +137,7 @@ const inlineVariantSchema = z.object({
   price: z.coerce.number().gt(0),
   discountedPrice: discountedPriceSchema,
   stock: z.coerce.number().int().min(0).optional(),
+  costPerCupText: z.string().trim().max(120).optional(),
 });
 
 export const createProductSchema = z.object({
@@ -137,6 +146,8 @@ export const createProductSchema = z.object({
     slug: optStr(220),
     description: optStr(5000),
     shortDescription: optStr(300),
+    brewingGuide: z.array(z.string().trim().max(300)).max(30).optional(),
+    sourcingInfo: z.array(z.string().trim().max(300)).max(30).optional(),
     categoryId: mongoId,
     collectionIds: z.array(mongoId).optional(),
     basePrice: z.coerce.number().min(0),
@@ -167,6 +178,8 @@ export const updateProductSchema = z.object({
     slug: optStr(220),
     description: optStr(5000),
     shortDescription: optStr(300),
+    brewingGuide: z.array(z.string().trim().max(300)).max(30).optional(),
+    sourcingInfo: z.array(z.string().trim().max(300)).max(30).optional(),
     categoryId: z.preprocess((v) => (v === '' ? undefined : v), mongoId.optional()),
     collectionIds: z.array(mongoId).optional(),
     basePrice: z.coerce.number().min(0).optional(),
@@ -200,6 +213,7 @@ const variantBodySchema = z.object({
   price: z.number({ coerce: true }).gt(0),
   discountedPrice: discountedPriceSchema,
   cost: z.number({ coerce: true }).min(0).optional(),
+  costPerCupText: z.string().trim().max(120).optional(),
   stock: z.coerce.number().int().min(0).optional(),
   trackInventory: z.boolean().optional(),
   images: z.array(z.string().url().or(z.string().startsWith('/'))).optional(),
