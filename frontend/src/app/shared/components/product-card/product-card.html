@@ -1,19 +1,24 @@
-<div class="product-card" (click)="onCardClick()">
-  <!-- Image Container (Large, Dominant) -->
-  <div
-    class="product-card__image-container"
-    [style.backgroundImage]="'url(' + getImages()[currentImageIndex()] + ')'"
-    [style.--secondary-image]="getSecondaryImage()"
-    (mouseenter)="onHover(true)"
-    (mouseleave)="onHover(false)">
+<div class="product-card">
+  <!-- Image Container (Large, Dominant) — crawlable link to the product page -->
+  <a
+    class="product-card__media-link"
+    [routerLink]="['/product', product.slug]"
+    [attr.aria-label]="product.name">
+    <div
+      class="product-card__image-container"
+      [style.backgroundImage]="'url(' + getImages()[currentImageIndex()] + ')'"
+      [style.--secondary-image]="getSecondaryImage()"
+      (mouseenter)="onHover(true)"
+      (mouseleave)="onHover(false)">
 
-    @if (product.showBadge && product.badgeText) {
-      <div class="product-badge">{{ product.badgeText }}</div>
-    }
+      @if (product.showBadge && product.badgeText) {
+        <div class="product-badge">{{ product.badgeText }}</div>
+      }
 
 
 
-  </div>
+    </div>
+  </a>
 
   <!-- Content Section -->
   <div class="product-card__content">
@@ -21,11 +26,7 @@
       <!-- Title & selected-variant weight -->
       <div class="product-card__title-desc">
         <h3 class="product-card__name">
-          <a class="product-card__name-link"
-             [routerLink]="['/product', product.slug]"
-             (click)="$event.stopPropagation()">
-            {{ product.name }}
-          </a>
+          <a class="product-card__name-link" [routerLink]="['/product', product.slug]">{{ product.name }}</a>
         </h3>
         @if (getSelectedVariant()) {
           <p class="product-card__weight">{{ getSelectedVariant()!.name }}</p>
@@ -69,7 +70,7 @@
         }
       </div>
 
-
+      
     </div>
 
 
@@ -96,7 +97,7 @@
           <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
         </svg>
       </button>
-
+     
     </div>
   </div>
 </div>

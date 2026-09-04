@@ -86,7 +86,25 @@ export class ProductsPageComponent implements OnInit {
   });
 
   constructor() {
+    // SEO for the product listing page. Set in the constructor so it's present
+    // during build-time prerendering of /products.
     this.titleService.setTitle('All Products — Rajhans Tea');
+    this.meta.updateTag({
+      name: 'description',
+      content:
+        'Shop the full range of Rajhans Tea — premium Assam, green, and specialty loose-leaf teas. Fresh, ethically sourced, and delivered across India.',
+    });
+
+    // Self-canonical for the listing page (trailing slash matches the sitemap and
+    // the prerendered directory URL the site 301s to).
+    const pageUrl = 'https://rajhanstea.com/products/';
+    let canonical = this.document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = this.document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      this.document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', pageUrl);
   }
 
   ngOnInit(): void {

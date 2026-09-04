@@ -63,6 +63,15 @@
 
 .pd__left {
   min-width: 0;
+  position: sticky;
+  top: calc(#{$header-height} + #{$space-lg});
+  align-self: start;
+
+  // On mobile the columns stack, so sticky must be disabled
+  @include respond-to(md) {
+    position: static;
+    top: auto;
+  }
 }
 
 // ═══════════════════════════════════════
@@ -72,7 +81,7 @@
 .pd__zoom-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 4/5;
+  aspect-ratio: 1/1;
   background: rgb(249, 250, 251); // soft gray background
   cursor: pointer;
   overflow: hidden;
@@ -81,7 +90,20 @@
   border: 1px solid rgba($color-mono-dark, 0.08);
 }
 
+// Ambient backdrop — the empty bars left by `object-fit: contain`, painted with
+// the colours of the image edge they sit against so a portrait photo (e.g. 5:7)
+// reads as one piece with the square frame. The component sets the background
+// inline; this is the neutral shown until it resolves.
+.pd__ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: rgb(249, 250, 251);
+}
+
 .pd__main-img {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -336,6 +358,29 @@
   color: #4b5563;
 }
 
+.pd__rating-score {
+  font-family: $font-family-body !important;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.pd__rating-link {
+  font-family: $font-family-body !important;
+  font-size: 14px;
+  color: #4b5563;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+
+  &:hover {
+    color: #d8421f;
+  }
+}
+
 // Short description
 .pd__short-desc {
   font-family: $font-family-body !important;
@@ -440,6 +485,15 @@
   text-transform: uppercase;
   letter-spacing: 0.02em;
   align-self: center;
+}
+
+// Cost per cup (variant-dependent)
+.pd__cost-per-cup {
+  font-family: $font-family-body !important;
+  font-size: 14px;
+  font-weight: 500;
+  color: #d8421f; // brand orange-red
+  margin: 8px 0 0 0;
 }
 
 // Quantity Section
@@ -562,6 +616,111 @@
   @media (max-width: 639px) {
     width: 100%;
     flex:none;
+  }
+}
+
+// ═══════════════════════════════════════
+// TRUST STRIP (static)
+// ═══════════════════════════════════════
+
+.pd__trust {
+  margin-top: 20px;
+  background: #f5efe3;
+  border-radius: $radius-lg;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pd__trust-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pd__trust-tick {
+  color: #c9ab6e; // gold
+  flex-shrink: 0;
+}
+
+.pd__trust-text {
+  font-family: $font-family-body !important;
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+// Free-delivery progress line
+.pd__free-delivery {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: rgba(201, 171, 110, 0.12); // faint gold tint
+  border-radius: $radius-md;
+  font-family: $font-family-body !important;
+  font-size: 14px;
+  font-weight: 500;
+  color: #8a6d3b;
+}
+
+// ═══════════════════════════════════════
+// PRODUCT DETAIL ACCORDIONS
+// ═══════════════════════════════════════
+
+.pd__accordion {
+  margin-top: 24px;
+  border-top: 1px solid rgba($color-mono-dark, 0.1);
+}
+
+.pd__acc-item {
+  border-bottom: 1px solid rgba($color-mono-dark, 0.1);
+}
+
+.pd__acc-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.pd__acc-title {
+  font-family: $font-family-body !important;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #111827;
+}
+
+.pd__acc-icon {
+  flex-shrink: 0;
+  color: rgba($color-mono-dark, 0.55);
+  transition: transform 0.2s ease;
+
+  .pd__acc-header.open & {
+    transform: rotate(180deg);
+  }
+}
+
+.pd__acc-panel {
+  padding: 0 0 20px 0;
+
+  p {
+    font-family: $font-family-body;
+    font-size: $font-size-md;
+    line-height: 1.6;
+    color: rgba($color-mono-dark, 0.65);
+    margin: 0 0 $space-lg 0;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 }
 

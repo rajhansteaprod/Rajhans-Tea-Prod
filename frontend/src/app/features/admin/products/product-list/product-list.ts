@@ -20,12 +20,15 @@ interface VariantRow {
   price: number | '';
   discountedPrice: number | '';
   stock: number;
+  costPerCupText: string;
 }
 
 interface ProductForm {
   name: string;
   description: string;
   shortDescription: string;
+  brewingGuide: string;   // one bullet per line
+  sourcingInfo: string;   // one bullet per line
   categoryId: string;
   collectionIds: string[];
   basePrice: number | '';
@@ -37,7 +40,7 @@ interface ProductForm {
   attributes: AttributeEntry[];
   tags: string;
   region?: 'Assam' | 'Darjeeling' | 'Nilgiri' | 'Dooars';
-  bestTakenFor?: 'Morning' | 'Noon' | 'Evening';
+  bestTakenFor: ('Morning' | 'Noon' | 'Evening')[];
   status: 'draft' | 'active' | 'archived';
   isFeatured: boolean;
   stock: number;
@@ -51,10 +54,10 @@ interface ProductForm {
 }
 
 const emptyForm = (): ProductForm => ({
-  name: '', description: '', shortDescription: '',
+  name: '', description: '', shortDescription: '', brewingGuide: '', sourcingInfo: '',
   categoryId: '', collectionIds: [], basePrice: '', discountedPrice: '',
   images: [], primaryImage: '', imageAltText: '', reflectedImage: '', attributes: [], tags: '',
-  region: undefined, bestTakenFor: undefined,
+  region: undefined, bestTakenFor: [],
   status: 'draft', isFeatured: false,
   showBadge: false, badgeText: '',
   stock: 0, trackInventory: false, hasVariants: false, optionKey: '', variants: [],
@@ -62,7 +65,7 @@ const emptyForm = (): ProductForm => ({
 });
 
 const emptyVariantRow = (): VariantRow => ({
-  optionValue: '', price: '', discountedPrice: '', stock: 0,
+  optionValue: '', price: '', discountedPrice: '', stock: 0, costPerCupText: '',
 });
 
 @Component({
@@ -184,6 +187,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
       name:             product.name,
       description:      product.description ?? '',
       shortDescription: product.shortDescription ?? '',
+      brewingGuide:     (product.brewingGuide ?? []).join('\n'),
+      sourcingInfo:     (product.sourcingInfo ?? []).join('\n'),
       categoryId:       product.category._id,
       collectionIds:    product.collections.map((c) => c._id),
       basePrice:        product.basePrice,
@@ -195,7 +200,9 @@ export class ProductListComponent implements OnInit, OnDestroy {
       attributes:       Object.entries(product.attributes).map(([key, value]) => ({ key, value })),
       tags:             product.tags.join(', '),
       region:           (product as any).region ?? undefined,
-      bestTakenFor:     (product as any).bestTakenFor ?? undefined,
+      bestTakenFor:     Array.isArray((product as any).bestTakenFor)
+                          ? (product as any).bestTakenFor
+                          : ((product as any).bestTakenFor ? [(product as any).bestTakenFor] : []),
       status:           product.status ?? 'draft',
       isFeatured:       product.isFeatured ?? false,
       showBadge:        product.showBadge ?? false,
@@ -227,6 +234,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
               price: v.price,
               discountedPrice: v.discountedPrice ?? '',
               stock: v.stock,
+              costPerCupText: v.costPerCupText ?? '',
             })),
           }));
           this.variantsLoading.set(false);
@@ -429,6 +437,18 @@ export class ProductListComponent implements OnInit, OnDestroy {
     });
   }
 
+  readonly bestTakenForOptions: ('Morning' | 'Noon' | 'Evening')[] = ['Morning', 'Noon', 'Evening'];
+
+  /** Toggle a "Best Taken For" time on/off (multi-select). */
+  toggleBestTakenFor(time: 'Morning' | 'Noon' | 'Evening') {
+    this.form.update((f) => {
+      const times = f.bestTakenFor.includes(time)
+        ? f.bestTakenFor.filter((t) => t !== time)
+        : [...f.bestTakenFor, time];
+      return { ...f, bestTakenFor: times };
+    });
+  }
+
   addAttribute() {
     this.form.update((f) => ({ ...f, attributes: [...f.attributes, { key: '', value: '' }] }));
   }
@@ -623,6 +643,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
         price: Number(v.price),
         discountedPrice: v.discountedPrice !== '' ? Number(v.discountedPrice) : null,
         stock: Number(v.stock) || 0,
+        costPerCupText: v.costPerCupText.trim(),
       }));
     }
     if (f.images.length === 0) {
@@ -667,6 +688,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
       name:             f.name,
       description:      f.description || undefined,
       shortDescription: f.shortDescription || undefined,
+      brewingGuide:     f.brewingGuide.split('\n').map((s) => s.trim()).filter(Boolean),
+      sourcingInfo:     f.sourcingInfo.split('\n').map((s) => s.trim()).filter(Boolean),
       categoryId:       f.categoryId,
       collectionIds:    f.collectionIds,
       ...pricing,
@@ -678,7 +701,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
       tags,
       // null (not undefined) so clearing the dropdown actually clears the field
       region:           f.region || null,
-      bestTakenFor:     f.bestTakenFor || null,
+      bestTakenFor:     f.bestTakenFor.length ? f.bestTakenFor : null,
       status:           f.status,
       isFeatured:       f.isFeatured,
       showBadge:        f.showBadge,

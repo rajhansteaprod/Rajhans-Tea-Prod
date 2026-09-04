@@ -1,0 +1,310 @@
+<div class="page">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Reviews &amp; Moderation</h1>
+      <p class="page-subtitle">
+        Approve, reject, reply to and pin customer reviews. Only approved reviews appear on the
+        storefront and count toward a product's rating.
+      </p>
+    </div>
+    <button class="btn-refresh" (click)="load(meta()?.page ?? 1)" [disabled]="loading()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      {{ loading() ? 'Refreshing…' : 'Refresh' }}
+    </button>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="stat-grid">
+    <div class="stat-card" [class.stat-card--attention]="(analytics()?.pendingCount ?? 0) > 0">
+      <span class="stat-label">Awaiting Review</span>
+      <span class="stat-value">{{ analytics()?.pendingCount ?? '—' }}</span>
+      <span class="stat-hint">Not visible on the storefront yet</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Published</span>
+      <span class="stat-value">{{ analytics()?.totalApproved ?? '—' }}</span>
+      <span class="stat-hint">Live and counted in ratings</span>
+    </div>
+    <div class="stat-card" [class.stat-card--attention]="(analytics()?.reportedCount ?? 0) > 0">
+      <span class="stat-label">Reported</span>
+      <span class="stat-value">{{ analytics()?.reportedCount ?? '—' }}</span>
+      <span class="stat-hint">Flagged by customers</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Average Rating</span>
+      <span class="stat-value">
+        {{ analytics()?.overallAvgRating ?? '—' }}
+        @if (analytics()) { <small>/ 5</small> }
+      </span>
+      <span class="stat-hint">Across all published reviews</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    @for (tab of tabs; track tab.key) {
+      <button class="tab" [class.active]="activeTab() === tab.key" (click)="selectTab(tab.key)">
+        {{ tab.label }}
+        @if (tabCount(tab.key) !== null) {
+          <span class="tab-count" [class.tab-count--alert]="tab.key === 'pending' && (tabCount('pending') ?? 0) > 0">
+            {{ tabCount(tab.key) }}
+          </span>
+        }
+      </button>
+    }
+  </div>
+
+  <!-- Rating filter -->
+  <div class="filter-bar">
+    <span class="filter-label">Filter by rating</span>
+    @for (s of stars; track s) {
+      <button class="rating-chip" [class.active]="ratingFilter() === s" (click)="setRatingFilter(s)">
+        {{ s }} ★
+      </button>
+    }
+    @if (ratingFilter()) {
+      <button class="clear-filter" (click)="ratingFilter.set(0)">Clear</button>
+    }
+    @if (meta()) {
+      <span class="result-count">
+        Showing {{ visibleList().length }} of {{ meta()!.total }}
+      </span>
+    }
+  </div>
+
+  <!-- List -->
+  @if (loading()) {
+    <div class="state-box">Loading reviews…</div>
+  } @else if (loadError()) {
+    <div class="state-box state-box--error">{{ loadError() }}</div>
+  } @else if (visibleList().length === 0) {
+    <div class="state-box">
+      @if (ratingFilter()) {
+        No {{ ratingFilter() }}-star reviews on this page.
+      } @else if (activeTab() === 'pending') {
+        Nothing awaiting review — the queue is clear.
+      } @else {
+        No reviews found for this filter.
+      }
+    </div>
+  } @else {
+    <div class="review-list">
+      @for (review of visibleList(); track review._id) {
+        <article class="review-card" [class.busy]="isBusy(review._id)">
+          <!-- Product -->
+          <div class="review-card__product">
+            @if (productThumb(review)) {
+              <img class="product-thumb" [src]="productThumb(review)" [alt]="productName(review)" />
+            } @else {
+              <div class="product-thumb product-thumb--empty">—</div>
+            }
+            <div class="product-meta">
+              @if (productLink(review)) {
+                <a class="product-name" [href]="productLink(review)" target="_blank" rel="noopener">
+                  {{ productName(review) }}
+                </a>
+              } @else {
+                <span class="product-name">{{ productName(review) }}</span>
+              }
+              <span class="product-sub">Reviewed {{ formatDate(review.createdAt) }}</span>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="review-card__main">
+            <div class="review-head">
+              <div class="review-stars" [attr.aria-label]="review.rating + ' out of 5'">
+                @for (s of stars; track s) {
+                  <span class="star" [class.filled]="s <= review.rating">★</span>
+                }
+                <span class="rating-num">{{ review.rating }}.0</span>
+              </div>
+
+              <div class="badge-row">
+                <span class="badge" [class]="'badge--' + review.status">{{ review.status }}</span>
+                @if (review.isVerifiedPurchase) {
+                  <span class="badge badge--verified">Verified purchase</span>
+                }
+                @if (review.isPinned) {
+                  <span class="badge badge--pinned">Pinned</span>
+                }
+                @if (review.reportCount > 0) {
+                  <span class="badge badge--reported">
+                    {{ review.reportCount }} report{{ review.reportCount === 1 ? '' : 's' }}
+                  </span>
+                }
+              </div>
+            </div>
+
+            <div class="reviewer-line">
+              <strong>{{ reviewerName(review) }}</strong>
+              @if (reviewerContact(review)) {
+                <span class="dot">·</span><span>{{ reviewerContact(review) }}</span>
+              }
+              @if (review.orderNumber) {
+                <span class="dot">·</span><span>Order {{ review.orderNumber }}</span>
+              }
+              <span class="dot">·</span>
+              <span>{{ review.helpfulVotes }} helpful</span>
+            </div>
+
+            @if (review.title) {
+              <h3 class="review-title">{{ review.title }}</h3>
+            }
+            @if (review.body) {
+              <p class="review-body">{{ review.body }}</p>
+            } @else {
+              <p class="review-body muted">Rating only — no comment left.</p>
+            }
+
+            @if (review.images.length) {
+              <div class="photo-row">
+                @for (img of review.images; track img) {
+                  <button type="button" class="photo" (click)="openLightbox(imgSrc(img))">
+                    <img [src]="imgSrc(img)" alt="Customer photo" />
+                  </button>
+                }
+              </div>
+            }
+
+            @if (review.status === 'rejected' && review.rejectionReason) {
+              <div class="note note--reject">
+                <strong>Rejected:</strong> {{ review.rejectionReason }}
+              </div>
+            }
+
+            @if (review.adminReply) {
+              <div class="note note--reply">
+                <strong>Your reply</strong>
+                <span class="note-date">{{ formatDate(review.adminReply.repliedAt) }}</span>
+                <p>{{ review.adminReply.body }}</p>
+              </div>
+            }
+          </div>
+
+          <!-- Actions -->
+          <div class="review-card__actions">
+            @if (review.status !== 'approved') {
+              <button class="act act--approve" [disabled]="isBusy(review._id)" (click)="approve(review)">
+                Approve
+              </button>
+            }
+            @if (review.status !== 'rejected') {
+              <button class="act act--reject" [disabled]="isBusy(review._id)" (click)="openReject(review)">
+                Reject
+              </button>
+            }
+            <button class="act" [disabled]="isBusy(review._id)" (click)="openReply(review)">
+              {{ review.adminReply ? 'Edit reply' : 'Reply' }}
+            </button>
+            <button class="act" [disabled]="isBusy(review._id)" (click)="togglePin(review)">
+              {{ review.isPinned ? 'Unpin' : 'Pin' }}
+            </button>
+            <button class="act act--delete" [disabled]="isBusy(review._id)" (click)="remove(review)">
+              Delete
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+
+    <!-- Pagination -->
+    @if (meta() && meta()!.totalPages > 1) {
+      <div class="pagination">
+        <button class="page-btn" [disabled]="meta()!.page <= 1" (click)="goToPage(meta()!.page - 1)">
+          Previous
+        </button>
+        <span class="page-info">Page {{ meta()!.page }} of {{ meta()!.totalPages }}</span>
+        <button class="page-btn" [disabled]="meta()!.page >= meta()!.totalPages"
+                (click)="goToPage(meta()!.page + 1)">
+          Next
+        </button>
+      </div>
+    }
+  }
+</div>
+
+<!-- Reject modal -->
+@if (rejectTarget()) {
+  <div class="modal-overlay" (click)="closeReject()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Reject review</h2>
+        <button class="modal-close" (click)="closeReject()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint">
+          Rejecting hides this review from the storefront and removes it from the product's rating.
+          The reason is stored for your records.
+        </p>
+        <div class="form-field">
+          <label class="form-label">Reason *</label>
+          <textarea class="form-input" rows="3" maxlength="500"
+                    [ngModel]="rejectReason()" (ngModelChange)="rejectReason.set($event)"
+                    placeholder="e.g. Off-topic / abusive language / spam"></textarea>
+        </div>
+      </div>
+      @if (modalError()) {
+        <div class="modal-error">{{ modalError() }}</div>
+      }
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeReject()">Cancel</button>
+        <button class="btn-save btn-save--danger" (click)="confirmReject()"
+                [disabled]="modalSaving() || !rejectReason().trim()">
+          {{ modalSaving() ? 'Rejecting…' : 'Reject review' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Reply modal -->
+@if (replyTarget()) {
+  <div class="modal-overlay" (click)="closeReply()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">{{ replyTarget()!.adminReply ? 'Edit reply' : 'Reply to review' }}</h2>
+        <button class="modal-close" (click)="closeReply()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint">Your reply is shown publicly under the review.</p>
+        <div class="form-field">
+          <label class="form-label">Reply *</label>
+          <textarea class="form-input" rows="4" maxlength="2000"
+                    [ngModel]="replyBody()" (ngModelChange)="replyBody.set($event)"
+                    placeholder="Thanks for the feedback…"></textarea>
+        </div>
+      </div>
+      @if (modalError()) {
+        <div class="modal-error">{{ modalError() }}</div>
+      }
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeReply()">Cancel</button>
+        <button class="btn-save" (click)="confirmReply()"
+                [disabled]="modalSaving() || !replyBody().trim()">
+          {{ modalSaving() ? 'Saving…' : 'Save reply' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Photo lightbox -->
+@if (lightboxUrl()) {
+  <div class="lightbox" (click)="closeLightbox()">
+    <img [src]="lightboxUrl()" alt="Customer photo" (click)="$event.stopPropagation()" />
+    <button class="lightbox-close" (click)="closeLightbox()">✕</button>
+  </div>
+}

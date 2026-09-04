@@ -58,6 +58,20 @@ export const ADMIN_ROUTES: Routes = [
           import('./variant-options/variant-option-list').then((m) => m.VariantOptionListComponent),
       },
       {
+        path: 'reviews',
+        loadComponent: () =>
+          import('./reviews/review-moderation').then((m) => m.ReviewModerationComponent),
+      },
+      {
+        path: 'seo',
+        loadComponent: () => import('./seo-audit/seo-audit').then((m) => m.SeoAuditComponent),
+      },
+      {
+        path: 'seo/recommendations',
+        loadComponent: () =>
+          import('./seo-recommendations/seo-recommendations').then((m) => m.SeoRecommendationsComponent),
+      },
+      {
         path: 'payments',
         loadComponent: () =>
           import('./payments/payment-list').then((m) => m.AdminPaymentListComponent),
