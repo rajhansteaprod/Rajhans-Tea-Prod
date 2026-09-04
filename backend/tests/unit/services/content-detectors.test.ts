@@ -165,7 +165,10 @@ describe('strong GSC evidence', () => {
 describe('low-volume / noisy queries', () => {
   it('raises no demand-based opportunity and falls through to insufficient-evidence', () => {
     const out = detectOpportunities(
-      input({ gscRows: [row('some obscure phrase', { impressions: 3, clicks: 0, ctr: 0, position: 42 })] }),
+      input({
+        gscRows: [row('some obscure phrase', { impressions: 3, clicks: 0, ctr: 0, position: 42 })],
+        normalizedText: Array(800).fill('tea').join(' '),
+      }),
     );
     expect(typesOf(out)).not.toContain('high-impression-low-ctr');
     expect(typesOf(out)).not.toContain('striking-distance');
@@ -205,13 +208,27 @@ describe('branded queries', () => {
 
 describe('thin content', () => {
   it('fires under the existing 250-word bar', () => {
-    const out = detectOpportunities(input({ state: state({ wordCount: 120 }) }));
+    const out = detectOpportunities(
+      input({
+        state: state({ wordCount: 120 }),
+        normalizedText: Array(120).fill('tea').join(' '),
+      }),
+    );
     const finding = out.opportunities.find((o) => o.type === 'thin-content')!;
     expect(finding.evidence[0].facts).toMatchObject({ wordCount: 120, threshold: 250 });
   });
 
   it('does not fire on a page over the bar', () => {
-    expect(typesOf(detectOpportunities(input({ state: state({ wordCount: 800 }) })))).not.toContain('thin-content');
+    expect(
+      typesOf(
+        detectOpportunities(
+          input({
+            state: state({ wordCount: 800 }),
+            normalizedText: Array(800).fill('tea').join(' '),
+          }),
+        ),
+      ),
+    ).not.toContain('thin-content');
   });
 
   it('respects the audit’s own path exclusions for legitimately short pages', () => {
@@ -254,7 +271,10 @@ describe('metadata', () => {
 describe('heading structure', () => {
   it('fires when a long page has no H2 at all', () => {
     const out = detectOpportunities(
-      input({ state: state({ h2: [], headingOutline: [{ level: 1, text: 'Assam CTC Tea' }], wordCount: 900 }) }),
+      input({
+        state: state({ h2: [], headingOutline: [{ level: 1, text: 'Assam CTC Tea' }], wordCount: 900 }),
+        normalizedText: Array(900).fill('tea').join(' '),
+      }),
     );
     expect(out.opportunities.find((o) => o.type === 'heading-structure-opportunity')!.explanation).toMatch(/without a single H2/);
   });
@@ -513,5 +533,40 @@ describe('determinism and invariants', () => {
     const out = detectOpportunities(rich());
     expect(out.opportunities.length).toBeGreaterThan(1);
     expect(typesOf(out)).not.toContain('insufficient-evidence');
+  });
+});
+
+describe('scoped content word count', () => {
+  it('uses scoped normalizedText for thin-content instead of legacy full-document wordCount', () => {
+    const scopedText = Array(120).fill('tea').join(' ');
+    const out = detectOpportunities(
+      input({
+        state: state({ wordCount: 800 }),
+        normalizedText: scopedText,
+      }),
+    );
+
+    const finding = out.opportunities.find((o) => o.type === 'thin-content');
+    expect(finding).toBeDefined();
+    expect(finding!.evidence[0].facts).toMatchObject({
+      wordCount: 120,
+      threshold: 250,
+    });
+  });
+
+  it('does not demand an H2 when only the full document is long but scoped page content is short', () => {
+    const scopedText = Array(100).fill('tea').join(' ');
+    const out = detectOpportunities(
+      input({
+        state: state({
+          h2: [],
+          headingOutline: [{ level: 1, text: 'Assam CTC Tea' }],
+          wordCount: 900,
+        }),
+        normalizedText: scopedText,
+      }),
+    );
+
+    expect(typesOf(out)).not.toContain('heading-structure-opportunity');
   });
 });

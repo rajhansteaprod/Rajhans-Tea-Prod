@@ -139,6 +139,16 @@ function pathOf(url: string): string {
   }
 }
 
+/** Phase 6.1 content-length reasoning uses the scoped page-content text. */
+function scopedWordCount(input: DetectorInput): number {
+  // Pre-6.1 snapshots never captured scoped page text, so preserve their
+  // historical behaviour instead of treating missing text as zero words.
+  if (!input.state?.captureComplete) return input.state?.wordCount ?? 0;
+
+  const text = input.normalizedText.trim();
+  return text ? text.split(/\s+/).length : 0;
+}
+
 function seoJoinFacts(input: DetectorInput): Map<string, SeoJoinFacts> {
   return new Map([
     [
@@ -269,11 +279,13 @@ function detectThinContent(input: DetectorInput): ContentOpportunity[] {
   const path = pathOf(input.page.normalizedUrl);
   // Pages that are legitimately short are excluded by the audit's own list.
   if (recoConfig.thinContentExcludePatterns.some((re) => re.test(path))) return [];
-  if (state.wordCount >= recoConfig.thinContentWordCount) return [];
 
+  const words = scopedWordCount(input);
   const threshold = recoConfig.thinContentWordCount;
+  if (words >= threshold) return [];
+
   // Well under the bar is a stronger observation than a word off it.
-  const strength: OpportunityConfidence = state.wordCount < threshold * 0.5 ? 'high' : 'medium';
+  const strength: OpportunityConfidence = words < threshold * 0.5 ? 'high' : 'medium';
 
   return [
     {
@@ -281,12 +293,12 @@ function detectThinContent(input: DetectorInput): ContentOpportunity[] {
       priority: statePriority(input.page.normalizedUrl),
       evidenceStrength: downgradeIfStale(strength, input.auditRun.stale),
       explanation:
-        `The page carries ${state.wordCount} words of visible text, below the ${threshold}-word bar the audit ` +
+        `The page carries ${words} words of visible page content, below the ${threshold}-word bar the audit ` +
         'already uses. Little unique text gives search engines few relevance signals to rank on.',
       affectedQueries: [],
       evidence: [
-        snapshotEvidence(input, `wordCount ${state.wordCount} < ${threshold}`, {
-          wordCount: state.wordCount,
+        snapshotEvidence(input, `wordCount ${words} < ${threshold}`, {
+          wordCount: words,
           threshold,
           normalizedTextChars: state.normalizedTextChars,
         }),
@@ -391,7 +403,7 @@ function detectHeadingStructure(input: DetectorInput): ContentOpportunity[] {
   if (structure.h1Count === 0) problems.push('the page has no H1');
   else if (structure.h1Count > 1) problems.push(`the page has ${structure.h1Count} H1 elements`);
 
-  const words = state.wordCount ?? 0;
+  const words = scopedWordCount(input);
   if (structure.h2Count === 0 && words >= contentConfig.headingStructureMinWords) {
     problems.push(`${words} words run without a single H2, so the content has no scannable structure`);
   }
