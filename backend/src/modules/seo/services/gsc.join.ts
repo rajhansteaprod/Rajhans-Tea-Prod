@@ -37,6 +37,23 @@ const NOINDEX_PREFIXES = [
   '/orders', '/wishlist', '/track-order', '/error', '/404', '/cart',
 ];
 
+/**
+ * Whether a URL's path is a system/per-user route that is never an SEO target.
+ * Exported so other phases REUSE this one exclusion list rather than restating
+ * it: Phase 6.1 applies it as a defence-in-depth gate on the pages it will
+ * analyse, so admin/auth/checkout/wishlist/account routes can never enter the
+ * analysable set even if some future page-candidate source started emitting them.
+ */
+export function isNoindexSystemPath(url: string): boolean {
+  let path: string;
+  try {
+    path = new URL(url).pathname;
+  } catch {
+    return false;
+  }
+  return NOINDEX_PREFIXES.some((p) => path === p || path.startsWith(p + '/'));
+}
+
 const hasFileExtension = (path: string): boolean => /\.[a-z0-9]{1,8}$/i.test(path.split('/').pop() || '');
 const stripWww = (host: string): string => host.replace(/^www\./i, '');
 

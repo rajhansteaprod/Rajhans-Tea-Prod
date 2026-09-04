@@ -43,5 +43,4 @@ grafana-data/
 firebase-service-account.json
 firebase-service-account.json/
 *-firebase-adminsdk-*.json
-
- 
+node_modules

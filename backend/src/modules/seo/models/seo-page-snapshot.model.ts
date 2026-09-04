@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import { ImageRef, InternalLinkRef, RedirectHop } from '../seo.types';
+import { FaqSignals, HeadingRef, ImageRef, InternalLinkRef, RedirectHop } from '../seo.types';
 
 /**
  * The observed state of one URL during one run — the raw evidence behind any
@@ -29,6 +29,19 @@ export interface ISeoPageSnapshotDoc extends Document {
   structuredDataTypes: string[];
   wordCount: number;
   contentHash: string | null;
+  // ── Phase 6.1 content signals ──
+  // All optional: a snapshot written before Phase 6.1 must keep hydrating and
+  // serializing unchanged. `extractorVersion === null` is the authoritative
+  // "content structure was never captured for this page" marker; analysis
+  // treats that as MISSING EVIDENCE, never as "the page has no headings".
+  h2: string[];
+  h3: string[];
+  headingOutline: HeadingRef[];
+  normalizedText: string;
+  normalizedTextChars: number;
+  normalizedTextTruncated: boolean;
+  faqSignals: FaqSignals | null;
+  extractorVersion: string | null;
   inSitemap: boolean;
   fetchError: string | null;
   createdAt: Date;
@@ -70,6 +83,29 @@ const seoPageSnapshotSchema = new Schema<ISeoPageSnapshotDoc>(
     structuredDataTypes: { type: [String], default: [] },
     wordCount: { type: Number, default: 0 },
     contentHash: { type: String, default: null },
+    h2: { type: [String], default: [] },
+    h3: { type: [String], default: [] },
+    headingOutline: {
+      type: [new Schema<HeadingRef>({ level: { type: Number, required: true }, text: { type: String, default: '' } }, { _id: false })],
+      default: [],
+    },
+    normalizedText: { type: String, default: '' },
+    normalizedTextChars: { type: Number, default: 0 },
+    normalizedTextTruncated: { type: Boolean, default: false },
+    // No `default` — a pre-6.1 snapshot must hydrate with these UNSET rather
+    // than being handed a fabricated "0 questions, no FAQ" observation.
+    faqSignals: {
+      type: new Schema<FaqSignals>(
+        {
+          questionHeadings: { type: Number, default: 0 },
+          faqHeadingPresent: { type: Boolean, default: false },
+          faqSchemaPresent: { type: Boolean, default: false },
+        },
+        { _id: false },
+      ),
+      default: null,
+    },
+    extractorVersion: { type: String, default: null },
     inSitemap: { type: Boolean, default: false },
     fetchError: { type: String, default: null },
   },

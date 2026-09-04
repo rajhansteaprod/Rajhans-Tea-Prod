@@ -174,6 +174,17 @@ export function scoreCommercialIntent(keyword: string, taxonomy: RelevanceTaxono
 const GENERIC_ENTITY_TERMS = new Set(['tea', 'chai']);
 
 /**
+ * Word-boundary term containment against arbitrary prose, exported so consumers
+ * outside 4b — Phase 6.1's page-content coverage check — decide "does this text
+ * contain this taxonomy term" using the EXACT rule the relevance scorer uses.
+ * Reimplementing the match would let page coverage and keyword relevance drift
+ * apart on punctuation and casing.
+ */
+export function containsTaxonomyTerm(haystack: string, term: string): boolean {
+  return containsTerm(norm(haystack), term);
+}
+
+/**
  * Specific (non-generic) core-taxonomy matches + matched businessChannel phrases.
  * Shared by 4b.3's clustering engine AND 4b.4's URL mapper/cannibalization guard —
  * a single anchor-extraction rule for the whole 4b pipeline (extracted here, not

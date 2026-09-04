@@ -19,7 +19,8 @@
     "seed": "ts-node src/seeds/index.ts",
     "gsc:dryrun": "ts-node scripts/gsc-dryrun.ts",
     "market:validate-dataforseo": "ts-node --project tsconfig.scripts.json scripts/market-validate-dataforseo.ts",
-    "market:validate-dataforseo-serp": "ts-node --project tsconfig.scripts.json scripts/market-validate-dataforseo-serp.ts"
+    "market:validate-dataforseo-serp": "ts-node --project tsconfig.scripts.json scripts/market-validate-dataforseo-serp.ts",
+    "content:analyze": "ts-node --project tsconfig.scripts.json scripts/content-analyze.ts"
   },
   "dependencies": {
     "@types/multer": "^2.1.0",

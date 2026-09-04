@@ -22,7 +22,17 @@ export interface MappingClusterInput {
 const INFORMATIONAL_FAMILY: Intent[] = ['INFORMATIONAL', 'HOW_TO', 'COMPARISON', 'PROBLEM_NEED'];
 const COMMERCIAL_FAMILY: Intent[] = ['TRANSACTIONAL', 'COMMERCIAL_INVESTIGATION', 'CATEGORY'];
 
-const TYPE_COMPATIBILITY: Partial<Record<Intent, PageType[]>> = {
+/**
+ * Which page types can legitimately serve each intent. Exported so Phase 6.1's
+ * query/page mismatch detector REUSES this table rather than defining a second,
+ * overlapping compatibility taxonomy — there must be exactly one answer in this
+ * codebase to "can a product page serve a HOW_TO query?".
+ *
+ * NAVIGATIONAL is deliberately absent and handled by
+ * `navigationalCompatibleTypes()`; a consumer that finds no entry for an intent
+ * has NO OPINION about compatibility and must not report a mismatch.
+ */
+export const TYPE_COMPATIBILITY: Partial<Record<Intent, PageType[]>> = {
   TRANSACTIONAL: ['product', 'category'],
   COMMERCIAL_INVESTIGATION: ['product', 'category'],
   CATEGORY: ['category', 'product'],

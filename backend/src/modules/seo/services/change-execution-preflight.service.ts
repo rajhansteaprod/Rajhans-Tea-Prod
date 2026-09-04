@@ -358,6 +358,25 @@ const EXECUTABLE_FIELDS = [
 type ExecutableFieldSpec = (typeof EXECUTABLE_FIELDS)[number];
 type SnapshotKey = ExecutableFieldSpec['snapshotKey'];
 
+/**
+ * The execution capability this module actually implements, published so other
+ * phases can DERIVE what the pipeline can do rather than restate it.
+ *
+ * Phase 6.1 reads these (together with the exported `resolveCmsPageTarget`) to
+ * decide whether an opportunity it finds could currently flow through Phase 5
+ * execution at all. Deriving it from here means the answer can never drift from
+ * the executor's real behaviour: widening execution in a later phase updates
+ * both the gate above and every consumer's capability report at once.
+ */
+export const EXECUTION_CAPABILITY = {
+  /** The only draft change kind the executor accepts. */
+  changeKind: 'metadata' as const,
+  /** The only target type it can resolve and write. */
+  targetType: 'cms_page' as const,
+  /** The exact Page columns it may write. */
+  fields: EXECUTABLE_FIELDS.map((f) => f.snapshotKey) as readonly SnapshotKey[],
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // The evaluator
 // ─────────────────────────────────────────────────────────────────────────────
