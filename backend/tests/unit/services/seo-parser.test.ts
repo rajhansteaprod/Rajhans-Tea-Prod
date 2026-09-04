@@ -180,3 +180,54 @@ describe('parseHtml — Phase 6.1 provenance', () => {
     expect(parseHtml('<h1>x</h1>', PAGE, BASE).extractorVersion).toBe(EXTRACTOR_VERSION);
   });
 });
+
+describe('parseHtml — Phase 6.1 main-content scoping', () => {
+  it('uses <main> for Phase 6.1 headings/text while preserving legacy full-document wordCount', () => {
+    const html = `
+      <header>
+        <h2>MENU</h2>
+        <p>Global header words</p>
+      </header>
+      <main>
+        <h1>Rajhans Royal Assam</h1>
+        <h2>Why it tastes malty</h2>
+        <p>Assam tea body content.</p>
+      </main>
+      <aside>
+        <h2>Your Cart</h2>
+        <p>Global cart words</p>
+      </aside>
+    `;
+
+    const p = parseHtml(html, PAGE, BASE);
+
+    expect(p.h1).toEqual(['Rajhans Royal Assam']);
+    expect(p.h2).toEqual(['Why it tastes malty']);
+    expect(p.headingOutline).toEqual([
+      { level: 1, text: 'Rajhans Royal Assam' },
+      { level: 2, text: 'Why it tastes malty' },
+    ]);
+    expect(p.normalizedText).toBe(
+      'Rajhans Royal Assam Why it tastes malty Assam tea body content.',
+    );
+    expect(p.normalizedText).not.toContain('MENU');
+    expect(p.normalizedText).not.toContain('Your Cart');
+
+    // Legacy metric intentionally still sees the whole document.
+    expect(p.wordCount).toBeGreaterThan(
+      p.normalizedText.split(' ').filter(Boolean).length,
+    );
+  });
+
+  it('falls back to the full document when no <main> element exists', () => {
+    const p = parseHtml(
+      '<h1>Fallback H1</h1><h2>Fallback H2</h2><p>Fallback body.</p>',
+      PAGE,
+      BASE,
+    );
+
+    expect(p.h1).toEqual(['Fallback H1']);
+    expect(p.h2).toEqual(['Fallback H2']);
+    expect(p.normalizedText).toBe('Fallback H1 Fallback H2 Fallback body.');
+  });
+});

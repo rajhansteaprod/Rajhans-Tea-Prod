@@ -176,8 +176,16 @@ export function parseHtml(html: string, pageUrl: string, baseUrl: string): Parse
     }
   }
 
-  // ── <h1>/<h2>/<h3> (need inner text, so match the full element) ──
-  const { h1, h2, h3, outline: headingOutline } = extractHeadings(html);
+  // ── Phase 6.1 content scope ─────────────────────────────────────────────
+  // Shared app chrome (header/nav/cart/footer) can contain headings and text
+  // that are not part of the page's SEO content. Prefer the semantic <main>
+  // region for Phase 6.1 signals, with full-document fallback for pages that do
+  // not expose one. Legacy fields below intentionally continue using full HTML.
+  const mainMatch = html.match(/<main\b[^>]*>([\s\S]*?)<\/main\s*>/i);
+  const contentHtml = mainMatch ? mainMatch[1] : html;
+
+  // ── <h1>/<h2>/<h3> (Phase 6.1 scoped content signals) ──
+  const { h1, h2, h3, outline: headingOutline } = extractHeadings(contentHtml);
 
   // ── <img> alt coverage + per-image src/alt (for generic-alt) ──
   const imgTags = allTags(html, 'img');
@@ -265,10 +273,17 @@ export function parseHtml(html: string, pageUrl: string, baseUrl: string): Parse
   const wordCount = text ? text.split(' ').filter(Boolean).length : 0;
   const contentHash = createHash('sha1').update(text).digest('hex');
 
-  // ── Phase 6.1: the same stripped text, entity-decoded and bounded ──
-  // Decoding happens HERE and not above so `wordCount`/`contentHash` keep their
-  // exact pre-6.1 derivation and stay comparable across the phase boundary.
-  const decodedText = decode(text).replace(/\s+/g, ' ').trim();
+  // ── Phase 6.1: scoped visible text, entity-decoded and bounded ──
+  // Unlike the legacy `text` above, this is derived from the semantic page
+  // content region so shared app chrome cannot distort topic/coverage analysis.
+  // `wordCount`/`contentHash` remain based on full-document `text` unchanged.
+  const contentText = contentHtml
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const decodedText = decode(contentText).replace(/\s+/g, ' ').trim();
   const bounded = boundText(decodedText, EXTRACTION_LIMITS.normalizedTextMaxChars);
   const faqSignals = buildFaqSignals(headingOutline, Array.from(structuredDataTypes));
 
