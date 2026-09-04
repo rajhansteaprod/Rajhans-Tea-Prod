@@ -1,4 +1,6 @@
 import { createHash } from 'crypto';
+import mongoose from 'mongoose';
+import { SeoContentPageAnalysis } from '../models/seo-content-page-analysis.model';
 import { ANALYZER_VERSION, contentConfig } from '../content.config';
 import { ContentPageAnalysis, EligiblePage } from '../content.types';
 import { loadPageStates } from './page-state.assembler';
@@ -11,9 +13,15 @@ import { detectOpportunities } from './opportunity-detectors';
  * Phase 6.1 — the analysis orchestrator.
  *
  * Assemble stored evidence → run the pure detectors → build the versioned
- * artifact. This module owns SEQUENCING and PROVENANCE and nothing else: it
- * never re-derives a detector's logic, never fetches a page, never calls a paid
- * provider, and (in this commit) never writes anything at all.
+ * artifact. This module owns SEQUENCING, PROVENANCE and PERSISTENCE and nothing
+ * else: it never re-derives a detector's logic, never fetches a page, and never
+ * calls a paid provider.
+ *
+ * `analyzePages()` writes NOTHING — it returns the analyses in memory, so a dry
+ * run and a persisted run take the identical code path and can never disagree.
+ * `persistAnalyses()` is the separate, explicitly-invoked step, and the only
+ * collection it touches is SeoContentPageAnalysis: no CMS page, no product, no
+ * category, no recommendation, no execution record.
  *
  * Determinism is the load-bearing property. `inputsHash` is a content-only hash
  * of everything the detectors saw, deliberately excluding `analyzedAt` and any
@@ -312,4 +320,125 @@ export async function analyzePages(opts: AnalyzePagesOptions = {}): Promise<Anal
     },
     analyses,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Persistence — the ONLY writing this phase does, and only to its own collection
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface PersistResult {
+  created: number;
+  updated: number;
+  pruned: number;
+}
+
+/**
+ * Upsert analyses on (normalizedUrl, analyzerVersion, evidenceWindowKey).
+ *
+ * Re-running the CLI against the same audit run and GSC period rewrites ONE row
+ * per page rather than accumulating; a new row appears only when the evidence
+ * genuinely moves or the analyzer version is bumped. That is what keeps a
+ * long-lived history useful without letting it grow per invocation.
+ *
+ * Negative results are persisted deliberately: a page analysed and found
+ * healthy is exactly the control case Phase 8 needs, and "was this page ever
+ * looked at?" has to be answerable.
+ *
+ * This function touches SeoContentPageAnalysis and nothing else — no CMS, no
+ * catalog, no recommendation, no execution record.
+ */
+export async function persistAnalyses(analyses: ContentPageAnalysis[]): Promise<PersistResult> {
+  let created = 0;
+  let updated = 0;
+
+  for (const analysis of analyses) {
+    const key = {
+      normalizedUrl: analysis.normalizedUrl,
+      analyzerVersion: analysis.analyzerVersion,
+      evidenceWindowKey: analysis.evidenceWindowKey,
+    };
+    const res = await SeoContentPageAnalysis.updateOne(
+      key,
+      {
+        $set: {
+          canonicalUrl: analysis.canonicalUrl,
+          pageType: analysis.pageType,
+          sourceRef: {
+            model: analysis.sourceRef.model,
+            documentId: analysis.sourceRef.documentId
+              ? new mongoose.Types.ObjectId(analysis.sourceRef.documentId)
+              : null,
+            slug: analysis.sourceRef.slug,
+          },
+          extractorVersion: analysis.extractorVersion,
+          analyzedAt: analysis.analyzedAt,
+          inputsHash: analysis.inputsHash,
+          evidenceWindow: analysis.evidenceWindow,
+          currentState: analysis.currentState,
+          searchPerformance: analysis.searchPerformance,
+          marketEvidence: analysis.marketEvidence,
+          existingWork: analysis.existingWork,
+          topicCoverage: analysis.topicCoverage,
+          opportunities: analysis.opportunities,
+          missingEvidence: analysis.missingEvidence,
+          executability: analysis.executability,
+        },
+      },
+      { upsert: true },
+    ).exec();
+
+    if (res.upsertedCount) created++;
+    else updated++;
+  }
+
+  const pruned = await applyAnalysisRetention(analyses.map((a) => a.normalizedUrl));
+  return { created, updated, pruned };
+}
+
+/**
+ * Two independent bounds, applied together: a per-page history cap and a hard
+ * age cutoff. The age cutoff mirrors gscConfig.retentionMonths so an analysis
+ * never outlives the GSC facts it cites; 0 months disables it, matching the
+ * existing convention.
+ */
+export async function applyAnalysisRetention(urls: string[]): Promise<number> {
+  let pruned = 0;
+
+  const { retentionMonths, maxAnalysesPerPage } = contentConfig.retention;
+  if (retentionMonths > 0) {
+    const cutoff = new Date();
+    cutoff.setUTCMonth(cutoff.getUTCMonth() - retentionMonths);
+    const res = await SeoContentPageAnalysis.deleteMany({ analyzedAt: { $lt: cutoff } }).exec();
+    pruned += res.deletedCount ?? 0;
+  }
+
+  for (const url of new Set(urls)) {
+    const keep = await SeoContentPageAnalysis.find({ normalizedUrl: url })
+      .sort({ analyzedAt: -1 })
+      .skip(maxAnalysesPerPage)
+      .select('_id')
+      .lean()
+      .exec();
+    if (!keep.length) continue;
+    const res = await SeoContentPageAnalysis.deleteMany({ _id: { $in: keep.map((d) => d._id) } }).exec();
+    pruned += res.deletedCount ?? 0;
+  }
+
+  return pruned;
+}
+
+/** Latest stored analysis per page, newest first. Read-only. */
+export async function listLatestAnalyses(limit = 100) {
+  return SeoContentPageAnalysis.aggregate([
+    { $sort: { normalizedUrl: 1, analyzedAt: -1 } },
+    { $group: { _id: '$normalizedUrl', doc: { $first: '$$ROOT' } } },
+    { $replaceRoot: { newRoot: '$doc' } },
+    { $sort: { analyzedAt: -1 } },
+    { $limit: limit },
+  ]).exec();
+}
+
+/** The newest stored analysis for one page. Read-only. */
+export async function getLatestAnalysis(normalizedUrl: string) {
+  return SeoContentPageAnalysis.findOne({ normalizedUrl }).sort({ analyzedAt: -1 }).lean().exec();
 }

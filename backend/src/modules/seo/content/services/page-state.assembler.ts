@@ -18,7 +18,7 @@ import {
 import { buildPageCandidates } from '../../market/services/page-candidate.builder';
 import { buildRelevanceModel, RelevanceTaxonomy } from '../../market/relevance.taxonomy';
 import { loadInventoryEntities } from '../../market/services/seed.engine';
-import { PageType } from '../../market/market.types';
+import { PageCandidate, PageType } from '../../market/market.types';
 import { contentConfig } from '../content.config';
 import { EligiblePage, PageContentState, PageExecutability, PageExistingWork } from '../content.types';
 
@@ -44,6 +44,39 @@ const SOURCE_MODEL_BY_PAGE_TYPE: Record<PageType, string> = {
   static: 'Page',
   home: 'Home',
 };
+
+/**
+ * Pure eligibility derivation from one page candidate. Exported and kept free
+ * of any DB access so it is directly unit-testable: the three exclusion rules
+ * (page type, system/per-user route, indexability) are exactly what governs
+ * whether a URL ever reaches a detector, and this is the single place that
+ * decision is made.
+ */
+export function toEligiblePage(
+  c: Pick<PageCandidate, 'canonicalUrl' | 'pageType' | 'slug' | 'title' | 'indexable'>,
+  sourceIds: Map<string, mongoose.Types.ObjectId>,
+): EligiblePage {
+  let ineligibleReason: string | null = null;
+  if (!ANALYSABLE_PAGE_TYPES.includes(c.pageType)) {
+    ineligibleReason = `page type "${c.pageType}" is outside Phase 6.1 scope`;
+  } else if (isNoindexSystemPath(c.canonicalUrl)) {
+    // Defence in depth: reuses the audit's own system/per-user route list.
+    ineligibleReason = 'system / per-user route — never an SEO target';
+  } else if (!c.indexable) {
+    ineligibleReason = 'not an indexable, self-canonical 200 page in the latest audit run';
+  }
+  return {
+    normalizedUrl: c.canonicalUrl,
+    canonicalUrl: c.canonicalUrl,
+    pageType: c.pageType,
+    slug: c.slug,
+    title: c.title,
+    sourceModel: SOURCE_MODEL_BY_PAGE_TYPE[c.pageType],
+    documentId: sourceIds.get(`${c.pageType}:${c.slug}`)?.toString() ?? null,
+    eligible: ineligibleReason === null,
+    ineligibleReason,
+  };
+}
 
 export interface AuditRunContext {
   runId: mongoose.Types.ObjectId | null;
@@ -202,28 +235,7 @@ export async function loadPageStates(opts: { only?: string[]; now?: Date } = {})
 
   const pages: EligiblePage[] = candidates
     .filter((c) => !onlySet || onlySet.has(c.canonicalUrl))
-    .map((c) => {
-      let ineligibleReason: string | null = null;
-      if (!ANALYSABLE_PAGE_TYPES.includes(c.pageType)) {
-        ineligibleReason = `page type "${c.pageType}" is outside Phase 6.1 scope`;
-      } else if (isNoindexSystemPath(c.canonicalUrl)) {
-        // Defence in depth: reuses the audit's own system/per-user route list.
-        ineligibleReason = 'system / per-user route — never an SEO target';
-      } else if (!c.indexable) {
-        ineligibleReason = 'not an indexable, self-canonical 200 page in the latest audit run';
-      }
-      return {
-        normalizedUrl: c.canonicalUrl,
-        canonicalUrl: c.canonicalUrl,
-        pageType: c.pageType,
-        slug: c.slug,
-        title: c.title,
-        sourceModel: SOURCE_MODEL_BY_PAGE_TYPE[c.pageType],
-        documentId: sourceIds.get(`${c.pageType}:${c.slug}`)?.toString() ?? null,
-        eligible: ineligibleReason === null,
-        ineligibleReason,
-      };
-    });
+    .map((c) => toEligiblePage(c, sourceIds));
 
   const stateByUrl = new Map<string, PageContentState>();
   const contentHashByUrl = new Map<string, string | null>();
