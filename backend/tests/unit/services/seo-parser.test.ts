@@ -231,3 +231,39 @@ describe('parseHtml — Phase 6.1 main-content scoping', () => {
     expect(p.normalizedText).toBe('Fallback H1 Fallback H2 Fallback body.');
   });
 });
+
+describe('parseHtml — Phase 6.1 component heading exclusions', () => {
+  it('excludes product-card headings from the editorial heading outline but keeps their text in normalizedText', () => {
+    const html = `
+      <main>
+        <h1>Kadak And Strong</h1>
+        <app-product-card>
+          <div class="product-card">
+            <h3 class="product-card__name">
+              <a href="/product/rajhans-royal-assam/">Rajhans Royal Assam</a>
+            </h3>
+          </div>
+        </app-product-card>
+        <app-product-card>
+          <div class="product-card">
+            <h3 class="product-card__name">
+              <a href="/product/rajhans-rajdoot-dooars/">Rajhans Rajdoot Dooars</a>
+            </h3>
+          </div>
+        </app-product-card>
+      </main>
+    `;
+
+    const p = parseHtml(html, PAGE, BASE);
+
+    expect(p.h1).toEqual(['Kadak And Strong']);
+    expect(p.h2).toEqual([]);
+    expect(p.h3).toEqual([]);
+    expect(p.headingOutline).toEqual([
+      { level: 1, text: 'Kadak And Strong' },
+    ]);
+
+    expect(p.normalizedText).toContain('Rajhans Royal Assam');
+    expect(p.normalizedText).toContain('Rajhans Rajdoot Dooars');
+  });
+});

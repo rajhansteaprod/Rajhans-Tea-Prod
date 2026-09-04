@@ -185,7 +185,11 @@ export function parseHtml(html: string, pageUrl: string, baseUrl: string): Parse
   const contentHtml = mainMatch ? mainMatch[1] : html;
 
   // ── <h1>/<h2>/<h3> (Phase 6.1 scoped content signals) ──
-  const { h1, h2, h3, outline: headingOutline } = extractHeadings(contentHtml);
+  // Product-card names are UI/card labels, not editorial page headings.
+  // Keep their text in normalizedText for topical coverage, but exclude
+  // their heading tags from hierarchy analysis.
+  const headingHtml = contentHtml.replace(/<app-product-card\b[^>]*>[\s\S]*?<\/app-product-card\s*>/gi, ' ');
+  const { h1, h2, h3, outline: headingOutline } = extractHeadings(headingHtml);
 
   // ── <img> alt coverage + per-image src/alt (for generic-alt) ──
   const imgTags = allTags(html, 'img');
