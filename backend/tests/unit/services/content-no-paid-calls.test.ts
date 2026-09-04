@@ -148,3 +148,24 @@ describe('Phase 6.1 — no scheduling', () => {
     expect(offenders.map((o) => path.basename(o.file))).toEqual([]);
   });
 });
+
+describe('Phase 6.1 — zero database footprint on connect', () => {
+  const cliSource = fs.readFileSync(CLI_PATH, 'utf8');
+
+  it('connects with BOTH autoIndex and autoCreate disabled', () => {
+    // Two SEPARATE Mongoose connection options: autoIndex controls automatic
+    // index builds, autoCreate controls automatic collection creation via
+    // createCollection() on model init, and defaults to true INDEPENDENTLY of
+    // autoIndex. Disabling only one still lets Mongoose silently create an
+    // empty collection for this phase's brand-new SeoContentPageAnalysis
+    // schema the moment it connects — confirmed against production during
+    // Phase 6.1 development (an empty collection was created and had to be
+    // dropped) before this test was added. Both must be off for a dry run
+    // to be a genuine no-footprint read against whatever database it points at.
+    // Match the ACTUAL call (`await mongoose.connect(`), never prose in a
+    // comment that happens to mention `mongoose.connect(uri)`.
+    const connectCall = cliSource.match(/await mongoose\.connect\([^;]*\);/)?.[0] ?? '';
+    expect(connectCall).toMatch(/autoIndex:\s*false/);
+    expect(connectCall).toMatch(/autoCreate:\s*false/);
+  });
+});

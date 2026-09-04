@@ -151,7 +151,18 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     process.exit(1);
   }
 
-  await mongoose.connect(config.mongo.uri);
+  // autoIndex:false AND autoCreate:false — belt-and-suspenders on top of
+  // --persist gating. These are TWO SEPARATE Mongoose connection options:
+  // autoIndex controls automatic index builds; autoCreate controls automatic
+  // collection creation (via createCollection) on model initialization, and
+  // defaults to true independently of autoIndex — disabling only autoIndex
+  // still lets Mongoose silently create an empty collection for this phase's
+  // brand-new SeoContentPageAnalysis schema the moment it connects, in ANY
+  // mode, persisted or not. (This codebase relies on the opposite default —
+  // plain mongoose.connect(uri) with both left on — elsewhere; see
+  // change-execution.service.ts.) Both must be off for this connection to be a
+  // genuine no-footprint read against whatever database it points at.
+  await mongoose.connect(config.mongo.uri, { autoIndex: false, autoCreate: false });
   try {
     const result = await analyzePages({
       urls: url ? [url] : undefined,
