@@ -68,7 +68,10 @@ function printAnalysis(a: ContentPageAnalysis): void {
   line(`  headings        h1×${s.h1.length} h2×${s.h2.length} h3×${s.h3.length}${s.captureComplete ? '' : '  (NOT CAPTURED — pre-6.1 snapshot)'}`);
   if (s.h1.length) line(`    h1: ${s.h1.join(' | ')}`);
   if (s.h2.length) line(`    h2: ${s.h2.slice(0, 8).join(' | ')}${s.h2.length > 8 ? ` … +${s.h2.length - 8}` : ''}`);
-  line(`  words           ${s.wordCount ?? '-'}${s.normalizedTextTruncated ? '  (text truncated at capture)' : ''}`);
+  const visibleWordCount = s.captureComplete
+    ? (s.normalizedText.trim() ? s.normalizedText.trim().split(/\s+/).length : 0)
+    : s.wordCount;
+  line(`  words           ${visibleWordCount ?? '-'}${s.captureComplete ? ' visible content' : ' legacy full-document'}${s.normalizedTextTruncated ? '  (text truncated at capture)' : ''}`);
   line(`  faq             ${s.faqSignals ? `${s.faqSignals.questionHeadings} question headings, heading=${s.faqSignals.faqHeadingPresent}, schema=${s.faqSignals.faqSchemaPresent}` : '(not captured)'}`);
   line(`  schema          ${s.structuredDataTypes.length ? s.structuredDataTypes.join(', ') : '(none)'}`);
   line(`  internal links  ${s.internalLinks.inboundCount} inbound / ${s.internalLinks.outboundCount} outbound`);

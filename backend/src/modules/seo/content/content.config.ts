@@ -102,4 +102,4 @@ export const contentConfig = {
  * key, so a bump produces a NEW analysis row rather than silently rewriting
  * history — the same discipline as `marketConfig.opportunity.scoringConfigVersion`.
  */
-export const ANALYZER_VERSION = '6.1.0-content-v1';
+export const ANALYZER_VERSION = '6.1.0-content-v2';

@@ -45,7 +45,7 @@ function analysis(over: Partial<ContentPageAnalysis> = {}): ContentPageAnalysis 
     pageType: 'static',
     sourceRef: { model: 'Page', documentId: null, slug: 'about-us' },
     analyzerVersion: ANALYZER_VERSION,
-    extractorVersion: '6.1.0-extract-v1',
+    extractorVersion: '6.1.0-extract-v2',
     analyzedAt: new Date('2026-09-04T10:00:00Z'),
     inputsHash: 'a'.repeat(64),
     evidenceWindowKey: WINDOW,
@@ -79,7 +79,7 @@ function analysis(over: Partial<ContentPageAnalysis> = {}): ContentPageAnalysis 
       structuredDataTypes: [],
       internalLinks: { outboundCount: 4, inboundCount: 2, outboundTargets: [] },
       captureComplete: true,
-      extractorVersion: '6.1.0-extract-v1',
+      extractorVersion: '6.1.0-extract-v2',
     },
     searchPerformance: { known: false, period: null, totals: null, queries: [], queryCount: 0, queriesTruncated: false },
     marketEvidence: {
@@ -159,7 +159,7 @@ describe('persistAnalyses — what is written', () => {
     await persistAnalyses([analysis()]);
     const set = updateOne.mock.calls[0][1].$set;
     expect(set).toHaveProperty('evidenceWindow.snapshotContentHash', 'deadbeef');
-    expect(set).toHaveProperty('extractorVersion', '6.1.0-extract-v1');
+    expect(set).toHaveProperty('extractorVersion', '6.1.0-extract-v2');
     expect(set).toHaveProperty('executability.status', 'executable');
     expect(set).toHaveProperty('missingEvidence');
     expect(set).toHaveProperty('topicCoverage');

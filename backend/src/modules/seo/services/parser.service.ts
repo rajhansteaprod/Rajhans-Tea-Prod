@@ -13,7 +13,7 @@ import { isSameOrigin, normalizeUrl } from '../seo.util';
  * `contentHash`/`wordCount` derivation is byte-for-byte unchanged so cross-run
  * content comparisons made before this phase stay valid.
  */
-export const EXTRACTOR_VERSION = '6.1.0-extract-v1';
+export const EXTRACTOR_VERSION = '6.1.0-extract-v2';
 
 /**
  * Bounds on the content signals persisted per page snapshot. Snapshots are
