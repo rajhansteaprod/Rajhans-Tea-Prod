@@ -5,6 +5,7 @@ import {
   RecommendationCategory,
   RecommendationEffort,
   RecommendationImpact,
+  ApprovalPropensity,
 } from '../../seo.types';
 import {
   ContentOpportunity,
@@ -190,6 +191,170 @@ export interface ContentRecommendationPersistenceResult {
   fingerprints: string[];
 }
 
+
+export type ContentRecommendationPreviewAction =
+  | 'new'
+  | 'update'
+  | 'reopen'
+  | 'suppressed';
+
+export interface ContentRecommendationPreview {
+  normalizedUrl: string;
+  opportunityType: ContentOpportunityType;
+  recommendationId: string | null;
+  fingerprint: string | null;
+  title: string;
+  priority: ContentOpportunity['priority'];
+  evidenceStrength: OpportunityConfidence;
+  impact: RecommendationImpact | null;
+  executability: ContentPageAnalysis['executability'];
+  action: ContentRecommendationPreviewAction;
+  reason: string;
+  approvalPropensity: ApprovalPropensity;
+  approvalReason: string;
+}
+
+function approvalPropensityFor(
+  analysis: ContentPageAnalysis,
+  opportunity: ContentOpportunity,
+): { propensity: ApprovalPropensity; reason: string } {
+  if (opportunity.type === 'insufficient-evidence') {
+    return {
+      propensity: 'monitoring',
+      reason: 'The evidence floor was not met, so there is nothing to approve yet.',
+    };
+  }
+
+  // Unsupported/recommendation-only targets still require human implementation
+  // or product/editorial judgment even when the finding itself is credible.
+  if (analysis.executability.status !== 'executable') {
+    return {
+      propensity: 'needs_review',
+      reason: `The finding is actionable, but the current executor status is ${analysis.executability.status}.`,
+    };
+  }
+
+  // Strong deterministic metadata defects are safe candidates for owner approval.
+  // Examples include repeated rendered title segments and audit-backed duplicate
+  // metadata findings. This rule is based on evidence strength, not brand text.
+  if (
+    opportunity.type === 'metadata-opportunity' &&
+    opportunity.evidenceStrength === 'high'
+  ) {
+    return {
+      propensity: 'recommended_to_approve',
+      reason: 'This is an executable metadata defect supported by high-strength deterministic evidence.',
+    };
+  }
+
+  // Higher-priority, strongly supported executable findings can also rise to
+  // the approve bucket once real data produces them.
+  if (
+    opportunity.priority !== 'low' &&
+    opportunity.evidenceStrength !== 'low'
+  ) {
+    return {
+      propensity: 'recommended_to_approve',
+      reason: 'The finding is executable, materially prioritized, and supported by sufficient evidence.',
+    };
+  }
+
+  // Low-priority executable guideline findings should not compete with stronger
+  // defects for the owner’s attention.
+  if (opportunity.priority === 'low') {
+    return {
+      propensity: 'low_urgency',
+      reason: 'The finding is executable but low priority, so it can wait behind stronger opportunities.',
+    };
+  }
+
+  return {
+    propensity: 'needs_review',
+    reason: 'The finding is credible but still benefits from human review before approval.',
+  };
+}
+
+/**
+ * READ-ONLY preview of what Phase 6.2 emission would do.
+ *
+ * No create/save/update/resolve calls. `insufficient-evidence` is deliberately
+ * surfaced as suppressed so the owner can see that it was analysed but will
+ * never become an approval item.
+ */
+export async function previewContentRecommendations(
+  analyses: ContentPageAnalysis[],
+): Promise<ContentRecommendationPreview[]> {
+  const previews: ContentRecommendationPreview[] = [];
+  const seen = new Set<string>();
+
+  for (const analysis of analyses) {
+    for (const opportunity of analysis.opportunities) {
+      if (opportunity.type === 'insufficient-evidence') {
+        previews.push({
+          normalizedUrl: analysis.normalizedUrl,
+          opportunityType: opportunity.type,
+          recommendationId: null,
+          fingerprint: null,
+          title: 'No recommendation emitted',
+          priority: opportunity.priority,
+          evidenceStrength: opportunity.evidenceStrength,
+          impact: null,
+          executability: analysis.executability,
+          action: 'suppressed',
+          reason: 'Insufficient evidence is a monitoring state, not an approval recommendation.',
+          approvalPropensity: 'monitoring',
+          approvalReason: 'The evidence floor was not met, so there is nothing to approve yet.',
+        });
+        continue;
+      }
+
+      const recommendationId = recommendationIdFor(opportunity.type);
+      const fp = recoFingerprint(recommendationId, opportunity.discriminator);
+
+      // Defensive dedupe: preview exactly one action per persisted identity.
+      if (seen.has(fp)) continue;
+      seen.add(fp);
+
+      const existing = await SeoRecommendation.findOne({ fingerprint: fp })
+        .select('status')
+        .lean()
+        .exec();
+
+      const action: ContentRecommendationPreviewAction =
+        !existing
+          ? 'new'
+          : existing.status === 'resolved'
+            ? 'reopen'
+            : 'update';
+
+      const approval = approvalPropensityFor(analysis, opportunity);
+
+      previews.push({
+        normalizedUrl: analysis.normalizedUrl,
+        opportunityType: opportunity.type,
+        recommendationId,
+        fingerprint: fp,
+        title: titleFor(opportunity.type),
+        priority: opportunity.priority,
+        evidenceStrength: opportunity.evidenceStrength,
+        impact: impactFor(opportunity.priority, opportunity.evidenceStrength),
+        executability: analysis.executability,
+        action,
+        reason:
+          action === 'new'
+            ? 'No recommendation with this stable fingerprint exists yet.'
+            : action === 'reopen'
+              ? 'The same recommendation existed previously but is currently resolved.'
+              : 'The same recommendation is already open and would be refreshed with current evidence.',
+        approvalPropensity: approval.propensity,
+        approvalReason: approval.reason,
+      });
+    }
+  }
+
+  return previews;
+}
+
 /**
  * Upsert only. Human review state is deliberately preserved on updates/reopens.
  * A machine evidence refresh must never silently approve/reject a recommendation.
@@ -213,6 +378,8 @@ export async function upsertContentRecommendations(
       const recommendationId = recommendationIdFor(opportunity.type);
       const fp = recoFingerprint(recommendationId, opportunity.discriminator);
       fingerprints.push(fp);
+
+      const approval = approvalPropensityFor(analysis, opportunity);
 
       const common = {
         recommendationId,
@@ -246,6 +413,8 @@ export async function upsertContentRecommendations(
         demandImpressions: analysis.searchPerformance.known
           ? analysis.searchPerformance.totals?.impressions ?? 0
           : 0,
+        approvalPropensity: approval.propensity,
+        approvalReason: approval.reason,
       };
 
       const existing = await SeoRecommendation.findOne({ fingerprint: fp }).exec();

@@ -11,6 +11,7 @@ jest.mock('../../../src/modules/seo/models/seo-recommendation.model', () => ({
 import { SeoRecommendation } from '../../../src/modules/seo/models/seo-recommendation.model';
 import {
   emitContentRecommendations,
+  previewContentRecommendations,
   resolveMissingContentRecommendations,
   upsertContentRecommendations,
 } from '../../../src/modules/seo/content/services/content-recommendation.service';
@@ -155,6 +156,158 @@ describe('Phase 6.2 content recommendation emission', () => {
     jest.resetAllMocks();
   });
 
+  it('previews insufficient-evidence as suppressed without querying or writing recommendations', async () => {
+    const a = analysis({
+      opportunities: [
+        {
+          type: 'insufficient-evidence',
+          priority: 'low',
+          evidenceStrength: 'low',
+          explanation: 'Not enough evidence',
+          affectedQueries: [],
+          evidence: [
+            {
+              source: 'gsc',
+              collection: 'GscQueryPageMetric',
+              key: 'faq',
+              observedAt: new Date(),
+              freshness: 'unknown',
+              summary: 'no rows',
+              facts: {},
+            },
+          ],
+          discriminator: 'faq::insufficient',
+        },
+      ],
+    });
+
+    const preview = await previewContentRecommendations([a]);
+
+    expect(preview).toHaveLength(1);
+    expect(preview[0]).toMatchObject({
+      opportunityType: 'insufficient-evidence',
+      action: 'suppressed',
+      recommendationId: null,
+      fingerprint: null,
+      approvalPropensity: 'monitoring',
+    });
+
+    expect(SeoRecommendation.findOne).not.toHaveBeenCalled();
+    expect(SeoRecommendation.create).not.toHaveBeenCalled();
+  });
+
+  it('previews new, update and reopen states read-only', async () => {
+    const leanExec = (value: unknown) => ({
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue(value),
+    });
+
+    (SeoRecommendation.findOne as jest.Mock)
+      .mockReturnValueOnce(leanExec(null))
+      .mockReturnValueOnce(leanExec({ status: 'open' }))
+      .mockReturnValueOnce(leanExec({ status: 'resolved' }));
+
+    const first = await previewContentRecommendations([analysis()]);
+
+    const secondAnalysis = analysis({
+      opportunities: [
+        {
+          ...analysis().opportunities[0],
+          discriminator: 'https://rajhanstea.com/page/faq/::metadata-two',
+        },
+      ],
+    });
+    const second = await previewContentRecommendations([secondAnalysis]);
+
+    const thirdAnalysis = analysis({
+      opportunities: [
+        {
+          ...analysis().opportunities[0],
+          discriminator: 'https://rajhanstea.com/page/faq/::metadata-three',
+        },
+      ],
+    });
+    const third = await previewContentRecommendations([thirdAnalysis]);
+
+    expect(first[0].action).toBe('new');
+    expect(second[0].action).toBe('update');
+    expect(third[0].action).toBe('reopen');
+
+    expect(SeoRecommendation.create).not.toHaveBeenCalled();
+    expect(SeoRecommendation.find).not.toHaveBeenCalled();
+  });
+
+  it('classifies high-evidence executable metadata as recommended to approve', async () => {
+    const leanExec = (value: unknown) => ({
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue(value),
+    });
+
+    (SeoRecommendation.findOne as jest.Mock).mockReturnValue(leanExec(null));
+
+    const preview = await previewContentRecommendations([analysis()]);
+
+    expect(preview[0]).toMatchObject({
+      opportunityType: 'metadata-opportunity',
+      approvalPropensity: 'recommended_to_approve',
+    });
+  });
+
+  it('classifies recommendation-only findings as needs review', async () => {
+    const leanExec = (value: unknown) => ({
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue(value),
+    });
+
+    (SeoRecommendation.findOne as jest.Mock).mockReturnValue(leanExec(null));
+
+    const a = analysis({
+      executability: {
+        status: 'recommendation_only',
+        reason: 'No executor',
+        supportedFields: [],
+        targetType: null,
+      },
+      opportunities: [
+        {
+          ...analysis().opportunities[0],
+          type: 'thin-content',
+          evidenceStrength: 'medium',
+          discriminator: 'faq::thin',
+        },
+      ],
+    });
+
+    const preview = await previewContentRecommendations([a]);
+    expect(preview[0].approvalPropensity).toBe('needs_review');
+  });
+
+  it('classifies low-priority executable guideline findings as low urgency', async () => {
+    const leanExec = (value: unknown) => ({
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue(value),
+    });
+
+    (SeoRecommendation.findOne as jest.Mock).mockReturnValue(leanExec(null));
+
+    const a = analysis({
+      opportunities: [
+        {
+          ...analysis().opportunities[0],
+          evidenceStrength: 'medium',
+          discriminator: 'faq::metadata-guideline',
+        },
+      ],
+    });
+
+    const preview = await previewContentRecommendations([a]);
+    expect(preview[0].approvalPropensity).toBe('low_urgency');
+  });
+
   it('never emits insufficient-evidence as an approval recommendation', async () => {
     const a = analysis({
       opportunities: [
@@ -218,6 +371,9 @@ describe('Phase 6.2 content recommendation emission', () => {
     expect(payload.affectedUrls).toEqual([
       'https://rajhanstea.com/page/faq/',
     ]);
+
+    expect(payload.approvalPropensity).toBe('recommended_to_approve');
+    expect(payload.approvalReason).toMatch(/high-strength deterministic evidence/i);
 
     expect(payload.evidence).toMatchObject({
       opportunityType: 'metadata-opportunity',

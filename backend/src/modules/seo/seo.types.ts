@@ -245,6 +245,16 @@ export type RecommendationImpact = 'very-high' | 'high' | 'medium' | 'low';
 export type RecommendationEffort = 'small' | 'medium' | 'large';
 
 /**
+ * Owner-facing decision aid. This does NOT change reviewStatus and never
+ * approves anything automatically.
+ */
+export type ApprovalPropensity =
+  | 'recommended_to_approve'
+  | 'needs_review'
+  | 'low_urgency'
+  | 'monitoring';
+
+/**
  * An actionable growth recommendation synthesized from one or more audit
  * findings. This is NOT an audit issue — it is advice (automationLevel always
  * 'recommend'; Phase 3A never generates copy or changes production).

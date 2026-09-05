@@ -27,6 +27,7 @@
 import mongoose from 'mongoose';
 import { config } from '../src/config';
 import { analyzePages, persistAnalyses } from '../src/modules/seo/content/services/page-analysis.service';
+import { previewContentRecommendations } from '../src/modules/seo/content/services/content-recommendation.service';
 import { ContentPageAnalysis } from '../src/modules/seo/content/content.types';
 
 const line = (s = '') => console.log(s);
@@ -141,6 +142,7 @@ function printAnalysis(a: ContentPageAnalysis): void {
 export async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
   const args = argv;
   const persist = args.includes('--persist');
+  const recommendationPreview = args.includes('--recommendation-preview');
   const asJson = args.includes('--json');
   const url = arg(args, '--url');
   const pageType = arg(args, '--page-type');
@@ -149,6 +151,11 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
   if (limitRaw && (!Number.isFinite(limit) || (limit as number) <= 0)) {
     console.error(`--limit must be a positive number (got "${limitRaw}")`);
+    process.exit(1);
+  }
+
+  if (recommendationPreview && asJson) {
+    console.error('--recommendation-preview and --json are not combined in this checkpoint build');
     process.exit(1);
   }
 
@@ -176,7 +183,13 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     } else {
       hr('═');
       line('PHASE 6.1 — CONTENT OPPORTUNITY & PAGE ANALYSIS');
-      line(persist ? 'MODE: analyse + persist artifacts (zero recommendations, zero CMS writes)' : 'MODE: dry run — WRITES NOTHING');
+      line(
+        recommendationPreview
+          ? 'MODE: recommendation preview — READ ONLY, WRITES NOTHING'
+          : persist
+            ? 'MODE: analyse + persist artifacts (zero recommendations, zero CMS writes)'
+            : 'MODE: dry run — WRITES NOTHING',
+      );
       hr('═');
       const su = result.summary;
       line(`analyzer        ${su.analyzerVersion}`);
@@ -203,6 +216,60 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
       line('');
       line(`PERSISTED       ${res.created} created, ${res.updated} updated, ${res.pruned} pruned by retention`);
       line('                (SeoContentPageAnalysis only — no recommendation, CMS or catalog write)');
+    }
+
+
+    if (recommendationPreview) {
+      const previews = await previewContentRecommendations(result.analyses);
+
+      line('');
+      hr('═');
+      line('PHASE 6.2 — RECOMMENDATION PREVIEW');
+      line('READ ONLY — no SeoRecommendation writes');
+      hr('═');
+
+      if (!previews.length) {
+        line('  (no recommendation candidates)');
+      }
+
+      for (const preview of previews) {
+        line(
+          `  ${preview.action.toUpperCase().padEnd(10)} ${shortUrl(preview.normalizedUrl)}  ${preview.opportunityType}`,
+        );
+        line(
+          `             priority ${preview.priority} · evidence ${preview.evidenceStrength}` +
+            (preview.impact ? ` · impact ${preview.impact}` : ''),
+        );
+        line(`             ${preview.title}`);
+        line(
+          `             executability ${preview.executability.status}` +
+            (preview.executability.supportedFields.length
+              ? ` · ${preview.executability.supportedFields.join(', ')}`
+              : ''),
+        );
+        line(`             approval ${preview.approvalPropensity}`);
+        line(`             ${preview.approvalReason}`);
+        line(`             ${preview.reason}`);
+      }
+
+      const counts = new Map<string, number>();
+      const approvalCounts = new Map<string, number>();
+      for (const preview of previews) {
+        counts.set(preview.action, (counts.get(preview.action) ?? 0) + 1);
+        approvalCounts.set(
+          preview.approvalPropensity,
+          (approvalCounts.get(preview.approvalPropensity) ?? 0) + 1,
+        );
+      }
+
+      line('');
+      line(
+        `PREVIEW TOTALS  new ${counts.get('new') ?? 0} · update ${counts.get('update') ?? 0} · reopen ${counts.get('reopen') ?? 0} · suppressed ${counts.get('suppressed') ?? 0}`,
+      );
+      line(
+        `APPROVAL       recommended ${approvalCounts.get('recommended_to_approve') ?? 0} · review ${approvalCounts.get('needs_review') ?? 0} · low urgency ${approvalCounts.get('low_urgency') ?? 0} · monitoring ${approvalCounts.get('monitoring') ?? 0}`,
+      );
+      line('                WRITES 0');
     }
   } finally {
     await mongoose.disconnect();

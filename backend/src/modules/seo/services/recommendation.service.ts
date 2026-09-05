@@ -186,6 +186,12 @@ export function toView(rec: ISeoRecommendationDoc, runId: string) {
     demandImpressions: rec.demandImpressions ?? 0,
     demandBonus: rec.demandBonus ?? 0,
     effectivePriority: liftDisplayPriority(rec.priority, rec.demandBonus ?? 0),
+
+    // Phase 6.2 owner-facing decision aid. Null for legacy/audit/GSC/market
+    // recommendations that have not been classified by the content agent.
+    approvalPropensity: rec.approvalPropensity ?? null,
+    approvalReason: rec.approvalReason ?? null,
+
     reviewStatus: rec.reviewStatus ?? 'pending',
     reviewNote: rec.reviewNote ?? null,
     reviewedAt: rec.reviewedAt ?? null,

@@ -5,6 +5,7 @@ import {
   RecommendationImpact,
   RecommendationPriority,
   RecommendationSource,
+  ApprovalPropensity,
 } from '../seo.types';
 
 /**
@@ -34,6 +35,11 @@ export interface ISeoRecommendationDoc extends Document {
    *  from technical severity/priority so the two stay conceptually distinct. */
   demandBonus: number;
   demandImpressions: number;
+
+  // Phase 6.2 — owner-facing decision aid only. Independent from reviewStatus.
+  approvalPropensity: ApprovalPropensity | null;
+  approvalReason: string | null;
+
   status: 'open' | 'resolved';
 
   // Phase 5.1 — human review lifecycle. Deliberately independent from
@@ -69,6 +75,15 @@ const seoRecommendationSchema = new Schema<ISeoRecommendationDoc>(
     source: { type: String, enum: ['audit', 'gsc', 'market', 'content'], default: 'audit', index: true },
     demandBonus: { type: Number, default: 0 },
     demandImpressions: { type: Number, default: 0 },
+
+    approvalPropensity: {
+      type: String,
+      enum: ['recommended_to_approve', 'needs_review', 'low_urgency', 'monitoring'],
+      default: null,
+      index: true,
+    },
+    approvalReason: { type: String, default: null, maxlength: 2000 },
+
     status: { type: String, enum: ['open', 'resolved'], default: 'open', index: true },
 
     // Human review does NOT execute or modify production SEO.
