@@ -9,9 +9,16 @@
  *   content-analyze --page-type product      restrict to one page type.
  *   content-analyze --limit 4                cap the batch (deterministic order).
  *   content-analyze --persist                additionally upsert the analysis
- *                                            artifacts. Still emits ZERO
- *                                            recommendations.
- *   content-analyze --json                   machine-readable output.
+ *                                            artifacts.
+ *   content-analyze --recommendation-preview preview Phase 6.2 recommendation
+ *                                            actions, WRITE NOTHING.
+ *   content-analyze --emit                   explicitly upsert actionable
+ *                                            source:'content' recommendations.
+ *   content-analyze --emit --resolve-content additionally resolve previously
+ *                                            open content recommendations that
+ *                                            were genuinely re-evaluated and
+ *                                            are no longer detected.
+ *   content-analyze --json                   machine-readable analysis output.
  *
  * SAFETY, enforced structurally by tests/unit/services/content-no-paid-calls.test.ts:
  * this phase performs zero CMS/product/category writes, zero public-site
@@ -20,14 +27,18 @@
  * Console metrics and cached Phase 4B market evidence, and — only with
  * --persist — writes to its own SeoContentPageAnalysis collection.
  *
- * Recommendation emission is DELIBERATELY ABSENT. It is gated behind the 6.1.7
- * checkpoint review and is not implemented in this build; there is no flag that
- * turns it on.
+ * Phase 6.2 recommendation emission is available ONLY behind the explicit
+ * --emit flag. The default remains read-only. Emission writes only to the
+ * existing SeoRecommendation lifecycle with source:'content'; it never
+ * approves, drafts, executes, publishes, or mutates public SEO content.
  */
 import mongoose from 'mongoose';
 import { config } from '../src/config';
 import { analyzePages, persistAnalyses } from '../src/modules/seo/content/services/page-analysis.service';
-import { previewContentRecommendations } from '../src/modules/seo/content/services/content-recommendation.service';
+import {
+  emitContentRecommendations,
+  previewContentRecommendations,
+} from '../src/modules/seo/content/services/content-recommendation.service';
 import { ContentPageAnalysis } from '../src/modules/seo/content/content.types';
 
 const line = (s = '') => console.log(s);
@@ -143,6 +154,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
   const args = argv;
   const persist = args.includes('--persist');
   const recommendationPreview = args.includes('--recommendation-preview');
+  const emit = args.includes('--emit');
+  const resolveContent = args.includes('--resolve-content');
   const asJson = args.includes('--json');
   const url = arg(args, '--url');
   const pageType = arg(args, '--page-type');
@@ -155,7 +168,27 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
   }
 
   if (recommendationPreview && asJson) {
-    console.error('--recommendation-preview and --json are not combined in this checkpoint build');
+    console.error('--recommendation-preview and --json cannot be combined');
+    process.exit(1);
+  }
+
+  if (emit && recommendationPreview) {
+    console.error('--emit and --recommendation-preview are mutually exclusive');
+    process.exit(1);
+  }
+
+  if (emit && asJson) {
+    console.error('--emit and --json are mutually exclusive');
+    process.exit(1);
+  }
+
+  if (emit && persist) {
+    console.error('--emit and --persist must be run separately so each write intent is explicit');
+    process.exit(1);
+  }
+
+  if (resolveContent && !emit) {
+    console.error('--resolve-content requires --emit');
     process.exit(1);
   }
 
@@ -186,9 +219,11 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
       line(
         recommendationPreview
           ? 'MODE: recommendation preview — READ ONLY, WRITES NOTHING'
-          : persist
-            ? 'MODE: analyse + persist artifacts (zero recommendations, zero CMS writes)'
-            : 'MODE: dry run — WRITES NOTHING',
+          : emit
+            ? `MODE: Phase 6.2 EMIT — SeoRecommendation writes only${resolveContent ? ' + content resolution' : ''}; NO SEO execution`
+            : persist
+              ? 'MODE: analyse + persist artifacts (SeoContentPageAnalysis only)'
+              : 'MODE: dry run — WRITES NOTHING',
       );
       hr('═');
       const su = result.summary;
@@ -271,6 +306,53 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
       );
       line('                WRITES 0');
     }
+
+    if (emit) {
+      const auditRunId = result.summary.auditRun.runId;
+      const auditStatus = result.summary.auditRun.status;
+
+      if (!auditRunId || !mongoose.isValidObjectId(auditRunId)) {
+        throw new Error(
+          'Refusing Phase 6.2 emission: current analysis has no valid SeoAuditRun id',
+        );
+      }
+
+      if (auditStatus !== 'completed' && auditStatus !== 'degraded') {
+        throw new Error(
+          `Refusing Phase 6.2 emission: audit run status is "${auditStatus ?? 'unknown'}", expected completed or degraded`,
+        );
+      }
+
+      if (result.summary.pagesAnalysed === 0) {
+        throw new Error(
+          'Refusing Phase 6.2 emission: current analysis produced zero analysed pages',
+        );
+      }
+
+      const runId = new mongoose.Types.ObjectId(auditRunId);
+
+      const emission = await emitContentRecommendations(
+        runId,
+        result.analyses,
+        { allowResolution: resolveContent },
+      );
+
+      line('');
+      hr('═');
+      line('PHASE 6.2 — CONTENT RECOMMENDATION EMISSION');
+      hr('═');
+      line(`audit run       ${auditRunId}`);
+      line(`created         ${emission.created}`);
+      line(`updated         ${emission.updated}`);
+      line(`reopened        ${emission.reopened}`);
+      line(`resolved        ${emission.resolved}`);
+      line(`fingerprints    ${emission.fingerprints.length}`);
+      line('source          content');
+      line('review status   pending unless an existing human review already exists');
+      line('SEO execution   NONE');
+      line('public changes  NONE');
+    }
+
   } finally {
     await mongoose.disconnect();
   }
