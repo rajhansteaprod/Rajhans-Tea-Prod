@@ -275,7 +275,68 @@ function generateMetadataChanges(rec: ISeoRecommendationDoc): { proposedChanges:
   const evidence = rec.evidence as {
     sharedTitles?: { value: unknown; urls: string[] }[];
     sharedDescriptions?: { value: unknown; urls: string[] }[];
+    opportunityType?: string;
+    pageState?: {
+      title?: string | null;
+      metaDescription?: string | null;
+    };
+    evidenceRefs?: {
+      facts?: Record<string, unknown>;
+    }[];
   };
+
+  // Phase 6.2 content metadata recommendation.
+  // A rendered CMS title can be:
+  //   "Privacy Policy — Rajhans Tea — Rajhans Tea"
+  //
+  // The frontend appends one branding suffix automatically. Therefore the
+  // stored CMS value is:
+  //   "Privacy Policy — Rajhans Tea"
+  //
+  // When the detector proves that the trailing segment is repeated, the
+  // deterministic storage fix is:
+  //   "Privacy Policy"
+  //
+  // No marketing copy is invented and the description is left untouched.
+  if (
+    rec.source === 'content' &&
+    rec.recommendationId === 'content-opportunity:metadata-opportunity'
+  ) {
+    const repeatedSegment = evidence.evidenceRefs
+      ?.map((ref) => ref.facts?.repeatedTrailingTitleSegment)
+      .find((value): value is string => typeof value === 'string' && value.trim().length > 0);
+
+    const renderedTitle = evidence.pageState?.title ?? null;
+    const targetUrl = rec.affectedUrls[0] ?? '';
+
+    if (repeatedSegment && renderedTitle && targetUrl) {
+      const storageCurrent = toStorageTitle(renderedTitle, targetUrl);
+
+      const escaped = repeatedSegment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const trailing = new RegExp(`\\s*(?:—|–|-|\\|)\\s*${escaped}\\s*$`, 'i');
+      const proposed = storageCurrent.replace(trailing, '').trim();
+
+      if (proposed && proposed !== storageCurrent) {
+        return {
+          proposedChanges: [{
+            kind: 'metadata',
+            targetUrl,
+            fields: {
+              title: {
+                current: storageCurrent,
+                proposed,
+              },
+            },
+          }],
+          warnings,
+        };
+      }
+
+      warnings.push(
+        `${targetUrl}: repeated title segment was detected but a safe storage-level removal could not be derived.`,
+      );
+    }
+  }
   const sharedTitles = evidence.sharedTitles ?? [];
   const sharedDescriptions = evidence.sharedDescriptions ?? [];
 

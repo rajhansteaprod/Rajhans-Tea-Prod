@@ -405,6 +405,10 @@ export async function upsertContentRecommendations(
           executability: analysis.executability,
           pageType: analysis.pageType,
           sourceRef: analysis.sourceRef,
+          pageState: {
+            title: analysis.currentState.title,
+            metaDescription: analysis.currentState.metaDescription,
+          },
         } as Record<string, unknown>,
         relatedCheckIds: [] as string[],
         automationLevel: 'recommend' as const,
