@@ -344,7 +344,31 @@ function detectMetadataOpportunity(input: DetectorInput): ContentOpportunity[] {
     problems.push(`the meta description is ${lengths.descriptionLength} characters, over the ${seoConfig.descriptionMaxLength}-character guideline`);
   }
 
-  // Duplicate metadata is the audit's own finding — reused, never re-detected.
+  // Catch an obvious rendered-title composition defect locally: the same
+  // trailing segment repeated twice (for example "Brand — Brand"). This is
+  // deterministic page-state evidence and does not require search demand.
+  if (state.title) {
+    const titleSegments = state.title
+      .split(/\s+(?:\||—|–|-)\s+/)
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+
+    if (titleSegments.length >= 2) {
+      const last = titleSegments[titleSegments.length - 1];
+      const previous = titleSegments[titleSegments.length - 2];
+      const normalizeSegment = (segment: string): string =>
+        segment.toLowerCase().replace(/\s+/g, ' ').trim();
+
+      if (normalizeSegment(last) === normalizeSegment(previous)) {
+        problems.push(`the rendered title repeats the trailing segment "${last}"`);
+        facts.repeatedTrailingTitleSegment = last;
+        strength = 'high';
+      }
+    }
+  }
+
+  // Duplicate metadata is the audit's own cross-page finding — reused, never
+  // re-detected here.
   const duplicateChecks = input.existingWork.openIssueCheckIds.filter(
     (c) => c === 'duplicate-title' || c === 'duplicate-description',
   );

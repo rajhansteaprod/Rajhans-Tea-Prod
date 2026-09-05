@@ -255,6 +255,21 @@ describe('metadata', () => {
     expect(finding.evidence[0].facts).toMatchObject({ titleMin: 30, titleMax: 60, descriptionMin: 50, descriptionMax: 160 });
   });
 
+  it('detects a repeated trailing rendered-title segment without needing GSC evidence', () => {
+    const title = 'Frequently Asked Questions — Rajhans Tea — Rajhans Tea';
+    const out = detectOpportunities(
+      input({
+        state: state({ title, titleLength: title.length }),
+      }),
+    );
+
+    const finding = out.opportunities.find((o) => o.type === 'metadata-opportunity')!;
+    expect(finding.explanation).toMatch(/repeats the trailing segment/i);
+    expect(finding.evidence[0].facts).toMatchObject({
+      repeatedTrailingTitleSegment: 'Rajhans Tea',
+    });
+  });
+
   it('reuses the audit’s open duplicate findings rather than re-detecting them', () => {
     const out = detectOpportunities(
       input({ existingWork: { openIssueCheckIds: ['duplicate-title'], openRecommendations: [] } }),
