@@ -96,7 +96,7 @@ const seoChangeDraftSchema = new Schema<ISeoChangeDraftDoc>(
     recommendationId: { type: Schema.Types.ObjectId, ref: 'SeoRecommendation', required: true, index: true },
     recommendationFingerprint: { type: String, default: '' },
     targetUrl: { type: String, default: '' },
-    source: { type: String, enum: ['audit', 'gsc', 'market'], required: true },
+    source: { type: String, enum: ['audit', 'gsc', 'market', 'content'], required: true },
     type: { type: String, required: true },
     status: { type: String, enum: ['draft', 'superseded'], default: 'draft', index: true },
     generatorVersion: { type: String, required: true },
