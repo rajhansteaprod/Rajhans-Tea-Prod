@@ -110,10 +110,14 @@ describe('Phase 6.1 — zero CMS / catalog / production writes', () => {
     expect(offenders.map((o) => path.basename(o.file))).toEqual([]);
   });
 
-  it('never writes SeoRecommendation — emission is deferred past the 6.1.7 checkpoint', () => {
+  it('isolates SeoRecommendation writes to the dedicated Phase 6.2 emitter', () => {
     const pattern = new RegExp(`\\bSeoRecommendation\\s*\\.\\s*(?:${WRITE_METHODS.join('|')})\\s*\\(`);
-    const offenders = sources.filter(({ source }) => pattern.test(source));
-    expect(offenders.map((o) => path.basename(o.file))).toEqual([]);
+    const writers = sources
+      .filter(({ source }) => pattern.test(source))
+      .map((o) => path.basename(o.file))
+      .sort();
+
+    expect(writers).toEqual(['content-recommendation.service.ts']);
   });
 
   it('never imports the execution, rollback, verification or draft-generation services', () => {

@@ -238,7 +238,7 @@ export type RecommendationCategory =
   | 'commercial-opportunity';
 
 /** Where a recommendation was synthesized from. */
-export type RecommendationSource = 'audit' | 'gsc' | 'market';
+export type RecommendationSource = 'audit' | 'gsc' | 'market' | 'content';
 
 export type RecommendationPriority = 'high' | 'medium' | 'low';
 export type RecommendationImpact = 'very-high' | 'high' | 'medium' | 'low';

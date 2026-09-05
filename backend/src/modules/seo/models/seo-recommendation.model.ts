@@ -66,7 +66,7 @@ const seoRecommendationSchema = new Schema<ISeoRecommendationDoc>(
     evidence: { type: Schema.Types.Mixed, default: {} },
     relatedCheckIds: { type: [String], default: [] },
     automationLevel: { type: String, enum: ['recommend'], default: 'recommend' },
-    source: { type: String, enum: ['audit', 'gsc', 'market'], default: 'audit', index: true },
+    source: { type: String, enum: ['audit', 'gsc', 'market', 'content'], default: 'audit', index: true },
     demandBonus: { type: Number, default: 0 },
     demandImpressions: { type: Number, default: 0 },
     status: { type: String, enum: ['open', 'resolved'], default: 'open', index: true },
