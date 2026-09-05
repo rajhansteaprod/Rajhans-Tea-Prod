@@ -278,6 +278,7 @@ export async function analyzePages(opts: AnalyzePagesOptions = {}): Promise<Anal
           wordCount: null,
           contentHash: null,
           normalizedTextChars: 0,
+          visibleWordCount: 0,
           normalizedTextTruncated: false,
           faqSignals: null,
           canonical: null,

@@ -176,6 +176,8 @@ export interface PageContentState {
   wordCount: number | null;
   contentHash: string | null;
   normalizedTextChars: number;
+  /** Exact word count of the Phase 6.1 scoped normalized visible text. */
+  visibleWordCount: number;
   normalizedTextTruncated: boolean;
   faqSignals: FaqSignals | null;
   canonical: string | null;

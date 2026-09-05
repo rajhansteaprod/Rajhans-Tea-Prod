@@ -48,6 +48,7 @@ function state(over: Partial<PageContentState> = {}): PageContentState {
     wordCount: 800,
     contentHash: 'hash',
     normalizedTextChars: 4200,
+    visibleWordCount: 0,
     normalizedTextTruncated: false,
     faqSignals: { questionHeadings: 0, faqHeadingPresent: false, faqSchemaPresent: false },
     canonical: URL,

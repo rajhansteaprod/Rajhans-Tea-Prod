@@ -309,6 +309,9 @@ export async function loadPageStates(opts: { only?: string[]; now?: Date } = {})
       wordCount: snap.wordCount ?? null,
       contentHash: snap.contentHash ?? null,
       normalizedTextChars: snap.normalizedTextChars ?? 0,
+      visibleWordCount: (snap.normalizedText ?? '').trim()
+        ? (snap.normalizedText ?? '').trim().split(/\s+/).length
+        : 0,
       normalizedTextTruncated: snap.normalizedTextTruncated ?? false,
       faqSignals: snap.faqSignals ?? null,
       canonical: snap.canonical ?? null,

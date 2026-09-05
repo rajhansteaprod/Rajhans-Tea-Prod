@@ -70,6 +70,7 @@ function analysis(over: Partial<ContentPageAnalysis> = {}): ContentPageAnalysis 
       wordCount: 400,
       contentHash: 'deadbeef',
       normalizedTextChars: 2100,
+      visibleWordCount: 120,
       normalizedTextTruncated: false,
       faqSignals: { questionHeadings: 0, faqHeadingPresent: false, faqSchemaPresent: false },
       canonical: URL_A,
