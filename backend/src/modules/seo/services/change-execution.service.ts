@@ -4,6 +4,7 @@ import {
   ISeoChangeExecutionDoc,
   ExecutedTarget,
 } from '../models/seo-change-execution.model';
+import { SeoChangePublication } from '../models/seo-change-publication.model';
 import { CmsService } from '../../cms/services/cms.service';
 import { evaluateExecutionPreflight, PreflightBlockerCode } from './change-execution-preflight.service';
 
@@ -86,6 +87,7 @@ export async function executeApprovedChangeDraft(opts: {
   // mongoose caches the resulting promise, so this is a no-op on every call
   // after the first. This stays a database constraint, not an in-memory lock.
   await SeoChangeExecution.init();
+  await SeoChangePublication.init();
 
   // Fast idempotency short-circuit — the unique index on draftId (re-checked at
   // insert time inside the transaction below) is the actual race-safety
@@ -156,6 +158,37 @@ export async function executeApprovedChangeDraft(opts: {
             changedFields: result.changedFields,
             evaluatedAt: result.evaluatedAt,
           },
+        },
+      ],
+      { session },
+    );
+
+    // A successful CMS write is not yet a public SEO publication on this site:
+    // /page routes are statically prerendered into the frontend image.
+    //
+    // Create the publication request in the SAME Mongo transaction as the Page
+    // writes + immutable execution record. If this request cannot be persisted,
+    // the CMS mutation is rolled back too, so no new execution can become
+    // stranded without a publication lifecycle.
+    await SeoChangePublication.create(
+      [
+        {
+          executionId: created._id,
+          recommendationId: recommendation._id,
+          draftId: draft._id,
+          requestedByUserId: new mongoose.Types.ObjectId(executorUserId),
+          requestedAt: new Date(),
+          status: 'pending',
+          startedAt: null,
+          publishedAt: null,
+          failedAt: null,
+          frontendImage: null,
+          frontendSourceRef: null,
+          attemptCount: 0,
+          errorMessage: null,
+          publicationVersion: '5.4a-publication-v1',
+          verificationId: null,
+          verificationStatus: null,
         },
       ],
       { session },

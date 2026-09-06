@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { SeoChangePublication } from '../models/seo-change-publication.model';
 import { SeoChangeExecution, ISeoChangeExecutionDoc, ExecutedTarget } from '../models/seo-change-execution.model';
 import {
   SeoChangeVerification,
@@ -249,6 +250,26 @@ export async function verifyExecution(opts: {
   if (!execution) return { ok: false, error: 'not_found', message: 'Execution not found' };
   if (execution.status !== 'succeeded') {
     return { ok: false, error: 'unsupported_state', message: 'Only a successful execution can be verified' };
+  }
+
+  // Phase 5.4 publication gate.
+  //
+  // New prerender-dependent executions carry a SeoChangePublication record.
+  // They must not be verified against stale public HTML before the publisher
+  // has rebuilt and deployed the frontend.
+  //
+  // No publication record means a historical pre-publication-layer execution,
+  // whose existing verification semantics are intentionally preserved.
+  const publication = await SeoChangePublication.findOne({
+    executionId: execution._id,
+  }).exec();
+
+  if (publication && publication.status !== 'published') {
+    return {
+      ok: false,
+      error: 'unsupported_state',
+      message: `Execution publication is "${publication.status}" and cannot be verified until it is published`,
+    };
   }
 
   const targets: VerifiedTarget[] = [];

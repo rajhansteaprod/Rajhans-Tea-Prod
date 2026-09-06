@@ -71,6 +71,16 @@ let draftStore: FakeDraft[] = [];
 let pageStore: FakePage[] = [];
 let execStore: FakeExecution[] = [];
 
+interface FakePublication {
+  _id: mongoose.Types.ObjectId;
+  executionId: mongoose.Types.ObjectId;
+  recommendationId: mongoose.Types.ObjectId;
+  draftId: mongoose.Types.ObjectId;
+  status: 'pending' | 'building' | 'published' | 'failed';
+}
+
+let publicationStore: FakePublication[] = [];
+
 function makeRec(fields: Partial<FakeRec> = {}): FakeRec {
   return {
     _id: new mongoose.Types.ObjectId(),
@@ -153,6 +163,7 @@ function metadataChange(overrides: Partial<MetadataProposedChange> = {}): Metada
 // instead of depending on how two interleaved runs happen to be scheduled. ──
 interface FakeSession {
   createdExecutionIds: string[];
+  createdPublicationIds: string[];
   pageBackups: Map<string, FakePage>;
   startTransaction: jest.Mock;
   commitTransaction: jest.Mock;
@@ -163,11 +174,13 @@ interface FakeSession {
 function makeSession(): FakeSession {
   const session = {
     createdExecutionIds: [] as string[],
+    createdPublicationIds: [] as string[],
     pageBackups: new Map<string, FakePage>(),
   } as FakeSession;
 
   const forget = () => {
     session.createdExecutionIds.length = 0;
+    session.createdPublicationIds.length = 0;
     session.pageBackups.clear();
   };
 
@@ -181,6 +194,10 @@ function makeSession(): FakeSession {
     for (const id of session.createdExecutionIds) {
       const index = execStore.findIndex((e) => String(e._id) === id);
       if (index >= 0) execStore.splice(index, 1);
+    }
+    for (const id of session.createdPublicationIds) {
+      const index = publicationStore.findIndex((p) => String(p._id) === id);
+      if (index >= 0) publicationStore.splice(index, 1);
     }
     forget();
   });
@@ -246,6 +263,25 @@ jest.mock('../../../src/modules/seo/models/seo-change-execution.model', () => ({
       const created = makeExecution(doc);
       execStore.push(created);
       options?.session?.createdExecutionIds.push(String(created._id));
+      return [created];
+    }),
+  },
+}));
+
+jest.mock('../../../src/modules/seo/models/seo-change-publication.model', () => ({
+  SeoChangePublication: {
+    init: jest.fn(async () => undefined),
+    create: jest.fn(async (docs: any[], options?: { session?: FakeSession }) => {
+      const doc = docs[0];
+      const created: FakePublication = {
+        _id: new mongoose.Types.ObjectId(),
+        executionId: doc.executionId,
+        recommendationId: doc.recommendationId,
+        draftId: doc.draftId,
+        status: doc.status,
+      };
+      publicationStore.push(created);
+      options?.session?.createdPublicationIds.push(String(created._id));
       return [created];
     }),
   },
@@ -344,6 +380,7 @@ const mockFindByIdAndUpdate = Page.findByIdAndUpdate as jest.Mock;
 const executorUserId = new mongoose.Types.ObjectId().toString();
 
 beforeEach(() => {
+  publicationStore = [];
   recStore = [];
   draftStore = [];
   pageStore = [];

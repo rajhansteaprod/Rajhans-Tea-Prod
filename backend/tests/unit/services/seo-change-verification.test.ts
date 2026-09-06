@@ -57,6 +57,13 @@ let execStore: FakeExecution[] = [];
 let pageStore: FakePage[] = [];
 let verStore: FakeVerification[] = [];
 
+interface FakePublication {
+  executionId: mongoose.Types.ObjectId;
+  status: 'pending' | 'building' | 'published' | 'failed';
+}
+
+let publicationStore: FakePublication[] = [];
+
 function makeExecutedTarget(fields: Partial<FakeExecutedTarget> = {}): FakeExecutedTarget {
   return {
     targetUrl: 'https://rajhanstea.com/page/about-us/',
@@ -141,6 +148,18 @@ jest.mock('../../../src/modules/seo/models/seo-change-verification.model', () =>
   };
 });
 
+
+jest.mock('../../../src/modules/seo/models/seo-change-publication.model', () => ({
+  SeoChangePublication: {
+    findOne: jest.fn((query: { executionId?: unknown }) => ({
+      exec: async () =>
+        publicationStore.find(
+          (p) => String(p.executionId) === String(query.executionId),
+        ) ?? null,
+    })),
+  },
+}));
+
 jest.mock('../../../src/modules/cms/models/page.model', () => ({
   Page: {
     findById: jest.fn((id: unknown) => ({
@@ -192,6 +211,7 @@ beforeEach(() => {
   execStore = [];
   pageStore = [];
   verStore = [];
+  publicationStore = [];
   jest.clearAllMocks();
   mockFetchUrl.mockResolvedValue(fetchOk());
   mockParseHtml.mockReturnValue({ title: 'About Us — Rajhans Tea', metaDescription: 'About our tea company.' });
@@ -818,5 +838,114 @@ describe('verifyExecution — repeated attempts + immutability + audit identity'
 
     await verifyExecution({ executionId: String(execution._id), verifierUserId });
     expect(pageStore[0]).toEqual(before);
+  });
+});
+
+
+// -----------------------------------------------------------------------------
+// Phase 5.4 publication gate
+// -----------------------------------------------------------------------------
+describe('verifyExecution — prerender publication gate', () => {
+  it('blocks verification while a new execution publication is pending', async () => {
+    const execution = makeExecution();
+    execStore.push(execution);
+
+    publicationStore.push({
+      executionId: execution._id,
+      status: 'pending',
+    });
+
+    const result = await verifyExecution({
+      executionId: String(execution._id),
+      verifierUserId,
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBe('unsupported_state');
+      expect(result.message).toContain('pending');
+    }
+
+    expect(mockFetchUrl).not.toHaveBeenCalled();
+    expect(verStore).toHaveLength(0);
+  });
+
+  it('allows verification once the execution publication is published', async () => {
+    const page = makePage({
+      metaTitle: 'About Us',
+      title: 'About Us',
+    });
+    pageStore.push(page);
+
+    const execution = makeExecution({
+      targets: [
+        makeExecutedTarget({
+          targetDocumentId: page._id,
+          proposed: { metaTitle: 'About Us' },
+          after: {
+            metaTitle: 'About Us',
+            metaDescription: 'About our tea company.',
+          },
+        }),
+      ],
+    });
+    execStore.push(execution);
+
+    publicationStore.push({
+      executionId: execution._id,
+      status: 'published',
+    });
+
+    mockParseHtml.mockReturnValue({
+      title: 'About Us — Rajhans Tea',
+      metaDescription: 'About our tea company.',
+    });
+
+    const result = await verifyExecution({
+      executionId: String(execution._id),
+      verifierUserId,
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.verification.status).toBe('verified');
+    }
+  });
+
+  it('preserves verification behaviour for historical executions with no publication record', async () => {
+    const page = makePage({
+      metaTitle: 'About Us',
+      title: 'About Us',
+    });
+    pageStore.push(page);
+
+    const execution = makeExecution({
+      targets: [
+        makeExecutedTarget({
+          targetDocumentId: page._id,
+          proposed: { metaTitle: 'About Us' },
+          after: {
+            metaTitle: 'About Us',
+            metaDescription: 'About our tea company.',
+          },
+        }),
+      ],
+    });
+    execStore.push(execution);
+
+    mockParseHtml.mockReturnValue({
+      title: 'About Us — Rajhans Tea',
+      metaDescription: 'About our tea company.',
+    });
+
+    const result = await verifyExecution({
+      executionId: String(execution._id),
+      verifierUserId,
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.verification.status).toBe('verified');
+    }
   });
 });
