@@ -13,6 +13,13 @@ import {
   GenericProposedChange,
 } from '../models/seo-change-draft.model';
 import { seoConfig } from '../seo.config';
+import { Product } from '../../catalog/models/product.model';
+import {
+  generateGroundedProductDraft,
+} from '../ai/openai-seo-drafting.service';
+import {
+  ProductContentEvidence,
+} from '../ai/seo-ai.types';
 
 /**
  * Phase 5.2 — deterministic, rule-based generator that turns an APPROVED, OPEN
@@ -22,7 +29,7 @@ import { seoConfig } from '../seo.config';
  * sitemap, or any live SEO field. Same recommendation/evidence state always
  * produces the same proposal for a given `GENERATOR_VERSION`.
  */
-export const GENERATOR_VERSION = '5.2.0-rule-v1';
+export const GENERATOR_VERSION = '6.3.0-ai-product-content-v1';
 
 // Bounds draft size for recommendations that span many URLs (e.g. a
 // site-wide schema gap) so a single draft never balloons unboundedly.
@@ -64,8 +71,14 @@ export async function generateChangeDraft(opts: {
     return { ok: false, error: 'not_approved', message: 'Only an approved recommendation can generate a draft' };
   }
 
-  const { proposedChanges, warnings } = buildProposedChanges(rec);
-  const validation = validateProposedChanges(proposedChanges, warnings);
+  const {
+    proposedChanges,
+    warnings,
+    generationEvidence,
+  } = await buildProposedChanges(rec);
+
+  const validation =
+    validateProposedChanges(proposedChanges, warnings);
 
   // Regeneration/versioning — CREATE FIRST, then supersede. If create() throws,
   // the previous active draft must remain untouched (never left with zero active
@@ -81,7 +94,10 @@ export async function generateChangeDraft(opts: {
     generatorVersion: GENERATOR_VERSION,
     generatedAt: new Date(),
     generatedBy: new mongoose.Types.ObjectId(opts.generatedBy),
-    inputSnapshot: buildInputSnapshot(rec),
+    inputSnapshot: {
+      ...buildInputSnapshot(rec),
+      generationEvidence,
+    },
     proposedChanges,
     validation,
   });
@@ -164,16 +180,28 @@ function buildInputSnapshot(rec: ISeoRecommendationDoc): Record<string, unknown>
 // Dispatcher — one deterministic generator per recommendation category.
 // Anything not explicitly covered gets the safe generic fallback.
 // ─────────────────────────────────────────────────────────────────────────────
-function buildProposedChanges(rec: ISeoRecommendationDoc): { proposedChanges: ProposedChange[]; warnings: string[] } {
+interface GeneratedProposal {
+  proposedChanges: ProposedChange[];
+  warnings: string[];
+  generationEvidence?: Record<string, unknown>;
+}
+
+async function buildProposedChanges(
+  rec: ISeoRecommendationDoc,
+): Promise<GeneratedProposal> {
   switch (rec.category) {
     case 'metadata':
       return generateMetadataChanges(rec);
+
     case 'schema':
       return generateSchemaChanges(rec);
+
     case 'internal-linking':
       return generateInternalLinkChanges(rec);
+
     case 'content':
       return generateContentChanges(rec);
+
     default:
       return generateGenericChange(rec);
   }
@@ -510,33 +538,231 @@ function generateInternalLinkChanges(rec: ISeoRecommendationDoc): { proposedChan
 // 4) content — thin-content: headings are a fixed structural outline, never
 // fabricated body copy. Body is left blank for a human to author.
 // ─────────────────────────────────────────────────────────────────────────────
-function generateContentChanges(rec: ISeoRecommendationDoc): { proposedChanges: ProposedChange[]; warnings: string[] } {
+function normalizeBestTakenFor(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter(
+      (v): v is string => typeof v === 'string',
+    );
+  }
+
+  if (typeof value === 'string') {
+    return [value];
+  }
+
+  return [];
+}
+
+async function generateContentChanges(
+  rec: ISeoRecommendationDoc,
+): Promise<GeneratedProposal> {
   const warnings: string[] = [];
+
   const evidence = rec.evidence as {
-    pages?: { url: string; wordCount: number | null; hasH1: boolean | null }[];
+    opportunityType?: string;
+    pageType?: string;
+    sourceRef?: {
+      model?: string;
+      documentId?: string;
+      slug?: string;
+    };
+    pages?: {
+      url: string;
+      wordCount: number | null;
+      hasH1: boolean | null;
+    }[];
     wordCountThreshold?: number;
   };
-  const pages: { url: string; wordCount: number | null; hasH1: boolean | null }[] = evidence.pages?.length
-    ? evidence.pages
-    : rec.affectedUrls.map((url) => ({ url, wordCount: null, hasH1: null }));
+
+  const isExecutableProductOpportunity =
+    rec.source === 'content' &&
+    evidence.opportunityType === 'thin-content' &&
+    evidence.pageType === 'product' &&
+    evidence.sourceRef?.model === 'Product';
+
+  if (isExecutableProductOpportunity) {
+    let product: any = null;
+
+    if (
+      evidence.sourceRef?.documentId &&
+      mongoose.isValidObjectId(
+        evidence.sourceRef.documentId,
+      )
+    ) {
+      product = await Product.findOne({
+        _id: evidence.sourceRef.documentId,
+        status: 'active',
+      })
+        .lean()
+        .exec();
+    }
+
+    if (
+      !product &&
+      evidence.sourceRef?.slug
+    ) {
+      product = await Product.findOne({
+        slug: evidence.sourceRef.slug,
+        status: 'active',
+      })
+        .lean()
+        .exec();
+    }
+
+    if (!product) {
+      warnings.push(
+        'Active Product could not be resolved; executable AI content generation was skipped.',
+      );
+
+      return {
+        proposedChanges: [],
+        warnings,
+        generationEvidence: {
+          mode: 'ai-product-content',
+          status: 'product_not_found',
+        },
+      };
+    }
+
+    const productEvidence: ProductContentEvidence = {
+      productId: String(product._id),
+      name: product.name,
+      slug: product.slug,
+      region: product.region ?? null,
+      description:
+        product.description ?? '',
+      shortDescription:
+        product.shortDescription ?? null,
+      bestTakenFor:
+        normalizeBestTakenFor(
+          product.bestTakenFor,
+        ),
+      imageAltText:
+        product.imageAltText ?? null,
+    };
+
+    const aiResult =
+      await generateGroundedProductDraft(
+        productEvidence,
+      );
+
+    if (
+      !aiResult.ok ||
+      !aiResult.output ||
+      aiResult.output.status !== 'ok' ||
+      !aiResult.output.draft
+    ) {
+      warnings.push(
+        `AI product drafting did not produce an executable proposal: ${aiResult.error ?? aiResult.output?.status ?? 'unknown failure'}`,
+      );
+
+      return {
+        proposedChanges: [],
+        warnings,
+        generationEvidence: {
+          mode: 'ai-product-content',
+          status: 'rejected',
+          provider: aiResult.provider,
+          model: aiResult.model,
+          error: aiResult.error ?? null,
+          output: aiResult.output,
+          evidence: productEvidence,
+        },
+      };
+    }
+
+    const targetUrl =
+      rec.affectedUrls[0] ??
+      `${seoConfig.baseUrl.replace(/\/$/, '')}/product/${product.slug}/`;
+
+    warnings.push(
+      'Product description was generated by the grounded AI drafting pipeline and passed independent factual verification.',
+    );
+
+    warnings.push(
+      'Human approval remains required before execution.',
+    );
+
+    return {
+      proposedChanges: [
+        {
+          kind: 'content',
+          targetUrl,
+          field: {
+            name: 'description',
+            current:
+              product.description ?? '',
+            proposed:
+              aiResult.output.draft,
+          },
+          blocks: [],
+        },
+      ],
+      warnings,
+      generationEvidence: {
+        mode: 'ai-product-content',
+        status: 'verified',
+        provider: aiResult.provider,
+        model: aiResult.model,
+        evidence: productEvidence,
+        claimsUsed:
+          aiResult.output.claimsUsed,
+        unsupportedClaims:
+          aiResult.output.unsupportedClaims,
+        notes:
+          aiResult.output.notes,
+      },
+    };
+  }
+
+  // Existing non-product/general content behavior remains safe and non-executable.
+  const pages =
+    evidence.pages?.length
+      ? evidence.pages
+      : rec.affectedUrls.map(
+          (url) => ({
+            url,
+            wordCount: null,
+            hasH1: null,
+          }),
+        );
 
   if (!pages.length) {
-    return generateGenericChange(rec, [...warnings, 'No page URLs found in evidence for this content recommendation.']);
+    return generateGenericChange(
+      rec,
+      [
+        ...warnings,
+        'No page URLs found in evidence for this content recommendation.',
+      ],
+    );
   }
 
-  const capped = cap(pages, warnings, 'pages');
-  const changes: ContentProposedChange[] = capped.map((p) => ({
-    kind: 'content',
-    targetUrl: p.url,
-    blocks: CONTENT_OUTLINE_HEADINGS.map((heading) => ({ heading, body: '' })),
-  }));
+  const capped =
+    cap(pages, warnings, 'pages');
+
+  const changes: ContentProposedChange[] =
+    capped.map((p) => ({
+      kind: 'content',
+      targetUrl: p.url,
+      blocks:
+        CONTENT_OUTLINE_HEADINGS.map(
+          (heading) => ({
+            heading,
+            body: '',
+          }),
+        ),
+    }));
+
   warnings.push(
-    'Section headings are a structural outline only; body copy is intentionally left blank — original, factual content must be authored by a human, not fabricated.',
+    'Section headings are a structural outline only; body copy is intentionally left blank — original, factual content must be authored before execution.',
   );
-  if (evidence.wordCountThreshold != null) {
-    warnings.push(`Current word counts are below the ${evidence.wordCountThreshold}-word thin-content threshold; see inputSnapshot for per-page counts.`);
-  }
-  return { proposedChanges: changes, warnings };
+
+  return {
+    proposedChanges: changes,
+    warnings,
+    generationEvidence: {
+      mode: 'outline-only',
+    },
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
