@@ -646,6 +646,28 @@ async function generateContentChanges(
       );
 
     if (
+      aiResult.disposition === 'no_material_improvement'
+    ) {
+      warnings.push(
+        'Grounded AI found no material factual expansion worth making. Existing product copy should be retained rather than padded.',
+      );
+
+      return {
+        proposedChanges: [],
+        warnings,
+        generationEvidence: {
+          mode: 'ai-product-content',
+          status: 'no_material_improvement',
+          provider: aiResult.provider,
+          model: aiResult.model,
+          error: aiResult.error ?? null,
+          output: aiResult.output,
+          evidence: productEvidence,
+        },
+      };
+    }
+
+    if (
       !aiResult.ok ||
       !aiResult.output ||
       aiResult.output.status !== 'ok' ||
@@ -850,7 +872,37 @@ function validateProposedChanges(changes: ProposedChange[], generationWarnings: 
         break;
       }
       case 'content': {
-        if (!change.blocks.length) errors.push(`${label}: no content blocks proposed.`);
+        // Phase 6.3C executable product content uses `field.description`.
+        // Historical content recommendations use structural `blocks`.
+        // Either representation is valid; an empty blocks[] is expected
+        // for an executable Product.description draft.
+        if (change.field) {
+          if (change.field.name !== 'description') {
+            errors.push(`${label}: unsupported executable content field.`);
+          }
+
+          if (typeof change.field.current !== 'string') {
+            errors.push(`${label}: field.current must be a string.`);
+          }
+
+          if (
+            typeof change.field.proposed !== 'string' ||
+            !change.field.proposed.trim()
+          ) {
+            errors.push(`${label}: field.proposed must be a non-empty string.`);
+          }
+
+          if (
+            typeof change.field.current === 'string' &&
+            typeof change.field.proposed === 'string' &&
+            change.field.current === change.field.proposed
+          ) {
+            errors.push(`${label}: proposed description is identical to current description.`);
+          }
+        } else if (!change.blocks.length) {
+          errors.push(`${label}: no content field or content blocks proposed.`);
+        }
+
         break;
       }
       case 'faq': {

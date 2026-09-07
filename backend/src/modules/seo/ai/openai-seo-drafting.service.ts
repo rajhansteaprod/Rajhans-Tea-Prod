@@ -248,14 +248,22 @@ Return JSON only.
       );
 
     if (errors.length) {
+      const onlyNoMaterialImprovement =
+        errors.length === 1 &&
+        errors[0].startsWith(
+          'Draft does not materially expand the page',
+        );
+
       return {
         ok: false,
         provider: 'openai',
         model: MODEL,
         evidence,
         output,
-        error:
-          errors.join('; '),
+        disposition: onlyNoMaterialImprovement
+          ? 'no_material_improvement'
+          : 'rejected',
+        error: errors.join('; '),
       };
     }
 
@@ -306,12 +314,31 @@ Return JSON only.
         );
 
       if (repairedErrors.length) {
+        const onlyNoMaterialImprovement =
+          repairedErrors.length === 1 &&
+          repairedErrors[0].startsWith(
+            'Draft does not materially expand the page',
+          );
+
+        if (onlyNoMaterialImprovement) {
+          return {
+            ok: false,
+            provider: 'openai',
+            model: MODEL,
+            evidence,
+            output: repairedOutput,
+            disposition: 'no_material_improvement',
+            error: repairedErrors[0],
+          };
+        }
+
         return {
           ok: false,
           provider: 'openai',
           model: MODEL,
           evidence,
           output: repairedOutput,
+          disposition: 'rejected',
           error:
             'Repaired draft failed deterministic validation: ' +
             repairedErrors.join('; '),
@@ -372,6 +399,7 @@ Return JSON only.
       provider: 'openai',
       model: MODEL,
       evidence,
+      disposition: 'draft_ready',
       output: {
         ...output,
         notes: [
