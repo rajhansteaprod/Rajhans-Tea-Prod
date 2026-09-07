@@ -12,6 +12,7 @@ import {
   VerifiedTarget,
 } from '../models/seo-change-verification.model';
 import { Page } from '../../cms/models/page.model';
+import { Product } from '../../catalog/models/product.model';
 import { fetchUrl } from './fetcher.service';
 import { parseHtml } from './parser.service';
 import { seoConfig } from '../seo.config';
@@ -74,7 +75,7 @@ function matchesIntendedTarget(intendedUrl: string, finalUrl: string): boolean {
  * `current`) is always the pre-verification baseline, since `after` is what
  * the execution actually confirmed was written.
  */
-async function verifyTarget(target: ExecutedTarget): Promise<VerifiedTarget> {
+async function verifyCmsPageTarget(target: ExecutedTarget): Promise<VerifiedTarget> {
   const checkTitle = target.proposed.metaTitle !== undefined;
   const checkDescription = target.proposed.metaDescription !== undefined;
 
@@ -221,6 +222,183 @@ async function verifyTarget(target: ExecutedTarget): Promise<VerifiedTarget> {
   };
 }
 
+
+function normalizePublicText(value: string): string {
+  return value
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+async function verifyProductTarget(
+  target: ExecutedTarget,
+): Promise<VerifiedTarget> {
+  const expectedDescription = target.after.description;
+
+  if (expectedDescription === undefined) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: emptyFetchInfo(
+        target.targetUrl,
+        'execution_missing_product_description',
+      ),
+      expected: {},
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: ['description_missing'],
+    };
+  }
+
+  const product = await Product.findById(
+    target.targetDocumentId,
+  ).exec();
+
+  if (!product || product.status !== 'active') {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: emptyFetchInfo(
+        target.targetUrl,
+        !product
+          ? 'product_missing'
+          : 'product_inactive',
+      ),
+      expected: {
+        description: expectedDescription,
+      },
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: [
+        !product
+          ? 'product_missing'
+          : 'product_inactive',
+      ],
+    };
+  }
+
+  if (
+    (product.description ?? '') !==
+    expectedDescription
+  ) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: emptyFetchInfo(
+        target.targetUrl,
+        'product_drifted_since_execution',
+      ),
+      expected: {
+        description: expectedDescription,
+      },
+      observed: {
+        description: product.description ?? '',
+      },
+      matches: {
+        description: false,
+      },
+      status: 'mismatch',
+      mismatchFields: ['description_drift'],
+    };
+  }
+
+  const fetched = await fetchUrl(target.targetUrl);
+
+  const fetchInfo: VerificationFetchInfo = {
+    requestedUrl: fetched.requestedUrl,
+    finalUrl: fetched.finalUrl,
+    finalStatus: fetched.finalStatus,
+    redirectChain: fetched.redirectChain,
+    error: fetched.error,
+    transient: fetched.transient,
+  };
+
+  const expected: VerificationExpected = {
+    description: expectedDescription,
+  };
+
+  const fetchSucceeded =
+    !fetched.transient &&
+    fetched.finalStatus === 200 &&
+    fetched.html !== null;
+
+  if (!fetchSucceeded) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: fetchInfo,
+      expected,
+      observed: {},
+      matches: {},
+      status: 'fetch_failed',
+      mismatchFields: [],
+    };
+  }
+
+  if (
+    !matchesIntendedTarget(
+      target.targetUrl,
+      fetched.finalUrl,
+    )
+  ) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: fetchInfo,
+      expected,
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: [
+        'redirected_to_different_page',
+      ],
+    };
+  }
+
+  const publicText = normalizePublicText(
+    fetched.html as string,
+  );
+
+  const normalizedExpected =
+    expectedDescription
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const matchesDescription =
+    publicText.includes(normalizedExpected);
+
+  return {
+    targetUrl: target.targetUrl,
+    targetDocumentId: target.targetDocumentId,
+    fetch: fetchInfo,
+    expected,
+    observed: {
+      description: matchesDescription
+        ? expectedDescription
+        : null,
+    },
+    matches: {
+      description: matchesDescription,
+    },
+    status: matchesDescription
+      ? 'verified'
+      : 'mismatch',
+    mismatchFields: matchesDescription
+      ? []
+      : ['description'],
+  };
+}
+
 /**
  * A confirmed mismatch is stronger evidence than an inability to verify
  * another target, so mismatch outranks fetch_failed when both are present.
@@ -273,8 +451,13 @@ export async function verifyExecution(opts: {
   }
 
   const targets: VerifiedTarget[] = [];
+
   for (const target of execution.targets) {
-    targets.push(await verifyTarget(target));
+    targets.push(
+      execution.targetType === 'product'
+        ? await verifyProductTarget(target)
+        : await verifyCmsPageTarget(target),
+    );
   }
   const status = aggregateStatus(targets);
 

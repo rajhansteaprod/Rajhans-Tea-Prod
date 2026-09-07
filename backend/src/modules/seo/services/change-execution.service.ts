@@ -6,6 +6,7 @@ import {
 } from '../models/seo-change-execution.model';
 import { SeoChangePublication } from '../models/seo-change-publication.model';
 import { CmsService } from '../../cms/services/cms.service';
+import { Product } from '../../catalog/models/product.model';
 import { evaluateExecutionPreflight, PreflightBlockerCode } from './change-execution-preflight.service';
 
 /**
@@ -26,7 +27,7 @@ import { evaluateExecutionPreflight, PreflightBlockerCode } from './change-execu
  * inside the transaction, immediately before Pass 2 — a preflight result
  * returned to a browser earlier is never trusted as authorization.
  */
-export const EXECUTOR_VERSION = '5.3.0-metadata-page-v1';
+export const EXECUTOR_VERSION = '6.3.0-metadata-product-content-v1';
 
 const cmsService = new CmsService();
 
@@ -119,17 +120,65 @@ export async function executeApprovedChangeDraft(opts: {
 
     // PASS 2 — every target passed Pass 1; only now perform the writes.
     const targets: ExecutedTarget[] = [];
+
     for (const p of prepared) {
-      const updated = await cmsService.updatePageSeoMetadata(String(p.page._id), p.proposed, executorUserId, {
-        session,
-      });
+      if (p.targetType === 'cms_page') {
+        const updated = await cmsService.updatePageSeoMetadata(
+          String(p.page._id),
+          p.proposed,
+          executorUserId,
+          { session },
+        );
+
+        targets.push({
+          targetUrl: p.targetUrl,
+          targetDocumentId:
+            p.page._id as mongoose.Types.ObjectId,
+          before: p.before,
+          proposed: p.proposed,
+          after: {
+            metaTitle: updated.metaTitle,
+            metaDescription: updated.metaDescription,
+          },
+        });
+
+        continue;
+      }
+
+      const updatedProduct =
+        await Product.findOneAndUpdate(
+          {
+            _id: p.product._id,
+            status: 'active',
+            description: p.before.description ?? '',
+          },
+          {
+            $set: {
+              description: p.proposed.description,
+            },
+          },
+          {
+            new: true,
+            session,
+          },
+        ).exec();
+
+      if (!updatedProduct) {
+        throw new ExecutionRejected(
+          'stale',
+          `Product "${p.product.slug}" changed before execution could commit`,
+        );
+      }
 
       targets.push({
         targetUrl: p.targetUrl,
-        targetDocumentId: p.page._id as mongoose.Types.ObjectId,
+        targetDocumentId:
+          p.product._id as mongoose.Types.ObjectId,
         before: p.before,
         proposed: p.proposed,
-        after: { metaTitle: updated.metaTitle, metaDescription: updated.metaDescription },
+        after: {
+          description: updatedProduct.description ?? '',
+        },
       });
     }
 
@@ -139,7 +188,7 @@ export async function executeApprovedChangeDraft(opts: {
           draftId: draft._id,
           recommendationId: recommendation._id,
           recommendationFingerprint: recommendation.fingerprint,
-          targetType: 'cms_page',
+          targetType: prepared[0].targetType,
           targets,
           executorUserId: new mongoose.Types.ObjectId(executorUserId),
           executedAt: new Date(),

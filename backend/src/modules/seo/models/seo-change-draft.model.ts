@@ -43,7 +43,21 @@ export interface InternalLinkProposedChange {
 export interface ContentProposedChange {
   kind: 'content';
   targetUrl: string;
-  blocks: { heading: string; body: string }[]; // body intentionally left blank when no factual source exists
+
+  /**
+   * Phase 6.3A — executable product-content proposal.
+   *
+   * Optional for backward compatibility with historical outline-only drafts.
+   * Execution accepts only name:'description' and requires exact current/proposed
+   * values so stale-state protection is equivalent to the metadata executor.
+   */
+  field?: {
+    name: 'description';
+    current: string;
+    proposed: string;
+  };
+
+  blocks: { heading: string; body: string }[];
 }
 
 export interface FaqProposedChange {

@@ -12,12 +12,15 @@ import mongoose, { Document, Schema } from 'mongoose';
  * a unique index on `draftId` is sufficient, on its own, to guarantee a draft
  * can never be successfully executed twice.
  */
-export type ExecutionTargetType = 'cms_page';
+export type ExecutionTargetType = 'cms_page' | 'product';
 
 /** Only the two whitelisted fields this phase may read or write. */
 export interface ExecutedFieldSnapshot {
   metaTitle?: string;
   metaDescription?: string;
+
+  /** Phase 6.3A product-content execution. */
+  description?: string;
 }
 
 /** One resolved CMS page within a (possibly multi-target) draft execution. */
@@ -92,6 +95,7 @@ const executedFieldSnapshotSchema = new Schema<ExecutedFieldSnapshot>(
   {
     metaTitle: { type: String },
     metaDescription: { type: String },
+    description: { type: String },
   },
   { _id: false },
 );
@@ -151,7 +155,7 @@ const seoChangeExecutionSchema = new Schema<ISeoChangeExecutionDoc>(
     draftId: { type: Schema.Types.ObjectId, ref: 'SeoChangeDraft', required: true },
     recommendationId: { type: Schema.Types.ObjectId, ref: 'SeoRecommendation', required: true, index: true },
     recommendationFingerprint: { type: String, required: true },
-    targetType: { type: String, enum: ['cms_page'], required: true },
+    targetType: { type: String, enum: ['cms_page', 'product'], required: true },
     targets: { type: [executedTargetSchema], required: true },
     executorUserId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     executedAt: { type: Date, required: true },

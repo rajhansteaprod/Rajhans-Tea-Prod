@@ -222,7 +222,7 @@ describe('completeExecution — eligibility gate', () => {
   });
 
   it('rejects an execution whose target type is outside the supported Phase 5.3 scope', async () => {
-    const execution = makeExecution({ targetType: 'product' });
+    const execution = makeExecution({ targetType: 'blog' as unknown as 'cms_page' });
     execStore.push(execution);
     verStore.push(makeVerification(execution));
 

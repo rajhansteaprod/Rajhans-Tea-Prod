@@ -66,7 +66,10 @@ export async function completeExecution(opts: {
   if (execution.status !== 'succeeded') {
     return { ok: false, error: 'unsupported_state', message: 'Only a successful execution can be completed' };
   }
-  if (execution.targetType !== 'cms_page') {
+  if (
+    execution.targetType !== 'cms_page' &&
+    execution.targetType !== 'product'
+  ) {
     return {
       ok: false,
       error: 'unsupported_state',

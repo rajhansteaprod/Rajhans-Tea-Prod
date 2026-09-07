@@ -730,6 +730,10 @@ describe('evaluateExecutionPreflight — valid proposals', () => {
     });
     const { result, prepared } = await evaluate(draft);
     expect(result.executable).toBe(true);
+    expect(prepared[0].targetType).toBe('cms_page');
+    if (prepared[0].targetType !== 'cms_page') {
+      throw new Error('Expected cms_page prepared target');
+    }
     expect(prepared[0].page.slug).toBe('terms-conditions');
   });
 

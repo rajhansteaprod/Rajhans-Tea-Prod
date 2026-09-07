@@ -1,8 +1,14 @@
 import mongoose, { ClientSession } from 'mongoose';
 import { SeoRecommendation, ISeoRecommendationDoc } from '../models/seo-recommendation.model';
-import { SeoChangeDraft, ISeoChangeDraftDoc, MetadataProposedChange } from '../models/seo-change-draft.model';
+import {
+  SeoChangeDraft,
+  ISeoChangeDraftDoc,
+  MetadataProposedChange,
+  ContentProposedChange,
+} from '../models/seo-change-draft.model';
 import { SeoChangeExecution, ExecutedFieldSnapshot } from '../models/seo-change-execution.model';
 import { Page, IPageDoc } from '../../cms/models/page.model';
+import { Product, IProductDoc } from '../../catalog/models/product.model';
 import { CANONICAL_PAGE_SLUG } from '../../cms/page-slug.util';
 import { seoConfig } from '../seo.config';
 
@@ -74,7 +80,8 @@ export type PreflightWarningCode =
   | 'duplicate_description'
   | 'normalized_no_op_title'
   | 'normalized_no_op_description'
-  | 'blank_description';
+  | 'blank_description'
+  | 'content_requires_review';
 
 /** One rule the evaluator actually ran. Rules after a short-circuiting gate are simply absent. */
 export type PreflightCheckCode =
@@ -120,7 +127,7 @@ export interface PreflightCheck {
 /** The metadata fields this execution would write, per resolved target — the exact mutation scope. */
 export interface PreflightChangedFields {
   targetUrl: string;
-  fields: ('metaTitle' | 'metaDescription')[];
+  fields: ('metaTitle' | 'metaDescription' | 'description')[];
 }
 
 export interface ExecutionPreflightResult {
@@ -138,12 +145,21 @@ export interface ExecutionPreflightResult {
  * Pass-1 output reused by Phase 5.3's Pass 2. Internal only — never serialized
  * to the API (it carries live mongoose documents).
  */
-export interface PreparedExecutionTarget {
-  targetUrl: string;
-  page: IPageDoc;
-  before: ExecutedFieldSnapshot;
-  proposed: ExecutedFieldSnapshot;
-}
+export type PreparedExecutionTarget =
+  | {
+      targetType: 'cms_page';
+      targetUrl: string;
+      page: IPageDoc;
+      before: ExecutedFieldSnapshot;
+      proposed: ExecutedFieldSnapshot;
+    }
+  | {
+      targetType: 'product';
+      targetUrl: string;
+      product: IProductDoc;
+      before: ExecutedFieldSnapshot;
+      proposed: ExecutedFieldSnapshot;
+    };
 
 export interface ExecutionPreflightEvaluation {
   result: ExecutionPreflightResult;
@@ -213,6 +229,7 @@ const MEDIUM_RISK_WARNING_CODES: PreflightWarningCode[] = [
   'description_too_short',
   'description_too_long',
   'blank_description',
+  'content_requires_review',
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -301,6 +318,74 @@ async function findUnpublishedCmsPage(targetUrl: string, session?: ClientSession
     if (page) return page;
   }
   return null;
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 6.3A product-content target resolution
+// ─────────────────────────────────────────────────────────────────────────────
+
+const PRODUCT_PATH_PATTERN = /^\/product\/([^/]+)\/?$/;
+
+type ProductTargetResolution =
+  | { ok: true; product: IProductDoc }
+  | {
+      ok: false;
+      reason: 'unsupported_host' | 'unsupported_path' | 'not_found';
+    };
+
+export async function resolveProductTarget(
+  targetUrl: string,
+  session?: ClientSession,
+): Promise<ProductTargetResolution> {
+  let parsed: URL;
+  let base: URL;
+
+  try {
+    parsed = new URL(targetUrl);
+    base = new URL(seoConfig.baseUrl);
+  } catch {
+    return { ok: false, reason: 'unsupported_path' };
+  }
+
+  if (
+    parsed.search !== '' ||
+    parsed.hash !== '' ||
+    parsed.username !== '' ||
+    parsed.password !== ''
+  ) {
+    return { ok: false, reason: 'unsupported_path' };
+  }
+
+  if (parsed.origin.toLowerCase() !== base.origin.toLowerCase()) {
+    return { ok: false, reason: 'unsupported_host' };
+  }
+
+  const match = PRODUCT_PATH_PATTERN.exec(parsed.pathname);
+  const slug = match?.[1];
+
+  if (!slug) {
+    return { ok: false, reason: 'unsupported_path' };
+  }
+
+  const product = await Product.findOne({
+    slug,
+    status: 'active',
+  })
+    .session(session ?? null)
+    .exec();
+
+  if (!product) {
+    return { ok: false, reason: 'not_found' };
+  }
+
+  return { ok: true, product };
+}
+
+function normalizeProductDescription(
+  value: string | null | undefined,
+): string {
+  return value ?? '';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -533,6 +618,299 @@ export async function evaluateExecutionPreflight(opts: {
   }
   record(acc, 'draft_valid', 'pass', 'Draft is valid and has proposed changes');
 
+  const uniqueKinds = new Set(
+    draft.proposedChanges.map((change) => change.kind),
+  );
+
+  if (uniqueKinds.size !== 1) {
+    block(
+      acc,
+      'unsupported_kind',
+      'A single execution draft cannot mix different change kinds',
+    );
+    record(
+      acc,
+      'change_kind_supported',
+      'fail',
+      'Mixed change kinds are outside the executable scope',
+    );
+    return empty(draft, recommendation);
+  }
+
+  // -------------------------------------------------------------------------
+  // Phase 6.3A — Product.description content execution.
+  // -------------------------------------------------------------------------
+  if (draft.proposedChanges[0]?.kind === 'content') {
+    const contentChanges =
+      draft.proposedChanges as ContentProposedChange[];
+
+    // Historical Phase 5.2 thin-content drafts are outline-only and contain
+    // no executable field snapshot. Preserve their original contract:
+    // they remain unsupported_kind rather than being reinterpreted as a
+    // malformed executable product change.
+    if (contentChanges.some((change) => !change.field)) {
+      block(
+        acc,
+        'unsupported_kind',
+        'Outline-only content drafts cannot be executed; regenerate the draft with executable product content support',
+      );
+      record(
+        acc,
+        'change_kind_supported',
+        'fail',
+        'Historical outline-only content is outside the executable scope',
+      );
+      return empty(draft, recommendation);
+    }
+
+    record(
+      acc,
+      'change_kind_supported',
+      'pass',
+      'All proposed changes are product content changes',
+    );
+
+    const prepared: PreparedExecutionTarget[] = [];
+    const seenProductIds = new Map<string, string>();
+
+    for (const change of contentChanges) {
+      const targetUrl = change.targetUrl;
+
+      if (
+        !change.field ||
+        change.field.name !== 'description'
+      ) {
+        const message =
+          'Product content execution requires field.name="description" with exact current/proposed values';
+        block(acc, 'unsupported_field', message, targetUrl);
+        record(acc, 'fields_supported', 'fail', message, targetUrl);
+        continue;
+      }
+
+      record(
+        acc,
+        'fields_supported',
+        'pass',
+        'Only Product.description is proposed',
+        targetUrl,
+      );
+
+      if (
+        typeof change.field.current !== 'string' ||
+        typeof change.field.proposed !== 'string'
+      ) {
+        const message =
+          'Product description current/proposed values must both be strings';
+        block(acc, 'malformed_value', message, targetUrl);
+        record(
+          acc,
+          'values_well_formed',
+          'fail',
+          message,
+          targetUrl,
+        );
+        continue;
+      }
+
+      if (!change.field.proposed.trim()) {
+        const message =
+          'Proposed Product.description cannot be empty';
+        block(acc, 'malformed_value', message, targetUrl);
+        record(
+          acc,
+          'values_well_formed',
+          'fail',
+          message,
+          targetUrl,
+        );
+        continue;
+      }
+
+      if (change.field.proposed.length > 12000) {
+        const message =
+          'Proposed Product.description exceeds the 12000-character structural limit';
+        block(acc, 'malformed_value', message, targetUrl);
+        record(
+          acc,
+          'values_well_formed',
+          'fail',
+          message,
+          targetUrl,
+        );
+        continue;
+      }
+
+      record(
+        acc,
+        'values_well_formed',
+        'pass',
+        'Product description values are well-formed strings',
+        targetUrl,
+      );
+
+      const target = await resolveProductTarget(
+        targetUrl,
+        session,
+      );
+
+      if (!target.ok) {
+        const message =
+          target.reason === 'not_found'
+            ? `No active Product found for ${targetUrl}`
+            : `${targetUrl} is not an executable product URL`;
+
+        block(
+          acc,
+          target.reason === 'not_found'
+            ? 'target_not_found'
+            : 'unsupported_target',
+          message,
+          targetUrl,
+        );
+        record(
+          acc,
+          'target_resolvable',
+          'fail',
+          message,
+          targetUrl,
+        );
+        continue;
+      }
+
+      const product = target.product;
+
+      record(
+        acc,
+        'target_resolvable',
+        'pass',
+        `Resolves to active Product "${product.slug}"`,
+        targetUrl,
+      );
+
+      const productId = String(product._id);
+      const claimedBy = seenProductIds.get(productId);
+
+      if (claimedBy) {
+        const message =
+          `${targetUrl} and ${claimedBy} both resolve to Product "${product.slug}"`;
+
+        block(
+          acc,
+          'ambiguous_target',
+          message,
+          targetUrl,
+        );
+        record(
+          acc,
+          'target_unique',
+          'fail',
+          message,
+          targetUrl,
+        );
+        continue;
+      }
+
+      seenProductIds.set(productId, targetUrl);
+
+      record(
+        acc,
+        'target_unique',
+        'pass',
+        `No other target in this draft writes "${product.slug}"`,
+        targetUrl,
+      );
+
+      const liveDescription =
+        normalizeProductDescription(product.description);
+
+      if (change.field.current !== liveDescription) {
+        const message =
+          `Live Product.description for "${product.slug}" has changed since this draft was generated`;
+
+        block(acc, 'stale', message, targetUrl);
+        record(
+          acc,
+          'live_state_unchanged',
+          'fail',
+          message,
+          targetUrl,
+        );
+        continue;
+      }
+
+      record(
+        acc,
+        'live_state_unchanged',
+        'pass',
+        'Live Product.description still matches the draft snapshot',
+        targetUrl,
+      );
+
+      if (change.field.proposed === liveDescription) {
+        const message =
+          `Proposed Product.description for ${targetUrl} is identical to the current value`;
+
+        block(
+          acc,
+          'no_effective_change',
+          message,
+          targetUrl,
+        );
+        record(
+          acc,
+          'effective_change',
+          'fail',
+          message,
+          targetUrl,
+        );
+        continue;
+      }
+
+      record(
+        acc,
+        'effective_change',
+        'pass',
+        'Changes Product.description',
+        targetUrl,
+      );
+
+      acc.changedFields.push({
+        targetUrl,
+        fields: ['description'],
+      });
+
+      // Product body-copy changes always deserve a human look even when all
+      // mechanical safety checks pass.
+      warn(
+        acc,
+        'content_requires_review',
+        'Product body-copy change requires human editorial review before execution',
+        targetUrl,
+      );
+
+      prepared.push({
+        targetType: 'product',
+        targetUrl,
+        product,
+        before: {
+          description: liveDescription,
+        },
+        proposed: {
+          description: change.field.proposed,
+        },
+      });
+    }
+
+    const result = finalize(acc, evaluatedAt);
+
+    return {
+      result,
+      prepared: result.executable ? prepared : [],
+      draft,
+      recommendation,
+    };
+  }
+
   const metadataChanges: MetadataProposedChange[] = [];
   for (const change of draft.proposedChanges) {
     if (change.kind !== 'metadata') {
@@ -650,7 +1028,13 @@ export async function evaluateExecutionPreflight(opts: {
       metaDescription: page.metaDescription,
     };
 
-    prepared.push({ targetUrl, page, before, proposed });
+    prepared.push({
+      targetType: 'cms_page',
+      targetUrl,
+      page,
+      before,
+      proposed,
+    });
   }
 
   const result = finalize(acc, evaluatedAt);

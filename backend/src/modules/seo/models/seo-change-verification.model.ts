@@ -26,16 +26,19 @@ export interface VerificationFetchInfo {
 export interface VerificationExpected {
   renderedTitle?: string;
   metaDescription?: string;
+  description?: string;
 }
 
 export interface VerificationObserved {
   renderedTitle?: string | null;
   metaDescription?: string | null;
+  description?: string | null;
 }
 
 export interface VerificationMatches {
   title?: boolean;
   metaDescription?: boolean;
+  description?: boolean;
 }
 
 export interface VerifiedTarget {
@@ -79,17 +82,29 @@ const verificationFetchInfoSchema = new Schema<VerificationFetchInfo>(
 );
 
 const verificationExpectedSchema = new Schema<VerificationExpected>(
-  { renderedTitle: { type: String }, metaDescription: { type: String } },
+  {
+    renderedTitle: { type: String },
+    metaDescription: { type: String },
+    description: { type: String },
+  },
   { _id: false },
 );
 
 const verificationObservedSchema = new Schema<VerificationObserved>(
-  { renderedTitle: { type: String, default: undefined }, metaDescription: { type: String, default: undefined } },
+  {
+    renderedTitle: { type: String, default: undefined },
+    metaDescription: { type: String, default: undefined },
+    description: { type: String, default: undefined },
+  },
   { _id: false },
 );
 
 const verificationMatchesSchema = new Schema<VerificationMatches>(
-  { title: { type: Boolean }, metaDescription: { type: Boolean } },
+  {
+    title: { type: Boolean },
+    metaDescription: { type: Boolean },
+    description: { type: Boolean },
+  },
   { _id: false },
 );
 
