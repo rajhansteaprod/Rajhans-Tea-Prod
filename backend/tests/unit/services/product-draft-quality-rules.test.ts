@@ -63,18 +63,57 @@ describe('evaluateProductDraftQuality', () => {
     expect(errors.some((e) => e.includes('repeats the same phrase'))).toBe(true);
   });
 
-  it('D: rejects morning framing when bestTakenFor is Evening only', () => {
+  it('D: rejects morning framing when bestTakenFor is Evening only and evening is never mentioned', () => {
+    const evidence = baseEvidence({ bestTakenFor: ['Evening'] });
+    const draft = 'This is your everyday chai, the one you make every morning without thinking about it.';
+    const errors = evaluateProductDraftQuality(evidence, draft);
+    expect(errors.some((e) => e.includes('never mentions the recommended time'))).toBe(true);
+  });
+
+  it('bestTakenFor is a RECOMMENDATION not an exclusive list: habitual morning framing is allowed once the recommended evening time is also surfaced', () => {
     const evidence = baseEvidence({ bestTakenFor: ['Evening'] });
     const draft = 'This is your everyday chai, the one you make every morning. It is suited to an evening cup too.';
     const errors = evaluateProductDraftQuality(evidence, draft);
-    expect(errors.some((e) => e.includes('frames the product for "Morning"'))).toBe(true);
+    expect(errors.some((e) => e.includes('Morning'))).toBe(false);
+  });
+
+  it('allows general "any time of day" versatility framing without penalty', () => {
+    const evidence = baseEvidence({ bestTakenFor: ['Evening'] });
+    const draft = 'Easy to drink at any time of day, with milk or without, this chai is suited to an evening cup.';
+    const errors = evaluateProductDraftQuality(evidence, draft);
+    expect(errors).toEqual([]);
+  });
+
+  it('still rejects a COMPETING strong recommendation for a non-recommended time, even when the real recommendation is also mentioned', () => {
+    const evidence = baseEvidence({ bestTakenFor: ['Evening'] });
+    const draft = 'This chai is best enjoyed in the morning. It is also suited to an evening cup.';
+    const errors = evaluateProductDraftQuality(evidence, draft);
+    expect(errors.some((e) => e.includes('recommends the product for "Morning"'))).toBe(true);
   });
 
   it('allows morning framing when bestTakenFor actually includes Morning', () => {
     const evidence = baseEvidence({ bestTakenFor: ['Morning'] });
     const draft = 'This is your everyday chai, the one you make every morning without thinking about it.';
     const errors = evaluateProductDraftQuality(evidence, draft);
-    expect(errors.some((e) => e.includes('frames the product for'))).toBe(false);
+    expect(errors.some((e) => e.includes('frames the product for') || e.includes('recommends the product for'))).toBe(false);
+  });
+
+  it('semantic pack-size repetition: rejects the same set of sizes listed twice even when reworded', () => {
+    const evidence = baseEvidence();
+    const draft =
+      'Rajhans Rajdoot Dooars is a strong chai. It comes in 500 gm and 750 gm sizes, alongside a 1 Kg pack, brewed with milk. ' +
+      'Choose from the available 500 gm, 750 gm, and 1 Kg options to suit your needs.';
+    const errors = evaluateProductDraftQuality(evidence, draft);
+    expect(errors.some((e) => e.includes('restated in more than one sentence'))).toBe(true);
+  });
+
+  it('does not flag pack-size mentions when the set of sizes is listed only once', () => {
+    const evidence = baseEvidence();
+    const draft =
+      'Rajhans Rajdoot Dooars is a strong chai brewed with milk, packed fresh from the gardens. ' +
+      'It comes in 500 gm, 750 gm, and 1 Kg sizes, and one spoon makes one cup either way.';
+    const errors = evaluateProductDraftQuality(evidence, draft);
+    expect(errors.some((e) => e.includes('restated in more than one sentence'))).toBe(false);
   });
 
   it('E: a clean, concise, grounded rewrite passes with no violations', () => {

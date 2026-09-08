@@ -176,20 +176,30 @@ Rules:
 14. Avoid generic commercial filler such as "dependable choice",
     "practical choice", "ideal choice", "perfect for", "regular household use",
     or invented customer situations unless directly supported by EVIDENCE.
-15. bestTakenFor states the product's actual recommended time(s) of day.
-    Do not frame the product as being for a different time of day (e.g. an
-    "every morning" habit) when bestTakenFor does not include that time —
-    even if you also separately mention the correct time. A fact being true
-    in isolation does not excuse a contradictory framing elsewhere.
+15. bestTakenFor is the product's RECOMMENDED time(s) of day — not an
+    exclusive or exhaustive list of when it may be mentioned. You may keep
+    genuine versatility already present in EVIDENCE (e.g. "easy to drink at
+    any time of day"). What you must NOT do is assert a COMPETING
+    recommendation for a different time (e.g. "best enjoyed in the
+    morning", "suited to a morning cup") when bestTakenFor does not include
+    that time, and you must not frame the product around a different
+    time's daily habit (e.g. an "every morning" ritual) without ALSO
+    stating the actual recommended time somewhere in the draft.
 16. packOptions lists every currently active pack/size this product is
     actually sold in. A statement about ONE size (e.g. "a 1kg pack gives
     400 cups") is fine when it is clearly about that size specifically. Do
     NOT write phrasing that implies the product is only sold in one size
     (e.g. "available in a 1kg pack", "comes in a 1kg pack") when packOptions
     has more than one entry — that is misleading even though the individual
-    size mentioned is real.
+    size mentioned is real. Also state the full set of pack sizes only
+    ONCE in the draft — do not list them again later in different words.
 17. Mention the product name naturally — at most twice. Do not restate the
     full product name in every paragraph.
+18. Write plainly. Avoid stock closing phrases like "giving you a choice of
+    sizes for your needs" and stilted verb choices like "retaining its
+    smell" — prefer natural, concrete wording a person would actually say
+    (e.g. "keeps its aroma"). This is a style note, not a factual one: keep
+    every fact exactly as grounded in EVIDENCE, just phrase it naturally.
 
 Return JSON only.
         `.trim(),

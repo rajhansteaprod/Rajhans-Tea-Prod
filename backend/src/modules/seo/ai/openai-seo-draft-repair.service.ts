@@ -50,15 +50,19 @@ Your job:
    - made for people who
    - regular household use
    unless those meanings are directly stated in EVIDENCE.
-7. bestTakenFor may only support a simple phrase such as
-   "suited to a morning cup" or "suited to an evening cup". Do not frame the
-   product for any OTHER time of day (e.g. an "every morning" habit) when
-   bestTakenFor does not include that time.
+7. bestTakenFor is the product's RECOMMENDED time(s) of day, not an
+   exclusive list — you may keep genuine versatility already in EVIDENCE
+   (e.g. "any time of day"). Do NOT assert a competing recommendation for a
+   different time (e.g. "best enjoyed in the morning") when bestTakenFor
+   does not include it, and do not frame the product around a different
+   time's daily habit (e.g. "every morning") without also stating the
+   actual recommended time somewhere in the draft.
 8. Do not pad the copy merely to increase word count.
 9. Natural customer-facing English only.
 10. Preserve exact numeric claims from evidence.
 11. State each fact or benefit only once — remove any restated/reworded
-    duplicate of a claim already made elsewhere in the draft.
+    duplicate of a claim already made elsewhere in the draft. This includes
+    the set of pack sizes: list it once, not again later in different words.
 12. packOptions lists every currently active pack/size. Do not use wording
     that implies the product is only sold in one size (e.g. "available in a
     1kg pack") when packOptions has more than one entry. A statement about

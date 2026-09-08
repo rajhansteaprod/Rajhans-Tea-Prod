@@ -32,10 +32,30 @@ const GENERIC_FILLER_PHRASES = [
   'exceptional quality',
 ];
 
-// A time-of-day pattern list is deliberately conservative: it only flags
-// phrases that FRAME the product as being for that time of day, not any
-// passing word (e.g. a sentence that merely contains "morning" elsewhere).
-const TIME_OF_DAY_PATTERNS: Record<string, RegExp[]> = {
+// bestTakenFor is a RECOMMENDATION, not an exclusive permitted list — a
+// product can genuinely be versatile ("easy to drink at any time of day")
+// without that contradicting a specific recommended time. Two tiers:
+//
+// - STRONG recommendation language ("suited to", "best enjoyed", "ideal
+//   for", ...) paired with a time-of-day is always rejected when that time
+//   isn't recommended: it asserts a COMPETING recommendation, and
+//   bestTakenFor is the authoritative one.
+// - HABITUAL/lifestyle framing ("every morning", "morning routine", ...)
+//   for a non-recommended time is a softer signal. It's only rejected when
+//   it entirely substitutes for the real recommendation — i.e. the actual
+//   recommended time is never mentioned anywhere in the draft. Casual
+//   mention of another typical-use context alongside the real
+//   recommendation is allowed.
+const RECOMMENDATION_KEYWORDS =
+  /\b(?:suited to|best enjoyed|best taken|ideal for|ideal in|recommended for|recommended in|great for|great in|works well)\b/i;
+
+const TIME_KEYWORDS: Record<string, RegExp> = {
+  Morning: /\bmorning\b/i,
+  Evening: /\bevening\b/i,
+  Noon: /\bnoon\b|\bmidday\b|\bafternoon\b/i,
+};
+
+const HABITUAL_PATTERNS: Record<string, RegExp[]> = {
   Morning: [
     /\bevery morning\b/i,
     /\bmorning routine\b/i,
@@ -104,6 +124,61 @@ function countOccurrences(haystack: string, needle: string): number {
   return (haystack.match(new RegExp(escaped, 'gi')) ?? []).length;
 }
 
+function evaluateTimeOfDayConsistency(evidence: ProductContentEvidence, normalizedDraft: string): string[] {
+  const errors: string[] = [];
+  const allowedTimes = new Set(evidence.bestTakenFor);
+  const sentences = splitSentences(normalizedDraft);
+
+  for (const [timeOfDay, timeRe] of Object.entries(TIME_KEYWORDS)) {
+    if (allowedTimes.has(timeOfDay)) continue;
+    const competingRecommendation = sentences.some(
+      (s) => RECOMMENDATION_KEYWORDS.test(s) && timeRe.test(s),
+    );
+    if (competingRecommendation) {
+      errors.push(
+        `Draft recommends the product for "${timeOfDay}" but bestTakenFor is [${evidence.bestTakenFor.join(', ') || 'none'}]`,
+      );
+    }
+  }
+
+  for (const [timeOfDay, patterns] of Object.entries(HABITUAL_PATTERNS)) {
+    if (allowedTimes.has(timeOfDay)) continue;
+    if (!patterns.some((re) => re.test(normalizedDraft))) continue;
+    const recommendedTimeMentioned = evidence.bestTakenFor.some((t) => TIME_KEYWORDS[t]?.test(normalizedDraft));
+    if (!recommendedTimeMentioned) {
+      errors.push(
+        `Draft frames the product for "${timeOfDay}" but never mentions the recommended time [${evidence.bestTakenFor.join(', ') || 'none'}]`,
+      );
+    }
+  }
+
+  return errors;
+}
+
+function normalizePackLabel(label: string): string {
+  return label.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+/**
+ * How many separate sentences each mention two or more of the product's
+ * distinct pack-size labels. Label-based rather than phrase-based, so it
+ * catches the same catalog fact restated in different wording (e.g. "500 gm
+ * and 750 gm pack sizes are also available" ... later ... "Choose from the
+ * available 500 gm, 750 gm, and 1 Kg packs") — repetition the literal
+ * repeated-phrase check above cannot see because the wording differs.
+ */
+function countPackSizeListingSentences(sentences: string[], packOptions: ProductContentEvidence['packOptions']): number {
+  if (packOptions.length < 2) return 0;
+  const labels = packOptions.map((p) => normalizePackLabel(p.label)).filter(Boolean);
+  let count = 0;
+  for (const sentence of sentences) {
+    const normalizedSentence = sentence.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const mentioned = labels.filter((label) => normalizedSentence.includes(label));
+    if (mentioned.length >= 2) count++;
+  }
+  return count;
+}
+
 export function evaluateProductDraftQuality(
   evidence: ProductContentEvidence,
   draft: string,
@@ -117,21 +192,20 @@ export function evaluateProductDraftQuality(
     errors.push(`Draft repeats the same phrase more than once: "${repeated}"`);
   }
 
-  // 2. Internal time-of-day contradiction against bestTakenFor.
-  const allowedTimes = new Set(evidence.bestTakenFor);
-  for (const [timeOfDay, patterns] of Object.entries(TIME_OF_DAY_PATTERNS)) {
-    if (allowedTimes.has(timeOfDay)) continue;
-    if (patterns.some((re) => re.test(normalizedDraft))) {
-      errors.push(
-        `Draft frames the product for "${timeOfDay}" but bestTakenFor is [${evidence.bestTakenFor.join(', ') || 'none'}]`,
-      );
-      break;
-    }
-  }
+  // 2. Internal time-of-day consistency against bestTakenFor (recommended,
+  //    not exclusive — see evaluateTimeOfDayConsistency).
+  errors.push(...evaluateTimeOfDayConsistency(evidence, normalizedDraft));
 
   // 3. Misleading pack-exclusivity omission.
   if (evidence.packOptions.length > 1 && PACK_EXCLUSIVITY_PATTERNS.some((re) => re.test(normalizedDraft))) {
     errors.push('Draft implies a single/exclusive pack size while multiple active pack sizes exist');
+  }
+
+  // 3b. Semantic pack-size repetition — the same set of sizes listed in more
+  // than one sentence, even reworded each time.
+  const packListingSentences = countPackSizeListingSentences(splitSentences(draft), evidence.packOptions);
+  if (packListingSentences > 1) {
+    errors.push('Pack-size list is restated in more than one sentence — mention the full set of pack sizes once');
   }
 
   // 4. Low material improvement — most draft sentences are verbatim reuses
