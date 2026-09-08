@@ -10,6 +10,7 @@ import {
 import {
   repairGroundedProductDraft,
 } from './openai-seo-draft-repair.service';
+import { evaluateProductDraftQuality } from './product-draft-quality-rules';
 
 const MODEL =
   process.env.OPENAI_SEO_MODEL?.trim() ||
@@ -34,7 +35,7 @@ function normalize(value: string): string {
     .trim();
 }
 
-function validateDraft(
+export function validateDraft(
   evidence: ProductContentEvidence,
   output: GroundedProductDraft,
 ): string[] {
@@ -91,22 +92,24 @@ function validateDraft(
     const words =
       normalizedDraft.split(/\s+/).length;
 
-    const currentWords =
-      normalizedCurrent
-        ? normalizedCurrent.split(/\s+/).length
-        : 0;
-
-    const addedWords =
-      words - currentWords;
-
     // Phase 6.3C quality rule:
     // thin-content is a signal to add genuinely useful information,
     // not a requirement to pad every product page to an arbitrary length.
     // Independent factual verification remains the primary quality gate.
-    // Reject only near-no-op rewrites that add fewer than 10 grounded words.
-    if (addedWords < 10) {
+    //
+    // This used to require the draft to add at least 10 words over the
+    // CURRENT description's length. That rewards whatever repetition or
+    // padding happens to already be live: a de-duplicated, correctly
+    // qualified rewrite of a repetitive draft is often legitimately
+    // SHORTER than the repetitive text it replaces, and would fail a
+    // relative-growth check for exactly the reason it is better. Content
+    // novelty vs. the current description is judged by the sentence-reuse
+    // check in evaluateProductDraftQuality below; this stays a plain
+    // sensible absolute floor so a draft can't be a token-length stub.
+    const MIN_DRAFT_WORDS = 40;
+    if (words < MIN_DRAFT_WORDS) {
       errors.push(
-        `Draft does not materially expand the page (${addedWords} words added; minimum 10)`,
+        `Draft is too short to be a useful expansion (${words} words; minimum ${MIN_DRAFT_WORDS})`,
       );
     }
 
@@ -115,6 +118,15 @@ function validateDraft(
         `Draft is too long (${words} words)`,
       );
     }
+
+    // Phase 6.3C+ quality gates: repetition, internal contradiction,
+    // misleading pack-exclusivity framing, near-no-op reshuffles, unsupported
+    // generic filler, and mechanical product-name repetition. Deterministic
+    // and evidence-grounded — no network call, applies to first-pass AND
+    // repaired drafts alike.
+    errors.push(
+      ...evaluateProductDraftQuality(evidence, output.draft),
+    );
   }
 
   return errors;
@@ -144,7 +156,10 @@ Rules:
 3. Preserve factual meaning already present.
 4. Improve readability, usefulness and topical depth.
 5. Avoid keyword stuffing.
-6. Avoid repeating the same fact in different wording.
+6. Avoid repeating the same fact in different wording — state each benefit
+   or fact ONCE. Do not restate it later even in reordered or rephrased
+   words. Do not simply reorganize the existing sentences into a new order;
+   the result must be a genuine rewrite, not a reshuffle.
 7. Do not mention internal database concepts such as "categorized",
    "stored", "metadata", "evidence", or "product record".
 8. Write natural customer-facing English.
@@ -161,6 +176,20 @@ Rules:
 14. Avoid generic commercial filler such as "dependable choice",
     "practical choice", "ideal choice", "perfect for", "regular household use",
     or invented customer situations unless directly supported by EVIDENCE.
+15. bestTakenFor states the product's actual recommended time(s) of day.
+    Do not frame the product as being for a different time of day (e.g. an
+    "every morning" habit) when bestTakenFor does not include that time —
+    even if you also separately mention the correct time. A fact being true
+    in isolation does not excuse a contradictory framing elsewhere.
+16. packOptions lists every currently active pack/size this product is
+    actually sold in. A statement about ONE size (e.g. "a 1kg pack gives
+    400 cups") is fine when it is clearly about that size specifically. Do
+    NOT write phrasing that implies the product is only sold in one size
+    (e.g. "available in a 1kg pack", "comes in a 1kg pack") when packOptions
+    has more than one entry — that is misleading even though the individual
+    size mentioned is real.
+17. Mention the product name naturally — at most twice. Do not restate the
+    full product name in every paragraph.
 
 Return JSON only.
         `.trim(),
@@ -251,7 +280,7 @@ Return JSON only.
       const onlyNoMaterialImprovement =
         errors.length === 1 &&
         errors[0].startsWith(
-          'Draft does not materially expand the page',
+          'Draft is too short to be a useful expansion',
         );
 
       return {
@@ -317,7 +346,7 @@ Return JSON only.
         const onlyNoMaterialImprovement =
           repairedErrors.length === 1 &&
           repairedErrors[0].startsWith(
-            'Draft does not materially expand the page',
+            'Draft is too short to be a useful expansion',
           );
 
         if (onlyNoMaterialImprovement) {

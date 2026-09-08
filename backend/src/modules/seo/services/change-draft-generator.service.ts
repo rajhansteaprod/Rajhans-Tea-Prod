@@ -14,6 +14,7 @@ import {
 } from '../models/seo-change-draft.model';
 import { seoConfig } from '../seo.config';
 import { Product } from '../../catalog/models/product.model';
+import { ProductVariant } from '../../catalog/models/product-variant.model';
 import {
   generateGroundedProductDraft,
 } from '../ai/openai-seo-drafting.service';
@@ -623,6 +624,16 @@ async function generateContentChanges(
       };
     }
 
+    // .lean() does not populate the `variants` virtual, and pack-size context
+    // is exactly the fact category the writer/verifier need to avoid
+    // misleadingly implying exclusivity (e.g. "available in a 1kg pack" when
+    // other sizes are also active) — so fetch it explicitly.
+    const activeVariants = product.hasVariants
+      ? await ProductVariant.find({ productId: product._id, isActive: true })
+          .select('name')
+          .lean()
+      : [];
+
     const productEvidence: ProductContentEvidence = {
       productId: String(product._id),
       name: product.name,
@@ -638,6 +649,7 @@ async function generateContentChanges(
         ),
       imageAltText:
         product.imageAltText ?? null,
+      packOptions: activeVariants.map((v) => ({ label: v.name })),
     };
 
     const aiResult =

@@ -51,11 +51,20 @@ Your job:
    - regular household use
    unless those meanings are directly stated in EVIDENCE.
 7. bestTakenFor may only support a simple phrase such as
-   "suited to a morning cup" or "suited to an evening cup".
+   "suited to a morning cup" or "suited to an evening cup". Do not frame the
+   product for any OTHER time of day (e.g. an "every morning" habit) when
+   bestTakenFor does not include that time.
 8. Do not pad the copy merely to increase word count.
 9. Natural customer-facing English only.
 10. Preserve exact numeric claims from evidence.
-11. Return ONLY the repaired draft text.
+11. State each fact or benefit only once — remove any restated/reworded
+    duplicate of a claim already made elsewhere in the draft.
+12. packOptions lists every currently active pack/size. Do not use wording
+    that implies the product is only sold in one size (e.g. "available in a
+    1kg pack") when packOptions has more than one entry. A statement about
+    one specific size (e.g. "a 1kg pack gives 400 cups") is fine.
+13. Mention the product name naturally — at most twice in the whole draft.
+14. Return ONLY the repaired draft text.
 
 If a rejected statement cannot be repaired from evidence,
 delete it completely.

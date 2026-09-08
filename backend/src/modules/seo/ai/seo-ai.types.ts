@@ -1,3 +1,8 @@
+/** One active, sellable pack/size option for the product (e.g. a weight variant). */
+export interface ProductPackOption {
+  label: string;
+}
+
 export interface ProductContentEvidence {
   productId: string;
   name: string;
@@ -7,6 +12,14 @@ export interface ProductContentEvidence {
   shortDescription: string | null;
   bestTakenFor: string[];
   imageAltText: string | null;
+  /**
+   * Every currently active pack/size option, so the writer/verifier can tell
+   * whether a specific size (e.g. "1kg") is the ONLY way the product is sold
+   * or just one of several — a fact can be individually true yet still
+   * misleading if it implies exclusivity the catalog doesn't support.
+   * Empty when the product has no separate size variants.
+   */
+  packOptions: ProductPackOption[];
 }
 
 export interface GroundedProductDraft {
