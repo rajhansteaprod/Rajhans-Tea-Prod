@@ -174,24 +174,28 @@
 
           <!-- Product detail accordions (collapsed by default) -->
           <div class="pd__accordion">
-            <!-- Description -->
-            <div class="pd__acc-item">
-              <button
-                type="button"
-                class="pd__acc-header"
-                [class.open]="isSectionOpen('description')"
-                [attr.aria-expanded]="isSectionOpen('description')"
-                (click)="toggleSection('description')"
-              >
-                <span class="pd__acc-title">Description</span>
-                <svg class="pd__acc-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </button>
-              @if (isSectionOpen('description')) {
-                <div class="pd__acc-panel">
+            <!-- Description. The panel stays in the DOM (visibility toggled via
+                 [hidden], not @if) so the real product description is present
+                 in prerendered/crawlable HTML even though it renders collapsed
+                 by default; only the outer item is gated on there being a
+                 description at all, so products without one render nothing. -->
+            @if (product()?.description) {
+              <div class="pd__acc-item">
+                <button
+                  type="button"
+                  class="pd__acc-header"
+                  [class.open]="isSectionOpen('description')"
+                  [attr.aria-expanded]="isSectionOpen('description')"
+                  (click)="toggleSection('description')"
+                >
+                  <span class="pd__acc-title">Description</span>
+                  <svg class="pd__acc-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="pd__acc-panel" data-seo="product-description" [hidden]="!isSectionOpen('description')">
                   <p>{{ product()?.description }}</p>
                 </div>
-              }
-            </div>
+              </div>
+            }
 
             <!-- Brewing Guide -->
             <div class="pd__acc-item">

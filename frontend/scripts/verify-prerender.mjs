@@ -21,7 +21,7 @@ function check(name, cond, detail) {
   if (!cond) failures.push(`  ✗ [${name}] ${detail}`);
 }
 
-function verify(routePrefix, slug, { requireJsonLdProduct = false, requireCards = false } = {}) {
+function verify(routePrefix, slug, { requireJsonLdProduct = false, requireCards = false, requireDescription = false } = {}) {
   const url = `/${routePrefix}/${slug}/`;
   const file = resolve(BROWSER, routePrefix, slug, 'index.html');
   if (!existsSync(file)) {
@@ -38,6 +38,17 @@ function verify(routePrefix, slug, { requireJsonLdProduct = false, requireCards 
   check(url, h1.length > 0, 'no <h1> content');
   if (requireJsonLdProduct) check(url, /"@type"\s*:\s*"Product"/.test(html), 'missing Product JSON-LD');
   if (requireCards) check(url, /app-product-card/.test(html), 'no product cards rendered');
+  if (requireDescription) {
+    // Regression guard: the description accordion panel used to be removed
+    // from the DOM entirely via @if when collapsed, so Product.description
+    // never reached prerendered/crawlable HTML even though it was real,
+    // user-visible content. The panel now stays in the DOM (visibility
+    // toggled via [hidden]), so its text must be present here regardless of
+    // the accordion's default collapsed state.
+    const panel = (html.match(/data-seo="product-description"[\s\S]*?<p[^>]*>([\s\S]*?)<\/p>/) || [])[1] || '';
+    const text = panel.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+    check(url, text.length > 40, `product description panel missing/too short in prerendered HTML (got ${text.length} chars)`);
+  }
 }
 
 // One representative of each dynamic route type (first slug in the manifest).
@@ -46,6 +57,9 @@ verify('catalog', manifest.catalog[0], { requireCards: true });
 if (manifest.blog[0]) verify('blog', manifest.blog[0]);
 // A DB-backed CMS page (content comes from the API at build, like the dynamic routes).
 verify('page', 'faq');
+// Known-good production data with a real Product.description — a targeted
+// regression check for the prerender gap above, not a tautology.
+verify('product', 'rajhans-rajdoot-dooars', { requireJsonLdProduct: true, requireDescription: true });
 
 if (failures.length) {
   console.error('\n[verify-prerender] FAILED — dynamic SEO routes are incomplete:\n' + failures.join('\n'));
