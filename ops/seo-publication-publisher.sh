@@ -4,6 +4,8 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/source-revision-guard.sh
 source "$SCRIPT_DIR/lib/source-revision-guard.sh"
+# shellcheck source=lib/homepage-smoke-check.sh
+source "$SCRIPT_DIR/lib/homepage-smoke-check.sh"
 
 WORKTREE="${SEO_WORKTREE:-/tmp/seo-phase-4b-deploy}"
 PROD_ROOT="${SEO_PROD_ROOT:-/root/Rajhans-Tea-Prod}"
@@ -192,18 +194,15 @@ docker compose \
 CURRENT_STEP="nginx_refresh"
 docker restart tea-nginx >/dev/null
 
-# Basic availability gate before publication is recorded.
+# Basic availability gate before publication is recorded. Bounded recovery
+# for the known post-swap nginx-stale-upstream race lives in
+# lib/homepage-smoke-check.sh (exactly one extra nginx restart + retry).
 CURRENT_STEP="homepage_smoke"
 
-HTTP_CODE="$(
-  curl -sSIL \
-    -o /dev/null \
-    -w '%{http_code}' \
-    'https://rajhanstea.com/'
-)"
+HTTP_CODE="$(check_homepage_with_nginx_recovery 'https://rajhanstea.com/' tea-nginx)" || true
 
 if [[ "$HTTP_CODE" != "200" ]]; then
-  echo "homepage returned HTTP $HTTP_CODE" >&2
+  echo "homepage returned HTTP $HTTP_CODE (after nginx recovery retry)" >&2
   false
 fi
 

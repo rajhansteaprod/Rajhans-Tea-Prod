@@ -6,6 +6,7 @@ import {
   markPublicationFailed,
   markPublicationPublished,
   recordPublicationVerification,
+  retryFailedPublication,
 } from '../src/modules/seo/services/change-publication.service';
 import {
   verifyExecution,
@@ -87,6 +88,17 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (action === 'retry') {
+    const publicationId = process.argv[3];
+    if (!publicationId) throw new Error('retry requires <publicationId>');
+
+    const result = await retryFailedPublication(publicationId);
+
+    out(result);
+    if (!result.ok) process.exitCode = 2;
+    return;
+  }
+
   if (action === 'verify') {
     const publicationId = value('--id');
     if (!publicationId) throw new Error('verify requires --id');
@@ -147,7 +159,7 @@ async function main(): Promise<void> {
   }
 
   throw new Error(
-    'Usage: seo-publication-worker.ts claim|published|failed|verify',
+    'Usage: seo-publication-worker.ts claim|published|failed|retry|verify',
   );
 }
 

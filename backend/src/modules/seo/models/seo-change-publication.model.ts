@@ -40,8 +40,24 @@ export interface ISeoChangePublicationDoc extends Document {
   verificationId?: mongoose.Types.ObjectId | null;
   verificationStatus?: string | null;
 
+  /**
+   * Snapshot of each prior failed attempt, captured immediately before a
+   * retry resets the live failure fields (failedAt/errorMessage) for the
+   * next attempt — so retrying a failed publication doesn't destroy the
+   * forensic record of why it failed before.
+   */
+  retryHistory: PublicationRetryHistoryEntry[];
+
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface PublicationRetryHistoryEntry {
+  status: 'failed';
+  failedAt: Date | null;
+  errorMessage: string | null;
+  attemptCount: number;
+  retriedAt: Date;
 }
 
 const seoChangePublicationSchema =
@@ -134,6 +150,20 @@ const seoChangePublicationSchema =
       verificationStatus: {
         type: String,
         default: null,
+      },
+
+      retryHistory: {
+        type: [
+          {
+            _id: false,
+            status: { type: String, enum: ['failed'], required: true },
+            failedAt: { type: Date, default: null },
+            errorMessage: { type: String, default: null },
+            attemptCount: { type: Number, required: true },
+            retriedAt: { type: Date, required: true },
+          },
+        ],
+        default: [],
       },
     },
     {

@@ -3,6 +3,7 @@ import {
   SeoChangePublication,
   ISeoChangePublicationDoc,
 } from '../models/seo-change-publication.model';
+import { SeoChangeExecution } from '../models/seo-change-execution.model';
 
 export const PUBLICATION_WORKER_VERSION = '5.4a-publication-worker-v1';
 
@@ -10,7 +11,7 @@ export type PublicationMutationResult =
   | { ok: true; publication: ISeoChangePublicationDoc }
   | {
       ok: false;
-      error: 'invalid_id' | 'not_found_or_state';
+      error: 'invalid_id' | 'not_found_or_state' | 'execution_invalid';
       message: string;
     };
 
@@ -118,6 +119,96 @@ export async function markPublicationFailed(opts: {
       ok: false,
       error: 'not_found_or_state',
       message: 'Publication was not found in building state',
+    };
+  }
+
+  return { ok: true, publication };
+}
+
+/**
+ * Requeues a publication that reached terminal `failed` back to `pending`,
+ * for the SAME execution — never a duplicate. `executionId` carries a
+ * unique index on this model precisely so a second publication row for one
+ * execution can never be created; retry therefore has to mean "reset this
+ * record", not "make a new one". Only `failed` is accepted: `pending`,
+ * `building` and `published` are all rejected, matching the atomic
+ * status-guarded pattern every other mutator here already uses.
+ *
+ * Before resetting the live failure fields (failedAt/errorMessage) for a
+ * clean next attempt, the prior failure is snapshotted into
+ * `retryHistory` so that evidence isn't destroyed by the retry.
+ *
+ * Does not touch SeoChangeExecution or Product — it only re-validates that
+ * the execution this publication belongs to still exists and is
+ * `succeeded` (execution has no other status once persisted, but this
+ * stays a real check rather than an assumption).
+ */
+export async function retryFailedPublication(
+  publicationId: string,
+): Promise<PublicationMutationResult> {
+  if (!mongoose.isValidObjectId(publicationId)) {
+    return {
+      ok: false,
+      error: 'invalid_id',
+      message: 'Invalid publication id',
+    };
+  }
+
+  const failedPublication = await SeoChangePublication.findOne({
+    _id: new mongoose.Types.ObjectId(publicationId),
+    status: 'failed',
+  }).exec();
+
+  if (!failedPublication) {
+    return {
+      ok: false,
+      error: 'not_found_or_state',
+      message: 'Publication was not found in failed state',
+    };
+  }
+
+  const execution = await SeoChangeExecution.findById(
+    failedPublication.executionId,
+  ).exec();
+
+  if (!execution || execution.status !== 'succeeded') {
+    return {
+      ok: false,
+      error: 'execution_invalid',
+      message: 'Associated execution is missing or not in a succeeded state',
+    };
+  }
+
+  const publication = await SeoChangePublication.findOneAndUpdate(
+    {
+      _id: new mongoose.Types.ObjectId(publicationId),
+      status: 'failed',
+    },
+    {
+      $set: {
+        status: 'pending',
+        startedAt: null,
+        failedAt: null,
+        errorMessage: null,
+      },
+      $push: {
+        retryHistory: {
+          status: 'failed',
+          failedAt: failedPublication.failedAt,
+          errorMessage: failedPublication.errorMessage,
+          attemptCount: failedPublication.attemptCount,
+          retriedAt: new Date(),
+        },
+      },
+    },
+    { new: true },
+  ).exec();
+
+  if (!publication) {
+    return {
+      ok: false,
+      error: 'not_found_or_state',
+      message: 'Publication was not found in failed state',
     };
   }
 
