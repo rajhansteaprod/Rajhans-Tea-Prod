@@ -1,9 +1,18 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/source-revision-guard.sh
+source "$SCRIPT_DIR/lib/source-revision-guard.sh"
+
 WORKTREE="${SEO_WORKTREE:-/tmp/seo-phase-4b-deploy}"
 PROD_ROOT="${SEO_PROD_ROOT:-/root/Rajhans-Tea-Prod}"
 ENV_FILE="${SEO_ENV_FILE:-/root/Rajhans-Tea-Prod/.env}"
+
+# The commit the operator has approved for this worktree to build/deploy
+# from. No default: an unset value must fail closed, never implicitly
+# trust whatever happens to be checked out in $WORKTREE.
+APPROVED_SOURCE_REVISION="${SEO_PUBLICATION_SOURCE_REVISION:-}"
 
 # Source is mounted into the helper container; this image supplies Node,
 # node_modules and ts-node. It does NOT receive Docker socket access.
@@ -28,6 +37,18 @@ exec 9>"$LOCK_FILE"
 if ! flock -n 9; then
   echo "[seo-publication] another publisher is already running"
   exit 0
+fi
+
+# ---------------------------------------------------------------------
+# SOURCE-REVISION SAFETY GUARD.
+# Refuses to build, deploy, or publish unless $WORKTREE is a clean git
+# worktree whose HEAD exactly equals $SEO_PUBLICATION_SOURCE_REVISION.
+# This runs before any docker build (including the self-test path below)
+# so a stale or unapproved worktree can never produce or ship an image.
+# ---------------------------------------------------------------------
+if ! assert_source_revision_guard "$WORKTREE" "$APPROVED_SOURCE_REVISION"; then
+  echo "[seo-publication] refusing to build or deploy: source-revision guard failed" >&2
+  exit 1
 fi
 
 SOURCE_REF="$(git -C "$WORKTREE" rev-parse --short HEAD)"
