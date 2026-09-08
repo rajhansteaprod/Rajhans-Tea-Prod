@@ -34,6 +34,7 @@ export interface InlineVariantInput {
   price: number;
   discountedPrice?: number | null;
   stock?: number;
+  costPerCupText?: string;
 }
 
 export class ProductService {
@@ -145,6 +146,8 @@ export class ProductService {
     slug?: string;
     description?: string;
     shortDescription?: string;
+    brewingGuide?: string[];
+    sourcingInfo?: string[];
     categoryId: string;
     collectionIds?: string[];
     basePrice: number;
@@ -156,7 +159,7 @@ export class ProductService {
     attributes?: Record<string, string>;
     tags?: string[];
     region?: string | null;
-    bestTakenFor?: string | null;
+    bestTakenFor?: string[] | null;
     status?: ProductStatus;
     isFeatured?: boolean;
     showBadge?: boolean;
@@ -197,6 +200,8 @@ export class ProductService {
       slug,
       description: data.description,
       shortDescription: data.shortDescription,
+      brewingGuide: data.brewingGuide ?? [],
+      sourcingInfo: data.sourcingInfo ?? [],
       category: data.categoryId as never,
       collections: (data.collectionIds ?? []) as never,
       basePrice: data.basePrice,
@@ -208,7 +213,7 @@ export class ProductService {
       attributes: attributesMap as never,
       tags: (data.tags ?? []).map((t) => t.toLowerCase().trim()),
       region: (data.region ?? undefined) as any,
-      bestTakenFor: (data.bestTakenFor ?? undefined) as any,
+      bestTakenFor: (data.bestTakenFor?.length ? data.bestTakenFor : undefined) as any,
       status: data.status ?? 'draft',
       isFeatured: data.isFeatured ?? false,
       showBadge: data.showBadge ?? false,
@@ -241,6 +246,8 @@ export class ProductService {
       slug?: string;
       description?: string;
       shortDescription?: string;
+      brewingGuide?: string[];
+      sourcingInfo?: string[];
       categoryId?: string;
       collectionIds?: string[];
       basePrice?: number;
@@ -252,7 +259,7 @@ export class ProductService {
       attributes?: Record<string, string>;
       tags?: string[];
       region?: string | null; // null clears the field
-      bestTakenFor?: string | null; // null clears the field
+      bestTakenFor?: string[] | null; // null/empty clears the field
       status?: ProductStatus;
       isFeatured?: boolean;
       showBadge?: boolean;
@@ -302,6 +309,8 @@ export class ProductService {
     if (slug !== undefined) update.slug = slug;
     if (data.description !== undefined) update.description = data.description;
     if (data.shortDescription !== undefined) update.shortDescription = data.shortDescription;
+    if (data.brewingGuide !== undefined) update.brewingGuide = data.brewingGuide;
+    if (data.sourcingInfo !== undefined) update.sourcingInfo = data.sourcingInfo;
     if (data.categoryId !== undefined) update.category = data.categoryId;
     if (data.collectionIds !== undefined) update.collections = data.collectionIds;
     if (data.basePrice !== undefined) update.basePrice = data.basePrice;
@@ -327,8 +336,12 @@ export class ProductService {
     const unset: Record<string, 1> = {};
     if (data.region === null) unset.region = 1;
     else if (data.region !== undefined) update.region = data.region;
-    if (data.bestTakenFor === null) unset.bestTakenFor = 1;
-    else if (data.bestTakenFor !== undefined) update.bestTakenFor = data.bestTakenFor;
+    // null or an empty array clears the field; a non-empty array sets it
+    if (data.bestTakenFor === null || (Array.isArray(data.bestTakenFor) && data.bestTakenFor.length === 0)) {
+      unset.bestTakenFor = 1;
+    } else if (data.bestTakenFor !== undefined) {
+      update.bestTakenFor = data.bestTakenFor;
+    }
     if (clearDiscount) unset.discountedPrice = 1;
 
     if (data.status !== undefined) update.status = data.status;
@@ -394,6 +407,7 @@ export class ProductService {
         price: v.price,
         discountedPrice: v.discountedPrice ?? null,
         stock: v.stock ?? 0,
+        costPerCupText: v.costPerCupText,
       };
       if (v._id) {
         await variantService.update(v._id, payload);

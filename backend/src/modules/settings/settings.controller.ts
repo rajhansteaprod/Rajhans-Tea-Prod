@@ -23,6 +23,13 @@ export const updateSettings = async (req: Request, res: Response) => {
   sendSuccess(res, settings, 'Settings updated');
 };
 
+/** Public subset of store settings safe to expose to the storefront. */
+export const getPublicSettings = async (_req: Request, res: Response) => {
+  let settings = await StoreSettings.findOne().exec();
+  if (!settings) settings = await StoreSettings.create({});
+  sendSuccess(res, { trustPoints: settings.trustPoints ?? [] });
+};
+
 export const getHomepageSectionsPublic = async (_req: Request, res: Response) => {
   const sectionsFromDb = await HomepageSection.find({ isActive: true })
     .populate({

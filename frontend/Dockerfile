@@ -3,11 +3,11 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm install
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
 
 COPY frontend/ .
-RUN npx ng build --configuration=production
+RUN NODE_OPTIONS=--max-old-space-size=6144 npx ng build --configuration=production
 
 # SEO gate: fail the image build if representative dynamic routes were not
 # prerendered with real content (e.g. API unreachable at build). Prevents

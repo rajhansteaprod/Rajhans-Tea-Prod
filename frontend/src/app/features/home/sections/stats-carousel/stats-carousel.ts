@@ -21,8 +21,6 @@ interface Stat {
 export class StatsCarouselComponent implements OnInit, OnDestroy {
   readonly stats = signal<Stat[]>([
     { text: '25+ YEARS OF EXCELLENCE' },
-    { text: '100,000+ HAPPY CUSTOMERS' },
-    { text: '50,000+ 4.8 STAR RATINGS' },
     { text: 'DIRECT FROM ASSAM GARDENS' },
     { text: '100% PRODUCT TRACEABILITY' },
   ]);

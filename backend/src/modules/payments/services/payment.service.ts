@@ -61,6 +61,7 @@ export class PaymentService {
     loyaltyPoints = 0,
     items?: any[],
     promoCode?: string,
+    tracking?: { fbp?: string | null; fbc?: string | null; clientIp?: string | null; userAgent?: string | null },
   ): Promise<CreateOrderResult | { paymentId: string; paidViaWallet: true }> {
     let idempotencyKey = idempotencyKey_;
 
@@ -177,6 +178,7 @@ export class PaymentService {
         shippingAddress: address,
         idempotencyKey,
         priceSnapshotId: frozenPricing.snapshotId as never, // Store reference to frozen price
+        tracking,
       });
 
       // Mark snapshot used + record coupon usage + clear cart + enqueue jobs
@@ -209,6 +211,7 @@ export class PaymentService {
       status: 'created',
       checkoutSnapshot: this.buildCheckoutSnapshot(summary),
       shippingAddress: address,
+      tracking,
       walletDeductPaise,
       loyaltyPointsUsed,
       loyaltyDiscountPaise,

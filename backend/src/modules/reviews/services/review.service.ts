@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { ReviewRepository } from '../repositories/review.repository';
+import { ReviewStatus } from '../models/review.model';
 import { ReviewVote } from '../models/review-vote.model';
 import { ReviewReport } from '../models/review-report.model';
 import { Order } from '../../inventory/models/order.model';
@@ -225,8 +226,10 @@ export class ReviewService {
     await this.repo.computeRatingSummary(productId);
   }
 
-  async getModerationQueue(query: { page?: number; limit?: number; status?: string } = {}) {
-    return this.repo.findModerationQueue(query as any);
+  async getModerationQueue(
+    query: { page?: number; limit?: number; status?: ReviewStatus | 'all' } = {},
+  ) {
+    return this.repo.findModerationQueue(query);
   }
 
   async approveReview(reviewId: string): Promise<void> {

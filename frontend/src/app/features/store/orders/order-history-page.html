@@ -64,20 +64,20 @@
               </div>
             </div>
             <div class="orders__col orders__col--actions">
-              <a [routerLink]="['/track-order']" [queryParams]="{ order: order.orderNumber }" class="orders__action-link">
+              @if (order.reviewUrl) {
+                <a [href]="order.reviewUrl" class="orders__cta orders__cta--primary">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/>
+                  </svg>
+                  Give Review
+                </a>
+              }
+              <a [routerLink]="['/track-order']" [queryParams]="{ order: order.orderNumber }" class="orders__cta orders__cta--ghost">
                 Track my Order
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </a>
-              @if (order.reviewUrl) {
-                <a [href]="order.reviewUrl" class="orders__action-link orders__action-link--review">
-                  Give Review
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </a>
-              }
             </div>
           </div>
 

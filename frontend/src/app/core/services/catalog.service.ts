@@ -62,6 +62,7 @@ export interface ProductVariant {
   price: number;
   discountedPrice?: number;
   cost?: number;
+  costPerCupText?: string; // Free-text cost-per-cup line
   stock: number;
   trackInventory: boolean;
   images?: string[];
@@ -91,6 +92,7 @@ export interface InlineVariant {
   price: number;
   discountedPrice?: number | null;
   stock?: number;
+  costPerCupText?: string;
 }
 
 // Global variant-options dictionary (e.g. Weight → [100g, 250g, 500g, 1kg])
@@ -119,6 +121,8 @@ export interface Product {
   slug: string;
   description?: string;
   shortDescription?: string;
+  brewingGuide?: string[];
+  sourcingInfo?: string[];
   category: CategoryRef;
   collections: { _id: string; name: string; slug: string }[];
   basePrice: number;
@@ -130,7 +134,7 @@ export interface Product {
   attributes: Record<string, string>;
   tags: string[];
   region?: 'Assam' | 'Darjeeling' | 'Nilgiri' | 'Dooars';
-  bestTakenFor?: 'Morning' | 'Noon' | 'Evening';
+  bestTakenFor?: ('Morning' | 'Noon' | 'Evening')[];
   hasVariants?: boolean; // when true, basePrice/discountedPrice/stock are derived from variants
   variants?: ProductVariant[];
   // Admin-only (present in /admin/products, absent in /catalog/products)
@@ -189,6 +193,8 @@ export interface CreateProductPayload {
   slug?: string;
   description?: string;
   shortDescription?: string;
+  brewingGuide?: string[];
+  sourcingInfo?: string[];
   categoryId: string;
   collectionIds?: string[];
   basePrice: number;
@@ -200,7 +206,7 @@ export interface CreateProductPayload {
   attributes?: Record<string, string>;
   tags?: string[];
   region?: 'Assam' | 'Darjeeling' | 'Nilgiri' | 'Dooars' | null; // null clears
-  bestTakenFor?: 'Morning' | 'Noon' | 'Evening' | null; // null clears
+  bestTakenFor?: ('Morning' | 'Noon' | 'Evening')[] | null; // null/empty clears
   status?: 'draft' | 'active' | 'archived';
   showBadge?: boolean;
   badgeText?: string;
@@ -237,6 +243,12 @@ export class CatalogService {
   private readonly publicUrl = `${environment.apiUrl}/catalog`;
 
   constructor(private http: HttpClient) {}
+
+  // --- Store settings (public subset) ---
+
+  getPublicStoreSettings(): Observable<ApiResponse<{ trustPoints: string[] }>> {
+    return this.http.get<ApiResponse<{ trustPoints: string[] }>>(`${this.publicUrl}/store-settings`);
+  }
 
   // --- Categories ---
 

@@ -32,6 +32,16 @@ export const createOrder = async (req: Request, res: Response) => {
   const userId = req.user?.userId ?? null;
   const { address, items, walletAmount, loyaltyPoints, promoCode } = req.body;
 
+  // Meta attribution captured here (req has cookies/headers); stored on the
+  // Payment and copied to the Order for the CAPI Purchase event. Metadata only.
+  const xff = (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim();
+  const tracking = {
+    fbp: req.cookies?._fbp ?? null,
+    fbc: req.cookies?._fbc ?? null,
+    clientIp: xff || req.ip || null,
+    userAgent: req.headers['user-agent'] ?? null,
+  };
+
   // Idempotency key: derived from sessionId + address hash (prevents double payment for same cart)
   const addressHash = crypto
     .createHash('md5')
@@ -50,6 +60,7 @@ export const createOrder = async (req: Request, res: Response) => {
     loyaltyPoints || 0,
     items,
     promoCode,
+    tracking,
   );
   sendCreated(
     res,

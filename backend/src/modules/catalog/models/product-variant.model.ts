@@ -9,6 +9,7 @@ export interface IProductVariantDoc extends Document {
   price: number;
   discountedPrice?: number; // Price after discount applied (if different from price)
   cost?: number;          // Cost price (admin only)
+  costPerCupText?: string; // Free-text cost-per-cup line, e.g. "400 cups - Rs.1.32 a cup"
   stock: number;
   trackInventory: boolean;
   images?: string[];      // Variant-specific images
@@ -29,6 +30,7 @@ const productVariantSchema = new Schema<IProductVariantDoc>(
     price: { type: Number, required: true, min: 0 },
     discountedPrice: { type: Number, min: 0 },
     cost: { type: Number, min: 0 },
+    costPerCupText: { type: String, trim: true, maxlength: 120 },
     stock: { type: Number, default: 0, min: 0 },
     trackInventory: { type: Boolean, default: true },
     images: [{ type: String }],

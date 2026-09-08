@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule, DOCUMENT } from '@angular/common';
+import { Component, OnInit, inject, signal, computed, effect, PLATFORM_ID } from '@angular/core';
+import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
@@ -7,13 +7,21 @@ import { CatalogService, Product, ProductVariant } from '../../../core/services/
 import { CartStore } from '../../../core/services/cart.store';
 import { ReviewStore, RatingSummary, Review, ProductRatingSummary } from '../../../core/services/review.store';
 import { AuthService } from '../../../core/services/auth.service';
-import {
-  PRODUCT_META_OVERRIDE,
-  sanitizeMetaDescription,
-  breadcrumbJsonLd,
-  injectJsonLd,
-} from '../../../core/seo/seo-content';
-import { trackPixelEvent } from '../../../core/utils/meta-pixel';
+import { trackStandardEvent, sendCapiBeacon } from '../../../core/utils/meta-pixel';
+import { PRODUCT_META_OVERRIDE, sanitizeMetaDescription, breadcrumbJsonLd, injectJsonLd } from '../../../core/seo/seo-content';
+
+/**
+ * Colours read along the two edges of an image that end up beside the empty
+ * bars in a square frame.
+ */
+interface AmbientEdges {
+  /** 'x' = portrait image, bars left/right. 'y' = landscape, bars top/bottom. */
+  axis: 'x' | 'y';
+  /** Left (or top) edge colours, in order along that edge. */
+  lead: string[];
+  /** Right (or bottom) edge colours, in order along that edge. */
+  trail: string[];
+}
 
 @Component({
   selector: 'app-product-detail',
@@ -32,6 +40,7 @@ export class ProductDetailComponent implements OnInit {
   private readonly meta = inject(Meta);
   private readonly titleService = inject(Title);
   private readonly document = inject(DOCUMENT);
+  private readonly platformId = inject(PLATFORM_ID);
 
   readonly isLoggedIn = this.authService.isLoggedIn;
 
@@ -47,13 +56,156 @@ export class ProductDetailComponent implements OnInit {
   readonly lightboxImage = signal<string | null>(null);
   readonly selectedVariant = signal<ProductVariant | undefined>(undefined);
   readonly hoveredProductId = signal<string | null>(null);
-  readonly activeTab = signal<'description' | 'brewing' | 'sourcing' | 'reviews'>('description');
+  /** Accordion sections currently expanded (collapsed by default). */
+  readonly openSections = signal<Set<string>>(new Set());
   readonly reviews = signal<Review[]>([]);
   readonly reviewsLoading = signal(false);
   readonly reviewRating = signal(5);
   reviewTitle = '';
   reviewBody = '';
   readonly submittingReview = signal(false);
+
+  // ─ Ambient backdrop (blends a non-square image into the 1:1 frame) ─
+
+  /** Number of slices sampled along each edge — enough to follow a soft vignette. */
+  private readonly AMBIENT_SLICES = 8;
+
+  /** Edge colours keyed by image URL, so each image is analysed at most once. */
+  private readonly ambientCache = new Map<string, AmbientEdges>();
+
+  /** Edges of the image currently on screen; null while it is being read. */
+  private readonly ambient = signal<AmbientEdges | null>(null);
+
+  /**
+   * Paints each empty bar with the colours of the image edge it touches, so the
+   * bar continues the photo's own backdrop and the join becomes invisible. Two
+   * gradient layers, each covering its half of the frame — the image sits on
+   * top and hides where they meet. Empty until the read resolves, which leaves
+   * the neutral CSS background in place.
+   */
+  readonly ambientBackground = computed(() => {
+    const edges = this.ambient();
+    if (!edges) return '';
+
+    const direction = edges.axis === 'x' ? 'to bottom' : 'to right';
+    const ramp = (colors: string[]) => {
+      const stops = colors.map(
+        (color, i) => `${color} ${((i / (colors.length - 1)) * 100).toFixed(1)}%`,
+      );
+      return `linear-gradient(${direction}, ${stops.join(', ')})`;
+    };
+
+    // Slight overlap (50.5%) so rounding never leaves a hairline down the middle
+    const size = edges.axis === 'x' ? '50.5% 100%' : '100% 50.5%';
+    const leadAt = edges.axis === 'x' ? 'left center' : 'center top';
+    const trailAt = edges.axis === 'x' ? 'right center' : 'center bottom';
+
+    return (
+      `${ramp(edges.lead)} ${leadAt} / ${size} no-repeat, ` +
+      `${ramp(edges.trail)} ${trailAt} / ${size} no-repeat`
+    );
+  });
+
+  constructor() {
+    // Re-read the edges whenever the visible image changes.
+    effect(() => {
+      const url = this.selectedImage();
+      if (!url) {
+        this.ambient.set(null);
+        return;
+      }
+
+      const cached = this.ambientCache.get(url);
+      if (cached) {
+        this.ambient.set(cached);
+        return;
+      }
+
+      this.ambient.set(null);
+      if (isPlatformBrowser(this.platformId)) this.extractAmbient(url);
+    });
+  }
+
+  /**
+   * Reads the outermost pixels of the image from a 64x64 downscale. Only a 2px
+   * strip is sampled per slice — roughly 3% of the source width, which stays on
+   * the photo's backdrop instead of picking up the product itself. Gives up
+   * silently on load or cross-origin failures, leaving the neutral background.
+   */
+  private extractAmbient(url: string): void {
+    const SIZE = 64;
+    const EDGE = 2; // strip thickness sampled at the very border
+    const slices = this.AMBIENT_SLICES;
+    const step = SIZE / slices;
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      const canvas = this.document.createElement('canvas');
+      canvas.width = SIZE;
+      canvas.height = SIZE;
+
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0, SIZE, SIZE);
+
+      // Which pair of bars `object-fit: contain` will leave in the square frame
+      const axis: 'x' | 'y' = img.naturalWidth <= img.naturalHeight ? 'x' : 'y';
+
+      try {
+        const lead: string[] = [];
+        const trail: string[] = [];
+
+        for (let i = 0; i < slices; i++) {
+          const offset = i * step;
+          if (axis === 'x') {
+            lead.push(this.averageColor(ctx, 0, offset, EDGE, step));
+            trail.push(this.averageColor(ctx, SIZE - EDGE, offset, EDGE, step));
+          } else {
+            lead.push(this.averageColor(ctx, offset, 0, step, EDGE));
+            trail.push(this.averageColor(ctx, offset, SIZE - EDGE, step, EDGE));
+          }
+        }
+
+        const edges: AmbientEdges = { axis, lead, trail };
+        this.ambientCache.set(url, edges);
+        // The shopper may have moved on to another image while this loaded
+        if (this.selectedImage() === url) this.ambient.set(edges);
+      } catch {
+        // Tainted canvas (image served without CORS headers) — keep the neutral
+      }
+    };
+
+    img.src = url;
+  }
+
+  /** Mean rgb() of a canvas rectangle, skipping near-transparent pixels. */
+  private averageColor(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  ): string {
+    const { data } = ctx.getImageData(x, y, width, height);
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    let count = 0;
+
+    for (let i = 0; i < data.length; i += 4) {
+      // Transparent PNG margins carry no colour and would wash the average out
+      if (data[i + 3] < 16) continue;
+      r += data[i];
+      g += data[i + 1];
+      b += data[i + 2];
+      count++;
+    }
+
+    if (count === 0) return 'rgb(249, 250, 251)'; // matches the neutral fallback
+    return `rgb(${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)})`;
+  }
 
   readonly orderedImages = computed(() => {
     const prod = this.product();
@@ -76,21 +228,46 @@ export class ProductDetailComponent implements OnInit {
     return result;
   });
 
-  readonly brewingGuide = signal<string[]>([
+  /** Fallback trust points used until settings load / when none are configured. */
+  private readonly defaultTrustPoints: string[] = [
+    'Free delivery on orders over Rs.649',
+    '100% money-back on your first order',
+    'FSSAI certified - packed fresh in Bhopal',
+    'Prepaid & COD available',
+  ];
+
+  /** Trust points shown below the action buttons (from global store settings). */
+  readonly trustPoints = signal<string[]>(this.defaultTrustPoints);
+
+  /** Fallback brewing steps shown when a product has none configured. */
+  private readonly defaultBrewingGuide: string[] = [
     'Use 1 teaspoon (2g) of tea per 200ml of water',
     'Water temperature: 90-95°C (just off the boil)',
     'Steep for 3-4 minutes for optimal flavor',
     'Can be re-steeped 2-3 times with excellent results',
-  ]);
+  ];
 
-  readonly sourcingInfo = signal<string[]>([
+  /** Fallback sourcing points shown when a product has none configured. */
+  private readonly defaultSourcingInfo: string[] = [
     'Sourced from the finest gardens in India\'s tea regions',
     'Direct partnerships with ethical and sustainable tea farms',
     'Each batch tested for quality, flavor, and purity',
     'Freshly dried and packaged within weeks of harvest',
     'Fair trade practices ensure farmer communities thrive',
     'Commitment to organic and eco-friendly farming methods',
-  ]);
+  ];
+
+  /** Admin-configured brewing steps, falling back to the defaults when empty. */
+  readonly brewingGuide = computed(() => {
+    const configured = this.product()?.brewingGuide;
+    return configured && configured.length > 0 ? configured : this.defaultBrewingGuide;
+  });
+
+  /** Admin-configured sourcing points, falling back to the defaults when empty. */
+  readonly sourcingInfo = computed(() => {
+    const configured = this.product()?.sourcingInfo;
+    return configured && configured.length > 0 ? configured : this.defaultSourcingInfo;
+  });
 
   // ─ Computed ─
   readonly effectivePrice = computed(() => {
@@ -107,6 +284,17 @@ export class ProductDetailComponent implements OnInit {
 
     return 0;
   });
+
+  /** Free delivery threshold (Rs). Hardcoded for now. */
+  private readonly FREE_DELIVERY_THRESHOLD = 649;
+
+  /** Admin-configured cost-per-cup line for the selected variant, or '' when unset. */
+  readonly costPerCup = computed(() => this.selectedVariant()?.costPerCupText?.trim() ?? '');
+
+  /** Rupees remaining until free delivery; 0 or less means threshold met. */
+  readonly freeDeliveryRemaining = computed(() =>
+    this.FREE_DELIVERY_THRESHOLD - this.effectivePrice(),
+  );
 
   readonly discountPercent = computed(() => {
     const variant = this.selectedVariant();
@@ -130,6 +318,15 @@ export class ProductDetailComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    // Global trust strip content (falls back to defaults on error / when empty)
+    this.catalog.getPublicStoreSettings().subscribe({
+      next: (res) => {
+        if (res.data?.trustPoints?.length) {
+          this.trustPoints.set(res.data.trustPoints);
+        }
+      },
+    });
+
     this.route.params.subscribe((params) => {
       const slug = params['slug'];
       this.loading.set(true);
@@ -178,25 +375,30 @@ export class ProductDetailComponent implements OnInit {
           this.product.set(res.data);
           this.selectedImage.set(this.orderedImages()[0] || '');
 
-          // Set first variant if available
+          // Default to the 1 Kg variant when available (else largest/first)
           if (res.data.variants?.length) {
-            this.selectedVariant.set(res.data.variants[0]);
+            this.selectedVariant.set(this.defaultVariant(res.data.variants));
           }
 
-          trackPixelEvent('ViewContent', {
-            content_ids: [res.data._id],
-            content_type: 'product',
-            value: this.effectivePrice(),
-            currency: 'INR',
-          });
+          {
+            const vcData = {
+              content_ids: [res.data._id],
+              content_type: 'product',
+              value: this.effectivePrice(),
+              currency: 'INR',
+            };
+            const eid = trackStandardEvent('ViewContent', vcData);
+            sendCapiBeacon('ViewContent', eid, vcData);
+          }
 
-          // SEO
+          // SEO — curated override where the source copy is unsuitable, else a
+          // length-sanitized shortDescription (keeps snippets ≤ ~158 chars).
           const pageTitle = `${res.data.name} — Rajhans Tea`;
           const pageDescription =
             PRODUCT_META_OVERRIDE[res.data.slug] ||
             sanitizeMetaDescription(res.data.shortDescription || res.data.name);
-
-          // Canonical URL carries the trailing slash — matches sitemap + redirect policy.
+          // Canonical URL carries the trailing slash — matches the sitemap and
+          // the prerendered directory URL the site 301s to. Dynamic per product.
           const pageUrl = `https://rajhanstea.com/product/${res.data.slug}/`;
 
           this.titleService.setTitle(pageTitle);
@@ -208,25 +410,17 @@ export class ProductDetailComponent implements OnInit {
           this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
           this.meta.updateTag({ name: 'twitter:title', content: res.data.name });
           this.meta.updateTag({ name: 'twitter:description', content: pageDescription });
-
-
           const toAbsoluteUrl = (path: string) =>
-            path.startsWith('http')
-              ? path
-              : `https://rajhanstea.com${path.startsWith('/') ? '' : '/'}${path}`;
+            path.startsWith('http') ? path : `https://rajhanstea.com${path.startsWith('/') ? '' : '/'}${path}`;
 
-          const absoluteImg = res.data.images?.[0]
-            ? toAbsoluteUrl(res.data.images[0])
-            : undefined;
-
+          const absoluteImg = res.data.images?.[0] ? toAbsoluteUrl(res.data.images[0]) : undefined;
           if (absoluteImg) {
-
+            // Social crawlers require absolute image URLs
             this.meta.updateTag({ property: 'og:image', content: absoluteImg });
             this.meta.updateTag({ name: 'twitter:image', content: absoluteImg });
           }
 
-
-
+          // Canonical link (Angular's Meta service has no built-in canonical helper)
           let canonical = this.document.querySelector('link[rel="canonical"]');
           if (!canonical) {
             canonical = this.document.createElement('link');
@@ -235,8 +429,10 @@ export class ProductDetailComponent implements OnInit {
           }
           canonical.setAttribute('href', pageUrl);
 
-
-          // Additive BreadcrumbList JSON-LD: Home → Category → Product.
+          // Additive BreadcrumbList JSON-LD: Home → Category → Product, derived
+          // from the product's real category taxonomy (falls back to All Products
+          // when a product has no single category). Never touches the Product /
+          // Organization JSON-LD blocks.
           const cat = res.data.category;
           injectJsonLd(
             this.document,
@@ -250,9 +446,9 @@ export class ProductDetailComponent implements OnInit {
             ]),
           );
 
-          // Load rating summary, then inject Product JSON-LD so prerendered HTML
-          // contains aggregateRating when rating evidence is available.
-
+          // Load rating summary, then inject Product JSON-LD (includes aggregateRating
+          // once known — chained here so prerendering captures the real value, not a
+          // placeholder written before the rating summary request resolves)
           this.reviewStore.getRatingSummary(res.data._id).subscribe({
             next: (r) => {
               this.ratingSummary.set(r.data);
@@ -348,6 +544,54 @@ export class ProductDetailComponent implements OnInit {
     this.selectedVariant.set(variant);
   }
 
+  /**
+   * Parses a variant weight to grams from its free-text name, tolerating
+   * casing/spacing variations ("1kg", "1 Kg", "500 gm", "750g"). Returns null
+   * when no weight can be read.
+   */
+  private variantGrams(variant: ProductVariant | undefined): number | null {
+    if (!variant?.name) return null;
+    const match = variant.name.toLowerCase().replace(/\s+/g, '').match(/([\d.]+)(kg|gm|g)/);
+    if (!match) return null;
+    const value = parseFloat(match[1]);
+    if (isNaN(value)) return null;
+    return match[2] === 'kg' ? Math.round(value * 1000) : Math.round(value);
+  }
+
+  /**
+   * Chooses the default variant: prefer the 1 kg option, else fall back to the
+   * last (typically largest) variant, else the first.
+   */
+  private defaultVariant(variants: ProductVariant[]): ProductVariant {
+    const oneKg = variants.find((v) => this.variantGrams(v) === 1000);
+    return oneKg ?? variants[variants.length - 1] ?? variants[0];
+  }
+
+  // ─ Accordions ─
+  toggleSection(key: string): void {
+    const next = new Set(this.openSections());
+    if (next.has(key)) {
+      next.delete(key);
+    } else {
+      next.add(key);
+    }
+    this.openSections.set(next);
+  }
+
+  isSectionOpen(key: string): boolean {
+    return this.openSections().has(key);
+  }
+
+  /** Opens the Reviews accordion and scrolls it into view. */
+  scrollToReviews(): void {
+    const next = new Set(this.openSections());
+    next.add('reviews');
+    this.openSections.set(next);
+    setTimeout(() => {
+      this.document.getElementById('pd-reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  }
+
   // ─ Quantity ─
   incrementQty(): void {
     let max = 99;
@@ -404,17 +648,22 @@ export class ProductDetailComponent implements OnInit {
   }
 
   /**
-   * Descriptive, SEO-friendly ALT text for a product image.
-   * An optional 1-based position disambiguates gallery thumbnails.
+   * Descriptive, SEO-friendly ALT text for a product image. Beyond the bare
+   * product name it includes the category and a "tea" qualifier so the alt
+   * describes the image content (helps image search and accessibility). An
+   * optional 1-based position disambiguates gallery thumbnails.
    */
   imageAltText(position?: number): string {
     const p = this.product();
     if (!p) return 'Rajhans Tea product image';
-
     const category = p.category?.name ? `${p.category.name} ` : '';
     const base = `${p.name} — ${category}loose-leaf tea by Rajhans Tea`;
-
     return position && position > 1 ? `${base} (view ${position})` : base;
+  }
+
+  // ─ Recommendations card navigation ─
+  goToProduct(product: Product): void {
+    this.router.navigate(['/product', product.slug]);
   }
 
   /** Injects/updates the schema.org Product JSON-LD block for this page. */
@@ -442,9 +691,7 @@ export class ProductDetailComponent implements OnInit {
             : 'https://schema.org/InStock',
       },
     };
-
     if (absoluteImg) schema['image'] = absoluteImg;
-
     if (rating && rating.totalReviews > 0) {
       schema['aggregateRating'] = {
         '@type': 'AggregateRating',
@@ -455,22 +702,14 @@ export class ProductDetailComponent implements OnInit {
 
     const scriptId = 'product-jsonld';
     let script = this.document.getElementById(scriptId) as HTMLScriptElement | null;
-
     if (!script) {
       script = this.document.createElement('script');
       script.type = 'application/ld+json';
       script.id = scriptId;
       this.document.head.appendChild(script);
     }
-
     script.textContent = JSON.stringify(schema);
   }
-
-  // ─ Recommendations card navigation ─
-  goToProduct(product: Product): void {
-    this.router.navigate(['/product', product.slug]);
-  }
-
 
   // ─ Real rating summaries for recommendation cards ─
   private loadRelatedSummaries(ids: string[]): void {
@@ -502,14 +741,18 @@ export class ProductDetailComponent implements OnInit {
     return this.relatedSummaries().get(productId)?.totalReviews ?? 0;
   }
 
-  /** Display name for a review: admin-entered name, else the reviewer's account name */
+  /**
+   * Display name for a review: the name the reviewer typed, else their account
+   * name. Order-token reviews leave the name field blank, so those show as
+   * "Anonymous" rather than a generic label.
+   */
   reviewerNameFor(review: Review): string {
-    if (review.reviewerName) return review.reviewerName;
+    if (review.reviewerName?.trim()) return review.reviewerName.trim();
     const u = review.userId;
     if (u && typeof u === 'object') {
-      const name = [u.firstName, u.lastName].filter(Boolean).join(' ');
+      const name = [u.firstName, u.lastName].filter(Boolean).join(' ').trim();
       if (name) return name;
     }
-    return 'Verified Customer';
+    return 'Anonymous';
   }
 }

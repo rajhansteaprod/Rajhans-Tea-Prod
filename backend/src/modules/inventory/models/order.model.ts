@@ -78,6 +78,13 @@ export interface IOrderDoc extends Document {
   cancellationReason: string | null;
   returnReason: string | null;
   notes: string | null;
+  // Meta attribution captured at order creation (for the CAPI Purchase event).
+  tracking?: {
+    fbp?: string | null;
+    fbc?: string | null;
+    clientIp?: string | null;
+    userAgent?: string | null;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -165,6 +172,12 @@ const orderSchema = new Schema<IOrderDoc>(
     cancellationReason: { type: String, default: null },
     returnReason: { type: String, default: null },
     notes: { type: String, default: null },
+    tracking: {
+      fbp: { type: String, default: null },
+      fbc: { type: String, default: null },
+      clientIp: { type: String, default: null },
+      userAgent: { type: String, default: null },
+    },
   },
   { timestamps: true },
 );

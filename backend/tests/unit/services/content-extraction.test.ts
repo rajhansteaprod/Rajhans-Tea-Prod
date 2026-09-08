@@ -31,6 +31,7 @@ function state(over: Partial<PageContentState> = {}): PageContentState {
     wordCount: 600,
     contentHash: 'hash',
     normalizedTextChars: 3200,
+    visibleWordCount: 600,
     normalizedTextTruncated: false,
     faqSignals: { questionHeadings: 0, faqHeadingPresent: false, faqSchemaPresent: false },
     canonical: 'https://rajhanstea.com/product/x/',

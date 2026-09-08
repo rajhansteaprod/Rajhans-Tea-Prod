@@ -13,6 +13,7 @@ export interface ProductVariantView {
   optionValue?: string;
   price: number;
   discountedPrice?: number;
+  costPerCupText?: string;
   stock?: number;
   isActive?: boolean;
 }
@@ -26,6 +27,8 @@ export interface ProductAdminView {
   slug: string;
   description?: string;
   shortDescription?: string;
+  brewingGuide?: string[];
+  sourcingInfo?: string[];
   category: { _id: string; name: string; slug: string };
   collections: { _id: string; name: string; slug: string }[];
   basePrice: number;
@@ -37,7 +40,7 @@ export interface ProductAdminView {
   attributes: Record<string, string>;
   tags: string[];
   region?: string;
-  bestTakenFor?: string;
+  bestTakenFor?: string[];
   status: ProductStatus;
   isFeatured: boolean;
   showBadge: boolean;
@@ -59,6 +62,8 @@ export interface ProductPublicView {
   slug: string;
   description?: string;
   shortDescription?: string;
+  brewingGuide?: string[];
+  sourcingInfo?: string[];
   category: { _id: string; name: string; slug: string };
   collections: { _id: string; name: string; slug: string }[];
   basePrice: number;
@@ -70,7 +75,7 @@ export interface ProductPublicView {
   attributes: Record<string, string>;
   tags: string[];
   region?: string;
-  bestTakenFor?: string;
+  bestTakenFor?: string[];
   isFeatured: boolean;
   showBadge: boolean;
   badgeText?: string;
@@ -92,6 +97,13 @@ function attributesToRecord(attrs: Map<string, string> | undefined): Record<stri
     result[k] = v;
   }
   return result;
+}
+
+/** Normalises bestTakenFor to a string[] (legacy docs may store a single string). */
+function bestTakenForToArray(value: unknown): string[] | undefined {
+  if (value == null) return undefined;
+  if (Array.isArray(value)) return value.length ? (value as string[]) : undefined;
+  return [String(value)];
 }
 
 function extractCategory(product: IProductDoc) {
@@ -128,6 +140,7 @@ export class ProductDTO {
       optionValue: v.optionValue,
       price: v.price,
       discountedPrice: v.discountedPrice,
+      costPerCupText: v.costPerCupText,
       stock: v.stock,
       isActive: v.isActive,
     }));
@@ -141,6 +154,8 @@ export class ProductDTO {
       slug: product.slug,
       description: product.description,
       shortDescription: product.shortDescription,
+      brewingGuide: product.brewingGuide ?? [],
+      sourcingInfo: product.sourcingInfo ?? [],
       category: extractCategory(product),
       collections: extractCollections(product),
       basePrice: product.basePrice,
@@ -152,7 +167,7 @@ export class ProductDTO {
       attributes: attributesToRecord(product.attributes),
       tags: product.tags ?? [],
       region: product.region,
-      bestTakenFor: product.bestTakenFor,
+      bestTakenFor: bestTakenForToArray(product.bestTakenFor),
       status: product.status,
       isFeatured: product.isFeatured,
       showBadge: product.showBadge ?? false,
@@ -174,6 +189,8 @@ export class ProductDTO {
       slug: product.slug,
       description: product.description,
       shortDescription: product.shortDescription,
+      brewingGuide: product.brewingGuide ?? [],
+      sourcingInfo: product.sourcingInfo ?? [],
       category: extractCategory(product),
       collections: extractCollections(product),
       basePrice: product.basePrice,
@@ -185,7 +202,7 @@ export class ProductDTO {
       attributes: attributesToRecord(product.attributes),
       tags: product.tags ?? [],
       region: product.region,
-      bestTakenFor: product.bestTakenFor,
+      bestTakenFor: bestTakenForToArray(product.bestTakenFor),
       isFeatured: product.isFeatured,
       showBadge: product.showBadge ?? false,
       badgeText: product.badgeText,

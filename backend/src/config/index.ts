@@ -47,6 +47,14 @@ export const config = {
     keySecret: process.env.RAZORPAY_KEY_SECRET || '',
     webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || '',
   },
+  meta: {
+    pixelId: process.env.META_PIXEL_ID || '',
+    capiToken: process.env.META_CAPI_ACCESS_TOKEN || '',
+    // Current Graph API version (v26.0, Jul 2026). Bump here in one place.
+    apiVersion: process.env.META_GRAPH_API_VERSION || 'v26.0',
+    // When set, CAPI events go to the Test Events tab instead of live data.
+    testEventCode: process.env.META_TEST_EVENT_CODE || '',
+  },
   communication: {
     email: {
       smtp: {

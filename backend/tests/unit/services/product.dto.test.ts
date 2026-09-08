@@ -32,7 +32,7 @@ describe('ProductDTO', () => {
     attributes: new Map([['Grade', 'FTGFOP']]),
     tags: ['organic', 'jasmine'],
     region: 'Assam',
-    bestTakenFor: 'Morning',
+    bestTakenFor: ['Morning'],
     status: 'active',
     isFeatured: true,
     stock: 100,
@@ -59,7 +59,7 @@ describe('ProductDTO', () => {
       expect(result.reflectedImage).toBe('reflected.png');
       expect(result.imageAltText).toBe('Jasmine packet front');
       expect(result.region).toBe('Assam');
-      expect(result.bestTakenFor).toBe('Morning');
+      expect(result.bestTakenFor).toEqual(['Morning']);
       expect(result.status).toBe('active');
     });
 

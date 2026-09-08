@@ -16,7 +16,7 @@ import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import { PlatformService } from './platform.service';
 import { Product, ProductVariant } from './catalog.service';
-import { trackPixelEvent } from '../utils/meta-pixel';
+import { trackPixelEvent, trackStandardEvent, sendCapiBeacon } from '../utils/meta-pixel';
 
 // ─── API types (mirror backend) ───────────────────────────────────────────────
 
@@ -292,12 +292,14 @@ export class CartStore {
           const unitPrice = added
             ? (added.variantPrice ?? added.discountedPrice ?? added.price ?? added.basePrice ?? 0)
             : 0;
-          trackPixelEvent('AddToCart', {
+          const atcData = {
             content_ids: [productId],
             content_type: 'product',
             value: unitPrice * qty,
             currency: 'INR',
-          });
+          };
+          const atcEid = trackStandardEvent('AddToCart', atcData);
+          sendCapiBeacon('AddToCart', atcEid, atcData);
         },
         error: () => this._cartLoading.set(false),
       });

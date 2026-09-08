@@ -21,6 +21,7 @@ adminRouter.post('/homepage-sections/reorder', homepageSectionCtrl.reorderHomepa
 
 // Public routes
 router.get('/catalog/homepage-sections', ctrl.getHomepageSectionsPublic);
+router.get('/catalog/store-settings', ctrl.getPublicSettings);
 
 router.use('/admin', adminRouter);
 
