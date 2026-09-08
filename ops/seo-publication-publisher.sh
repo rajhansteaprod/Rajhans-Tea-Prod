@@ -64,6 +64,7 @@ if [[ "${SEO_PUBLICATION_SELF_TEST:-0}" == "1" ]]; then
   echo "[seo-publication] SELF TEST: building $IMAGE"
 
   docker build \
+    --build-arg SEO_CONTENT_BUILD_REVISION="selftest-$(date +%s)" \
     -f "$WORKTREE/frontend/Dockerfile" \
     -t "$IMAGE" \
     "$WORKTREE"
@@ -163,6 +164,7 @@ echo "[seo-publication] candidate frontend=$IMAGE"
 CURRENT_STEP="frontend_build"
 
 docker build \
+  --build-arg SEO_CONTENT_BUILD_REVISION="$PUBLICATION_ID" \
   -f "$WORKTREE/frontend/Dockerfile" \
   -t "$IMAGE" \
   "$WORKTREE"
