@@ -17,6 +17,7 @@ import { Blog } from '../../cms/models/blog.model';
 import { fetchUrl } from './fetcher.service';
 import { parseHtml } from './parser.service';
 import { seoConfig } from '../seo.config';
+import { FaqItem } from './faq-schema.util';
 
 /**
  * Phase 5.4A — post-execution verification. Manually re-checks a SUCCESSFUL
@@ -516,6 +517,198 @@ async function verifyBlogTarget(target: ExecutedTarget): Promise<VerifiedTarget>
 }
 
 /**
+ * Phase 6.5A — verify one FAQ schema execution against the LIVE, PUBLISHED
+ * page. DB/source-only success is never enough: this independently fetches
+ * the live page and requires exactly one `FAQPage` JSON-LD block whose
+ * `@context`/`@type` are correct, whose item count matches what execution
+ * wrote, and whose every `Question.name`/`acceptedAnswer.text` is present in
+ * the page's own VISIBLE (non-script) text — so a schema can never claim an
+ * entry that isn't genuinely shown to a visitor.
+ */
+async function verifyFaqSchemaTarget(target: ExecutedTarget): Promise<VerifiedTarget> {
+  const expectedSerialized = target.after.faqSchema;
+
+  if (!expectedSerialized) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: emptyFetchInfo(target.targetUrl, 'execution_missing_faq_schema'),
+      expected: {},
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: ['faq_schema_missing_from_execution'],
+    };
+  }
+
+  let expectedParsed: { mainEntity?: unknown };
+  try {
+    expectedParsed = JSON.parse(expectedSerialized);
+  } catch {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: emptyFetchInfo(target.targetUrl, 'execution_faq_schema_unparseable'),
+      expected: { faqSchema: expectedSerialized },
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: ['faq_schema_unparseable'],
+    };
+  }
+  const expectedItems: FaqItem[] = Array.isArray(expectedParsed.mainEntity)
+    ? (expectedParsed.mainEntity as { name?: unknown; acceptedAnswer?: { text?: unknown } }[]).map((q) => ({
+        question: typeof q.name === 'string' ? q.name : '',
+        answer: typeof q.acceptedAnswer?.text === 'string' ? q.acceptedAnswer.text : '',
+      }))
+    : [];
+
+  const expected: VerificationExpected = { faqSchema: expectedSerialized };
+
+  const page = await Page.findById(target.targetDocumentId).exec();
+  if (!page || page.status !== 'published') {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: emptyFetchInfo(target.targetUrl, !page ? 'page_missing' : 'page_unpublished'),
+      expected,
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: [!page ? 'page_missing' : 'page_unpublished'],
+    };
+  }
+
+  if ((page.faqSchema ?? '') !== expectedSerialized) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: emptyFetchInfo(target.targetUrl, 'faq_schema_drifted_since_execution'),
+      expected,
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: ['faq_schema_drift'],
+    };
+  }
+
+  const fetched = await fetchUrl(target.targetUrl);
+  const fetchInfo: VerificationFetchInfo = {
+    requestedUrl: fetched.requestedUrl,
+    finalUrl: fetched.finalUrl,
+    finalStatus: fetched.finalStatus,
+    redirectChain: fetched.redirectChain,
+    error: fetched.error,
+    transient: fetched.transient,
+  };
+
+  const fetchSucceeded = !fetched.transient && fetched.finalStatus === 200 && fetched.html !== null;
+  if (!fetchSucceeded) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: fetchInfo,
+      expected,
+      observed: {},
+      matches: {},
+      status: 'fetch_failed',
+      mismatchFields: [],
+    };
+  }
+
+  if (!matchesIntendedTarget(target.targetUrl, fetched.finalUrl)) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: fetchInfo,
+      expected,
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: ['redirected_to_different_page'],
+    };
+  }
+
+  const html = fetched.html as string;
+
+  // Exactly one FAQPage JSON-LD block, never zero and never more than one.
+  const scriptBlocks = [...html.matchAll(/<script\b[^>]*type\s*=\s*"application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)];
+  const faqBlocks: Record<string, unknown>[] = [];
+  for (const block of scriptBlocks) {
+    try {
+      const parsed = JSON.parse(block[1].trim());
+      if (parsed && typeof parsed === 'object' && parsed['@type'] === 'FAQPage') faqBlocks.push(parsed);
+    } catch {
+      // A malformed <script> block simply doesn't count as a valid FAQPage block.
+    }
+  }
+
+  if (faqBlocks.length !== 1) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: fetchInfo,
+      expected,
+      observed: { faqSchema: null },
+      matches: { faqSchema: false },
+      status: 'mismatch',
+      mismatchFields: [faqBlocks.length === 0 ? 'faq_schema_missing_on_page' : 'multiple_faq_schema_blocks'],
+    };
+  }
+
+  const liveSchema = faqBlocks[0] as { '@context'?: unknown; '@type'?: unknown; mainEntity?: unknown };
+  const observedSerialized = JSON.stringify(liveSchema);
+  const mismatchFields: string[] = [];
+
+  if (liveSchema['@context'] !== 'https://schema.org') mismatchFields.push('context_mismatch');
+  if (liveSchema['@type'] !== 'FAQPage') mismatchFields.push('type_mismatch');
+
+  const liveItems: FaqItem[] = Array.isArray(liveSchema.mainEntity)
+    ? (liveSchema.mainEntity as { name?: unknown; acceptedAnswer?: { text?: unknown } }[]).map((q) => ({
+        question: typeof q.name === 'string' ? q.name : '',
+        answer: typeof q.acceptedAnswer?.text === 'string' ? q.acceptedAnswer.text : '',
+      }))
+    : [];
+
+  if (liveItems.length !== expectedItems.length) mismatchFields.push('count_mismatch');
+
+  // No hidden/invented entries: every Question.name and acceptedAnswer.text
+  // in the live schema must literally appear in the page's own VISIBLE
+  // (non-script/style) text — never trust the schema's own claims about
+  // itself.
+  const publicText = normalizePublicText(html);
+  for (const item of liveItems) {
+    const normalizedQuestion = item.question.replace(/\s+/g, ' ').trim();
+    if (!normalizedQuestion || !publicText.includes(normalizedQuestion)) {
+      mismatchFields.push('question_not_visible');
+      break;
+    }
+  }
+  for (const item of liveItems) {
+    const normalizedAnswer = item.answer.replace(/\s+/g, ' ').trim();
+    if (!normalizedAnswer || !publicText.includes(normalizedAnswer)) {
+      mismatchFields.push('answer_not_visible');
+      break;
+    }
+  }
+
+  // Exact match against what execution wrote — the strongest possible check,
+  // subsuming count/content equality when it passes.
+  if (observedSerialized !== expectedSerialized) mismatchFields.push('schema_does_not_match_execution');
+
+  return {
+    targetUrl: target.targetUrl,
+    targetDocumentId: target.targetDocumentId,
+    fetch: fetchInfo,
+    expected,
+    observed: { faqSchema: observedSerialized },
+    matches: { faqSchema: mismatchFields.length === 0 },
+    status: mismatchFields.length ? 'mismatch' : 'verified',
+    mismatchFields,
+  };
+}
+
+/**
  * A confirmed mismatch is stronger evidence than an inability to verify
  * another target, so mismatch outranks fetch_failed when both are present.
  */
@@ -570,11 +763,13 @@ export async function verifyExecution(opts: {
 
   for (const target of execution.targets) {
     targets.push(
-      execution.targetType === 'product'
-        ? await verifyProductTarget(target)
-        : execution.targetType === 'blog'
-          ? await verifyBlogTarget(target)
-          : await verifyCmsPageTarget(target),
+      target.after.faqSchema !== undefined
+        ? await verifyFaqSchemaTarget(target)
+        : execution.targetType === 'product'
+          ? await verifyProductTarget(target)
+          : execution.targetType === 'blog'
+            ? await verifyBlogTarget(target)
+            : await verifyCmsPageTarget(target),
     );
   }
   const status = aggregateStatus(targets);

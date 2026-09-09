@@ -30,6 +30,8 @@ export interface VerificationExpected {
   /** Phase 6.4A internal-link verification. */
   linkTargetUrl?: string;
   linkAnchorText?: string;
+  /** Phase 6.5A FAQ schema verification: the exact FAQPage JSON-LD execution wrote, serialized. */
+  faqSchema?: string;
 }
 
 export interface VerificationObserved {
@@ -38,6 +40,8 @@ export interface VerificationObserved {
   description?: string | null;
   /** Whether the exact `<a href="linkTargetUrl">linkAnchorText</a>` was found in the live page. */
   linkPresent?: boolean | null;
+  /** The single FAQPage JSON-LD block actually found in the live page's HTML, serialized. Null when none/ambiguous. */
+  faqSchema?: string | null;
 }
 
 export interface VerificationMatches {
@@ -45,6 +49,7 @@ export interface VerificationMatches {
   metaDescription?: boolean;
   description?: boolean;
   link?: boolean;
+  faqSchema?: boolean;
 }
 
 export interface VerifiedTarget {
@@ -94,6 +99,7 @@ const verificationExpectedSchema = new Schema<VerificationExpected>(
     description: { type: String },
     linkTargetUrl: { type: String },
     linkAnchorText: { type: String },
+    faqSchema: { type: String },
   },
   { _id: false },
 );
@@ -104,6 +110,7 @@ const verificationObservedSchema = new Schema<VerificationObserved>(
     metaDescription: { type: String, default: undefined },
     description: { type: String, default: undefined },
     linkPresent: { type: Boolean, default: undefined },
+    faqSchema: { type: String, default: undefined },
   },
   { _id: false },
 );
@@ -114,6 +121,7 @@ const verificationMatchesSchema = new Schema<VerificationMatches>(
     metaDescription: { type: Boolean },
     description: { type: Boolean },
     link: { type: Boolean },
+    faqSchema: { type: Boolean },
   },
   { _id: false },
 );

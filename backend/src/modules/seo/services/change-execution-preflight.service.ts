@@ -6,6 +6,7 @@ import {
   MetadataProposedChange,
   ContentProposedChange,
   InternalLinkProposedChange,
+  FaqProposedChange,
 } from '../models/seo-change-draft.model';
 import { SeoChangeExecution, ExecutedFieldSnapshot } from '../models/seo-change-execution.model';
 import { Page, IPageDoc } from '../../cms/models/page.model';
@@ -14,6 +15,7 @@ import { Blog, IBlogDoc } from '../../cms/models/blog.model';
 import { CANONICAL_PAGE_SLUG } from '../../cms/page-slug.util';
 import { seoConfig } from '../seo.config';
 import { applyInternalLinkPatch, contentAlreadyLinksTo } from './internal-link-patch.util';
+import { extractFaqPairsFromHtml, buildFaqJsonLd, serializeFaqJsonLd, FaqItem } from './faq-schema.util';
 
 /**
  * Phase 5.5 — execution quality controls. THE single authoritative answer to
@@ -74,7 +76,12 @@ export type PreflightBlockerCode =
   | 'duplicate_link'
   | 'self_link'
   | 'external_target'
-  | 'malformed_link';
+  | 'malformed_link'
+  // Phase 6.5A — FAQ schema execution.
+  | 'empty_faq_items'
+  | 'duplicate_question'
+  | 'schema_already_present'
+  | 'schema_mismatch';
 
 /**
  * SEO quality findings. These NEVER block execution — they are judgement calls
@@ -114,7 +121,11 @@ export type PreflightCheckCode =
   // Phase 6.4A — internal-link execution.
   | 'anchor_present'
   | 'link_target_valid'
-  | 'no_duplicate_link';
+  | 'no_duplicate_link'
+  // Phase 6.5A — FAQ schema execution.
+  | 'faq_items_well_formed'
+  | 'faq_schema_novel'
+  | 'faq_schema_matches_derivation';
 
 export type PreflightCheckStatus = 'pass' | 'warn' | 'fail';
 export type PreflightRiskLevel = 'low' | 'medium' | 'high';
@@ -141,7 +152,7 @@ export interface PreflightCheck {
 /** The metadata fields this execution would write, per resolved target — the exact mutation scope. */
 export interface PreflightChangedFields {
   targetUrl: string;
-  fields: ('metaTitle' | 'metaDescription' | 'description' | 'content')[];
+  fields: ('metaTitle' | 'metaDescription' | 'description' | 'content' | 'faqSchema')[];
 }
 
 export interface ExecutionPreflightResult {
@@ -1220,6 +1231,157 @@ export async function evaluateExecutionPreflight(opts: {
           linkTargetUrl: linkDestination,
           linkAnchorText: anchorText,
         },
+      });
+    }
+
+    const result = finalize(acc, evaluatedAt);
+    return {
+      result,
+      prepared: result.executable ? prepared : [],
+      draft,
+      recommendation,
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  // Phase 6.5A — FAQPage schema execution on an existing CMS Page.
+  //
+  // The draft's `items`/`proposedJsonLd` are NEVER trusted: this branch
+  // independently re-extracts Q&A pairs from the LIVE Page.content via
+  // extractFaqPairsFromHtml and re-derives the canonical JSON-LD via
+  // buildFaqJsonLd, requiring an exact match to what the draft proposed. A
+  // draft generated against stale/edited/invented content therefore always
+  // fails closed here, never silently executes a divergent schema.
+  // -------------------------------------------------------------------------
+  if (draft.proposedChanges[0]?.kind === 'faq') {
+    const faqChanges = draft.proposedChanges as FaqProposedChange[];
+
+    // Historical outline-only add-faq-schema drafts (always items: [], no
+    // execution payload) remain unsupported_kind rather than reinterpreted.
+    if (faqChanges.some((change) => !change.execution)) {
+      block(acc, 'unsupported_kind', 'Outline-only FAQ schema drafts cannot be executed; regenerate the draft with executable FAQ schema support');
+      record(acc, 'change_kind_supported', 'fail', 'Historical outline-only FAQ schema recommendation is outside the executable scope');
+      return empty(draft, recommendation);
+    }
+    record(acc, 'change_kind_supported', 'pass', 'All proposed changes are FAQ schema changes');
+
+    const prepared: PreparedExecutionTarget[] = [];
+    const seenPageIds = new Map<string, string>();
+
+    for (const change of faqChanges) {
+      const targetUrl = change.targetUrl;
+      const exec = change.execution!;
+
+      if (typeof exec.sourceContentSnapshot !== 'string' || !exec.sourceContentSnapshot) {
+        const message = 'FAQ schema execution requires a non-empty sourceContentSnapshot';
+        block(acc, 'malformed_value', message, targetUrl);
+        record(acc, 'faq_items_well_formed', 'fail', message, targetUrl);
+        continue;
+      }
+      if (!exec.proposedJsonLd || typeof exec.proposedJsonLd !== 'object') {
+        const message = 'FAQ schema execution requires a proposedJsonLd object';
+        block(acc, 'malformed_value', message, targetUrl);
+        record(acc, 'faq_items_well_formed', 'fail', message, targetUrl);
+        continue;
+      }
+      record(acc, 'faq_items_well_formed', 'pass', 'FAQ schema execution payload is well-formed', targetUrl);
+
+      const target = await resolveCmsPageTarget(targetUrl, session);
+      if (!target.ok) {
+        const message =
+          target.reason === 'not_found'
+            ? `No published CMS page found for ${targetUrl}`
+            : `${targetUrl} is not an executable CMS page URL`;
+        block(acc, target.reason === 'not_found' ? 'target_not_found' : 'unsupported_target', message, targetUrl);
+        record(acc, 'target_resolvable', 'fail', message, targetUrl);
+        continue;
+      }
+      const page = target.page;
+      record(acc, 'target_resolvable', 'pass', `Resolves to published CMS page "${page.slug}"`, targetUrl);
+
+      const pageId = String(page._id);
+      const claimedBy = seenPageIds.get(pageId);
+      if (claimedBy) {
+        const message = `${targetUrl} and ${claimedBy} both resolve to CMS page "${page.slug}"`;
+        block(acc, 'ambiguous_target', message, targetUrl);
+        record(acc, 'target_unique', 'fail', message, targetUrl);
+        continue;
+      }
+      seenPageIds.set(pageId, targetUrl);
+      record(acc, 'target_unique', 'pass', `No other target in this draft writes "${page.slug}"`, targetUrl);
+
+      // Stale-source protection: the visible FAQ content must not have
+      // changed since the draft was generated.
+      const liveContent = page.content ?? '';
+      if (exec.sourceContentSnapshot !== liveContent) {
+        const message = `Live content for CMS page "${page.slug}" has changed since this draft was generated`;
+        block(acc, 'stale', message, targetUrl);
+        record(acc, 'live_state_unchanged', 'fail', message, targetUrl);
+        continue;
+      }
+      record(acc, 'live_state_unchanged', 'pass', 'Live FAQ page content still matches the draft snapshot', targetUrl);
+
+      // Independently re-extract Q&A pairs from the LIVE content — this is
+      // what makes "invented/non-visible answer", "empty question/answer",
+      // "duplicate question", and "no FAQ entries" all fail-closed rather
+      // than trusting the draft's stored items.
+      const derivedItems = extractFaqPairsFromHtml(liveContent);
+      if (!derivedItems.ok) {
+        const reasonMessages: Record<string, string> = {
+          no_faq_entries: `No <h3>Question</h3><p>Answer</p> pairs found in CMS page "${page.slug}"`,
+          empty_question: `An empty question was found in CMS page "${page.slug}"`,
+          empty_answer: `An empty answer was found in CMS page "${page.slug}"`,
+          duplicate_question: `A duplicate question was found in CMS page "${page.slug}"`,
+        };
+        const message = reasonMessages[derivedItems.reason] ?? `Could not extract FAQ items (${derivedItems.reason})`;
+        const blockerCode: PreflightBlockerCode = derivedItems.reason === 'duplicate_question' ? 'duplicate_question' : 'empty_faq_items';
+        block(acc, blockerCode, message, targetUrl);
+        record(acc, 'faq_items_well_formed', 'fail', message, targetUrl);
+        continue;
+      }
+
+      const derivedItemsSorted: FaqItem[] = derivedItems.items;
+      const draftItemsMatch =
+        change.items.length === derivedItemsSorted.length &&
+        change.items.every(
+          (item, i) => item.question === derivedItemsSorted[i]!.question && item.answer === derivedItemsSorted[i]!.answer,
+        );
+      if (!draftItemsMatch) {
+        const message = `Proposed FAQ items for "${page.slug}" do not match the deterministic reconstruction from live page content`;
+        block(acc, 'schema_mismatch', message, targetUrl);
+        record(acc, 'faq_schema_matches_derivation', 'fail', message, targetUrl);
+        continue;
+      }
+
+      const derivedJsonLd = buildFaqJsonLd(derivedItemsSorted);
+      const derivedSerialized = serializeFaqJsonLd(derivedJsonLd);
+      const proposedSerialized = serializeFaqJsonLd(exec.proposedJsonLd);
+      if (derivedSerialized !== proposedSerialized) {
+        const message = `Proposed JSON-LD for "${page.slug}" does not match the deterministic reconstruction from live page content`;
+        block(acc, 'schema_mismatch', message, targetUrl);
+        record(acc, 'faq_schema_matches_derivation', 'fail', message, targetUrl);
+        continue;
+      }
+      record(acc, 'faq_schema_matches_derivation', 'pass', 'Proposed JSON-LD matches the deterministic reconstruction exactly', targetUrl);
+
+      // "Existing equivalent FAQPage schema already present" / no-op.
+      const liveSchema = page.faqSchema ?? '';
+      if (liveSchema === derivedSerialized) {
+        const message = `CMS page "${page.slug}" already has this exact FAQPage schema`;
+        block(acc, 'schema_already_present', message, targetUrl);
+        record(acc, 'faq_schema_novel', 'fail', message, targetUrl);
+        continue;
+      }
+      record(acc, 'faq_schema_novel', 'pass', 'No equivalent FAQPage schema is already present', targetUrl);
+
+      acc.changedFields.push({ targetUrl, fields: ['faqSchema'] });
+
+      prepared.push({
+        targetType: 'cms_page',
+        targetUrl,
+        page,
+        before: { faqSchema: liveSchema },
+        proposed: { faqSchema: derivedSerialized },
       });
     }
 

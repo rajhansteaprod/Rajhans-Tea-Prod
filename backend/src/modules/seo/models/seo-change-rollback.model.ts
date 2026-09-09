@@ -52,6 +52,7 @@ const rollbackFieldSnapshotSchema = new Schema<ExecutedFieldSnapshot>(
     content: { type: String },
     linkTargetUrl: { type: String },
     linkAnchorText: { type: String },
+    faqSchema: { type: String },
   },
   { _id: false },
 );

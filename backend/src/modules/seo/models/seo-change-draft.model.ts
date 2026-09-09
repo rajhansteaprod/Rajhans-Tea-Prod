@@ -89,6 +89,24 @@ export interface FaqProposedChange {
   kind: 'faq';
   targetUrl: string;
   items: { question: string; answer: string }[]; // may be empty when evidence supplies no Q&A content
+
+  /**
+   * Phase 6.5A — executable FAQPage schema proposal. Optional for backward
+   * compatibility with historical outline-only add-faq-schema drafts (always
+   * `items: []`, no source to draw from). Execution requires this: `items`
+   * is deterministically extracted from `sourceContentSnapshot` (the CMS
+   * Page's own `content` at draft-generation time) via
+   * `extractFaqPairsFromHtml`, and `proposedJsonLd` is deterministically
+   * built from those same items via `buildFaqJsonLd` — both re-derived and
+   * required to match byte-for-byte by preflight, never trusted blindly
+   * (see faq-schema.util.ts).
+   */
+  execution?: {
+    /** Full Page.content exactly as read when the draft was generated. */
+    sourceContentSnapshot: string;
+    /** Deterministically derived from `items` via buildFaqJsonLd + serializeFaqJsonLd. */
+    proposedJsonLd: Record<string, unknown>;
+  };
 }
 
 export interface GenericProposedChange {

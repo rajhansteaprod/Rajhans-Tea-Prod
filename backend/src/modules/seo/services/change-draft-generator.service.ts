@@ -16,7 +16,9 @@ import { seoConfig } from '../seo.config';
 import { Product } from '../../catalog/models/product.model';
 import { ProductVariant } from '../../catalog/models/product-variant.model';
 import { Blog } from '../../cms/models/blog.model';
+import { Page } from '../../cms/models/page.model';
 import { applyInternalLinkPatch, contentAlreadyLinksTo, countOccurrences } from './internal-link-patch.util';
+import { extractFaqPairsFromHtml, buildFaqJsonLd } from './faq-schema.util';
 import {
   generateGroundedProductDraft,
 } from '../ai/openai-seo-drafting.service';
@@ -197,7 +199,7 @@ async function buildProposedChanges(
       return generateMetadataChanges(rec);
 
     case 'schema':
-      return generateSchemaChanges(rec);
+      return await generateSchemaChanges(rec);
 
     case 'internal-linking':
       return await generateInternalLinkChanges(rec);
@@ -425,7 +427,7 @@ function generateMetadataChanges(rec: ISeoRecommendationDoc): { proposedChanges:
 // fabricated. add-faq-schema is handled separately (kind 'faq') since it is
 // specifically about Q&A content, not a generic schema skeleton.
 // ─────────────────────────────────────────────────────────────────────────────
-function generateSchemaChanges(rec: ISeoRecommendationDoc): { proposedChanges: ProposedChange[]; warnings: string[] } {
+async function generateSchemaChanges(rec: ISeoRecommendationDoc): Promise<{ proposedChanges: ProposedChange[]; warnings: string[] }> {
   const warnings: string[] = [];
   const evidence = rec.evidence as { pages?: { url: string; schemaTypes?: string[] }[] };
   const urls = evidence.pages?.length ? evidence.pages.map((p) => p.url) : rec.affectedUrls;
@@ -436,11 +438,7 @@ function generateSchemaChanges(rec: ISeoRecommendationDoc): { proposedChanges: P
   }
 
   if (rec.recommendationId === 'add-faq-schema') {
-    const changes: FaqProposedChange[] = capped.map((url) => ({ kind: 'faq', targetUrl: url, items: [] }));
-    warnings.push(
-      'No FAQ question/answer content was found in stored evidence; add real Q&A content to each item before this schema can be published.',
-    );
-    return { proposedChanges: changes, warnings };
+    return await generateFaqSchemaChanges(capped, warnings);
   }
 
   const schemaType = SCHEMA_TYPE_BY_RECOMMENDATION[rec.recommendationId];
@@ -502,6 +500,83 @@ function buildJsonLdSkeleton(schemaType: string, url: string): Record<string, un
     default:
       return { '@context': 'https://schema.org', '@type': schemaType };
   }
+}
+
+/** Only `/page/:slug/` (or without the trailing slash) on the configured public origin — the one target shape add-faq-schema ever proposes. */
+const FAQ_CMS_PAGE_PATH_PATTERN = /^\/page\/([^/]+)\/?$/;
+
+/**
+ * Phase 6.5A — for each add-faq-schema target that resolves to a published
+ * CMS Page, deterministically extract the page's own visible `<h3>Question
+ * </h3><p>Answer</p>` pairs (never invented, never rewritten — see
+ * faq-schema.util.ts) and build an executable FAQPage schema proposal from
+ * them. Falls back to the historical outline-only proposal (`items: []`,
+ * no `execution`) whenever the target isn't a resolvable CMS page or its
+ * content contains no safe, well-formed FAQ pairs.
+ */
+async function generateFaqSchemaChanges(
+  targetUrls: string[],
+  warnings: string[],
+): Promise<{ proposedChanges: ProposedChange[]; warnings: string[] }> {
+  const changes: FaqProposedChange[] = [];
+  const skipped: { targetUrl: string; reason: string }[] = [];
+
+  for (const targetUrl of targetUrls) {
+    let slug: string | null = null;
+    try {
+      const parsed = new URL(targetUrl);
+      const base = new URL(seoConfig.baseUrl);
+      if (parsed.origin.toLowerCase() === base.origin.toLowerCase()) {
+        const match = FAQ_CMS_PAGE_PATH_PATTERN.exec(parsed.pathname);
+        if (match) slug = match[1]!.toLowerCase();
+      }
+    } catch {
+      slug = null;
+    }
+
+    if (!slug) {
+      skipped.push({ targetUrl, reason: 'not_a_cms_page_url' });
+      changes.push({ kind: 'faq', targetUrl, items: [] });
+      continue;
+    }
+
+    const page = await Page.findOne({ slug, status: 'published' }).lean();
+    if (!page) {
+      skipped.push({ targetUrl, reason: 'page_not_found' });
+      changes.push({ kind: 'faq', targetUrl, items: [] });
+      continue;
+    }
+
+    const content = page.content ?? '';
+    const extracted = extractFaqPairsFromHtml(content);
+    if (!extracted.ok) {
+      skipped.push({ targetUrl, reason: extracted.reason });
+      changes.push({ kind: 'faq', targetUrl, items: [] });
+      continue;
+    }
+
+    const proposedJsonLd = buildFaqJsonLd(extracted.items);
+    changes.push({
+      kind: 'faq',
+      targetUrl,
+      items: extracted.items,
+      execution: {
+        sourceContentSnapshot: content,
+        proposedJsonLd,
+      },
+    });
+  }
+
+  if (skipped.length) {
+    for (const { targetUrl, reason } of skipped) {
+      warnings.push(`${targetUrl}: could not derive an executable FAQ schema (${reason}) — falling back to an outline-only recommendation.`);
+    }
+  }
+  if (changes.some((c) => c.execution)) {
+    warnings.push('FAQ question/answer content is the exact visible text already rendered on the page — nothing was invented.');
+  }
+
+  return { proposedChanges: changes, warnings };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

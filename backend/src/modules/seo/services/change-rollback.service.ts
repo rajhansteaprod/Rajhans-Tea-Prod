@@ -64,9 +64,9 @@ function isDuplicateKeyError(err: unknown): boolean {
   return !!err && typeof err === 'object' && (err as { code?: number }).code === 11000;
 }
 
-/** The two whitelisted metadata fields, as they are keyed in an ExecutedFieldSnapshot. */
-type MetadataFieldKey = 'metaTitle' | 'metaDescription';
-const METADATA_FIELD_KEYS: MetadataFieldKey[] = ['metaTitle', 'metaDescription'];
+/** The whitelisted CMS Page fields, as they are keyed in an ExecutedFieldSnapshot. faqSchema (Phase 6.5A) reuses this exact generic restore/stale-check path — it is just another whitelisted string field on Page. */
+type MetadataFieldKey = 'metaTitle' | 'metaDescription' | 'faqSchema';
+const METADATA_FIELD_KEYS: MetadataFieldKey[] = ['metaTitle', 'metaDescription', 'faqSchema'];
 
 /**
  * THE canonical executed-field test. Presence is exact — `!== undefined`, never

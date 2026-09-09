@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { injectJsonLd } from '../../../core/seo/seo-content';
 
 @Component({
   selector: 'app-static-page',
@@ -49,6 +50,20 @@ export class StaticPageComponent implements OnInit {
           this.page.set(res.data);
           this.titleService.setTitle(`${res.data.metaTitle || res.data.title} — Rajhans Tea`);
           if (res.data.metaDescription) this.meta.updateTag({ name: 'description', content: res.data.metaDescription });
+
+          // Phase 6.5A — controlled FAQPage schema execution. Only ever
+          // injected when the backend has approved/executed an exact JSON-LD
+          // block derived from THIS SAME page's own content — never
+          // constructed here, never hardcoded, so it can't silently diverge
+          // from what's actually rendered above.
+          if (typeof res.data.faqSchema === 'string' && res.data.faqSchema) {
+            try {
+              const faqJsonLd = JSON.parse(res.data.faqSchema);
+              injectJsonLd(this.document, 'faq-schema-jsonld', faqJsonLd);
+            } catch {
+              // Malformed/unexpected value — never inject invalid structured data.
+            }
+          }
         },
         error: () => {
           this.notFound.set(true);

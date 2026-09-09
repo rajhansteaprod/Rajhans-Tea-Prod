@@ -46,13 +46,14 @@ export class CmsService {
    */
   async updatePageSeoMetadata(
     id: string,
-    data: { metaTitle?: string; metaDescription?: string },
+    data: { metaTitle?: string; metaDescription?: string; faqSchema?: string },
     adminUserId: string,
     options: { session?: ClientSession } = {},
   ): Promise<IPageDoc> {
     const $set: Record<string, unknown> = { updatedBy: new Types.ObjectId(adminUserId) };
     if (data.metaTitle !== undefined) $set['metaTitle'] = data.metaTitle;
     if (data.metaDescription !== undefined) $set['metaDescription'] = data.metaDescription;
+    if (data.faqSchema !== undefined) $set['faqSchema'] = data.faqSchema;
     const page = await Page.findByIdAndUpdate(id, { $set }, { new: true, session: options.session }).exec();
     if (!page) throw new NotFoundError('Page not found');
     return page;

@@ -8,6 +8,7 @@ import { SeoChangePublication } from '../models/seo-change-publication.model';
 import { CmsService } from '../../cms/services/cms.service';
 import { Product } from '../../catalog/models/product.model';
 import { Blog } from '../../cms/models/blog.model';
+import { Page } from '../../cms/models/page.model';
 import { evaluateExecutionPreflight, PreflightBlockerCode } from './change-execution-preflight.service';
 
 /**
@@ -123,6 +124,46 @@ export async function executeApprovedChangeDraft(opts: {
     const targets: ExecutedTarget[] = [];
 
     for (const p of prepared) {
+      if (p.targetType === 'cms_page' && p.proposed.faqSchema !== undefined) {
+        // Phase 6.5A — FAQ schema execution. Atomic compare-and-set on the
+        // exact field this execution touches, mirroring the blog/product
+        // stale-source guard rather than cmsService's unconditional
+        // metadata update (which has no such guard).
+        const updatedPage = await Page.findOneAndUpdate(
+          {
+            _id: p.page._id,
+            status: 'published',
+            faqSchema: p.before.faqSchema ?? '',
+          },
+          {
+            $set: { faqSchema: p.proposed.faqSchema },
+          },
+          {
+            new: true,
+            session,
+          },
+        ).exec();
+
+        if (!updatedPage) {
+          throw new ExecutionRejected(
+            'stale',
+            `CMS page "${p.page.slug}" changed before execution could commit`,
+          );
+        }
+
+        targets.push({
+          targetUrl: p.targetUrl,
+          targetDocumentId: p.page._id as mongoose.Types.ObjectId,
+          before: p.before,
+          proposed: p.proposed,
+          after: {
+            faqSchema: updatedPage.faqSchema ?? '',
+          },
+        });
+
+        continue;
+      }
+
       if (p.targetType === 'cms_page') {
         const updated = await cmsService.updatePageSeoMetadata(
           String(p.page._id),

@@ -29,6 +29,9 @@ export interface ExecutedFieldSnapshot {
   linkTargetUrl?: string;
   /** The link's anchor text — same reasoning as `linkTargetUrl`. */
   linkAnchorText?: string;
+
+  /** Phase 6.5A FAQ schema execution: the exact FAQPage JSON-LD, serialized (see faq-schema.util.ts serializeFaqJsonLd). */
+  faqSchema?: string;
 }
 
 /** One resolved CMS page within a (possibly multi-target) draft execution. */
@@ -107,6 +110,7 @@ const executedFieldSnapshotSchema = new Schema<ExecutedFieldSnapshot>(
     content: { type: String },
     linkTargetUrl: { type: String },
     linkAnchorText: { type: String },
+    faqSchema: { type: String },
   },
   { _id: false },
 );
