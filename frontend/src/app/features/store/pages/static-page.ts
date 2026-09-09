@@ -122,7 +122,7 @@ export class StaticPageComponent implements OnInit {
         content: `
           <div class="policy-content">
             <h2>Acceptance of Terms</h2>
-            <p>By accessing or purchasing from our website (www.rajhans.com), you agree to be bound by these Terms & Conditions. If you do not agree with any part of these terms, please refrain from using our platform. Rajhans Tea reserves the right to update these terms at any time; continued use of the website constitutes your acceptance of the revised terms.</p>
+            <p>By accessing or purchasing from our website (rajhanstea.com), you agree to be bound by these Terms & Conditions. If you do not agree with any part of these terms, please refrain from using our platform. Rajhans Tea reserves the right to update these terms at any time; continued use of the website constitutes your acceptance of the revised terms.</p>
             
             <h2>About Rajhans Tea</h2>
             <p>Rajhans Tea is a brand of fine Indian teas rooted in a family legacy dating back to 1986, based in Bhopal, Madhya Pradesh, India. All transactions made through our website are subject to Indian law.</p>
