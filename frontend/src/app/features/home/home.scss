@@ -9,6 +9,21 @@
   overflow: hidden;
 }
 
+// Slim, genuinely visible brand kicker — the page's single H1. Sits above
+// the hero as a small wordmark line, not a second competing headline; the
+// hero's own rotating slide title remains the large visual focal point.
+.home__brand-kicker {
+  margin: 0;
+  padding: $space-sm $space-md;
+  text-align: center;
+  color: $color-primary;
+  font-family: $font-family-heading;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 // ═══ DIVIDER BETWEEN SECTIONS ═══
 .home__divider {
   width: 100%;

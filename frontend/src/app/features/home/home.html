@@ -1,8 +1,10 @@
 <div class="home">
-  <!-- Single semantic H1 for the homepage. Screen-reader-only so the visual hero
-       design is unchanged; always present (independent of hero slide data), so the
-       prerendered HTML always has exactly one H1. -->
-  <h1 class="visually-hidden">Rajhans Tea — Premium Loose-Leaf CTC Chai, Ethically Sourced Since 1986</h1>
+  <!-- Single semantic H1 for the homepage: a slim, genuinely visible brand
+       kicker above the hero. Always present (independent of hero slide
+       data), so the prerendered HTML always has exactly one H1. The hero's
+       own rotating slide title stays an h2 (see hero.html) — this is the
+       page's one true H1, not a second competing headline. -->
+  <h1 class="home__brand-kicker">Rajhans Tea — Premium Loose-Leaf CTC Chai, Ethically Sourced Since 1986</h1>
 
   <!-- 1. HERO -->
   <app-hero />

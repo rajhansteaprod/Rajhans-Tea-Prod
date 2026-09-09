@@ -51,6 +51,54 @@ function verify(routePrefix, slug, { requireJsonLdProduct = false, requireCards 
   }
 }
 
+/**
+ * Homepage brand/entity signals: exactly one genuinely visible H1 containing
+ * "Rajhans Tea", WebSite JSON-LD with the canonical homepage URL, and the
+ * existing Organization JSON-LD still present.
+ */
+function verifyHomepageEntitySignals() {
+  const url = '/';
+  const file = resolve(BROWSER, 'index.html');
+  if (!existsSync(file)) {
+    failures.push(`  ✗ [${url}] not prerendered (file missing: ${file})`);
+    return;
+  }
+  const html = readFileSync(file, 'utf8');
+
+  const h1Matches = [...html.matchAll(/<h1\b([^>]*)>([\s\S]*?)<\/h1>/g)];
+  check(url, h1Matches.length === 1, `expected exactly one homepage <h1>, found ${h1Matches.length}`);
+  if (h1Matches.length >= 1) {
+    const [, attrs, inner] = h1Matches[0];
+    const text = inner.replace(/<[^>]*>/g, '').trim();
+    check(url, text.includes('Rajhans Tea'), `homepage H1 does not contain "Rajhans Tea": "${text}"`);
+    check(url, !/visually-hidden/.test(attrs), 'homepage H1 is visually-hidden, not genuinely visible');
+  }
+
+  check(url, /"@type"\s*:\s*"WebSite"/.test(html), 'missing WebSite JSON-LD');
+  check(
+    url,
+    /"@type"\s*:\s*"WebSite"[\s\S]{0,300}"url"\s*:\s*"https:\/\/rajhanstea\.com\/?"/.test(html),
+    'WebSite JSON-LD missing or does not declare the canonical homepage url',
+  );
+  check(url, /"@type"\s*:\s*"Organization"/.test(html), 'Organization JSON-LD is no longer present');
+}
+
+/** One in-body link to the homepage with anchor text "Rajhans Tea" on a given static route. */
+function verifyInternalBrandLink(routePath) {
+  const url = routePath.endsWith('/') ? routePath : `${routePath}/`;
+  const file = resolve(BROWSER, ...url.split('/').filter(Boolean), 'index.html');
+  if (!existsSync(file)) {
+    failures.push(`  ✗ [${url}] not prerendered (file missing: ${file})`);
+    return;
+  }
+  const html = readFileSync(file, 'utf8');
+  check(
+    url,
+    /<a[^>]*href="\/"[^>]*>\s*Rajhans Tea\s*<\/a>/.test(html),
+    'expected an in-body link to "/" with anchor text "Rajhans Tea"',
+  );
+}
+
 // One representative of each dynamic route type (first slug in the manifest).
 verify('product', manifest.product[0], { requireJsonLdProduct: true });
 verify('catalog', manifest.catalog[0], { requireCards: true });
@@ -60,6 +108,10 @@ verify('page', 'faq');
 // Known-good production data with a real Product.description — a targeted
 // regression check for the prerender gap above, not a tautology.
 verify('product', 'rajhans-rajdoot-dooars', { requireJsonLdProduct: true, requireDescription: true });
+
+verifyHomepageEntitySignals();
+verifyInternalBrandLink('/page/about-us');
+verifyInternalBrandLink('/buy-in-bulk');
 
 if (failures.length) {
   console.error('\n[verify-prerender] FAILED — dynamic SEO routes are incomplete:\n' + failures.join('\n'));
