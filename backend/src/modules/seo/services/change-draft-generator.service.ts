@@ -724,6 +724,59 @@ function topicKeywords(blog: { title: string; tags?: string[]; content?: string 
   return { strong, weak };
 }
 
+/**
+ * Phase 6.4C — destination-intent taxonomy. Topic/entity overlap alone is
+ * not enough to justify a link (two posts can both mention "CTC" while one
+ * is a brewing guide and the other a sourcing story). Each category is a
+ * distinct real-world PURPOSE a blog post serves; a candidate context
+ * sentence must independently exhibit the SAME purpose the target page
+ * exists to serve, not merely share a keyword with it. Phrases are matched
+ * as case-insensitive substrings, so both single words ("steep") and short
+ * fixed phrases ("water temperature") work uniformly.
+ */
+const INTENT_CATEGORIES: Record<string, string[]> = {
+  brewing: [
+    'brew', 'brewing', 'brewed', 'steep', 'steeping', 'steeped', 'infuse', 'infusion',
+    'infusing', 'water temperature', 'temperature', 'boiling', 'boil', 'brewing time',
+    'steeping time',
+  ],
+  sourcing: [
+    'source', 'sourcing', 'sourced', 'garden', 'gardens', 'harvest', 'harvesting',
+    'harvested', 'estate', 'estates', 'processed', 'processing', 'farmer', 'farmers',
+    'origin', 'journey', 'flush', 'plantation', 'plantations',
+  ],
+  health: [
+    'health', 'healthy', 'benefit', 'benefits', 'antioxidant', 'antioxidants', 'wellness',
+    'digestion', 'digestive', 'immune', 'immunity', 'nutrient', 'nutrients', 'cardiovascular',
+    'metabolism',
+  ],
+  recipe: [
+    'recipe', 'recipes', 'variation', 'variations', 'ingredient', 'ingredients', 'blend',
+    'blends', 'spice', 'spices', 'preparation method', 'homemade',
+  ],
+};
+
+/** Every intent category whose signal phrase appears (as a substring) in `text`. */
+export function textIntentCategories(text: string): Set<string> {
+  const lower = text.toLowerCase();
+  const cats = new Set<string>();
+  for (const [category, signals] of Object.entries(INTENT_CATEGORIES)) {
+    if (signals.some((s) => lower.includes(s))) cats.add(category);
+  }
+  return cats;
+}
+
+/**
+ * The destination purpose(s) a blog post itself serves, derived from its own
+ * title/tags/paragraph prose. An empty result means this target's purpose
+ * cannot be deterministically classified — callers must treat that as
+ * "no destination intent could be verified," never as "anything goes."
+ */
+export function blogIntentCategories(blog: { title: string; tags?: string[]; content?: string }): Set<string> {
+  const paragraphText = extractPlainParagraphSentences(blog.content ?? '').join(' ');
+  return textIntentCategories(`${blog.title} ${(blog.tags ?? []).join(' ')} ${paragraphText}`);
+}
+
 function splitSentences(text: string): string[] {
   return text
     .replace(/\s+/g, ' ')
@@ -824,6 +877,14 @@ export async function generateExecutableBlogLinkChanges(
     }
 
     const keywords = topicKeywords(targetBlog);
+    const targetIntents = blogIntentCategories(targetBlog);
+    if (targetIntents.size === 0) {
+      // Cannot deterministically verify what purpose this target page
+      // serves, so no context sentence can be confirmed to describe or
+      // imply it — fail closed rather than allow a topic-only match.
+      skippedTargets.push({ targetUrl, reason: 'no_safe_contextual_insertion' });
+      continue;
+    }
     let match: { source: (typeof publishedBlogs)[number]; anchorText: string; contextSnapshot: string } | null = null;
 
     for (const candidate of publishedBlogs) {
@@ -848,6 +909,15 @@ export async function generateExecutableBlogLinkChanges(
         if (strongHits.length < 1 && weakHits.length < 2) continue;
         const matchWord = strongHits[0] ?? weakHits[0];
         if (!matchWord) continue;
+
+        // Destination-intent gate: topic/entity overlap is not sufficient —
+        // this sentence must also describe or naturally imply the SAME
+        // purpose the target page exists to serve (e.g. brewing instructions
+        // pointing at a brewing guide, not merely sharing a keyword with
+        // one). No overlap in intent ⇒ this sentence cannot be used.
+        const sentenceIntents = textIntentCategories(sentence);
+        const sharesIntent = [...sentenceIntents].some((c) => targetIntents.has(c));
+        if (!sharesIntent) continue;
 
         // Quality gate: never settle for the bare matched word just because
         // it happens to occur once — prefer a longer, genuinely descriptive
