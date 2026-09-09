@@ -155,6 +155,16 @@ jest.mock('../../../src/modules/seo/models/seo-change-draft.model', () => ({
   },
 }));
 
+jest.mock('../../../src/modules/cms/models/blog.model', () => ({
+  Blog: {
+    find: jest.fn(() => ({
+      select: () => ({
+        lean: async () => [],
+      }),
+    })),
+  },
+}));
+
 import {
   generateChangeDraft,
   listChangeDrafts,

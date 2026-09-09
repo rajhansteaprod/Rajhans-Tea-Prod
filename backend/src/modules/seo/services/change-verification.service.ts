@@ -13,6 +13,7 @@ import {
 } from '../models/seo-change-verification.model';
 import { Page } from '../../cms/models/page.model';
 import { Product } from '../../catalog/models/product.model';
+import { Blog } from '../../cms/models/blog.model';
 import { fetchUrl } from './fetcher.service';
 import { parseHtml } from './parser.service';
 import { seoConfig } from '../seo.config';
@@ -399,6 +400,121 @@ async function verifyProductTarget(
   };
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Phase 6.4A — verify one internal-link execution against the LIVE public
+ * blog page. Never accepts DB-only evidence: even though the DB write is
+ * already confirmed by execution, this independently fetches the live page
+ * and requires the exact `<a href="...">anchorText</a>` to be present and
+ * crawlable in the returned HTML.
+ */
+async function verifyBlogTarget(target: ExecutedTarget): Promise<VerifiedTarget> {
+  const expectedHref = target.after.linkTargetUrl;
+  const expectedAnchor = target.after.linkAnchorText;
+
+  if (!expectedHref || !expectedAnchor) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: emptyFetchInfo(target.targetUrl, 'execution_missing_link_data'),
+      expected: {},
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: ['link_data_missing'],
+    };
+  }
+
+  const expected: VerificationExpected = { linkTargetUrl: expectedHref, linkAnchorText: expectedAnchor };
+
+  const blog = await Blog.findById(target.targetDocumentId).exec();
+  if (!blog || blog.status !== 'published') {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: emptyFetchInfo(target.targetUrl, !blog ? 'blog_missing' : 'blog_unpublished'),
+      expected,
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: [!blog ? 'blog_missing' : 'blog_unpublished'],
+    };
+  }
+
+  if ((blog.content ?? '') !== (target.after.content ?? '')) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: emptyFetchInfo(target.targetUrl, 'content_drifted_since_execution'),
+      expected,
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: ['content_drift'],
+    };
+  }
+
+  const fetched = await fetchUrl(target.targetUrl);
+  const fetchInfo: VerificationFetchInfo = {
+    requestedUrl: fetched.requestedUrl,
+    finalUrl: fetched.finalUrl,
+    finalStatus: fetched.finalStatus,
+    redirectChain: fetched.redirectChain,
+    error: fetched.error,
+    transient: fetched.transient,
+  };
+
+  const fetchSucceeded = !fetched.transient && fetched.finalStatus === 200 && fetched.html !== null;
+  if (!fetchSucceeded) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: fetchInfo,
+      expected,
+      observed: {},
+      matches: {},
+      status: 'fetch_failed',
+      mismatchFields: [],
+    };
+  }
+
+  if (!matchesIntendedTarget(target.targetUrl, fetched.finalUrl)) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: fetchInfo,
+      expected,
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: ['redirected_to_different_page'],
+    };
+  }
+
+  const html = fetched.html as string;
+  // Trailing-slash tolerant: the live href may or may not carry it depending
+  // on how the source content stored it, but must match the origin+path.
+  const hrefVariants = [expectedHref, expectedHref.replace(/\/+$/, ''), `${expectedHref.replace(/\/+$/, '')}/`];
+  const anchorPattern = escapeRegExp(expectedAnchor);
+  const linkPresent = hrefVariants.some((href) =>
+    new RegExp(`<a\\b[^>]*\\bhref\\s*=\\s*"${escapeRegExp(href)}"[^>]*>\\s*${anchorPattern}\\s*<\\/a>`, 'i').test(html),
+  );
+
+  return {
+    targetUrl: target.targetUrl,
+    targetDocumentId: target.targetDocumentId,
+    fetch: fetchInfo,
+    expected,
+    observed: { linkPresent },
+    matches: { link: linkPresent },
+    status: linkPresent ? 'verified' : 'mismatch',
+    mismatchFields: linkPresent ? [] : ['link_missing'],
+  };
+}
+
 /**
  * A confirmed mismatch is stronger evidence than an inability to verify
  * another target, so mismatch outranks fetch_failed when both are present.
@@ -456,7 +572,9 @@ export async function verifyExecution(opts: {
     targets.push(
       execution.targetType === 'product'
         ? await verifyProductTarget(target)
-        : await verifyCmsPageTarget(target),
+        : execution.targetType === 'blog'
+          ? await verifyBlogTarget(target)
+          : await verifyCmsPageTarget(target),
     );
   }
   const status = aggregateStatus(targets);

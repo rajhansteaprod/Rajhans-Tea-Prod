@@ -7,6 +7,7 @@ import {
 import { SeoChangePublication } from '../models/seo-change-publication.model';
 import { CmsService } from '../../cms/services/cms.service';
 import { Product } from '../../catalog/models/product.model';
+import { Blog } from '../../cms/models/blog.model';
 import { evaluateExecutionPreflight, PreflightBlockerCode } from './change-execution-preflight.service';
 
 /**
@@ -139,6 +140,46 @@ export async function executeApprovedChangeDraft(opts: {
           after: {
             metaTitle: updated.metaTitle,
             metaDescription: updated.metaDescription,
+          },
+        });
+
+        continue;
+      }
+
+      if (p.targetType === 'blog') {
+        const updatedBlog = await Blog.findOneAndUpdate(
+          {
+            _id: p.blog._id,
+            status: 'published',
+            content: p.before.content ?? '',
+          },
+          {
+            $set: {
+              content: p.proposed.content,
+            },
+          },
+          {
+            new: true,
+            session,
+          },
+        ).exec();
+
+        if (!updatedBlog) {
+          throw new ExecutionRejected(
+            'stale',
+            `Blog post "${p.blog.slug}" changed before execution could commit`,
+          );
+        }
+
+        targets.push({
+          targetUrl: p.targetUrl,
+          targetDocumentId: p.blog._id as mongoose.Types.ObjectId,
+          before: p.before,
+          proposed: p.proposed,
+          after: {
+            content: updatedBlog.content ?? '',
+            linkTargetUrl: p.proposed.linkTargetUrl,
+            linkAnchorText: p.proposed.linkAnchorText,
           },
         });
 

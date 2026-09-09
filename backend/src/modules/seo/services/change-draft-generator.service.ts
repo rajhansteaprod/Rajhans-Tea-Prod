@@ -15,6 +15,8 @@ import {
 import { seoConfig } from '../seo.config';
 import { Product } from '../../catalog/models/product.model';
 import { ProductVariant } from '../../catalog/models/product-variant.model';
+import { Blog } from '../../cms/models/blog.model';
+import { applyInternalLinkPatch, contentAlreadyLinksTo, countOccurrences } from './internal-link-patch.util';
 import {
   generateGroundedProductDraft,
 } from '../ai/openai-seo-drafting.service';
@@ -198,7 +200,7 @@ async function buildProposedChanges(
       return generateSchemaChanges(rec);
 
     case 'internal-linking':
-      return generateInternalLinkChanges(rec);
+      return await generateInternalLinkChanges(rec);
 
     case 'content':
       return generateContentChanges(rec);
@@ -503,12 +505,92 @@ function buildJsonLdSkeleton(schemaType: string, url: string): Record<string, un
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3) internal-linking — the target page is always known from evidence; the
-// SOURCE page is never recorded by the current audit generators (only an
-// aggregate count), so sourceUrl is left null with a warning rather than
-// invented. Anchor text is a mechanical suggestion from the target's own URL.
+// 3) internal-linking — the target page is always known from evidence.
+//
+// Phase 6.4A: for link-strengthening recommendations whose target is a
+// published blog post, attempt a fully executable blog→blog internal link
+// FIRST — deterministic entity/topic overlap only, no invented copy: the
+// candidate source page, anchor text, and surrounding context are all
+// substrings that already exist verbatim in that source page's own content.
+// Falls back to the historical outline-only proposal (sourceUrl left null
+// for a human to pick) whenever no safe, unambiguous candidate is found.
 // ─────────────────────────────────────────────────────────────────────────────
-function generateInternalLinkChanges(rec: ISeoRecommendationDoc): { proposedChanges: ProposedChange[]; warnings: string[] } {
+
+const LINK_STRENGTHENING_RECOMMENDATION_IDS = new Set(['boost-low-inbound-pages', 'link-orphan-pages']);
+
+/** Domain words too generic to justify placing a link on their own. */
+const GENERIC_TOPIC_STOPWORDS = new Set([
+  'tea', 'teas', 'rajhans', 'chai', 'water', 'brew', 'brewing', 'brewed',
+  'cup', 'cups', 'leaf', 'leaves', 'drink', 'perfect', 'cold', 'fresh',
+]);
+
+const TITLE_STOPWORDS = new Set([
+  'the', 'a', 'an', 'and', 'or', 'of', 'to', 'in', 'on', 'for', 'with', 'our', 'your',
+  'is', 'are', 'from', 'beyond', 'that', 'this', 'these', 'those', 'have', 'has', 'had',
+  'will', 'would', 'each', 'which', 'when', 'where', 'while', 'than', 'then', 'them',
+  'they', 'their', 'here', 'there', 'about', 'into', 'over', 'more', 'most', 'some',
+  'such', 'only', 'just', 'also', 'been', 'were', 'was', 'not', 'can', 'use', 'used',
+  'using', 'per', 'you',
+]);
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, ' ');
+}
+
+function significantWords(text: string, minLength = 4): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length >= minLength && !TITLE_STOPWORDS.has(w));
+}
+
+/**
+ * Every distinctive topic word this blog post is genuinely "about" —
+ * deliberately narrow: proper nouns (capitalized words, e.g. "Assam"),
+ * acronyms (e.g. "CTC"), tags, and significant title words. NOT a scan of
+ * every common word in the body, which would match on filler ("that",
+ * "this") far too easily and produce a technically-unambiguous but
+ * meaningless anchor.
+ */
+function topicKeywords(blog: { title: string; tags?: string[]; content?: string }): Set<string> {
+  const plainBody = stripHtml(blog.content ?? '');
+  const properNouns = [...`${blog.title} ${plainBody}`.matchAll(/\b[A-Z][a-z]{3,}\b/g)].map((m) => m[0].toLowerCase());
+  const acronyms = [...`${blog.title} ${plainBody}`.matchAll(/\b[A-Z]{2,6}\b/g)].map((m) => m[0].toLowerCase());
+  const words = [
+    ...properNouns,
+    ...acronyms,
+    ...(blog.tags ?? []).map((t) => t.toLowerCase()),
+    ...significantWords(blog.title, 5),
+  ];
+  return new Set(words.filter((w) => !GENERIC_TOPIC_STOPWORDS.has(w) && !TITLE_STOPWORDS.has(w)));
+}
+
+function splitSentences(text: string): string[] {
+  return text
+    .replace(/\s+/g, ' ')
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Every sentence from a plain `<p>...text...</p>` paragraph (no nested
+ * tags), extracted so each returned sentence is a byte-for-byte substring
+ * of `rawContent` — required because the patch operates on that same raw
+ * HTML, not a stripped/normalized copy of it.
+ */
+function extractPlainParagraphSentences(rawContent: string): string[] {
+  const sentences: string[] = [];
+  const paragraphPattern = /<p>([^<]*)<\/p>/g;
+  let m: RegExpExecArray | null;
+  while ((m = paragraphPattern.exec(rawContent)) !== null) {
+    sentences.push(...splitSentences(m[1]));
+  }
+  return sentences;
+}
+
+async function generateInternalLinkChanges(rec: ISeoRecommendationDoc): Promise<{ proposedChanges: ProposedChange[]; warnings: string[] }> {
   const warnings: string[] = [];
   let targets: string[];
   if (rec.recommendationId === 'fix-redirecting-links') {
@@ -522,6 +604,15 @@ function generateInternalLinkChanges(rec: ISeoRecommendationDoc): { proposedChan
     return generateGenericChange(rec, [...warnings, 'No target URLs found in evidence for this internal-linking recommendation.']);
   }
 
+  if (LINK_STRENGTHENING_RECOMMENDATION_IDS.has(rec.recommendationId)) {
+    const executable = await generateExecutableBlogLinkChanges(cap(targets, warnings, 'link targets'), warnings);
+    if (executable.length) {
+      warnings.push('Anchor text and surrounding context are existing text taken verbatim from the source page — nothing was invented.');
+      return { proposedChanges: executable, warnings };
+    }
+    warnings.push('No safe, deterministic blog-to-blog internal-link candidate could be found for any target; falling back to an outline-only recommendation.');
+  }
+
   const capped = cap(targets, warnings, 'link targets');
   const changes: InternalLinkProposedChange[] = capped.map((targetUrl) => ({
     kind: 'internal_link',
@@ -533,6 +624,111 @@ function generateInternalLinkChanges(rec: ISeoRecommendationDoc): { proposedChan
     'Source page(s) to add the link from are not recorded in stored evidence and must be chosen manually; anchor text is a mechanical suggestion derived from the target URL.',
   );
   return { proposedChanges: changes, warnings };
+}
+
+/**
+ * For each target URL that resolves to a published blog post, find another
+ * published blog post that already contains — verbatim, unambiguously — a
+ * sentence mentioning a topic word genuinely drawn from the target post's
+ * own title/tags/body. At most one link per unique source page, since a
+ * single draft executes all its targets together and a source page can only
+ * be safely edited once per execution.
+ */
+export async function generateExecutableBlogLinkChanges(
+  targetUrls: string[],
+  warnings: string[],
+): Promise<InternalLinkProposedChange[]> {
+  const publishedBlogs = await Blog.find({ status: 'published' }).select('title slug tags content').lean();
+  if (!publishedBlogs.length) return [];
+
+  const blogByPath = new Map(publishedBlogs.map((b) => [`/blog/${b.slug}/`, b]));
+  const baseUrl = seoConfig.baseUrl.replace(/\/$/, '');
+  const claimedSourceUrls = new Set<string>();
+  const changes: InternalLinkProposedChange[] = [];
+  const skippedTargets: string[] = [];
+
+  for (const targetUrl of targetUrls) {
+    let targetPath: string;
+    try {
+      targetPath = new URL(targetUrl).pathname.replace(/\/+$/, '') + '/';
+    } catch {
+      skippedTargets.push(targetUrl);
+      continue;
+    }
+
+    const targetBlog = blogByPath.get(targetPath);
+    if (!targetBlog) {
+      // v1 only supports a blog post as the link target's KNOWN page type
+      // for automatic candidate discovery (product/CMS targets still fall
+      // back to the outline-only proposal below).
+      skippedTargets.push(targetUrl);
+      continue;
+    }
+
+    const keywords = topicKeywords(targetBlog);
+    let match: { source: (typeof publishedBlogs)[number]; anchorText: string; contextSnapshot: string } | null = null;
+
+    for (const candidate of publishedBlogs) {
+      if (String(candidate._id) === String(targetBlog._id)) continue; // never self-link
+      const candidateSourceUrl = `${baseUrl}/blog/${candidate.slug}/`;
+      if (claimedSourceUrls.has(candidateSourceUrl)) continue; // one link per source per draft
+
+      const candidateContent = candidate.content ?? '';
+      if (contentAlreadyLinksTo(candidateContent, targetUrl)) continue;
+
+      for (const sentence of extractPlainParagraphSentences(candidateContent)) {
+        const words = significantWords(sentence).filter((w) => !GENERIC_TOPIC_STOPWORDS.has(w));
+        const matchWord = words.find((w) => keywords.has(w));
+        if (!matchWord) continue;
+
+        const anchorMatch = new RegExp(`\\b${matchWord}\\w*`, 'i').exec(sentence);
+        if (!anchorMatch) continue;
+        const anchorText = anchorMatch[0];
+
+        if (countOccurrences(candidateContent, sentence) !== 1) continue;
+        if (countOccurrences(sentence, anchorText) !== 1) continue;
+
+        match = { source: candidate, anchorText, contextSnapshot: sentence };
+        break;
+      }
+      if (match) break;
+    }
+
+    if (!match) {
+      skippedTargets.push(targetUrl);
+      continue;
+    }
+
+    const sourceUrl = `${baseUrl}/blog/${match.source.slug}/`;
+    const beforeContent = match.source.content ?? '';
+    const patch = applyInternalLinkPatch(beforeContent, match.contextSnapshot, match.anchorText, targetUrl);
+    if (!patch.ok) {
+      skippedTargets.push(targetUrl);
+      continue;
+    }
+
+    claimedSourceUrls.add(sourceUrl);
+    changes.push({
+      kind: 'internal_link',
+      sourceUrl,
+      targetUrl,
+      anchorText: match.anchorText,
+      execution: {
+        sourcePageType: 'blog_content',
+        beforeContent,
+        afterContent: patch.afterContent,
+        contextSnapshot: match.contextSnapshot,
+      },
+    });
+  }
+
+  if (skippedTargets.length) {
+    warnings.push(
+      `Could not find a safe, unambiguous, non-conflicting blog source page for ${skippedTargets.length} target(s): ${skippedTargets.join(', ')}.`,
+    );
+  }
+
+  return changes;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

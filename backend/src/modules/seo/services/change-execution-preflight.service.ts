@@ -5,12 +5,15 @@ import {
   ISeoChangeDraftDoc,
   MetadataProposedChange,
   ContentProposedChange,
+  InternalLinkProposedChange,
 } from '../models/seo-change-draft.model';
 import { SeoChangeExecution, ExecutedFieldSnapshot } from '../models/seo-change-execution.model';
 import { Page, IPageDoc } from '../../cms/models/page.model';
 import { Product, IProductDoc } from '../../catalog/models/product.model';
+import { Blog, IBlogDoc } from '../../cms/models/blog.model';
 import { CANONICAL_PAGE_SLUG } from '../../cms/page-slug.util';
 import { seoConfig } from '../seo.config';
+import { applyInternalLinkPatch, contentAlreadyLinksTo } from './internal-link-patch.util';
 
 /**
  * Phase 5.5 — execution quality controls. THE single authoritative answer to
@@ -64,7 +67,14 @@ export type PreflightBlockerCode =
   | 'already_executed'
   | 'no_effective_change'
   | 'malformed_value'
-  | 'ambiguous_target';
+  | 'ambiguous_target'
+  // Phase 6.4A — internal-link execution.
+  | 'anchor_not_found'
+  | 'ambiguous_anchor'
+  | 'duplicate_link'
+  | 'self_link'
+  | 'external_target'
+  | 'malformed_link';
 
 /**
  * SEO quality findings. These NEVER block execution — they are judgement calls
@@ -100,7 +110,11 @@ export type PreflightCheckCode =
   | 'live_state_unchanged'
   | 'effective_change'
   | 'value_lengths'
-  | 'no_duplicate_metadata';
+  | 'no_duplicate_metadata'
+  // Phase 6.4A — internal-link execution.
+  | 'anchor_present'
+  | 'link_target_valid'
+  | 'no_duplicate_link';
 
 export type PreflightCheckStatus = 'pass' | 'warn' | 'fail';
 export type PreflightRiskLevel = 'low' | 'medium' | 'high';
@@ -127,7 +141,7 @@ export interface PreflightCheck {
 /** The metadata fields this execution would write, per resolved target — the exact mutation scope. */
 export interface PreflightChangedFields {
   targetUrl: string;
-  fields: ('metaTitle' | 'metaDescription' | 'description')[];
+  fields: ('metaTitle' | 'metaDescription' | 'description' | 'content')[];
 }
 
 export interface ExecutionPreflightResult {
@@ -157,6 +171,13 @@ export type PreparedExecutionTarget =
       targetType: 'product';
       targetUrl: string;
       product: IProductDoc;
+      before: ExecutedFieldSnapshot;
+      proposed: ExecutedFieldSnapshot;
+    }
+  | {
+      targetType: 'blog';
+      targetUrl: string;
+      blog: IBlogDoc;
       before: ExecutedFieldSnapshot;
       proposed: ExecutedFieldSnapshot;
     };
@@ -386,6 +407,90 @@ function normalizeProductDescription(
   value: string | null | undefined,
 ): string {
   return value ?? '';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 6.4A blog internal-link target resolution
+// ─────────────────────────────────────────────────────────────────────────────
+
+const BLOG_PATH_PATTERN = /^\/blog\/([^/]+)\/?$/;
+
+type BlogTargetResolution =
+  | { ok: true; blog: IBlogDoc }
+  | {
+      ok: false;
+      reason: 'unsupported_host' | 'unsupported_path' | 'not_found';
+    };
+
+export async function resolveBlogTarget(
+  targetUrl: string,
+  session?: ClientSession,
+): Promise<BlogTargetResolution> {
+  let parsed: URL;
+  let base: URL;
+
+  try {
+    parsed = new URL(targetUrl);
+    base = new URL(seoConfig.baseUrl);
+  } catch {
+    return { ok: false, reason: 'unsupported_path' };
+  }
+
+  if (parsed.search !== '' || parsed.hash !== '' || parsed.username !== '' || parsed.password !== '') {
+    return { ok: false, reason: 'unsupported_path' };
+  }
+
+  if (parsed.origin.toLowerCase() !== base.origin.toLowerCase()) {
+    return { ok: false, reason: 'unsupported_host' };
+  }
+
+  const match = BLOG_PATH_PATTERN.exec(parsed.pathname);
+  const slug = match?.[1];
+
+  if (!slug) {
+    return { ok: false, reason: 'unsupported_path' };
+  }
+
+  const blog = await Blog.findOne({ slug, status: 'published' })
+    .session(session ?? null)
+    .exec();
+
+  if (!blog) {
+    return { ok: false, reason: 'not_found' };
+  }
+
+  return { ok: true, blog };
+}
+
+/**
+ * Whether `url` resolves to a real, currently indexable Rajhans page this
+ * phase recognizes as a valid link destination — product, blog, CMS page, or
+ * the homepage. Deliberately conservative: an internal link is only ever
+ * proposed to a page type the SEO pipeline already understands.
+ */
+async function isValidInternalLinkTarget(url: string, session?: ClientSession): Promise<boolean> {
+  let parsed: URL;
+  let base: URL;
+  try {
+    parsed = new URL(url);
+    base = new URL(seoConfig.baseUrl);
+  } catch {
+    return false;
+  }
+  if (parsed.origin.toLowerCase() !== base.origin.toLowerCase()) return false;
+
+  if (parsed.pathname === '/' || parsed.pathname === '') return true;
+
+  const productResult = await resolveProductTarget(url, session);
+  if (productResult.ok) return true;
+
+  const blogResult = await resolveBlogTarget(url, session);
+  if (blogResult.ok) return true;
+
+  const cmsResult = await resolveCmsPageTarget(url, session);
+  if (cmsResult.ok) return true;
+
+  return false;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -903,6 +1008,222 @@ export async function evaluateExecutionPreflight(opts: {
 
     const result = finalize(acc, evaluatedAt);
 
+    return {
+      result,
+      prepared: result.executable ? prepared : [],
+      draft,
+      recommendation,
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  // Phase 6.4A — blog internal-link content execution.
+  // -------------------------------------------------------------------------
+  if (draft.proposedChanges[0]?.kind === 'internal_link') {
+    const linkChanges = draft.proposedChanges as InternalLinkProposedChange[];
+
+    // Historical outline-only internal-link recommendations only ever named
+    // an aspirational target/anchor with no concrete execution payload.
+    if (linkChanges.some((change) => !change.execution || !change.sourceUrl || !change.anchorText)) {
+      block(
+        acc,
+        'unsupported_kind',
+        'Outline-only internal-link drafts cannot be executed; regenerate the draft with executable internal-link support',
+      );
+      record(
+        acc,
+        'change_kind_supported',
+        'fail',
+        'Historical outline-only internal-link recommendation is outside the executable scope',
+      );
+      return empty(draft, recommendation);
+    }
+
+    record(acc, 'change_kind_supported', 'pass', 'All proposed changes are internal-link content changes');
+
+    const prepared: PreparedExecutionTarget[] = [];
+    const seenBlogIds = new Map<string, string>();
+
+    for (const change of linkChanges) {
+      // Here "targetUrl" (as used by check()/block()) means the EXECUTION
+      // target — the blog page being edited (change.sourceUrl) — not the
+      // link's destination (change.targetUrl). Same convention the content
+      // branch above uses for Product.
+      const sourceUrl = change.sourceUrl as string;
+      const linkDestination = change.targetUrl;
+      const anchorText = change.anchorText as string;
+      const exec = change.execution!;
+
+      if (exec.sourcePageType !== 'blog_content') {
+        const message = `Unsupported internal-link source page type "${exec.sourcePageType}"`;
+        block(acc, 'unsupported_target', message, sourceUrl);
+        record(acc, 'target_resolvable', 'fail', message, sourceUrl);
+        continue;
+      }
+
+      if (
+        typeof exec.beforeContent !== 'string' ||
+        typeof exec.afterContent !== 'string' ||
+        typeof exec.contextSnapshot !== 'string' ||
+        !exec.contextSnapshot
+      ) {
+        const message = 'Internal-link execution requires beforeContent, afterContent, and a non-empty contextSnapshot';
+        block(acc, 'malformed_value', message, sourceUrl);
+        record(acc, 'values_well_formed', 'fail', message, sourceUrl);
+        continue;
+      }
+      record(acc, 'values_well_formed', 'pass', 'Internal-link execution payload is well-formed', sourceUrl);
+
+      // Self-link: the source page must not link to itself.
+      const normalizePath = (u: string) => {
+        try {
+          const p = new URL(u);
+          return `${p.origin.toLowerCase()}${p.pathname.replace(/\/+$/, '') || '/'}`;
+        } catch {
+          return u;
+        }
+      };
+      if (normalizePath(sourceUrl) === normalizePath(linkDestination)) {
+        const message = `${sourceUrl} cannot link to itself`;
+        block(acc, 'self_link', message, sourceUrl);
+        record(acc, 'link_target_valid', 'fail', message, sourceUrl);
+        continue;
+      }
+
+      // External/non-Rajhans target, and the target must resolve to a page
+      // type this phase actually recognizes (product, blog, CMS page, or
+      // the homepage) — never propose a link to a URL that doesn't exist.
+      const validTarget = await isValidInternalLinkTarget(linkDestination, session);
+      if (!validTarget) {
+        let parsedOk = true;
+        let sameOrigin = false;
+        try {
+          const p = new URL(linkDestination);
+          const base = new URL(seoConfig.baseUrl);
+          sameOrigin = p.origin.toLowerCase() === base.origin.toLowerCase();
+        } catch {
+          parsedOk = false;
+        }
+        if (!parsedOk || !sameOrigin) {
+          const message = `Internal-link target "${linkDestination}" is external or not a recognized Rajhans URL`;
+          block(acc, 'external_target', message, sourceUrl);
+          record(acc, 'link_target_valid', 'fail', message, sourceUrl);
+        } else {
+          const message = `Internal-link target "${linkDestination}" does not resolve to an existing, indexable page`;
+          block(acc, 'target_not_found', message, sourceUrl);
+          record(acc, 'link_target_valid', 'fail', message, sourceUrl);
+        }
+        continue;
+      }
+      record(acc, 'link_target_valid', 'pass', `Link target "${linkDestination}" resolves to an existing page`, sourceUrl);
+
+      const target = await resolveBlogTarget(sourceUrl, session);
+      if (!target.ok) {
+        const message =
+          target.reason === 'not_found'
+            ? `No published blog post found for ${sourceUrl}`
+            : `${sourceUrl} is not an executable blog URL`;
+        block(acc, target.reason === 'not_found' ? 'target_not_found' : 'unsupported_target', message, sourceUrl);
+        record(acc, 'target_resolvable', 'fail', message, sourceUrl);
+        continue;
+      }
+      const blog = target.blog;
+      record(acc, 'target_resolvable', 'pass', `Resolves to published blog post "${blog.slug}"`, sourceUrl);
+
+      const blogId = String(blog._id);
+      const claimedBy = seenBlogIds.get(blogId);
+      if (claimedBy) {
+        const message = `${sourceUrl} and ${claimedBy} both resolve to blog post "${blog.slug}"`;
+        block(acc, 'ambiguous_target', message, sourceUrl);
+        record(acc, 'target_unique', 'fail', message, sourceUrl);
+        continue;
+      }
+      seenBlogIds.set(blogId, sourceUrl);
+      record(acc, 'target_unique', 'pass', `No other target in this draft writes "${blog.slug}"`, sourceUrl);
+
+      // Stale-current protection.
+      const liveContent = blog.content ?? '';
+      if (exec.beforeContent !== liveContent) {
+        const message = `Live content for blog post "${blog.slug}" has changed since this draft was generated`;
+        block(acc, 'stale', message, sourceUrl);
+        record(acc, 'live_state_unchanged', 'fail', message, sourceUrl);
+        continue;
+      }
+      record(acc, 'live_state_unchanged', 'pass', 'Live blog content still matches the draft snapshot', sourceUrl);
+
+      // Duplicate-link protection: the source must not already link to this
+      // exact target anywhere in its content.
+      if (contentAlreadyLinksTo(liveContent, linkDestination)) {
+        const message = `Blog post "${blog.slug}" already links to ${linkDestination}`;
+        block(acc, 'duplicate_link', message, sourceUrl);
+        record(acc, 'no_duplicate_link', 'fail', message, sourceUrl);
+        continue;
+      }
+      record(acc, 'no_duplicate_link', 'pass', 'Source content does not already link to this target', sourceUrl);
+
+      // Independently re-derive the patch from beforeContent + contextSnapshot
+      // + anchorText + targetUrl — the draft's precomputed afterContent is
+      // NEVER trusted; it must match this derivation byte-for-byte. This is
+      // what makes "anchor not present exactly", "ambiguous occurrence", and
+      // "malformed HTML" all fail-closed rather than trusting stored data.
+      const derived = applyInternalLinkPatch(liveContent, exec.contextSnapshot, anchorText, linkDestination);
+      if (!derived.ok) {
+        const reasonMessages: Record<string, string> = {
+          context_not_found: `The proposed context is no longer present in blog post "${blog.slug}"`,
+          context_ambiguous: `The proposed context occurs more than once in blog post "${blog.slug}"`,
+          anchor_not_in_context: `Anchor text "${anchorText}" is not present in the proposed context`,
+          anchor_ambiguous_in_context: `Anchor text "${anchorText}" occurs more than once in the proposed context`,
+          malformed_anchor_text: 'Anchor text contains characters that would produce malformed HTML',
+          malformed_target_url: 'Link target URL contains characters that would produce malformed HTML',
+        };
+        const message = reasonMessages[derived.reason] ?? `Could not apply the internal-link patch (${derived.reason})`;
+        const blockerCode: PreflightBlockerCode =
+          derived.reason === 'context_not_found' || derived.reason === 'context_ambiguous'
+            ? 'ambiguous_anchor'
+            : derived.reason === 'anchor_not_in_context' || derived.reason === 'anchor_ambiguous_in_context'
+              ? 'anchor_not_found'
+              : 'malformed_link';
+        block(acc, blockerCode, message, sourceUrl);
+        record(acc, 'anchor_present', 'fail', message, sourceUrl);
+        continue;
+      }
+      record(acc, 'anchor_present', 'pass', 'Anchor text is present exactly once in an unambiguous context', sourceUrl);
+
+      if (derived.afterContent !== exec.afterContent) {
+        const message = `Proposed afterContent for blog post "${blog.slug}" does not match the deterministic patch derived from beforeContent/contextSnapshot/anchorText`;
+        block(acc, 'malformed_value', message, sourceUrl);
+        record(acc, 'values_well_formed', 'fail', message, sourceUrl);
+        continue;
+      }
+
+      if (derived.afterContent === liveContent) {
+        const message = `Proposed change for blog post "${blog.slug}" would not change the live content`;
+        block(acc, 'no_effective_change', message, sourceUrl);
+        record(acc, 'effective_change', 'fail', message, sourceUrl);
+        continue;
+      }
+      record(acc, 'effective_change', 'pass', 'Changes blog post content (adds one internal link)', sourceUrl);
+
+      acc.changedFields.push({ targetUrl: sourceUrl, fields: ['content'] });
+
+      // Body-content changes always deserve a human look even when every
+      // mechanical safety check passes.
+      warn(acc, 'content_requires_review', 'Internal-link body-content change requires human editorial review before execution', sourceUrl);
+
+      prepared.push({
+        targetType: 'blog',
+        targetUrl: sourceUrl,
+        blog,
+        before: { content: liveContent },
+        proposed: {
+          content: derived.afterContent,
+          linkTargetUrl: linkDestination,
+          linkAnchorText: anchorText,
+        },
+      });
+    }
+
+    const result = finalize(acc, evaluatedAt);
     return {
       result,
       prepared: result.executable ? prepared : [],

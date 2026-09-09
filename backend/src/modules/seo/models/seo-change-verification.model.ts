@@ -27,18 +27,24 @@ export interface VerificationExpected {
   renderedTitle?: string;
   metaDescription?: string;
   description?: string;
+  /** Phase 6.4A internal-link verification. */
+  linkTargetUrl?: string;
+  linkAnchorText?: string;
 }
 
 export interface VerificationObserved {
   renderedTitle?: string | null;
   metaDescription?: string | null;
   description?: string | null;
+  /** Whether the exact `<a href="linkTargetUrl">linkAnchorText</a>` was found in the live page. */
+  linkPresent?: boolean | null;
 }
 
 export interface VerificationMatches {
   title?: boolean;
   metaDescription?: boolean;
   description?: boolean;
+  link?: boolean;
 }
 
 export interface VerifiedTarget {
@@ -86,6 +92,8 @@ const verificationExpectedSchema = new Schema<VerificationExpected>(
     renderedTitle: { type: String },
     metaDescription: { type: String },
     description: { type: String },
+    linkTargetUrl: { type: String },
+    linkAnchorText: { type: String },
   },
   { _id: false },
 );
@@ -95,6 +103,7 @@ const verificationObservedSchema = new Schema<VerificationObserved>(
     renderedTitle: { type: String, default: undefined },
     metaDescription: { type: String, default: undefined },
     description: { type: String, default: undefined },
+    linkPresent: { type: Boolean, default: undefined },
   },
   { _id: false },
 );
@@ -104,6 +113,7 @@ const verificationMatchesSchema = new Schema<VerificationMatches>(
     title: { type: Boolean },
     metaDescription: { type: Boolean },
     description: { type: Boolean },
+    link: { type: Boolean },
   },
   { _id: false },
 );

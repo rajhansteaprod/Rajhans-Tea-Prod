@@ -38,6 +38,31 @@ export interface InternalLinkProposedChange {
   sourceUrl: string | null; // null = not determinable from stored evidence; a human must pick it
   targetUrl: string;
   anchorText: string | null; // null = not determinable from stored evidence
+
+  /**
+   * Phase 6.4A — executable internal-link proposal. Optional for backward
+   * compatibility with historical outline-only internal-linking
+   * recommendations that only ever named an aspirational target with no
+   * concrete source/anchor/context. Execution requires this: an exact,
+   * deterministic content patch that preflight independently re-derives
+   * from `beforeContent` + `contextSnapshot` + `anchorText` + `targetUrl`
+   * (see internal-link-patch.util.ts) and requires to match `afterContent`
+   * byte-for-byte — the draft's precomputed patch is never trusted blindly.
+   */
+  execution?: {
+    /** The only source content field this phase can edit. */
+    sourcePageType: 'blog_content';
+    /** Full Blog.content exactly as read when the draft was generated. */
+    beforeContent: string;
+    /** Deterministically derived resulting Blog.content (see above). */
+    afterContent: string;
+    /**
+     * The exact, already-present contiguous substring of `beforeContent`
+     * that contains `anchorText` — must occur exactly once in
+     * `beforeContent`, and `anchorText` must occur exactly once within it.
+     */
+    contextSnapshot: string;
+  };
 }
 
 export interface ContentProposedChange {

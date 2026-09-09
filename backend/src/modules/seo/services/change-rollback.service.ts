@@ -7,8 +7,10 @@ import {
 } from '../models/seo-change-execution.model';
 import { SeoChangeRollback, ISeoChangeRollbackDoc, RolledBackTarget } from '../models/seo-change-rollback.model';
 import { Page, IPageDoc } from '../../cms/models/page.model';
+import { Blog, IBlogDoc } from '../../cms/models/blog.model';
 import { CmsService } from '../../cms/services/cms.service';
 import { resolveCmsPageTarget } from './change-execution.service';
+import { resolveBlogTarget } from './change-execution-preflight.service';
 
 /**
  * Phase 5.4B — controlled rollback. Restores the whitelisted CMS Page metadata
@@ -90,6 +92,65 @@ interface PreparedRollbackTarget {
   fields: MetadataFieldKey[];
   beforeRollback: ExecutedFieldSnapshot;
   restored: ExecutedFieldSnapshot;
+}
+
+interface PreparedBlogRollbackTarget {
+  targetUrl: string;
+  blog: IBlogDoc;
+  beforeRollback: ExecutedFieldSnapshot;
+  restored: ExecutedFieldSnapshot;
+}
+
+/**
+ * Phase 6.4A — Pass 1 for ONE internal-link execution target: resolve the
+ * blog post, prove it is still the same published post, stale-check its
+ * `content` against exactly what the execution wrote, and build the restore
+ * payload from `execution.before`. Performs ZERO writes.
+ */
+async function prepareBlogTarget(target: ExecutedTarget, session: ClientSession): Promise<PreparedBlogRollbackTarget> {
+  if (target.after.content === undefined) {
+    throw new RollbackRejected(
+      'unsupported_state',
+      `Execution for ${target.targetUrl} recorded no "after" content and cannot be rolled back`,
+    );
+  }
+  if (target.before.content === undefined) {
+    throw new RollbackRejected(
+      'unsupported_state',
+      `Execution for ${target.targetUrl} recorded no "before" content and cannot be rolled back`,
+    );
+  }
+
+  const blog = await Blog.findById(target.targetDocumentId).session(session).exec();
+  if (!blog) {
+    throw new RollbackRejected('target_not_found', `No blog post found for ${target.targetUrl}`);
+  }
+  if (blog.status !== 'published') {
+    throw new RollbackRejected('unsupported_target', `The blog post for ${target.targetUrl} is no longer published`);
+  }
+
+  const resolution = await resolveBlogTarget(target.targetUrl, session);
+  if (!resolution.ok || String(resolution.blog._id) !== String(target.targetDocumentId)) {
+    throw new RollbackRejected(
+      'unsupported_target',
+      `${target.targetUrl} no longer resolves to the blog post this execution wrote`,
+    );
+  }
+
+  const liveContent = blog.content ?? '';
+  if (liveContent !== target.after.content) {
+    throw new RollbackRejected(
+      'stale',
+      `Live content for "${blog.slug}" has changed since this execution — rollback would overwrite a newer change`,
+    );
+  }
+
+  return {
+    targetUrl: target.targetUrl,
+    blog,
+    beforeRollback: { content: liveContent },
+    restored: { content: target.before.content },
+  };
 }
 
 /**
@@ -207,7 +268,7 @@ export async function rollbackExecution(opts: {
     if (execution.status !== 'succeeded') {
       throw new RollbackRejected('unsupported_state', 'Only a successful execution can be rolled back');
     }
-    if (execution.targetType !== 'cms_page') {
+    if (execution.targetType !== 'cms_page' && execution.targetType !== 'blog') {
       throw new RollbackRejected(
         'unsupported_state',
         `Execution target type "${execution.targetType}" cannot be rolled back in this phase`,
@@ -219,30 +280,61 @@ export async function rollbackExecution(opts: {
 
     // PASS 1 — resolve, identity-check and stale-check EVERY target. NO WRITES.
     // If any target fails, the whole rollback is rejected with zero attempted
-    // Page writes — a real property of the code, not something left to the
+    // writes — a real property of the code, not something left to the
     // transaction to paper over.
-    const prepared: PreparedRollbackTarget[] = [];
-    for (const target of execution.targets) {
-      prepared.push(await prepareTarget(target, session));
-    }
-
-    // PASS 2 — every target passed Pass 1; only now perform the writes.
     const targets: RolledBackTarget[] = [];
-    for (const p of prepared) {
-      const updated = await cmsService.updatePageSeoMetadata(String(p.page._id), p.restored, rollbackUserId, {
-        session,
-      });
 
-      const afterRollback: ExecutedFieldSnapshot = {};
-      for (const field of p.fields) afterRollback[field] = updated[field];
+    if (execution.targetType === 'blog') {
+      const preparedBlog: PreparedBlogRollbackTarget[] = [];
+      for (const target of execution.targets) {
+        preparedBlog.push(await prepareBlogTarget(target, session));
+      }
 
-      targets.push({
-        targetUrl: p.targetUrl,
-        targetDocumentId: p.page._id as mongoose.Types.ObjectId,
-        beforeRollback: p.beforeRollback,
-        restored: p.restored,
-        afterRollback,
-      });
+      // PASS 2 — every target passed Pass 1; only now perform the writes.
+      for (const p of preparedBlog) {
+        const updated = await Blog.findOneAndUpdate(
+          { _id: p.blog._id, status: 'published', content: p.beforeRollback.content ?? '' },
+          { $set: { content: p.restored.content } },
+          { new: true, session },
+        ).exec();
+
+        if (!updated) {
+          throw new RollbackRejected(
+            'stale',
+            `Blog post "${p.blog.slug}" changed before rollback could commit`,
+          );
+        }
+
+        targets.push({
+          targetUrl: p.targetUrl,
+          targetDocumentId: p.blog._id as mongoose.Types.ObjectId,
+          beforeRollback: p.beforeRollback,
+          restored: p.restored,
+          afterRollback: { content: updated.content ?? '' },
+        });
+      }
+    } else {
+      const prepared: PreparedRollbackTarget[] = [];
+      for (const target of execution.targets) {
+        prepared.push(await prepareTarget(target, session));
+      }
+
+      for (const p of prepared) {
+        const updated = await cmsService.updatePageSeoMetadata(String(p.page._id), p.restored, rollbackUserId, {
+          session,
+        });
+
+        const afterRollback: ExecutedFieldSnapshot = {};
+        for (const field of p.fields) afterRollback[field] = updated[field];
+
+        targets.push({
+          targetUrl: p.targetUrl,
+          targetDocumentId: p.page._id as mongoose.Types.ObjectId,
+          beforeRollback: p.beforeRollback,
+          restored: p.restored,
+          afterRollback,
+        });
+      }
     }
 
     const [created] = await SeoChangeRollback.create(
@@ -253,7 +345,7 @@ export async function rollbackExecution(opts: {
           draftId: execution.draftId,
           rollbackUserId: new mongoose.Types.ObjectId(rollbackUserId),
           rolledBackAt: new Date(),
-          targetType: 'cms_page',
+          targetType: execution.targetType,
           targets,
           status: 'succeeded',
           rollbackVersion: ROLLBACK_VERSION,

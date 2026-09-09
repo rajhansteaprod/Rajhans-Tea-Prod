@@ -49,6 +49,9 @@ const rollbackFieldSnapshotSchema = new Schema<ExecutedFieldSnapshot>(
   {
     metaTitle: { type: String },
     metaDescription: { type: String },
+    content: { type: String },
+    linkTargetUrl: { type: String },
+    linkAnchorText: { type: String },
   },
   { _id: false },
 );
@@ -71,7 +74,7 @@ const seoChangeRollbackSchema = new Schema<ISeoChangeRollbackDoc>(
     draftId: { type: Schema.Types.ObjectId, ref: 'SeoChangeDraft', required: true },
     rollbackUserId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     rolledBackAt: { type: Date, required: true },
-    targetType: { type: String, enum: ['cms_page'], required: true },
+    targetType: { type: String, enum: ['cms_page', 'blog'], required: true },
     targets: { type: [rolledBackTargetSchema], required: true },
     status: { type: String, enum: ['succeeded'], default: 'succeeded' },
     rollbackVersion: { type: String, required: true },

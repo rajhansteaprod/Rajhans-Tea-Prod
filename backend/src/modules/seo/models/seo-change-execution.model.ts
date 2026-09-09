@@ -12,15 +12,23 @@ import mongoose, { Document, Schema } from 'mongoose';
  * a unique index on `draftId` is sufficient, on its own, to guarantee a draft
  * can never be successfully executed twice.
  */
-export type ExecutionTargetType = 'cms_page' | 'product';
+export type ExecutionTargetType = 'cms_page' | 'product' | 'blog';
 
-/** Only the two whitelisted fields this phase may read or write. */
+/** Only the whitelisted fields this phase may read or write. */
 export interface ExecutedFieldSnapshot {
   metaTitle?: string;
   metaDescription?: string;
 
   /** Phase 6.3A product-content execution. */
   description?: string;
+
+  /** Phase 6.4A blog internal-link execution: full Blog.content body. */
+  content?: string;
+  /** The link's destination URL — stored alongside `content` so verification
+   * can check the live page without re-deriving it from the content diff. */
+  linkTargetUrl?: string;
+  /** The link's anchor text — same reasoning as `linkTargetUrl`. */
+  linkAnchorText?: string;
 }
 
 /** One resolved CMS page within a (possibly multi-target) draft execution. */
@@ -96,6 +104,9 @@ const executedFieldSnapshotSchema = new Schema<ExecutedFieldSnapshot>(
     metaTitle: { type: String },
     metaDescription: { type: String },
     description: { type: String },
+    content: { type: String },
+    linkTargetUrl: { type: String },
+    linkAnchorText: { type: String },
   },
   { _id: false },
 );
@@ -155,7 +166,7 @@ const seoChangeExecutionSchema = new Schema<ISeoChangeExecutionDoc>(
     draftId: { type: Schema.Types.ObjectId, ref: 'SeoChangeDraft', required: true },
     recommendationId: { type: Schema.Types.ObjectId, ref: 'SeoRecommendation', required: true, index: true },
     recommendationFingerprint: { type: String, required: true },
-    targetType: { type: String, enum: ['cms_page', 'product'], required: true },
+    targetType: { type: String, enum: ['cms_page', 'product', 'blog'], required: true },
     targets: { type: [executedTargetSchema], required: true },
     executorUserId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     executedAt: { type: Date, required: true },
