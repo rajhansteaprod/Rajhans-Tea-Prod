@@ -533,6 +533,142 @@ const TITLE_STOPWORDS = new Set([
   'using', 'per', 'you',
 ]);
 
+/**
+ * Phase 6.4B (candidate quality gate) — standalone anchors that a reader
+ * would find meaningless in isolation: they give no indication of what the
+ * link leads to. Rejected regardless of whether they happen to occur only
+ * once in the source content, because "occurs uniquely" is not the same as
+ * "is a good anchor." Colors, generic beverage nouns, and vague pointer
+ * words ("here", "read more") are exactly the class of false-positive
+ * anchors human review rejected from the first preview batch.
+ */
+const BANNED_GENERIC_ANCHORS = new Set([
+  'here', 'there', 'read', 'more', 'click', 'link', 'this', 'that', 'article', 'post',
+  'page', 'guide', 'learn', 'info', 'information', 'science', 'modern', 'black', 'white',
+  'green', 'red', 'perfect', 'good', 'great', 'best',
+]);
+
+function normalizeWord(w: string): string {
+  return w.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+/**
+ * True only when a single word is a genuinely distinctive entity/brand/
+ * product term tied to the TARGET page specifically — an acronym (e.g.
+ * "CTC"), or a word that the target blog itself lists as a tag (e.g.
+ * "Darjeeling"). Being capitalized in running text is NOT sufficient on its
+ * own ("Black" at the start of "Black tea is..." is not an entity) — this is
+ * the exact false positive human review rejected from the first preview
+ * batch.
+ */
+function isDistinctiveEntityAnchor(rawAnchor: string, targetBlog: { tags?: string[] }): boolean {
+  if (/^[A-Z]{2,6}$/.test(rawAnchor)) return true; // acronym, e.g. "CTC"
+  const lower = rawAnchor.toLowerCase();
+  return (targetBlog.tags ?? []).some((t) => t.toLowerCase() === lower);
+}
+
+export type AnchorQualityResult = { ok: true } | { ok: false; reason: string };
+
+/**
+ * Phase 6.4B candidate quality gate — evaluated independently of, and in
+ * addition to, `applyInternalLinkPatch`'s exact-match/uniqueness rules. An
+ * anchor can be perfectly unambiguous in the source text and still be a bad
+ * anchor: this function is what actually rejects "here", "science",
+ * "modern", or a bare color/beverage noun that gives a reader no idea what
+ * the link leads to. A single word is only ever allowed through
+ * `isDistinctiveEntityAnchor`.
+ */
+export function evaluateAnchorQuality(anchorText: string, targetBlog: { tags?: string[] }): AnchorQualityResult {
+  const trimmed = anchorText.trim();
+  if (!trimmed) return { ok: false, reason: 'empty_anchor' };
+
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  const normalizedWords = words.map(normalizeWord);
+
+  if (words.length === 1) {
+    if (BANNED_GENERIC_ANCHORS.has(normalizedWords[0]) || GENERIC_TOPIC_STOPWORDS.has(normalizedWords[0])) {
+      return { ok: false, reason: 'generic_single_word_anchor' };
+    }
+    if (!isDistinctiveEntityAnchor(trimmed, targetBlog)) {
+      return { ok: false, reason: 'single_word_not_distinctive_entity' };
+    }
+    return { ok: true };
+  }
+
+  if (words.length > 6) {
+    return { ok: false, reason: 'anchor_too_long' };
+  }
+
+  const allMeaningless = normalizedWords.every(
+    (w) => BANNED_GENERIC_ANCHORS.has(w) || TITLE_STOPWORDS.has(w) || GENERIC_TOPIC_STOPWORDS.has(w),
+  );
+  if (allMeaningless) {
+    return { ok: false, reason: 'anchor_lacks_meaning' };
+  }
+
+  return { ok: true };
+}
+
+function tokenizeWithOffsets(text: string): { word: string; start: number; end: number }[] {
+  const tokens: { word: string; start: number; end: number }[] = [];
+  const re = /\S+/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    tokens.push({ word: m[0], start: m.index, end: m.index + m[0].length });
+  }
+  return tokens;
+}
+
+function stripEdgePunctuation(s: string): string {
+  return s.replace(/^[^A-Za-z0-9]+/, '').replace(/[^A-Za-z0-9]+$/, '');
+}
+
+/**
+ * Finds the best descriptive anchor phrase in `sentence` around the word
+ * `matchWord` (already known to be one of the target's topic keywords).
+ * Prefers longer, more descriptive windows (up to 6 words) over shorter
+ * ones, trims leading/trailing stopwords off each candidate window so a
+ * phrase never starts or ends mid-thought (e.g. "the" or "and"), and only
+ * ever falls back to a single word when that word independently passes
+ * `evaluateAnchorQuality`'s distinctive-entity bar. Returns null — never a
+ * forced/manufactured anchor — when no window in the sentence qualifies;
+ * callers must treat that as `no_safe_contextual_insertion` for this
+ * source/target pair, not retry with a lower bar.
+ */
+export function selectAnchorPhrase(
+  sentence: string,
+  matchWord: string,
+  targetBlog: { tags?: string[] },
+): string | null {
+  const tokens = tokenizeWithOffsets(sentence);
+  const matchIdx = tokens.findIndex((t) => normalizeWord(t.word) === matchWord);
+  if (matchIdx === -1) return null;
+
+  for (let windowSize = 6; windowSize >= 2; windowSize--) {
+    for (let start = Math.max(0, matchIdx - windowSize + 1); start <= matchIdx; start++) {
+      const end = start + windowSize - 1;
+      if (end >= tokens.length || matchIdx > end) continue;
+
+      let first = start;
+      let last = end;
+      while (first < last && TITLE_STOPWORDS.has(normalizeWord(tokens[first].word))) first++;
+      while (last > first && TITLE_STOPWORDS.has(normalizeWord(tokens[last].word))) last--;
+      if (last - first + 1 < 2 || matchIdx < first || matchIdx > last) continue;
+
+      const phrase = stripEdgePunctuation(sentence.slice(tokens[first].start, tokens[last].end));
+      const wordCount = phrase.split(/\s+/).filter(Boolean).length;
+      if (wordCount < 2 || wordCount > 6) continue;
+
+      if (evaluateAnchorQuality(phrase, targetBlog).ok) return phrase;
+    }
+  }
+
+  const singleWord = stripEdgePunctuation(tokens[matchIdx].word);
+  if (evaluateAnchorQuality(singleWord, targetBlog).ok) return singleWord;
+
+  return null;
+}
+
 function stripHtml(html: string): string {
   return html.replace(/<[^>]+>/g, ' ');
 }
@@ -645,14 +781,14 @@ export async function generateExecutableBlogLinkChanges(
   const baseUrl = seoConfig.baseUrl.replace(/\/$/, '');
   const claimedSourceUrls = new Set<string>();
   const changes: InternalLinkProposedChange[] = [];
-  const skippedTargets: string[] = [];
+  const skippedTargets: { targetUrl: string; reason: string }[] = [];
 
   for (const targetUrl of targetUrls) {
     let targetPath: string;
     try {
       targetPath = new URL(targetUrl).pathname.replace(/\/+$/, '') + '/';
     } catch {
-      skippedTargets.push(targetUrl);
+      skippedTargets.push({ targetUrl, reason: 'unsupported_target_type' });
       continue;
     }
 
@@ -661,7 +797,7 @@ export async function generateExecutableBlogLinkChanges(
       // v1 only supports a blog post as the link target's KNOWN page type
       // for automatic candidate discovery (product/CMS targets still fall
       // back to the outline-only proposal below).
-      skippedTargets.push(targetUrl);
+      skippedTargets.push({ targetUrl, reason: 'unsupported_target_type' });
       continue;
     }
 
@@ -681,9 +817,12 @@ export async function generateExecutableBlogLinkChanges(
         const matchWord = words.find((w) => keywords.has(w));
         if (!matchWord) continue;
 
-        const anchorMatch = new RegExp(`\\b${matchWord}\\w*`, 'i').exec(sentence);
-        if (!anchorMatch) continue;
-        const anchorText = anchorMatch[0];
+        // Quality gate: never settle for the bare matched word just because
+        // it happens to occur once — prefer a longer, genuinely descriptive
+        // phrase, and only accept a single word when it independently
+        // clears the distinctive-entity bar. No forced/manufactured anchor.
+        const anchorText = selectAnchorPhrase(sentence, matchWord, targetBlog);
+        if (!anchorText) continue;
 
         if (countOccurrences(candidateContent, sentence) !== 1) continue;
         if (countOccurrences(sentence, anchorText) !== 1) continue;
@@ -695,7 +834,7 @@ export async function generateExecutableBlogLinkChanges(
     }
 
     if (!match) {
-      skippedTargets.push(targetUrl);
+      skippedTargets.push({ targetUrl, reason: 'no_safe_contextual_insertion' });
       continue;
     }
 
@@ -703,7 +842,7 @@ export async function generateExecutableBlogLinkChanges(
     const beforeContent = match.source.content ?? '';
     const patch = applyInternalLinkPatch(beforeContent, match.contextSnapshot, match.anchorText, targetUrl);
     if (!patch.ok) {
-      skippedTargets.push(targetUrl);
+      skippedTargets.push({ targetUrl, reason: 'no_safe_contextual_insertion' });
       continue;
     }
 
@@ -723,9 +862,9 @@ export async function generateExecutableBlogLinkChanges(
   }
 
   if (skippedTargets.length) {
-    warnings.push(
-      `Could not find a safe, unambiguous, non-conflicting blog source page for ${skippedTargets.length} target(s): ${skippedTargets.join(', ')}.`,
-    );
+    for (const { targetUrl, reason } of skippedTargets) {
+      warnings.push(`${targetUrl}: ${reason} — no safe, non-conflicting, quality-gated blog source page was found.`);
+    }
   }
 
   return changes;
