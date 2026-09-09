@@ -669,10 +669,6 @@ export function selectAnchorPhrase(
   return null;
 }
 
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, ' ');
-}
-
 function significantWords(text: string, minLength = 4): string[] {
   return text
     .toLowerCase()
@@ -682,24 +678,50 @@ function significantWords(text: string, minLength = 4): string[] {
 }
 
 /**
- * Every distinctive topic word this blog post is genuinely "about" —
- * deliberately narrow: proper nouns (capitalized words, e.g. "Assam"),
- * acronyms (e.g. "CTC"), tags, and significant title words. NOT a scan of
- * every common word in the body, which would match on filler ("that",
- * "this") far too easily and produce a technically-unambiguous but
- * meaningless anchor.
+ * Same tokenization as `significantWords` but with no arbitrary minimum
+ * length — used only when checking a sentence for a keyword HIT (never for
+ * generating anchor text itself). A short acronym like "CTC" is exactly the
+ * kind of strong, unambiguous identity signal the relationship-quality gate
+ * depends on, and a length-4 floor would silently make it undetectable.
  */
-function topicKeywords(blog: { title: string; tags?: string[]; content?: string }): Set<string> {
-  const plainBody = stripHtml(blog.content ?? '');
-  const properNouns = [...`${blog.title} ${plainBody}`.matchAll(/\b[A-Z][a-z]{3,}\b/g)].map((m) => m[0].toLowerCase());
-  const acronyms = [...`${blog.title} ${plainBody}`.matchAll(/\b[A-Z]{2,6}\b/g)].map((m) => m[0].toLowerCase());
-  const words = [
-    ...properNouns,
-    ...acronyms,
-    ...(blog.tags ?? []).map((t) => t.toLowerCase()),
-    ...significantWords(blog.title, 5),
-  ];
-  return new Set(words.filter((w) => !GENERIC_TOPIC_STOPWORDS.has(w) && !TITLE_STOPWORDS.has(w)));
+function keywordMatchWords(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length >= 2 && !TITLE_STOPWORDS.has(w));
+}
+
+export interface TopicKeywords {
+  /** High-confidence identity signals: author-curated tags and acronyms (e.g. "CTC"). A single hit is enough to justify a link. */
+  strong: Set<string>;
+  /** Lower-confidence signals: proper nouns drawn from the post's own PARAGRAPH prose (never headings, which are structural, not subject matter) and significant title words. Coincidental — needs corroboration before it counts as a real relationship. */
+  weak: Set<string>;
+}
+
+/**
+ * Every distinctive topic word this blog post is genuinely "about" — split
+ * into "strong" (tags/acronyms — a curated or unambiguous identity signal)
+ * and "weak" (proper nouns/title words — plausible but easily coincidental)
+ * so a match against a single weak keyword can never, on its own, justify a
+ * link (see the relationship-quality gate in generateExecutableBlogLinkChanges).
+ * Proper nouns are deliberately read ONLY from `<p>` paragraph prose, never
+ * from headings: a heading like "Water Temperature" is structural markup,
+ * not evidence the post is genuinely "about" water or temperature, and
+ * treating it as one was the root cause of weak, coincidental candidate
+ * matches in the first preview batch.
+ */
+function topicKeywords(blog: { title: string; tags?: string[]; content?: string }): TopicKeywords {
+  const paragraphText = extractPlainParagraphSentences(blog.content ?? '').join(' ');
+  const properNouns = [...paragraphText.matchAll(/\b[A-Z][a-z]{3,}\b/g)].map((m) => m[0].toLowerCase());
+  const acronyms = [...`${blog.title} ${paragraphText}`.matchAll(/\b[A-Z]{2,6}\b/g)].map((m) => m[0].toLowerCase());
+  const tags = (blog.tags ?? []).map((t) => t.toLowerCase());
+  const titleWords = significantWords(blog.title, 5);
+
+  const isNoise = (w: string) => GENERIC_TOPIC_STOPWORDS.has(w) || TITLE_STOPWORDS.has(w);
+  const strong = new Set([...tags, ...acronyms].filter((w) => !isNoise(w)));
+  const weak = new Set([...properNouns, ...titleWords].filter((w) => !isNoise(w) && !strong.has(w)));
+  return { strong, weak };
 }
 
 function splitSentences(text: string): string[] {
@@ -813,8 +835,18 @@ export async function generateExecutableBlogLinkChanges(
       if (contentAlreadyLinksTo(candidateContent, targetUrl)) continue;
 
       for (const sentence of extractPlainParagraphSentences(candidateContent)) {
-        const words = significantWords(sentence).filter((w) => !GENERIC_TOPIC_STOPWORDS.has(w));
-        const matchWord = words.find((w) => keywords.has(w));
+        const words = keywordMatchWords(sentence).filter((w) => !GENERIC_TOPIC_STOPWORDS.has(w));
+        const strongHits = words.filter((w) => keywords.strong.has(w));
+        const weakHits = [...new Set(words.filter((w) => keywords.weak.has(w)))];
+
+        // Relationship-quality gate: a single coincidental shared word is not
+        // enough to justify a link (that is exactly how "Black tea contains
+        // powerful antioxidants" ended up pointed at a brewing-technique
+        // guide). One STRONG hit (a tag/acronym the target is genuinely
+        // identified by) is sufficient; a WEAK hit (an incidental proper
+        // noun) requires a second independent weak hit corroborating it.
+        if (strongHits.length < 1 && weakHits.length < 2) continue;
+        const matchWord = strongHits[0] ?? weakHits[0];
         if (!matchWord) continue;
 
         // Quality gate: never settle for the bare matched word just because
