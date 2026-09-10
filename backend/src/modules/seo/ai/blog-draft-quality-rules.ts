@@ -141,7 +141,10 @@ export function evaluateBlogDraftQuality(evidence: BlogContentEvidence, plan: Ar
   }
 
   // 6. Material repetition — the same 6+ word phrase stated more than once.
-  const repeated = findRepeatedPhrase(html);
+  // Checked against the STRIPPED body text, never raw HTML — an n-gram over
+  // tag markup can produce a garbled false-positive match (e.g. a stray "p"
+  // from a stripped <p> tag prefixing an otherwise-unique sentence).
+  const repeated = findRepeatedPhrase(plainBody);
   if (repeated) errors.push(`Article repeats the same phrase more than once: "${repeated}"`);
 
   // 7. Excessive product/brand-name repetition.
