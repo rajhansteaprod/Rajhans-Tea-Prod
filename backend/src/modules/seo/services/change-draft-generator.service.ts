@@ -714,7 +714,7 @@ async function buildBlogContentEvidence(rec: ISeoRecommendationDoc, entity: stri
   };
 }
 
-async function generateBlogCreateChanges(
+export async function generateBlogCreateChanges(
   rec: ISeoRecommendationDoc,
 ): Promise<GeneratedProposal> {
   const warnings: string[] = [];
