@@ -17,7 +17,7 @@ import { CANONICAL_PAGE_SLUG } from '../../cms/page-slug.util';
 import { seoConfig } from '../seo.config';
 import { applyInternalLinkPatch, contentAlreadyLinksTo } from './internal-link-patch.util';
 import { extractFaqPairsFromHtml, buildFaqJsonLd, serializeFaqJsonLd, FaqItem } from './faq-schema.util';
-import { validateArticleHtml, extractLinks, isInternalUrl } from './blog-content-safety.util';
+import { validateArticleHtml, extractLinks, isInternalUrl, UNSUPPORTED_CLAIM_PATTERNS } from './blog-content-safety.util';
 
 /**
  * Phase 5.5 — execution quality controls. THE single authoritative answer to
@@ -1494,16 +1494,8 @@ export async function evaluateExecutionPreflight(opts: {
     // Deterministic unsupported-claim guard: reject a small, explicit set of
     // unverifiable superlative/marketing claims that have no place in
     // grounded editorial content. Not a substitute for human review — a
-    // narrow, fail-closed safety net.
-    const UNSUPPORTED_CLAIM_PATTERNS = [
-      /best[\s-]?known/i,
-      /award[\s-]?winning/i,
-      /clinically\s+proven/i,
-      /scientifically\s+proven/i,
-      /#\s?1\b/i,
-      /guaranteed/i,
-      /india'?s\s+(best|boldest|finest|no\.?\s?1)/i,
-    ];
+    // narrow, fail-closed safety net. Shared with the autonomous article
+    // quality gate (blog-content-safety.util.ts) so the two never drift.
     const foundClaim = UNSUPPORTED_CLAIM_PATTERNS.find((p) => p.test(exec.content) || p.test(exec.title));
     if (foundClaim) {
       const message = `Article content contains an unsupported/unverifiable claim matching ${foundClaim}`;

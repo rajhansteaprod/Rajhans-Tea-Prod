@@ -18,7 +18,15 @@ APPROVED_SOURCE_REVISION="${SEO_PUBLICATION_SOURCE_REVISION:-}"
 
 # Source is mounted into the helper container; this image supplies Node,
 # node_modules and ts-node. It does NOT receive Docker socket access.
-HELPER_IMAGE="${SEO_PUBLICATION_HELPER_IMAGE:-rajhansteaprod/rajhans-tea-backend:829f71f}"
+#
+# No hardcoded fallback tag. An operator MAY pin an explicit image via
+# SEO_PUBLICATION_HELPER_IMAGE; when unset, the default is derived from the
+# SAME approved source revision the guard below validates (a short SHA tag),
+# so the helper can never silently run against stale/unrelated source. Either
+# way, the image's actual presence is verified (assert_helper_image_available,
+# below) before use — never a silent fallback to `latest` or a build attempt
+# with an image that doesn't exist.
+HELPER_IMAGE_OVERRIDE="${SEO_PUBLICATION_HELPER_IMAGE:-}"
 
 LOCK_FILE="${SEO_PUBLICATION_LOCK:-/tmp/rajhans-seo-publication.lock}"
 
@@ -75,6 +83,28 @@ if [[ "${SEO_PUBLICATION_SELF_TEST:-0}" == "1" ]]; then
   docker image rm "$IMAGE" >/dev/null 2>&1 || true
   exit 0
 fi
+
+# Resolve the helper image now that SOURCE_REF is known: an explicit pin
+# always wins; otherwise default to the versioned tag matching this exact
+# approved source revision.
+HELPER_IMAGE="${HELPER_IMAGE_OVERRIDE:-rajhansteaprod/rajhans-tea-backend:$SOURCE_REF}"
+
+# ---------------------------------------------------------------------
+# HELPER-IMAGE AVAILABILITY GUARD.
+# Fails closed (never falls back to `latest` or any other tag) if the
+# resolved helper image cannot be found locally or pulled. This is what
+# replaces the previous hardcoded, eventually-obsolete default tag.
+# ---------------------------------------------------------------------
+if ! docker image inspect "$HELPER_IMAGE" >/dev/null 2>&1; then
+  if ! docker pull "$HELPER_IMAGE" >/dev/null 2>&1; then
+    echo "[seo-publication] REJECTED: helper image not available: $HELPER_IMAGE" >&2
+    echo "[seo-publication]   Build it from the approved worktree, e.g.:" >&2
+    echo "[seo-publication]     docker build --target production -f \"$WORKTREE/backend/Dockerfile\" -t $HELPER_IMAGE \"$WORKTREE\"" >&2
+    echo "[seo-publication]   or set SEO_PUBLICATION_HELPER_IMAGE to an existing, approved image." >&2
+    exit 1
+  fi
+fi
+
 
 CLAIM_RAW="$(run_worker claim | tail -n 1)"
 

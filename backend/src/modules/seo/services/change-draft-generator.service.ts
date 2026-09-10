@@ -19,7 +19,7 @@ import { ProductVariant } from '../../catalog/models/product-variant.model';
 import { Blog } from '../../cms/models/blog.model';
 import { Page } from '../../cms/models/page.model';
 import { applyInternalLinkPatch, contentAlreadyLinksTo, countOccurrences } from './internal-link-patch.util';
-import { validateArticleHtml } from './blog-content-safety.util';
+import { validateArticleHtml, extractLinks } from './blog-content-safety.util';
 import { extractFaqPairsFromHtml, buildFaqJsonLd } from './faq-schema.util';
 import {
   generateGroundedProductDraft,
@@ -27,6 +27,9 @@ import {
 import {
   ProductContentEvidence,
 } from '../ai/seo-ai.types';
+import { generateGroundedBlogDraft } from '../ai/openai-seo-blog-drafting.service';
+import { planArticleAngle } from '../ai/blog-content-planner';
+import { BlogContentEvidence, ExistingBlogSummary } from '../ai/blog-ai.types';
 
 /**
  * Phase 5.2 — deterministic, rule-based generator that turns an APPROVED, OPEN
@@ -36,7 +39,7 @@ import {
  * sitemap, or any live SEO field. Same recommendation/evidence state always
  * produces the same proposal for a given `GENERATOR_VERSION`.
  */
-export const GENERATOR_VERSION = '6.3.0-ai-product-content-v1';
+export const GENERATOR_VERSION = '6.7.0-ai-product-content-and-article-drafting-v1';
 
 // Bounds draft size for recommendations that span many URLs (e.g. a
 // site-wide schema gap) so a single draft never balloons unboundedly.
@@ -647,9 +650,73 @@ const APPROVED_BLOG_ARTICLES: Record<string, ApprovedBlogArticle> = {
   },
 };
 
+/**
+ * Phase 6.7A — deterministically assembles the ONLY factual authority the
+ * autonomous article writer/verifier may draw on: the target product, the
+ * recommendation's own opportunity facts, and a deterministic, factual
+ * footprint of every existing published post (never the AI's own summary).
+ */
+async function buildBlogContentEvidence(rec: ISeoRecommendationDoc, entity: string): Promise<BlogContentEvidence | null> {
+  const relatedProductUrl = (rec.evidence as { relatedProducts?: string[] })?.relatedProducts?.[0] ?? rec.affectedUrls[0];
+  let productSlug: string | null = null;
+  try {
+    if (relatedProductUrl) {
+      const match = /^\/product\/([^/]+)\/?$/.exec(new URL(relatedProductUrl).pathname);
+      productSlug = match?.[1] ?? null;
+    }
+  } catch {
+    productSlug = null;
+  }
+
+  const product = productSlug ? await Product.findOne({ slug: productSlug, status: 'active' }).lean() : null;
+  if (!product) return null;
+
+  const activeVariants = product.hasVariants
+    ? await ProductVariant.find({ productId: product._id, isActive: true }).select('name').lean()
+    : [];
+
+  const publishedBlogs = await Blog.find({ status: 'published' }).select('title slug tags content').lean();
+  const baseUrl = seoConfig.baseUrl.replace(/\/$/, '');
+
+  const existingCorpus: ExistingBlogSummary[] = publishedBlogs.map((b) => {
+    const paragraphs = extractPlainParagraphSentences(b.content ?? '');
+    return {
+      title: b.title,
+      slug: b.slug,
+      url: `${baseUrl}/blog/${b.slug}/`,
+      tags: b.tags ?? [],
+      topicSummary: paragraphs.slice(0, 3).join(' '),
+      keyIntents: [...blogIntentCategories(b)],
+    };
+  });
+
+  return {
+    product: {
+      productId: String(product._id),
+      name: product.name,
+      slug: product.slug,
+      region: product.region ?? null,
+      description: product.description ?? '',
+      shortDescription: product.shortDescription ?? null,
+      bestTakenFor: normalizeBestTakenFor(product.bestTakenFor),
+      packOptions: activeVariants.map((v) => ({ label: v.name })),
+      url: `${baseUrl}/product/${product.slug}/`,
+    },
+    opportunity: {
+      recommendationId: rec.recommendationId,
+      recommendationType: rec.category,
+      entity,
+      targetUrl: rec.affectedUrls[0] ?? '',
+      rationale: rec.why,
+    },
+    existingCorpus,
+    siteFacts: { baseUrl },
+  };
+}
+
 async function generateBlogCreateChanges(
   rec: ISeoRecommendationDoc,
-): Promise<{ proposedChanges: ProposedChange[]; warnings: string[] }> {
+): Promise<GeneratedProposal> {
   const warnings: string[] = [];
   const targetUrl = rec.affectedUrls[0] ?? '';
 
@@ -661,41 +728,107 @@ async function generateBlogCreateChanges(
   const entity = evidence.entity;
   const approved = entity ? APPROVED_BLOG_ARTICLES[entity] : undefined;
 
-  if (!approved) {
-    warnings.push(
-      `No human-approved article text exists for entity "${entity ?? 'unknown'}" — falling back to an outline-only recommendation. This v1 generator never invents article content.`,
-    );
+  // Historical/manual path: a human has committed exact article text for
+  // this entity. Never required going forward (see generateAutonomousBlogArticle
+  // below) — kept for backward compatibility only.
+  if (approved) {
+    const htmlCheck = validateArticleHtml(approved.content);
+    if (!htmlCheck.ok) {
+      warnings.push(`Approved article text for "${entity}" failed its own safety/structure check (${htmlCheck.reason}) — falling back to an outline-only recommendation.`);
+      const change: BlogCreateProposedChange = { kind: 'blog_create', targetUrl: targetUrl || `${seoConfig.baseUrl}/blog/` };
+      return { proposedChanges: [change], warnings };
+    }
+
+    const articleUrl = `${seoConfig.baseUrl}/blog/${approved.slug}/`;
     const change: BlogCreateProposedChange = {
       kind: 'blog_create',
-      targetUrl: targetUrl || `${seoConfig.baseUrl}/blog/`,
+      targetUrl: articleUrl,
+      execution: {
+        slug: approved.slug,
+        title: approved.title,
+        metaTitle: approved.metaTitle,
+        metaDescription: approved.metaDescription,
+        excerpt: approved.excerpt,
+        content: approved.content,
+        tags: approved.tags,
+        status: 'published',
+      },
     };
-    return { proposedChanges: [change], warnings };
+    warnings.push('Article text is the exact human-approved wording committed for this entity — nothing was regenerated or invented.');
+    return { proposedChanges: [change], warnings, generationEvidence: { mode: 'manual-approved-article', entity } };
   }
 
-  const htmlCheck = validateArticleHtml(approved.content);
-  if (!htmlCheck.ok) {
-    warnings.push(`Approved article text for "${entity}" failed its own safety/structure check (${htmlCheck.reason}) — falling back to an outline-only recommendation.`);
+  // Phase 6.7A — autonomous grounded drafting. No source-code entry required.
+  if (!entity) {
+    warnings.push('Recommendation evidence has no entity — falling back to an outline-only recommendation.');
     const change: BlogCreateProposedChange = { kind: 'blog_create', targetUrl: targetUrl || `${seoConfig.baseUrl}/blog/` };
-    return { proposedChanges: [change], warnings };
+    return { proposedChanges: [change], warnings, generationEvidence: { mode: 'ai-article-drafting', status: 'no_entity' } };
   }
 
-  const articleUrl = `${seoConfig.baseUrl}/blog/${approved.slug}/`;
+  const blogEvidence = await buildBlogContentEvidence(rec, entity);
+  if (!blogEvidence) {
+    warnings.push(`Could not resolve a grounded product evidence source for "${entity}" — falling back to an outline-only recommendation.`);
+    const change: BlogCreateProposedChange = { kind: 'blog_create', targetUrl: targetUrl || `${seoConfig.baseUrl}/blog/` };
+    return { proposedChanges: [change], warnings, generationEvidence: { mode: 'ai-article-drafting', status: 'no_product_evidence', entity } };
+  }
+
+  const planResult = planArticleAngle(blogEvidence);
+  if (!planResult.ok) {
+    warnings.push(`No material content opportunity for "${entity}": ${planResult.details.join('; ')} — falling back to an outline-only recommendation.`);
+    const change: BlogCreateProposedChange = { kind: 'blog_create', targetUrl: targetUrl || `${seoConfig.baseUrl}/blog/` };
+    return {
+      proposedChanges: [change],
+      warnings,
+      generationEvidence: { mode: 'ai-article-drafting', status: 'no_material_content_opportunity', entity, details: planResult.details },
+    };
+  }
+
+  const aiResult = await generateGroundedBlogDraft(blogEvidence, planResult.plan);
+
+  const generationEvidence: Record<string, unknown> = {
+    mode: 'ai-article-drafting',
+    status: aiResult.disposition ?? (aiResult.ok ? 'draft_ready' : 'rejected'),
+    provider: aiResult.provider,
+    model: aiResult.model,
+    openaiCallCount: aiResult.openaiCallCount,
+    entity,
+    evidence: blogEvidence,
+    plan: planResult.plan,
+    error: aiResult.error ?? null,
+    unsupportedClaims: aiResult.output?.unsupportedClaims ?? [],
+    notes: aiResult.output?.notes ?? [],
+  };
+
+  if (!aiResult.ok || !aiResult.output || aiResult.output.status !== 'ok' || !aiResult.output.contentHtml || !aiResult.output.title || !aiResult.output.slug || !aiResult.output.h1) {
+    warnings.push(`Autonomous article drafting did not produce an executable proposal for "${entity}": ${aiResult.error ?? 'unknown failure'}`);
+    const change: BlogCreateProposedChange = { kind: 'blog_create', targetUrl: targetUrl || `${seoConfig.baseUrl}/blog/` };
+    return { proposedChanges: [change], warnings, generationEvidence };
+  }
+
+  const output = aiResult.output;
+  const slug = output.slug!;
+  const articleUrl = `${seoConfig.baseUrl}/blog/${slug}/`;
+  const contentHtml = output.contentHtml!;
+
+  const linksForTags = extractLinks(contentHtml) ?? [];
   const change: BlogCreateProposedChange = {
     kind: 'blog_create',
     targetUrl: articleUrl,
     execution: {
-      slug: approved.slug,
-      title: approved.title,
-      metaTitle: approved.metaTitle,
-      metaDescription: approved.metaDescription,
-      excerpt: approved.excerpt,
-      content: approved.content,
-      tags: approved.tags,
+      slug,
+      title: output.title!,
+      metaTitle: output.metaTitle ?? output.title!,
+      metaDescription: output.metaDescription ?? '',
+      excerpt: output.metaDescription ?? '',
+      content: contentHtml,
+      tags: [entity.toLowerCase(), 'guide'],
       status: 'published',
     },
   };
-  warnings.push('Article text is the exact human-approved wording committed for this entity — nothing was regenerated or invented.');
-  return { proposedChanges: [change], warnings };
+  warnings.push(
+    `Article text was autonomously drafted and independently verified (${aiResult.openaiCallCount} OpenAI call(s)) — grounded only in Product "${blogEvidence.product!.slug}" and the existing blog corpus. ${linksForTags.length} internal link(s) proposed.`,
+  );
+  return { proposedChanges: [change], warnings, generationEvidence };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

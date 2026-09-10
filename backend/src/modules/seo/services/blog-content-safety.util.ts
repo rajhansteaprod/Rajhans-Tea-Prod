@@ -68,3 +68,37 @@ export function isInternalUrl(url: string, baseUrl: string): boolean {
     return false;
   }
 }
+
+/**
+ * A small, explicit, deterministic set of unverifiable superlative/marketing
+ * claim patterns that have no place in grounded editorial content — shared
+ * by the preflight evaluator and the autonomous article quality gate so the
+ * two can never silently drift apart.
+ */
+export const UNSUPPORTED_CLAIM_PATTERNS: RegExp[] = [
+  /best[\s-]?known/i,
+  /award[\s-]?winning/i,
+  /clinically\s+proven/i,
+  /scientifically\s+proven/i,
+  /#\s?1\b/i,
+  /guaranteed/i,
+  /india'?s\s+(best|boldest|finest|no\.?\s?1)/i,
+];
+
+/**
+ * A conservative, explicit blocklist of health/scientific claim language.
+ * Not exhaustive — a deterministic fail-closed net, not a substitute for the
+ * independent AI verifier, which catches claims this can't pattern-match.
+ */
+export const UNSUPPORTED_HEALTH_CLAIM_PATTERNS: RegExp[] = [
+  /\bantioxidants?\b/i,
+  /\bboosts?\s+immunity\b/i,
+  /\bcures?\b/i,
+  /\bprevents?\s+(disease|illness|cancer)\b/i,
+  /\bmetaboli[sz]e?\b/i,
+  /\bweight\s?loss\b/i,
+  /\bdetox(?:ify|ifies|ification)?\b/i,
+  /\bhealth\s+benefits?\b/i,
+  /\bimproves?\s+(digestion|circulation|heart\s+health)\b/i,
+  /\breduces?\s+(stress|cholesterol|blood\s+pressure)\b/i,
+];
