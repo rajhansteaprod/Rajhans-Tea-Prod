@@ -100,11 +100,12 @@ export class CmsService {
     return { blogs, meta: buildPaginationMeta(page, limit, total) };
   }
 
-  async createBlog(data: Partial<IBlogDoc>, authorId: string) {
+  async createBlog(data: Partial<IBlogDoc>, authorId: string, options: { session?: ClientSession } = {}) {
     if (!data.slug && data.title) data.slug = slugify(data.title);
     data.author = new Types.ObjectId(authorId);
     if (data.status === 'published' && !data.publishedAt) data.publishedAt = new Date();
-    return Blog.create(data);
+    const [created] = await Blog.create([data], { session: options.session });
+    return created;
   }
 
   async updateBlog(id: string, data: Partial<IBlogDoc>) {

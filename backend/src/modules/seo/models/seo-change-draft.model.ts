@@ -9,7 +9,7 @@ import { RecommendationCategory, RecommendationSource } from '../seo.types';
  * field. There is no published/applied status — that is a later phase.
  */
 export type ChangeDraftStatus = 'draft' | 'superseded';
-export type ProposedChangeKind = 'metadata' | 'structured_data' | 'internal_link' | 'content' | 'faq' | 'generic';
+export type ProposedChangeKind = 'metadata' | 'structured_data' | 'internal_link' | 'content' | 'faq' | 'blog_create' | 'generic';
 
 export interface MetadataFieldChange {
   current: string | null;
@@ -109,6 +109,32 @@ export interface FaqProposedChange {
   };
 }
 
+/**
+ * Phase 6.6A — executable "create a brand-new published Blog article"
+ * proposal. Unlike every other executable kind, there is no existing live
+ * document to diverge from — the whole point is CREATION. `targetUrl` is the
+ * article's future canonical URL (`/blog/:slug/`); `execution` carries the
+ * exact, already human-approved field values preflight will write verbatim
+ * (after independently re-validating safety/structure/link-resolvability) —
+ * never regenerated, never rewritten.
+ */
+export interface BlogCreateProposedChange {
+  kind: 'blog_create';
+  targetUrl: string;
+  execution?: {
+    slug: string;
+    title: string;
+    metaTitle: string;
+    metaDescription: string;
+    /** Shown as the visible teaser under the H1; also drives the live <meta name="description"> via the existing blog-detail template. */
+    excerpt: string;
+    /** Full article HTML, including every embedded internal link. */
+    content: string;
+    tags: string[];
+    status: 'published';
+  };
+}
+
 export interface GenericProposedChange {
   kind: 'generic';
   targetUrl: string;
@@ -123,6 +149,7 @@ export type ProposedChange =
   | InternalLinkProposedChange
   | ContentProposedChange
   | FaqProposedChange
+  | BlogCreateProposedChange
   | GenericProposedChange;
 
 export interface ChangeDraftValidation {

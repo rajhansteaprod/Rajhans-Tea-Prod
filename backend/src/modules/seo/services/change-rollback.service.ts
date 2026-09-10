@@ -12,6 +12,38 @@ import { CmsService } from '../../cms/services/cms.service';
 import { resolveCmsPageTarget } from './change-execution.service';
 import { resolveBlogTarget } from './change-execution-preflight.service';
 
+interface PreparedBlogCreateRollbackTarget {
+  targetUrl: string;
+  blog: IBlogDoc;
+}
+
+/**
+ * Phase 6.6A — Pass 1 for ONE blog_create execution target: resolve the
+ * created blog post by its authoritative document id, prove it is still
+ * published under the exact slug/content this execution wrote (stale-check),
+ * and confirm it hasn't already been unpublished. Performs ZERO writes.
+ * There is no "restore the old field values" here — the execution CREATED
+ * this document, so rollback's only safe action is to unpublish it (see
+ * `rollbackExecution` below), never to delete or mutate its content.
+ */
+async function prepareBlogCreateTarget(target: ExecutedTarget, session: ClientSession): Promise<PreparedBlogCreateRollbackTarget> {
+  const blog = await Blog.findById(target.targetDocumentId).session(session).exec();
+  if (!blog) {
+    throw new RollbackRejected('target_not_found', `No blog post found for ${target.targetUrl}`);
+  }
+  if (blog.status !== 'published') {
+    throw new RollbackRejected('unsupported_state', `The blog post for ${target.targetUrl} is not currently published (already rolled back?)`);
+  }
+  if (blog.slug !== target.after.slug || (blog.content ?? '') !== (target.after.content ?? '')) {
+    throw new RollbackRejected(
+      'stale',
+      `Live state for "${blog.slug}" has changed since this execution — rollback would overwrite a newer change`,
+    );
+  }
+
+  return { targetUrl: target.targetUrl, blog };
+}
+
 /**
  * Phase 5.4B — controlled rollback. Restores the whitelisted CMS Page metadata
  * fields that ONE successful Phase 5.3 execution actually wrote back to the
@@ -268,7 +300,7 @@ export async function rollbackExecution(opts: {
     if (execution.status !== 'succeeded') {
       throw new RollbackRejected('unsupported_state', 'Only a successful execution can be rolled back');
     }
-    if (execution.targetType !== 'cms_page' && execution.targetType !== 'blog') {
+    if (execution.targetType !== 'cms_page' && execution.targetType !== 'blog' && execution.targetType !== 'blog_create') {
       throw new RollbackRejected(
         'unsupported_state',
         `Execution target type "${execution.targetType}" cannot be rolled back in this phase`,
@@ -284,7 +316,37 @@ export async function rollbackExecution(opts: {
     // transaction to paper over.
     const targets: RolledBackTarget[] = [];
 
-    if (execution.targetType === 'blog') {
+    if (execution.targetType === 'blog_create') {
+      const preparedCreated: PreparedBlogCreateRollbackTarget[] = [];
+      for (const target of execution.targets) {
+        preparedCreated.push(await prepareBlogCreateTarget(target, session));
+      }
+
+      // PASS 2 — unpublish the exact execution-created document. Preferred
+      // per the application's own status convention (draft/published) over
+      // deleting: reversible, keeps the forensic trail, and can never touch
+      // any OTHER blog post since the match is scoped to this exact _id +
+      // slug + status.
+      for (const p of preparedCreated) {
+        const updated = await Blog.findOneAndUpdate(
+          { _id: p.blog._id, status: 'published', slug: p.blog.slug },
+          { $set: { status: 'draft', publishedAt: null } },
+          { new: true, session },
+        ).exec();
+
+        if (!updated) {
+          throw new RollbackRejected('stale', `Blog post "${p.blog.slug}" changed before rollback could commit`);
+        }
+
+        targets.push({
+          targetUrl: p.targetUrl,
+          targetDocumentId: p.blog._id as mongoose.Types.ObjectId,
+          beforeRollback: { blogStatus: 'published' },
+          restored: { blogStatus: 'draft' },
+          afterRollback: { blogStatus: updated.status },
+        });
+      }
+    } else if (execution.targetType === 'blog') {
       const preparedBlog: PreparedBlogRollbackTarget[] = [];
       for (const target of execution.targets) {
         preparedBlog.push(await prepareBlogTarget(target, session));

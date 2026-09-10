@@ -7,6 +7,7 @@ import {
   ContentProposedChange,
   InternalLinkProposedChange,
   FaqProposedChange,
+  BlogCreateProposedChange,
 } from '../models/seo-change-draft.model';
 import { SeoChangeExecution, ExecutedFieldSnapshot } from '../models/seo-change-execution.model';
 import { Page, IPageDoc } from '../../cms/models/page.model';
@@ -16,6 +17,7 @@ import { CANONICAL_PAGE_SLUG } from '../../cms/page-slug.util';
 import { seoConfig } from '../seo.config';
 import { applyInternalLinkPatch, contentAlreadyLinksTo } from './internal-link-patch.util';
 import { extractFaqPairsFromHtml, buildFaqJsonLd, serializeFaqJsonLd, FaqItem } from './faq-schema.util';
+import { validateArticleHtml, extractLinks, isInternalUrl } from './blog-content-safety.util';
 
 /**
  * Phase 5.5 — execution quality controls. THE single authoritative answer to
@@ -81,7 +83,13 @@ export type PreflightBlockerCode =
   | 'empty_faq_items'
   | 'duplicate_question'
   | 'schema_already_present'
-  | 'schema_mismatch';
+  | 'schema_mismatch'
+  // Phase 6.6A — blog article creation.
+  | 'slug_already_exists'
+  | 'unsafe_markup'
+  | 'weak_structure'
+  | 'cannibalizing_target'
+  | 'unsupported_claim';
 
 /**
  * SEO quality findings. These NEVER block execution — they are judgement calls
@@ -125,7 +133,14 @@ export type PreflightCheckCode =
   // Phase 6.5A — FAQ schema execution.
   | 'faq_items_well_formed'
   | 'faq_schema_novel'
-  | 'faq_schema_matches_derivation';
+  | 'faq_schema_matches_derivation'
+  // Phase 6.6A — blog article creation.
+  | 'slug_available'
+  | 'markup_safe'
+  | 'structure_reasonable'
+  | 'links_internal_and_resolvable'
+  | 'no_cannibalization'
+  | 'single_article_creation';
 
 export type PreflightCheckStatus = 'pass' | 'warn' | 'fail';
 export type PreflightRiskLevel = 'low' | 'medium' | 'high';
@@ -152,7 +167,7 @@ export interface PreflightCheck {
 /** The metadata fields this execution would write, per resolved target — the exact mutation scope. */
 export interface PreflightChangedFields {
   targetUrl: string;
-  fields: ('metaTitle' | 'metaDescription' | 'description' | 'content' | 'faqSchema')[];
+  fields: ('metaTitle' | 'metaDescription' | 'description' | 'content' | 'faqSchema' | 'blog_article')[];
 }
 
 export interface ExecutionPreflightResult {
@@ -190,6 +205,12 @@ export type PreparedExecutionTarget =
       targetUrl: string;
       blog: IBlogDoc;
       before: ExecutedFieldSnapshot;
+      proposed: ExecutedFieldSnapshot;
+    }
+  | {
+      /** Phase 6.6A — no existing document: the whole point is CREATION. */
+      targetType: 'blog_create';
+      targetUrl: string;
       proposed: ExecutedFieldSnapshot;
     };
 
@@ -1384,6 +1405,187 @@ export async function evaluateExecutionPreflight(opts: {
         proposed: { faqSchema: derivedSerialized },
       });
     }
+
+    const result = finalize(acc, evaluatedAt);
+    return {
+      result,
+      prepared: result.executable ? prepared : [],
+      draft,
+      recommendation,
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  // Phase 6.6A — new Blog article creation.
+  //
+  // Structurally different from every other executable kind: there is no
+  // existing live document to resolve/diverge from, so "stale protection"
+  // here means re-verifying the proposed slug is STILL absent, re-checked
+  // inside the transaction immediately before Pass 2 (the same session-
+  // pinned rerun every other kind already relies on).
+  // -------------------------------------------------------------------------
+  if (draft.proposedChanges[0]?.kind === 'blog_create') {
+    const blogCreateChanges = draft.proposedChanges as BlogCreateProposedChange[];
+
+    if (blogCreateChanges.length !== 1) {
+      block(acc, 'ambiguous_target', 'Exactly one new blog article may be created per execution');
+      record(acc, 'single_article_creation', 'fail', 'More than one blog_create change was proposed in a single draft');
+      return empty(draft, recommendation);
+    }
+    record(acc, 'single_article_creation', 'pass', 'Exactly one new article is proposed');
+
+    const change = blogCreateChanges[0]!;
+    const targetUrl = change.targetUrl;
+
+    if (!change.execution) {
+      block(acc, 'unsupported_kind', 'Outline-only blog_create drafts cannot be executed; regenerate the draft with approved article content');
+      record(acc, 'change_kind_supported', 'fail', 'Historical outline-only topical-authority recommendation is outside the executable scope');
+      return empty(draft, recommendation);
+    }
+    record(acc, 'change_kind_supported', 'pass', 'Proposed change is an executable blog article creation');
+    const exec = change.execution;
+
+    // Target URL must be a well-formed /blog/:slug/ URL on the configured
+    // origin, and its slug must match exec.slug exactly — never create a
+    // document whose slug disagrees with the URL the draft/report names.
+    let parsedOk = true;
+    let urlSlug: string | null = null;
+    try {
+      const parsed = new URL(targetUrl);
+      const base = new URL(seoConfig.baseUrl);
+      if (parsed.origin.toLowerCase() !== base.origin.toLowerCase()) parsedOk = false;
+      else {
+        const m = BLOG_PATH_PATTERN.exec(parsed.pathname);
+        urlSlug = m?.[1] ?? null;
+      }
+    } catch {
+      parsedOk = false;
+    }
+    const slugPattern = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+    if (!parsedOk || !urlSlug || urlSlug !== exec.slug || !slugPattern.test(exec.slug)) {
+      const message = `Target URL "${targetUrl}" is not a well-formed /blog/:slug/ URL matching the proposed slug "${exec.slug}"`;
+      block(acc, 'malformed_value', message, targetUrl);
+      record(acc, 'values_well_formed', 'fail', message, targetUrl);
+      return empty(draft, recommendation);
+    }
+
+    if (!exec.title.trim() || !exec.content.trim()) {
+      const message = 'Blog article creation requires a non-empty title (rendered as the H1) and content';
+      block(acc, 'malformed_value', message, targetUrl);
+      record(acc, 'values_well_formed', 'fail', message, targetUrl);
+      return empty(draft, recommendation);
+    }
+    record(acc, 'values_well_formed', 'pass', 'Slug/title/content are present and well-formed', targetUrl);
+
+    const htmlCheck = validateArticleHtml(exec.content);
+    if (!htmlCheck.ok) {
+      const isSafety = ['script_tag_present', 'inline_event_handler', 'javascript_uri', 'iframe_present', 'style_tag_present'].includes(
+        htmlCheck.reason,
+      );
+      const blockerCode: PreflightBlockerCode = isSafety ? 'unsafe_markup' : 'weak_structure';
+      const message = `Article content failed its safety/structure check (${htmlCheck.reason})`;
+      block(acc, blockerCode, message, targetUrl);
+      record(acc, isSafety ? 'markup_safe' : 'structure_reasonable', 'fail', message, targetUrl);
+      return empty(draft, recommendation);
+    }
+    record(acc, 'markup_safe', 'pass', 'No script/style/iframe/inline-event markup found', targetUrl);
+    record(acc, 'structure_reasonable', 'pass', 'Article has at least one heading and two paragraphs', targetUrl);
+
+    // Deterministic unsupported-claim guard: reject a small, explicit set of
+    // unverifiable superlative/marketing claims that have no place in
+    // grounded editorial content. Not a substitute for human review — a
+    // narrow, fail-closed safety net.
+    const UNSUPPORTED_CLAIM_PATTERNS = [
+      /best[\s-]?known/i,
+      /award[\s-]?winning/i,
+      /clinically\s+proven/i,
+      /scientifically\s+proven/i,
+      /#\s?1\b/i,
+      /guaranteed/i,
+      /india'?s\s+(best|boldest|finest|no\.?\s?1)/i,
+    ];
+    const foundClaim = UNSUPPORTED_CLAIM_PATTERNS.find((p) => p.test(exec.content) || p.test(exec.title));
+    if (foundClaim) {
+      const message = `Article content contains an unsupported/unverifiable claim matching ${foundClaim}`;
+      block(acc, 'unsupported_claim', message, targetUrl);
+      record(acc, 'structure_reasonable', 'fail', message, targetUrl);
+      return empty(draft, recommendation);
+    }
+
+    const links = extractLinks(exec.content);
+    if (!links) {
+      const message = 'Article content contains a malformed <a> tag (missing href, empty anchor, or nested markup in the anchor text)';
+      block(acc, 'unsafe_markup', message, targetUrl);
+      record(acc, 'markup_safe', 'fail', message, targetUrl);
+      return empty(draft, recommendation);
+    }
+
+    for (const link of links) {
+      if (!isInternalUrl(link.href, seoConfig.baseUrl)) {
+        const message = `Article links to an external or unrecognized host: ${link.href}`;
+        block(acc, 'external_target', message, targetUrl);
+        record(acc, 'links_internal_and_resolvable', 'fail', message, targetUrl);
+        return empty(draft, recommendation);
+      }
+      const resolvable = await isValidInternalLinkTarget(link.href, session);
+      if (!resolvable) {
+        const message = `Article links to "${link.href}", which does not resolve to an existing, indexable page`;
+        block(acc, 'target_not_found', message, targetUrl);
+        record(acc, 'links_internal_and_resolvable', 'fail', message, targetUrl);
+        return empty(draft, recommendation);
+      }
+    }
+    record(acc, 'links_internal_and_resolvable', 'pass', `All ${links.length} embedded link(s) are internal and resolve to existing pages`, targetUrl);
+
+    // No duplicate slug — checked against ANY status (draft or published),
+    // and re-checked inside the transaction immediately before Pass 2, which
+    // is this kind's entire stale-protection story (there is no existing
+    // live field to diverge from; the only thing that can go stale is
+    // "is this slug still free?").
+    const existingBySlug = await Blog.findOne({ slug: exec.slug }).session(session ?? null).exec();
+    if (existingBySlug) {
+      const message = `A blog post with slug "${exec.slug}" already exists`;
+      block(acc, 'slug_already_exists', message, targetUrl);
+      record(acc, 'slug_available', 'fail', message, targetUrl);
+      return empty(draft, recommendation);
+    }
+    record(acc, 'slug_available', 'pass', `Slug "${exec.slug}" is not already in use`, targetUrl);
+
+    // No duplicate/cannibalizing target: reject an exact (case-insensitive)
+    // title collision with any existing post — the only cannibalization
+    // signal deterministically detectable from existing blog titles/slugs.
+    const existingByTitle = await Blog.findOne({
+      title: { $regex: `^${exec.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' },
+    })
+      .session(session ?? null)
+      .exec();
+    if (existingByTitle) {
+      const message = `An existing blog post ("${existingByTitle.slug}") already has the exact same title`;
+      block(acc, 'cannibalizing_target', message, targetUrl);
+      record(acc, 'no_cannibalization', 'fail', message, targetUrl);
+      return empty(draft, recommendation);
+    }
+    record(acc, 'no_cannibalization', 'pass', 'No existing post has the exact same title', targetUrl);
+
+    acc.changedFields.push({ targetUrl, fields: ['blog_article'] });
+    warn(acc, 'content_requires_review', 'New blog article creation requires human editorial review before execution', targetUrl);
+
+    const prepared: PreparedExecutionTarget[] = [
+      {
+        targetType: 'blog_create',
+        targetUrl,
+        proposed: {
+          title: exec.title,
+          slug: exec.slug,
+          metaTitle: exec.metaTitle,
+          metaDescription: exec.metaDescription,
+          excerpt: exec.excerpt,
+          content: exec.content,
+          tags: exec.tags,
+          blogStatus: exec.status,
+        },
+      },
+    ];
 
     const result = finalize(acc, evaluatedAt);
     return {

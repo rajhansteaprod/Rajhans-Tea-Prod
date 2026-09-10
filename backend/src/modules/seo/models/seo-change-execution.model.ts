@@ -12,7 +12,7 @@ import mongoose, { Document, Schema } from 'mongoose';
  * a unique index on `draftId` is sufficient, on its own, to guarantee a draft
  * can never be successfully executed twice.
  */
-export type ExecutionTargetType = 'cms_page' | 'product' | 'blog';
+export type ExecutionTargetType = 'cms_page' | 'product' | 'blog' | 'blog_create';
 
 /** Only the whitelisted fields this phase may read or write. */
 export interface ExecutedFieldSnapshot {
@@ -22,7 +22,7 @@ export interface ExecutedFieldSnapshot {
   /** Phase 6.3A product-content execution. */
   description?: string;
 
-  /** Phase 6.4A blog internal-link execution: full Blog.content body. */
+  /** Phase 6.4A blog internal-link execution: full Blog.content body. Also reused by Phase 6.6A blog_create as the new article's full HTML. */
   content?: string;
   /** The link's destination URL — stored alongside `content` so verification
    * can check the live page without re-deriving it from the content diff. */
@@ -32,6 +32,13 @@ export interface ExecutedFieldSnapshot {
 
   /** Phase 6.5A FAQ schema execution: the exact FAQPage JSON-LD, serialized (see faq-schema.util.ts serializeFaqJsonLd). */
   faqSchema?: string;
+
+  /** Phase 6.6A blog_create execution — a brand-new Blog document's fields. `before` is always {} (nothing existed). */
+  title?: string;
+  slug?: string;
+  excerpt?: string;
+  tags?: string[];
+  blogStatus?: 'draft' | 'published';
 }
 
 /** One resolved CMS page within a (possibly multi-target) draft execution. */
@@ -111,6 +118,11 @@ const executedFieldSnapshotSchema = new Schema<ExecutedFieldSnapshot>(
     linkTargetUrl: { type: String },
     linkAnchorText: { type: String },
     faqSchema: { type: String },
+    title: { type: String },
+    slug: { type: String },
+    excerpt: { type: String },
+    tags: { type: [String] },
+    blogStatus: { type: String, enum: ['draft', 'published'] },
   },
   { _id: false },
 );
@@ -170,7 +182,7 @@ const seoChangeExecutionSchema = new Schema<ISeoChangeExecutionDoc>(
     draftId: { type: Schema.Types.ObjectId, ref: 'SeoChangeDraft', required: true },
     recommendationId: { type: Schema.Types.ObjectId, ref: 'SeoRecommendation', required: true, index: true },
     recommendationFingerprint: { type: String, required: true },
-    targetType: { type: String, enum: ['cms_page', 'product', 'blog'], required: true },
+    targetType: { type: String, enum: ['cms_page', 'product', 'blog', 'blog_create'], required: true },
     targets: { type: [executedTargetSchema], required: true },
     executorUserId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     executedAt: { type: Date, required: true },

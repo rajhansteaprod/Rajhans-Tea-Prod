@@ -18,6 +18,7 @@ import { fetchUrl } from './fetcher.service';
 import { parseHtml } from './parser.service';
 import { seoConfig } from '../seo.config';
 import { FaqItem } from './faq-schema.util';
+import { extractLinks } from './blog-content-safety.util';
 
 /**
  * Phase 5.4A — post-execution verification. Manually re-checks a SUCCESSFUL
@@ -708,6 +709,175 @@ async function verifyFaqSchemaTarget(target: ExecutedTarget): Promise<VerifiedTa
   };
 }
 
+/** Every `<h2>...</h2>`/`<h3>...</h3>`/`<p>...</p>` block's inner text, tags stripped, whitespace collapsed — used to confirm no major section is missing from the live page. */
+function extractTextSegments(html: string): string[] {
+  const segments: string[] = [];
+  const pattern = /<(h2|h3|p)\b[^>]*>([\s\S]*?)<\/\1>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = pattern.exec(html)) !== null) {
+    const text = m[2]!
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (text) segments.push(text);
+  }
+  return segments;
+}
+
+/**
+ * Phase 6.6A — verify a brand-new blog article execution against the LIVE,
+ * PUBLISHED, PRERENDERED page. DB/source-only success is never enough: this
+ * independently fetches the live URL and requires the rendered H1/title/meta
+ * description to match exactly, every approved paragraph/heading segment to
+ * be present in the page's visible text, every approved internal link to be
+ * present with its exact href/anchor, and the page to not be marked noindex.
+ */
+async function verifyBlogCreateTarget(target: ExecutedTarget): Promise<VerifiedTarget> {
+  const expectedTitle = target.after.title;
+  const expectedMetaTitle = target.after.metaTitle;
+  const expectedMetaDescription = target.after.metaDescription;
+  const expectedContent = target.after.content;
+  const expectedSlug = target.after.slug;
+
+  if (!expectedTitle || !expectedContent || !expectedSlug) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: emptyFetchInfo(target.targetUrl, 'execution_missing_blog_article_data'),
+      expected: {},
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: ['blog_article_data_missing'],
+    };
+  }
+
+  const requiredLinks = extractLinks(expectedContent) ?? [];
+  const expected: VerificationExpected = {
+    renderedTitle: expectedMetaTitle,
+    metaDescription: expectedMetaDescription,
+    h1: expectedTitle,
+    bodyExcerpts: extractTextSegments(expectedContent),
+    requiredLinks,
+  };
+
+  const blog = await Blog.findById(target.targetDocumentId).exec();
+  if (!blog || blog.status !== 'published') {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: emptyFetchInfo(target.targetUrl, !blog ? 'blog_missing' : 'blog_unpublished'),
+      expected,
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: [!blog ? 'blog_missing' : 'blog_unpublished'],
+    };
+  }
+  if (blog.slug !== expectedSlug || (blog.content ?? '') !== expectedContent) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: emptyFetchInfo(target.targetUrl, 'blog_article_drifted_since_execution'),
+      expected,
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: ['content_drift'],
+    };
+  }
+
+  const fetched = await fetchUrl(target.targetUrl);
+  const fetchInfo: VerificationFetchInfo = {
+    requestedUrl: fetched.requestedUrl,
+    finalUrl: fetched.finalUrl,
+    finalStatus: fetched.finalStatus,
+    redirectChain: fetched.redirectChain,
+    error: fetched.error,
+    transient: fetched.transient,
+  };
+
+  const fetchSucceeded = !fetched.transient && fetched.finalStatus === 200 && fetched.html !== null;
+  if (!fetchSucceeded) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: fetchInfo,
+      expected,
+      observed: {},
+      matches: {},
+      status: 'fetch_failed',
+      mismatchFields: [],
+    };
+  }
+
+  if (!matchesIntendedTarget(target.targetUrl, fetched.finalUrl)) {
+    return {
+      targetUrl: target.targetUrl,
+      targetDocumentId: target.targetDocumentId,
+      fetch: fetchInfo,
+      expected,
+      observed: {},
+      matches: {},
+      status: 'mismatch',
+      mismatchFields: ['redirected_to_different_page'],
+    };
+  }
+
+  const html = fetched.html as string;
+  const parsed = parseHtml(html, fetched.finalUrl, seoConfig.baseUrl);
+  const mismatchFields: string[] = [];
+
+  const observedH1 = parsed.h1[0] ?? null;
+  const titleOk = parsed.title === expectedMetaTitle;
+  if (!titleOk) mismatchFields.push('title');
+  const h1Ok = observedH1 === expectedTitle;
+  if (!h1Ok) mismatchFields.push('h1');
+  const descOk = normalizeForCompare(parsed.metaDescription) === normalizeForCompare(expectedMetaDescription);
+  if (!descOk) mismatchFields.push('metaDescription');
+
+  const normalizedBody = parsed.normalizedText;
+  const bodyOk = (expected.bodyExcerpts ?? []).every((segment) => normalizedBody.includes(segment));
+  if (!bodyOk) mismatchFields.push('body_missing_section');
+
+  const linksOk = requiredLinks.every((link) => {
+    const hrefVariants = [link.href, link.href.replace(/\/+$/, ''), `${link.href.replace(/\/+$/, '')}/`];
+    const anchorPattern = escapeRegExp(link.anchor);
+    return hrefVariants.some((href) =>
+      new RegExp(`<a\\b[^>]*\\bhref\\s*=\\s*"${escapeRegExp(href)}"[^>]*>\\s*${anchorPattern}\\s*<\\/a>`, 'i').test(html),
+    );
+  });
+  if (!linksOk) mismatchFields.push('links_missing');
+
+  const noindex = !!parsed.robotsMeta && /noindex/i.test(parsed.robotsMeta);
+  if (noindex) mismatchFields.push('page_noindex');
+
+  const observed: VerificationObserved = {
+    renderedTitle: parsed.title,
+    metaDescription: parsed.metaDescription,
+    h1: observedH1,
+    bodyPresent: bodyOk,
+    linksPresent: linksOk,
+  };
+
+  return {
+    targetUrl: target.targetUrl,
+    targetDocumentId: target.targetDocumentId,
+    fetch: fetchInfo,
+    expected,
+    observed,
+    matches: {
+      title: titleOk,
+      h1: h1Ok,
+      metaDescription: descOk,
+      body: bodyOk,
+      links: linksOk,
+    },
+    status: mismatchFields.length ? 'mismatch' : 'verified',
+    mismatchFields,
+  };
+}
+
 /**
  * A confirmed mismatch is stronger evidence than an inability to verify
  * another target, so mismatch outranks fetch_failed when both are present.
@@ -763,13 +933,15 @@ export async function verifyExecution(opts: {
 
   for (const target of execution.targets) {
     targets.push(
-      target.after.faqSchema !== undefined
-        ? await verifyFaqSchemaTarget(target)
-        : execution.targetType === 'product'
-          ? await verifyProductTarget(target)
-          : execution.targetType === 'blog'
-            ? await verifyBlogTarget(target)
-            : await verifyCmsPageTarget(target),
+      execution.targetType === 'blog_create'
+        ? await verifyBlogCreateTarget(target)
+        : target.after.faqSchema !== undefined
+          ? await verifyFaqSchemaTarget(target)
+          : execution.targetType === 'product'
+            ? await verifyProductTarget(target)
+            : execution.targetType === 'blog'
+              ? await verifyBlogTarget(target)
+              : await verifyCmsPageTarget(target),
     );
   }
   const status = aggregateStatus(targets);

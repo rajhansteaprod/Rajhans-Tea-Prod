@@ -16,6 +16,8 @@ interface Blog {
   tags: string[];
   publishedAt: string;
   createdAt: string;
+  metaTitle?: string;
+  metaDescription?: string;
 }
 
 @Component({
@@ -48,7 +50,7 @@ export class BlogDetailPageComponent implements OnInit {
     this.http.get<{ data: Blog }>(`${environment.apiUrl}/blog/${slug}`).subscribe({
       next: (res) => {
         this.blog.set(res.data);
-        this.titleService.setTitle(`${res.data.title} — Rajhans Tea Blog`);
+        this.titleService.setTitle(res.data.metaTitle || `${res.data.title} — Rajhans Tea Blog`);
         this.meta.updateTag({
           name: 'description',
           content: res.data.excerpt,

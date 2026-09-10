@@ -743,6 +743,9 @@ describe('evaluateExecutionPreflight — valid proposals', () => {
       pages: [{ metaTitle: 'Old Title', metaDescription: 'Untouched description.' }],
     });
     const { prepared } = await evaluate(draft);
+    if (prepared[0].targetType !== 'cms_page') {
+      throw new Error('Expected cms_page prepared target');
+    }
     expect(prepared[0].before).toEqual({ metaTitle: 'Old Title', metaDescription: 'Untouched description.' });
   });
 });

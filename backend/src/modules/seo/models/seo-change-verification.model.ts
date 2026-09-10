@@ -32,6 +32,10 @@ export interface VerificationExpected {
   linkAnchorText?: string;
   /** Phase 6.5A FAQ schema verification: the exact FAQPage JSON-LD execution wrote, serialized. */
   faqSchema?: string;
+  /** Phase 6.6A blog_create verification. */
+  h1?: string;
+  bodyExcerpts?: string[];
+  requiredLinks?: { href: string; anchor: string }[];
 }
 
 export interface VerificationObserved {
@@ -42,6 +46,9 @@ export interface VerificationObserved {
   linkPresent?: boolean | null;
   /** The single FAQPage JSON-LD block actually found in the live page's HTML, serialized. Null when none/ambiguous. */
   faqSchema?: string | null;
+  h1?: string | null;
+  bodyPresent?: boolean | null;
+  linksPresent?: boolean | null;
 }
 
 export interface VerificationMatches {
@@ -50,6 +57,9 @@ export interface VerificationMatches {
   description?: boolean;
   link?: boolean;
   faqSchema?: boolean;
+  h1?: boolean;
+  body?: boolean;
+  links?: boolean;
 }
 
 export interface VerifiedTarget {
@@ -100,6 +110,11 @@ const verificationExpectedSchema = new Schema<VerificationExpected>(
     linkTargetUrl: { type: String },
     linkAnchorText: { type: String },
     faqSchema: { type: String },
+    h1: { type: String },
+    bodyExcerpts: { type: [String] },
+    requiredLinks: {
+      type: [new Schema({ href: String, anchor: String }, { _id: false })],
+    },
   },
   { _id: false },
 );
@@ -111,6 +126,9 @@ const verificationObservedSchema = new Schema<VerificationObserved>(
     description: { type: String, default: undefined },
     linkPresent: { type: Boolean, default: undefined },
     faqSchema: { type: String, default: undefined },
+    h1: { type: String, default: undefined },
+    bodyPresent: { type: Boolean, default: undefined },
+    linksPresent: { type: Boolean, default: undefined },
   },
   { _id: false },
 );
@@ -122,6 +140,9 @@ const verificationMatchesSchema = new Schema<VerificationMatches>(
     description: { type: Boolean },
     link: { type: Boolean },
     faqSchema: { type: Boolean },
+    h1: { type: Boolean },
+    body: { type: Boolean },
+    links: { type: Boolean },
   },
   { _id: false },
 );

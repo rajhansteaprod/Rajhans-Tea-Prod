@@ -227,6 +227,56 @@ export async function executeApprovedChangeDraft(opts: {
         continue;
       }
 
+      if (p.targetType === 'blog_create') {
+        // Phase 6.6A — brand-new article. No existing document to
+        // compare-and-set against: the unique index on `slug` is the
+        // concurrency guarantee, and a duplicate-key error here (another
+        // execution claimed the slug between Pass 1 and this write) is
+        // surfaced as the same 'slug_already_exists'-flavoured rejection
+        // preflight would have given, never a raw Mongo error.
+        let createdBlog;
+        try {
+          createdBlog = await cmsService.createBlog(
+            {
+              title: p.proposed.title,
+              slug: p.proposed.slug,
+              metaTitle: p.proposed.metaTitle,
+              metaDescription: p.proposed.metaDescription,
+              excerpt: p.proposed.excerpt,
+              content: p.proposed.content,
+              tags: p.proposed.tags,
+              status: p.proposed.blogStatus,
+            },
+            executorUserId,
+            { session },
+          );
+        } catch (err) {
+          if (isDuplicateKeyError(err)) {
+            throw new ExecutionRejected('stale', `Blog slug "${p.proposed.slug}" was claimed by another execution before this one could commit`);
+          }
+          throw err;
+        }
+
+        targets.push({
+          targetUrl: p.targetUrl,
+          targetDocumentId: createdBlog._id as mongoose.Types.ObjectId,
+          before: {},
+          proposed: p.proposed,
+          after: {
+            title: createdBlog.title,
+            slug: createdBlog.slug,
+            metaTitle: createdBlog.metaTitle,
+            metaDescription: createdBlog.metaDescription,
+            excerpt: createdBlog.excerpt,
+            content: createdBlog.content,
+            tags: createdBlog.tags,
+            blogStatus: createdBlog.status,
+          },
+        });
+
+        continue;
+      }
+
       const updatedProduct =
         await Product.findOneAndUpdate(
           {
