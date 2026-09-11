@@ -178,6 +178,8 @@ export function toChangeDraftView(doc: ISeoChangeDraftDoc) {
     inputSnapshot: doc.inputSnapshot,
     proposedChanges: doc.proposedChanges,
     validation: doc.validation,
+    contentHash: doc.contentHash,
+    previewOnly: doc.previewOnly,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   };
