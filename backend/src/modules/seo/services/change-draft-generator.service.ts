@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { createHash } from 'crypto';
 import { SeoRecommendation, ISeoRecommendationDoc } from '../models/seo-recommendation.model';
 import {
   SeoChangeDraft,
@@ -65,9 +66,31 @@ export type GenerateDraftResult =
  * is not guaranteed globally unique once fingerprint discriminators are
  * involved — the same identity rule Phase 5.1 review already follows).
  */
+/**
+ * Deterministic content fingerprint of exactly what a human would review —
+ * the proposed changes themselves. Stable key order via JSON.stringify on a
+ * plain object built in a fixed shape (proposedChanges is already a plain,
+ * serializable array). Used to bind an approval to the EXACT draft content
+ * it was granted for (see recommendation.service.ts approveRecommendationForDraft).
+ */
+function computeDraftContentHash(proposedChanges: ProposedChange[]): string {
+  return createHash('sha256').update(JSON.stringify(proposedChanges)).digest('hex');
+}
+
 export async function generateChangeDraft(opts: {
   recommendationId: string;
   generatedBy: string;
+  /**
+   * Phase 6.7B — allows draft generation for a PENDING (not-yet-approved)
+   * recommendation, producing a persisted, human-reviewable PREVIEW draft.
+   * The draft is marked `previewOnly: true` purely for display; it is NOT
+   * executable regardless of this flag — evaluateExecutionPreflight still
+   * independently requires `recommendation.reviewStatus === 'approved'`
+   * (and, once bound, a matching reviewedDraftContentHash) before any
+   * execution, exactly as before. Defaults to false so every existing
+   * caller keeps the original "approved only" behavior unchanged.
+   */
+  allowPreview?: boolean;
 }): Promise<GenerateDraftResult> {
   if (!mongoose.isValidObjectId(opts.recommendationId)) {
     return { ok: false, error: 'not_found', message: 'Invalid recommendation id' };
@@ -77,7 +100,7 @@ export async function generateChangeDraft(opts: {
   if (rec.status !== 'open') {
     return { ok: false, error: 'not_open', message: 'Only an open recommendation can generate a draft' };
   }
-  if (rec.reviewStatus !== 'approved') {
+  if (rec.reviewStatus !== 'approved' && !opts.allowPreview) {
     return { ok: false, error: 'not_approved', message: 'Only an approved recommendation can generate a draft' };
   }
 
@@ -110,6 +133,8 @@ export async function generateChangeDraft(opts: {
     },
     proposedChanges,
     validation,
+    contentHash: computeDraftContentHash(proposedChanges),
+    previewOnly: rec.reviewStatus !== 'approved',
   });
 
   await SeoChangeDraft.updateMany(
@@ -714,7 +739,7 @@ async function buildBlogContentEvidence(rec: ISeoRecommendationDoc, entity: stri
   };
 }
 
-export async function generateBlogCreateChanges(
+async function generateBlogCreateChanges(
   rec: ISeoRecommendationDoc,
 ): Promise<GeneratedProposal> {
   const warnings: string[] = [];

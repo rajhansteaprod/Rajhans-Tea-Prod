@@ -126,4 +126,139 @@ describe('planArticleAngle', () => {
       expect(result.plan.allowedLinkTargets.some((l) => l.href.includes('garden-to-cup-tea-journey'))).toBe(true);
     }
   });
+
+  // ---------------------------------------------------------------------
+  // Part C — tightened internal-link planning: "mentions brewing" is not
+  // the same as "is a generic brewing guide".
+  // ---------------------------------------------------------------------
+
+  it('E: an Assam category/region article ("What Is Assam Tea?") is NOT classified as a generic Darjeeling brewing target', () => {
+    const evidence = makeEvidence({
+      existingCorpus: [
+        {
+          title: 'What Is Assam Tea?',
+          slug: 'assam-tea-guide',
+          url: `${BASE_URL}/blog/assam-tea-guide/`,
+          tags: ['assam', 'guide', 'tea-tips'],
+          topicSummary: 'Rajhans Royal Assam is a strong, malty black tea. Because of this strength, three-quarters of a spoon makes one full-strength cup.',
+          keyIntents: ['brewing'],
+        },
+      ],
+    });
+    const result = planArticleAngle(evidence);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.plan.allowedLinkTargets.some((l) => l.href.includes('assam-tea-guide'))).toBe(false);
+    }
+  });
+
+  it('F: a recipe article is NOT classified as a generic brewing target even though it mentions brewing terms', () => {
+    const evidence = makeEvidence({
+      existingCorpus: [
+        {
+          title: 'Chai Beyond Tradition: Modern Tea Recipes',
+          slug: 'modern-chai-recipes',
+          url: `${BASE_URL}/blog/modern-chai-recipes/`,
+          tags: ['recipes', 'modern', 'creative'],
+          topicSummary: 'Steep Rajhans Tea in cold water overnight for a smooth iced tea. Brew strong tea and combine with milk and spices.',
+          keyIntents: ['brewing', 'recipe'],
+        },
+      ],
+    });
+    const result = planArticleAngle(evidence);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.plan.allowedLinkTargets.some((l) => l.href.includes('modern-chai-recipes'))).toBe(false);
+      expect(result.plan.topicsToAvoid.some((t) => t.reason.includes('modern-chai-recipes') === false)).toBe(true);
+    }
+  });
+
+  it('G: a genuine, single-purpose generic brewing article IS allowed', () => {
+    const evidence = makeEvidence({
+      existingCorpus: [
+        {
+          title: 'The Art of Perfect Tea Brewing',
+          slug: 'art-of-perfect-tea-brewing',
+          url: `${BASE_URL}/blog/art-of-perfect-tea-brewing/`,
+          tags: ['brewing', 'tea-tips', 'guide'],
+          topicSummary: 'Making the perfect cup of tea is an art form. Water temperature is crucial.',
+          keyIntents: ['brewing'],
+        },
+      ],
+    });
+    const result = planArticleAngle(evidence);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.plan.allowedLinkTargets.some((l) => l.href.includes('art-of-perfect-tea-brewing'))).toBe(true);
+    }
+  });
+
+  it('H: a sourcing article for a DIFFERENT, unrelated entity is excluded (and never silently reused)', () => {
+    const evidence = makeEvidence({
+      existingCorpus: [
+        {
+          title: 'From Garden to Cup: Our Tea Journey',
+          slug: 'garden-to-cup-tea-journey',
+          url: `${BASE_URL}/blog/garden-to-cup-tea-journey/`,
+          tags: ['story', 'assam'],
+          topicSummary: 'Our tea comes from the finest CTC gardens in Assam. These gardens benefit from the region\'s unique climate.',
+          keyIntents: ['sourcing'],
+        },
+      ],
+    });
+    const result = planArticleAngle(evidence);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.plan.allowedLinkTargets.some((l) => l.href.includes('garden-to-cup-tea-journey'))).toBe(false);
+      expect(result.plan.topicsToAvoid.some((t) => t.topic.includes('sourcing') || t.topic.includes('estate'))).toBe(true);
+    }
+  });
+
+  it('I: no minimum link count is forced — a single genuine brewing link plus the product link is a valid, complete plan', () => {
+    const evidence = makeEvidence({
+      existingCorpus: [
+        {
+          title: 'The Art of Perfect Tea Brewing',
+          slug: 'art-of-perfect-tea-brewing',
+          url: `${BASE_URL}/blog/art-of-perfect-tea-brewing/`,
+          tags: ['brewing', 'tea-tips', 'guide'],
+          topicSummary: 'Making the perfect cup of tea is an art form.',
+          keyIntents: ['brewing'],
+        },
+        {
+          title: 'What Is Assam Tea?',
+          slug: 'assam-tea-guide',
+          url: `${BASE_URL}/blog/assam-tea-guide/`,
+          tags: ['assam', 'guide'],
+          topicSummary: 'Rajhans Royal Assam is a strong, malty black tea.',
+          keyIntents: ['brewing'],
+        },
+        {
+          title: 'Chai Beyond Tradition: Modern Tea Recipes',
+          slug: 'modern-chai-recipes',
+          url: `${BASE_URL}/blog/modern-chai-recipes/`,
+          tags: ['recipes'],
+          topicSummary: 'Creative ways to enjoy Rajhans Tea.',
+          keyIntents: ['brewing', 'recipe'],
+        },
+        {
+          title: 'From Garden to Cup: Our Tea Journey',
+          slug: 'garden-to-cup-tea-journey',
+          url: `${BASE_URL}/blog/garden-to-cup-tea-journey/`,
+          tags: ['story', 'assam'],
+          topicSummary: 'Our tea comes from the finest CTC gardens in Assam.',
+          keyIntents: ['sourcing'],
+        },
+      ],
+    });
+    const result = planArticleAngle(evidence);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Only the product page + the one genuine brewing guide — exactly
+      // the small, honest link universe Part C expects for Darjeeling.
+      expect(result.plan.allowedLinkTargets).toHaveLength(2);
+      expect(result.plan.allowedLinkTargets.some((l) => l.href.includes('rajhans-royal-darjeeling'))).toBe(true);
+      expect(result.plan.allowedLinkTargets.some((l) => l.href.includes('art-of-perfect-tea-brewing'))).toBe(true);
+    }
+  });
 });

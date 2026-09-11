@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { ArticlePlan, BlogContentEvidence, GroundedBlogDraft } from './blog-ai.types';
-import { BlogClaimVerificationResult } from './openai-seo-blog-claim-verifier.service';
+import { RepairGuidance } from './blog-repair-guidance';
 
 const MODEL = process.env.OPENAI_SEO_MODEL?.trim() || 'gpt-5.6-luna';
 
@@ -11,16 +11,18 @@ function getClient(): OpenAI {
 }
 
 /**
- * Phase 6.7A — repairs an article that failed independent verification.
- * Preserves supported content, removes/rewrites every flagged problem, and
- * is never asked to invent new ideas — mirrors
- * openai-seo-draft-repair.service.ts's contract exactly.
+ * Phase 6.7B — TARGETED repair, not a free rewrite. `guidance.fieldsToFix`
+ * is the exact, closed set of fields this pass may change; everything else
+ * is force-preserved from the original draft by the caller regardless of
+ * what this call returns (see blog-repair-guidance.ts mergeRepairedDraft) —
+ * so the model is told explicitly which fields NOT to bother touching, but
+ * the actual safety guarantee is enforced in code, not by the prompt alone.
  */
 export async function repairGroundedBlogDraft(opts: {
   evidence: BlogContentEvidence;
   plan: ArticlePlan;
   draft: GroundedBlogDraft;
-  verification: BlogClaimVerificationResult;
+  guidance: RepairGuidance;
 }): Promise<GroundedBlogDraft> {
   const client = getClient();
 
@@ -28,25 +30,34 @@ export async function repairGroundedBlogDraft(opts: {
     model: MODEL,
 
     instructions: `
-You are repairing a long-form article that failed independent factual verification.
+You are making a TARGETED repair to a long-form article that failed validation.
 
-You are NOT being asked to create new ideas.
+This is NOT a free rewrite. You are NOT being asked to create new ideas.
+
+fieldsToFix lists EXACTLY which fields need a change: ${opts.guidance.fieldsToFix.join(', ') || '(none — should not happen)'}.
+fieldsToPreserve lists fields that already passed validation and are UNRELATED
+to the detected problems: ${opts.guidance.fieldsToPreserve.join(', ')}.
 
 Your job:
-1. Preserve all useful, supported content.
-2. Remove or rewrite every rejected claim/implication/contradiction listed.
-3. Remove or replace every internal link flagged in internalLinkConcerns —
-   only hrefs in PLAN.allowedLinkTargets may remain.
-4. Remove any content flagged as a cannibalization concern — link to the
-   existing page instead of restating it, if that link is in
+1. Return ALL fields (title, slug, metaTitle, metaDescription, h1,
+   contentHtml, proposedLinks) — the full article contract.
+2. For every field in fieldsToPreserve, return it EXACTLY as it appears in
+   currentDraft, character-for-character. Do not "improve", shorten,
+   reword, or drop it — even if you think it could be better.
+3. For every field in fieldsToFix, make the MINIMAL change that resolves
+   the listed deterministicFailures/verifierFailures/repetitionNotes.
+   Preserve every other sentence/fact in that field that is NOT implicated.
+4. If a repetition note gives an exact over-repeated term and count, fix
+   THAT exact overuse — replace only the excess mentions with natural
+   alternatives ("the tea", "this tea", the region/category name), only
+   where it reads naturally. Never mechanically find-and-replace in a way
+   that makes a sentence awkward — rewrite the sentence instead if needed.
+5. Use ONLY the supplied EVIDENCE and PLAN. Do not introduce new topics,
+   benefits, occasions, comparisons, facts, or internal links outside
    PLAN.allowedLinkTargets.
-5. Use ONLY the supplied EVIDENCE and PLAN.
-6. Do not introduce new topics, benefits, occasions, comparisons, or facts.
-7. Keep the same overall structure (H1 outside the body; 3-6 h2 sections)
-   unless a section must be removed because it was entirely unsupported.
-8. Do not pad the copy merely to increase length.
-9. Return the FULL repaired article as structured JSON (same shape as the
-   original draft) — not just the changed parts.
+6. Do not pad the copy merely to increase length.
+7. Every one of title/slug/metaTitle/metaDescription/h1/contentHtml MUST be
+   present and non-empty in your response — never omit a field.
 
 Return JSON only.
     `.trim(),
@@ -55,14 +66,11 @@ Return JSON only.
       evidence: opts.evidence,
       plan: opts.plan,
       currentDraft: opts.draft,
-      verificationProblems: {
-        unsupportedClaims: opts.verification.unsupportedClaims,
-        questionableClaims: opts.verification.questionableClaims,
-        misleadingImplications: opts.verification.misleadingImplications,
-        contradictions: opts.verification.contradictions,
-        cannibalizationConcerns: opts.verification.cannibalizationConcerns,
-        internalLinkConcerns: opts.verification.internalLinkConcerns,
-      },
+      fieldsToFix: opts.guidance.fieldsToFix,
+      fieldsToPreserve: opts.guidance.fieldsToPreserve,
+      deterministicFailures: opts.guidance.deterministicFailures,
+      verifierFailures: opts.guidance.verifierFailures,
+      repetitionNotes: opts.guidance.repetitionNotes,
     }),
 
     text: {

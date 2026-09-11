@@ -89,7 +89,9 @@ export type PreflightBlockerCode =
   | 'unsafe_markup'
   | 'weak_structure'
   | 'cannibalizing_target'
-  | 'unsupported_claim';
+  | 'unsupported_claim'
+  // Phase 6.7B — preview-before-approval draft-binding.
+  | 'approval_draft_mismatch';
 
 /**
  * SEO quality findings. These NEVER block execution — they are judgement calls
@@ -140,7 +142,8 @@ export type PreflightCheckCode =
   | 'structure_reasonable'
   | 'links_internal_and_resolvable'
   | 'no_cannibalization'
-  | 'single_article_creation';
+  | 'single_article_creation'
+  | 'approval_matches_draft';
 
 export type PreflightCheckStatus = 'pass' | 'warn' | 'fail';
 export type PreflightRiskLevel = 'low' | 'medium' | 'high';
@@ -735,6 +738,27 @@ export async function evaluateExecutionPreflight(opts: {
     return empty(draft, recommendation);
   }
   record(acc, 'recommendation_approved', 'pass', 'Recommendation is approved');
+
+  // Phase 6.7B — if this recommendation was approved FOR a specific draft
+  // (see recommendation.service.ts approveRecommendationForDraft), that
+  // approval only ever covers the EXACT draft/content reviewed. A
+  // recommendation approved the original (draft-agnostic) way has
+  // reviewedDraftId === null and skips this check entirely — unchanged
+  // behavior for every pre-6.7B approval.
+  if (recommendation.reviewedDraftId) {
+    const boundToThisDraft =
+      String(recommendation.reviewedDraftId) === String(draft._id) && recommendation.reviewedDraftContentHash === draft.contentHash;
+    if (!boundToThisDraft) {
+      block(
+        acc,
+        'approval_draft_mismatch',
+        'This recommendation was approved for a different draft or a different version of this draft\'s content — the approval is stale; review and approve the current draft again',
+      );
+      record(acc, 'approval_matches_draft', 'fail', 'Approved draft id/content hash does not match the draft being executed');
+      return empty(draft, recommendation);
+    }
+    record(acc, 'approval_matches_draft', 'pass', 'Approval is bound to this exact draft and content hash');
+  }
 
   if (draft.recommendationFingerprint !== recommendation.fingerprint) {
     block(acc, 'fingerprint_mismatch', 'The recommendation has changed since this draft was generated');

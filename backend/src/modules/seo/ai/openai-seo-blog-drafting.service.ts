@@ -3,6 +3,7 @@ import { writeGroundedBlogDraft } from './openai-seo-blog-writer.service';
 import { verifyBlogDraftClaims, BlogClaimVerificationResult } from './openai-seo-blog-claim-verifier.service';
 import { repairGroundedBlogDraft } from './openai-seo-blog-repair.service';
 import { evaluateBlogDraftQuality } from './blog-draft-quality-rules';
+import { buildRepairGuidance, mergeRepairedDraft, missingRequiredFields } from './blog-repair-guidance';
 
 const MODEL = process.env.OPENAI_SEO_MODEL?.trim() || 'gpt-5.6-luna';
 
@@ -19,13 +20,14 @@ function verifyDraft(evidence: BlogContentEvidence, plan: ArticlePlan, draft: Gr
 }
 
 /**
- * Phase 6.7A — autonomous grounded long-form article drafting. Same
- * philosophy as generateGroundedProductDraft: writer → deterministic
- * validation → independent verifier → repair-if-needed → second verifier,
- * with a hard cap of 4 OpenAI calls total (writer + verifier, plus at most
- * one repair + second verifier). No uncontrolled retry loop: exactly one
- * repair attempt, ever — if the repaired draft still fails, no executable
- * draft is returned.
+ * Phase 6.7A/B — autonomous grounded long-form article drafting. Writer →
+ * deterministic validation → independent verifier → AT MOST ONE targeted
+ * repair → deterministic re-validation → second verifier. Hard cap of 4
+ * OpenAI calls total, enforced in code: exactly one writer call, one
+ * verifier call, and (only if needed) one repair call + one second verifier
+ * call — never a second writer attempt, never more than one repair. A
+ * repair that comes back with a missing required field is rejected
+ * immediately, without spending the second verifier call.
  */
 export async function generateGroundedBlogDraft(evidence: BlogContentEvidence, plan: ArticlePlan): Promise<GroundedBlogDraftResult> {
   let openaiCallCount = 0;
@@ -66,11 +68,40 @@ export async function generateGroundedBlogDraft(evidence: BlogContentEvidence, p
       };
     }
 
-    // ---- Repair path (at most once) ----
-    const repaired = await repairGroundedBlogDraft({ evidence, plan, draft, verification });
+    // ---- Repair path (at most once, targeted, field-preserving) ----
+    const guidance = buildRepairGuidance({
+      draft,
+      productName: evidence.product?.name ?? null,
+      deterministicErrors: firstDetErrors,
+      verification,
+    });
+
+    const repairedRaw = await repairGroundedBlogDraft({ evidence, plan, draft, guidance });
     openaiCallCount++;
 
-    if (repaired.status === 'insufficient_evidence' || !repaired.contentHtml || !repaired.title || !repaired.slug || !repaired.h1) {
+    if (repairedRaw.status === 'insufficient_evidence') {
+      return {
+        ok: false,
+        provider: 'openai',
+        model: MODEL,
+        evidence,
+        plan,
+        output: repairedRaw,
+        disposition: 'rejected',
+        error: 'Repair judged the article could not be sufficiently grounded',
+        openaiCallCount,
+      };
+    }
+
+    // Force-preserve every field NOT implicated by the detected failures —
+    // a repair pass fixing only the body can never silently drop/alter
+    // metaTitle, metaDescription, title, slug, or h1.
+    const repaired = mergeRepairedDraft(draft, repairedRaw, guidance);
+
+    // Reject incomplete repair output immediately — never spend the second
+    // verifier call on a draft that's already missing a required field.
+    const missing = missingRequiredFields(repaired);
+    if (missing.length) {
       return {
         ok: false,
         provider: 'openai',
@@ -79,7 +110,7 @@ export async function generateGroundedBlogDraft(evidence: BlogContentEvidence, p
         plan,
         output: repaired,
         disposition: 'rejected',
-        error: 'Repair could not produce a sufficiently grounded article',
+        error: `Repair output is missing required field(s): ${missing.join(', ')}`,
         openaiCallCount,
       };
     }
@@ -111,8 +142,9 @@ export async function generateGroundedBlogDraft(evidence: BlogContentEvidence, p
         ...secondVerification.cannibalizationConcerns,
         ...secondVerification.internalLinkConcerns,
       ];
-      // No uncontrolled retry loop — exactly one repair attempt. Still not
-      // grounded after repair ⇒ no executable draft is ever returned.
+      // No uncontrolled retry loop — exactly one repair attempt, ever. Still
+      // not grounded after repair ⇒ no executable draft is ever returned,
+      // and no second writer attempt is ever started.
       return {
         ok: false,
         provider: 'openai',
@@ -136,7 +168,7 @@ export async function generateGroundedBlogDraft(evidence: BlogContentEvidence, p
       output: {
         ...repaired,
         unsupportedClaims: [],
-        notes: [...repaired.notes, ...secondVerification.notes, 'Initial draft required repair; repaired article passed independent factual verification.'],
+        notes: [...repaired.notes, ...secondVerification.notes, 'Initial draft required a targeted repair; repaired article passed independent factual verification.'],
       },
       openaiCallCount,
     };

@@ -49,6 +49,21 @@ export interface ISeoRecommendationDoc extends Document {
   reviewedAt: Date | null;
   reviewedBy: mongoose.Types.ObjectId | null;
 
+  /**
+   * Phase 6.7B preview-before-approval lifecycle. When approval was granted
+   * FOR a specific, already-generated draft (see
+   * recommendation.service.ts approveRecommendationForDraft), these pin
+   * exactly which draft and which content hash of that draft were reviewed.
+   * Preflight requires the draft being executed to match BOTH, so a draft
+   * regenerated after approval (different AI wording, same recommendation)
+   * can never execute under a stale approval — it fails closed and requires
+   * a fresh review. Null for every recommendation approved the ORIGINAL way
+   * (not bound to a specific draft) — preflight skips this check entirely
+   * in that case, preserving existing behavior exactly.
+   */
+  reviewedDraftId: mongoose.Types.ObjectId | null;
+  reviewedDraftContentHash: string | null;
+
   firstSeenRunId: mongoose.Types.ObjectId;
   lastSeenRunId: mongoose.Types.ObjectId;
   resolvedRunId: mongoose.Types.ObjectId | null;
@@ -96,6 +111,8 @@ const seoRecommendationSchema = new Schema<ISeoRecommendationDoc>(
     reviewNote: { type: String, default: null, maxlength: 5000 },
     reviewedAt: { type: Date, default: null },
     reviewedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    reviewedDraftId: { type: Schema.Types.ObjectId, ref: 'SeoChangeDraft', default: null },
+    reviewedDraftContentHash: { type: String, default: null },
 
     firstSeenRunId: { type: Schema.Types.ObjectId, ref: 'SeoAuditRun', required: true },
     lastSeenRunId: { type: Schema.Types.ObjectId, ref: 'SeoAuditRun', required: true },

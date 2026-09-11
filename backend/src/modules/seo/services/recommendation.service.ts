@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { SeoRecommendation, ISeoRecommendationDoc } from '../models/seo-recommendation.model';
+import { SeoChangeDraft } from '../models/seo-change-draft.model';
 import { SeoAuditRun } from '../models/seo-audit-run.model';
 import { DetectedIssue, LinkResolution, PageObservation, RecommendationPriority } from '../seo.types';
 import { fingerprint } from '../seo.util';
@@ -46,15 +47,62 @@ export async function updateRecommendationReview(opts: {
     rec.reviewNote = null;
     rec.reviewedAt = null;
     rec.reviewedBy = null;
+    // Any previous draft-bound approval is void the moment review is reset.
+    rec.reviewedDraftId = null;
+    rec.reviewedDraftContentHash = null;
   } else {
     rec.reviewStatus = opts.reviewStatus;
     rec.reviewNote = opts.reviewNote?.trim() || null;
     rec.reviewedAt = new Date();
     rec.reviewedBy = new mongoose.Types.ObjectId(opts.reviewedBy);
+    // This is the ORIGINAL (not draft-bound) review path — never touches a
+    // specific draft, so any prior draft-bound approval no longer applies.
+    rec.reviewedDraftId = null;
+    rec.reviewedDraftContentHash = null;
   }
 
   await rec.save();
   return rec;
+}
+
+/**
+ * Phase 6.7B — approve a recommendation FOR one specific, already-generated
+ * draft (as opposed to updateRecommendationReview's original, draft-agnostic
+ * approval). Records the draft's own id and content hash on the
+ * recommendation, so preflight can require an EXACT match: if a new draft is
+ * generated afterward (different AI wording), this approval does not carry
+ * over to it — the recommendation must be reviewed again.
+ */
+export async function approveRecommendationForDraft(opts: {
+  recommendationId: string;
+  draftId: string;
+  reviewedBy: string;
+  reviewNote?: string | null;
+}): Promise<{ ok: true; recommendation: ISeoRecommendationDoc } | { ok: false; error: 'not_found' | 'draft_not_found' | 'draft_mismatch' }> {
+  if (!mongoose.isValidObjectId(opts.recommendationId) || !mongoose.isValidObjectId(opts.draftId)) {
+    return { ok: false, error: 'not_found' };
+  }
+
+  const rec = await SeoRecommendation.findOne({ _id: opts.recommendationId, status: 'open' }).exec();
+  if (!rec) return { ok: false, error: 'not_found' };
+
+  const draft = await SeoChangeDraft.findById(opts.draftId).exec();
+  if (!draft || String(draft.recommendationId) !== String(rec._id) || draft.status !== 'draft') {
+    return { ok: false, error: 'draft_not_found' };
+  }
+  if (!draft.contentHash) {
+    return { ok: false, error: 'draft_mismatch' };
+  }
+
+  rec.reviewStatus = 'approved';
+  rec.reviewNote = opts.reviewNote?.trim() || null;
+  rec.reviewedAt = new Date();
+  rec.reviewedBy = new mongoose.Types.ObjectId(opts.reviewedBy);
+  rec.reviewedDraftId = draft._id as mongoose.Types.ObjectId;
+  rec.reviewedDraftContentHash = draft.contentHash;
+
+  await rec.save();
+  return { ok: true, recommendation: rec };
 }
 
 /**

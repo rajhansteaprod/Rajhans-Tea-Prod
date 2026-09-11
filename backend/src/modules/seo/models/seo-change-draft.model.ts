@@ -171,6 +171,26 @@ export interface ISeoChangeDraftDoc extends Document {
   inputSnapshot: Record<string, unknown>;
   proposedChanges: ProposedChange[];
   validation: ChangeDraftValidation;
+  /**
+   * Phase 6.7B preview-before-approval lifecycle. Deterministic hash of
+   * `proposedChanges` (see change-draft-generator.service.ts
+   * computeDraftContentHash) — the immutable fingerprint of exactly what a
+   * human reviewed. An approval that binds to a specific draft
+   * (SeoRecommendation.reviewedDraftContentHash) is compared against THIS
+   * value at preflight time, so a draft regenerated after approval (with
+   * different AI wording) can never silently execute under an old approval.
+   */
+  contentHash: string;
+  /**
+   * True when this draft was generated while its recommendation was still
+   * `pending` (or `needs_changes`) — i.e. a human-reviewable PREVIEW, not
+   * yet eligible for execution under any circumstance. Execution eligibility
+   * is still governed entirely by the recommendation's live reviewStatus at
+   * preflight time (this flag is informational/display only — it does not
+   * by itself gate anything, so a later approval of the SAME draft correctly
+   * makes it executable without needing to mutate this field).
+   */
+  previewOnly: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -193,6 +213,8 @@ const seoChangeDraftSchema = new Schema<ISeoChangeDraftDoc>(
       warnings: { type: [String], default: [] },
       errors: { type: [String], default: [] },
     },
+    contentHash: { type: String, default: '' },
+    previewOnly: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

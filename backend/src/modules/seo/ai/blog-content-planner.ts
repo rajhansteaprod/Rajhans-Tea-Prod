@@ -9,6 +9,17 @@ import { ArticlePlan, ArticlePlanResult, BlogContentEvidence, ProposedInternalLi
  * change-draft-generator.service.ts), so the plan can be fully explained
  * without a network call.
  */
+/**
+ * True for a title shaped like this system's OWN region/category-guide
+ * template ("What Is X Tea?") — a self-consistent, deterministic signal
+ * that a post's real identity is "the guide for entity X", not a generic
+ * cross-entity resource, regardless of what topic words its body happens
+ * to also touch on.
+ */
+function isRegionOrCategoryGuideTitle(title: string): boolean {
+  return /^what is .+ tea\??$/i.test(title.trim());
+}
+
 export function planArticleAngle(evidence: BlogContentEvidence): ArticlePlanResult {
   const details: string[] = [];
   const entity = evidence.opportunity.entity?.trim();
@@ -61,10 +72,17 @@ export function planArticleAngle(evidence: BlogContentEvidence): ArticlePlanResu
     const postMentionsEntity = post.topicSummary.toLowerCase().includes(entityLower) || post.title.toLowerCase().includes(entityLower);
 
     if (post.keyIntents.includes('brewing')) {
-      // Generic brewing mechanics content (temperature/steeping/ratio) is
-      // safe to link from ANY region guide as long as it doesn't itself
-      // claim to be about a different region.
-      if (!postMentionsEntity) {
+      // Phase 6.7B — "mentions brewing" is NOT the same as "IS a generic
+      // brewing guide". A post whose PRIMARY purpose is genuinely brewing
+      // mechanics (water temperature, steeping, ratio) — and NOTHING else,
+      // and which isn't itself a region/category guide for a different
+      // entity — is safe to link from any region guide. Everything else
+      // that merely mentions brewing terms (a recipe post, another
+      // region's own "What Is X Tea?" guide) is excluded: it would either
+      // misdirect the reader to unrelated content or implicitly borrow
+      // another entity's identity for this one.
+      const isPrimaryBrewingGuide = post.keyIntents.length === 1 && post.keyIntents[0] === 'brewing' && !isRegionOrCategoryGuideTitle(post.title);
+      if (isPrimaryBrewingGuide && !postMentionsEntity) {
         addLink(post.url, 'brewing guide');
       }
       topicsToAvoid.push({

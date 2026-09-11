@@ -11,6 +11,10 @@ import { validateArticleHtml, extractLinks, isInternalUrl, UNSUPPORTED_CLAIM_PAT
  * first-pass draft and any AI-repaired draft.
  */
 
+/** Repetition thresholds — the DETERMINISTIC gate's final authority. Exported so repair guidance can cite the exact permitted count; never relaxed to make an article pass (Part B). */
+export const MAX_PRODUCT_NAME_MENTIONS = 4;
+export const MAX_BRAND_MENTIONS = 6;
+
 const GENERIC_FILLER_PHRASES = [
   'premium quality',
   'perfect choice',
@@ -150,10 +154,10 @@ export function evaluateBlogDraftQuality(evidence: BlogContentEvidence, plan: Ar
   // 7. Excessive product/brand-name repetition.
   if (evidence.product) {
     const nameCount = countOccurrences(plainBody, evidence.product.name);
-    if (nameCount > 4) errors.push(`Product name repeated ${nameCount} times — should appear naturally, not mechanically`);
+    if (nameCount > MAX_PRODUCT_NAME_MENTIONS) errors.push(`Product name repeated ${nameCount} times — should appear naturally, not mechanically`);
   }
   const brandCount = countOccurrences(plainBody, 'Rajhans');
-  if (brandCount > 6) errors.push(`"Rajhans" repeated ${brandCount} times — excessive brand-name repetition`);
+  if (brandCount > MAX_BRAND_MENTIONS) errors.push(`"Rajhans" repeated ${brandCount} times — excessive brand-name repetition`);
 
   // 8. Generic SEO filler not grounded in evidence.
   const lowerBody = plainBody.toLowerCase();
