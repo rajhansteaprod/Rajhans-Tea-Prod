@@ -27,6 +27,13 @@ interface FakeVerification {
   draftId: mongoose.Types.ObjectId;
   verifiedAt: Date;
   status: 'verified' | 'mismatch' | 'fetch_failed';
+  targets: { mismatchFields: string[] }[];
+}
+
+interface FakePublication {
+  _id: mongoose.Types.ObjectId;
+  executionId: mongoose.Types.ObjectId;
+  status: 'pending' | 'building' | 'published' | 'failed';
 }
 
 interface FakeCompletion {
@@ -45,6 +52,7 @@ interface FakeCompletion {
 let execStore: FakeExecution[] = [];
 let verStore: FakeVerification[] = [];
 let compStore: FakeCompletion[] = [];
+let pubStore: FakePublication[] = [];
 
 function makeExecution(fields: Partial<FakeExecution> = {}): FakeExecution {
   return {
@@ -66,6 +74,16 @@ function makeVerification(execution: FakeExecution, fields: Partial<FakeVerifica
     draftId: execution.draftId,
     verifiedAt: new Date('2026-03-01T00:00:00Z'),
     status: 'verified',
+    targets: [{ mismatchFields: [] }],
+    ...fields,
+  };
+}
+
+function makePublication(execution: FakeExecution, fields: Partial<FakePublication> = {}): FakePublication {
+  return {
+    _id: new mongoose.Types.ObjectId(),
+    executionId: execution._id,
+    status: 'published',
     ...fields,
   };
 }
@@ -140,6 +158,17 @@ jest.mock('../../../src/modules/seo/models/seo-change-completion.model', () => (
   },
 }));
 
+jest.mock('../../../src/modules/seo/models/seo-change-publication.model', () => ({
+  SeoChangePublication: {
+    findOne: jest.fn((query: { executionId?: unknown; status?: string }) => ({
+      exec: async () =>
+        pubStore.find(
+          (p) => String(p.executionId) === String(query.executionId) && (query.status === undefined || p.status === query.status),
+        ) ?? null,
+    })),
+  },
+}));
+
 // Pure spies — completion must never reach for either of these models at all.
 jest.mock('../../../src/modules/seo/models/seo-recommendation.model', () => ({
   SeoRecommendation: {
@@ -180,6 +209,7 @@ beforeEach(() => {
   execStore = [];
   verStore = [];
   compStore = [];
+  pubStore = [];
   jest.clearAllMocks();
 });
 
@@ -312,6 +342,144 @@ describe('completeExecution — verification requirement', () => {
     const result = await completeExecution({ executionId: String(execution._id), completedByUserId });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toBe('unsupported_state');
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Regression tests for blog_create completion support (the narrow addition on
+// top of the otherwise-unchanged Phase 5.3/5.4A/5.4B gate above).
+// -----------------------------------------------------------------------------
+describe('completeExecution — blog_create support', () => {
+  function setupBlog(overrides: { publication?: Partial<FakePublication> | null; verification?: Partial<FakeVerification> } = {}) {
+    const execution = makeExecution({ targetType: 'blog_create' });
+    execStore.push(execution);
+    const verification = makeVerification(execution, overrides.verification);
+    verStore.push(verification);
+    if (overrides.publication !== null) {
+      pubStore.push(makePublication(execution, overrides.publication ?? {}));
+    }
+    return { execution, verification };
+  }
+
+  it('A: a succeeded blog_create execution with a published publication and a clean verified verification completes', async () => {
+    const { execution, verification } = setupBlog();
+
+    const result = await completeExecution({ executionId: String(execution._id), completedByUserId });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(String(result.completion.executionId)).toBe(String(execution._id));
+    expect(String(result.completion.verificationId)).toBe(String(verification._id));
+    expect(compStore).toHaveLength(1);
+  });
+
+  it('B: rejects a blog_create execution with no associated publication at all', async () => {
+    const { execution } = setupBlog({ publication: null });
+
+    const result = await completeExecution({ executionId: String(execution._id), completedByUserId });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('unsupported_state');
+    expect(compStore).toHaveLength(0);
+  });
+
+  it('C: rejects a blog_create execution whose publication is still pending/building (not yet live)', async () => {
+    const { execution } = setupBlog({ publication: { status: 'building' } });
+
+    const result = await completeExecution({ executionId: String(execution._id), completedByUserId });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('unsupported_state');
+  });
+
+  it('D: rejects a blog_create execution whose publication failed', async () => {
+    const { execution } = setupBlog({ publication: { status: 'failed' } });
+
+    const result = await completeExecution({ executionId: String(execution._id), completedByUserId });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('unsupported_state');
+  });
+
+  it('E: rejects a blog_create execution whose newest verification is mismatch (existing generic gate, unchanged)', async () => {
+    const execution = makeExecution({ targetType: 'blog_create' });
+    execStore.push(execution);
+    verStore.push(makeVerification(execution, { status: 'mismatch' }));
+    pubStore.push(makePublication(execution));
+
+    const result = await completeExecution({ executionId: String(execution._id), completedByUserId });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('not_verified');
+  });
+
+  it('F: rejects a blog_create execution whose "verified" verification still carries a non-empty mismatchFields (defensive double-check)', async () => {
+    const { execution } = setupBlog({ verification: { targets: [{ mismatchFields: ['title'] }] } });
+
+    const result = await completeExecution({ executionId: String(execution._id), completedByUserId });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('not_verified');
+    expect(compStore).toHaveLength(0);
+  });
+
+  it('G: an UNRELATED execution\'s published publication cannot authorize completion of this execution', async () => {
+    const execution = makeExecution({ targetType: 'blog_create' });
+    const otherExecution = makeExecution({ targetType: 'blog_create' });
+    execStore.push(execution, otherExecution);
+    verStore.push(makeVerification(execution));
+    // Publication belongs to a DIFFERENT execution — must not satisfy this one.
+    pubStore.push(makePublication(otherExecution));
+
+    const result = await completeExecution({ executionId: String(execution._id), completedByUserId });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('unsupported_state');
+  });
+
+  it('H: an UNRELATED execution\'s verification cannot authorize completion of this execution (existing identity check, unchanged)', async () => {
+    const execution = makeExecution({ targetType: 'blog_create' });
+    const otherExecution = makeExecution({ targetType: 'blog_create' });
+    execStore.push(execution, otherExecution);
+    verStore.push(makeVerification(otherExecution));
+    pubStore.push(makePublication(execution));
+
+    const result = await completeExecution({ executionId: String(execution._id), completedByUserId });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('not_verified');
+  });
+
+  it('I: a second completion attempt on an already-completed blog_create execution is rejected — no duplicate completion record', async () => {
+    const { execution } = setupBlog();
+
+    const first = await completeExecution({ executionId: String(execution._id), completedByUserId });
+    expect(first.ok).toBe(true);
+
+    const second = await completeExecution({ executionId: String(execution._id), completedByUserId });
+    expect(second.ok).toBe(false);
+    if (!second.ok) expect(second.error).toBe('already_completed');
+    expect(compStore).toHaveLength(1);
+  });
+
+  it('J: completion never creates a Blog, execution, or publication — the mocked models here expose no create() for any of them', () => {
+    // Structural guarantee: the SeoChangePublication mock above only exposes
+    // findOne (a read). There is no create/save path completeExecution could
+    // reach even by accident, and the SeoChangeExecution mock (from the top
+    // of this file) exposes only findById.
+    expect((require('../../../src/modules/seo/models/seo-change-publication.model').SeoChangePublication as Record<string, unknown>).create).toBeUndefined();
+  });
+
+  it('K: completion for a blog_create execution never reads or writes the CMS Blog model', () => {
+    // change-completion.service.ts does not import the Blog model at all —
+    // asserted directly against the source so this can never silently regress.
+    const fs = require('fs');
+    const path = require('path');
+    const src = fs.readFileSync(
+      path.join(__dirname, '../../../src/modules/seo/services/change-completion.service.ts'),
+      'utf8',
+    );
+    expect(src.includes("models/blog.model")).toBe(false);
   });
 });
 

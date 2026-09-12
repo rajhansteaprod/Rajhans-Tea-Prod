@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { SeoChangeExecution, ISeoChangeExecutionDoc } from '../models/seo-change-execution.model';
 import { SeoChangeVerification, ISeoChangeVerificationDoc } from '../models/seo-change-verification.model';
 import { SeoChangeCompletion, ISeoChangeCompletionDoc } from '../models/seo-change-completion.model';
+import { SeoChangePublication } from '../models/seo-change-publication.model';
 
 /**
  * Phase 5.4B — human completion. Records that an admin intentionally marked one
@@ -68,7 +69,8 @@ export async function completeExecution(opts: {
   }
   if (
     execution.targetType !== 'cms_page' &&
-    execution.targetType !== 'product'
+    execution.targetType !== 'product' &&
+    execution.targetType !== 'blog_create'
   ) {
     return {
       ok: false,
@@ -114,6 +116,36 @@ export async function completeExecution(opts: {
       error: 'unsupported_state',
       message: 'The verification for this execution does not match its recommendation/draft',
     };
+  }
+
+  // blog_create additionally proves a LIVE article: the execution's CMS write
+  // is only a DB mutation — nothing is publicly reachable until the separate
+  // publication pipeline (see change-publication.service.ts) has actually
+  // rebuilt/deployed the frontend. Completion must never mark a blog_create
+  // "done" while that deploy never happened or the page is known-mismatched.
+  if (execution.targetType === 'blog_create') {
+    const publication = await SeoChangePublication.findOne({ executionId: execution._id, status: 'published' }).exec();
+    if (!publication) {
+      return {
+        ok: false,
+        error: 'unsupported_state',
+        message: 'This blog_create execution has no publication in a published state — the article is not live',
+      };
+    }
+
+    // Belt-and-suspenders: status:'verified' already implies every target is
+    // individually 'verified' (see change-verification.service.ts's status
+    // aggregation), which in turn implies an empty mismatchFields — but this
+    // is explicitly re-checked rather than assumed, since completion is the
+    // one irreversible-feeling human decision in this lifecycle.
+    const hasMismatch = verification.targets.some((target) => target.mismatchFields.length > 0);
+    if (hasMismatch) {
+      return {
+        ok: false,
+        error: 'not_verified',
+        message: 'The verification for this execution still has mismatchFields and cannot authorize completion',
+      };
+    }
   }
 
   try {
