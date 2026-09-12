@@ -6,6 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/source-revision-guard.sh"
 # shellcheck source=lib/homepage-smoke-check.sh
 source "$SCRIPT_DIR/lib/homepage-smoke-check.sh"
+# shellcheck source=lib/prerender-manifest-refresh.sh
+source "$SCRIPT_DIR/lib/prerender-manifest-refresh.sh"
 
 WORKTREE="${SEO_WORKTREE:-/tmp/seo-phase-4b-deploy}"
 PROD_ROOT="${SEO_PROD_ROOT:-/root/Rajhans-Tea-Prod}"
@@ -119,16 +121,22 @@ if not publication:
     print("")
     print("")
     print("")
+    print("")
+    print("")
 else:
     print(publication["id"])
     print(publication["executionId"])
     print(publication["requestedByUserId"])
+    print(payload.get("targetType") or "")
+    print(payload.get("expectedBlogSlug") or "")
 PY
 )
 
 PUBLICATION_ID="${CLAIM_FIELDS[0]:-}"
 EXECUTION_ID="${CLAIM_FIELDS[1]:-}"
 REQUESTED_BY="${CLAIM_FIELDS[2]:-}"
+TARGET_TYPE="${CLAIM_FIELDS[3]:-}"
+EXPECTED_BLOG_SLUG="${CLAIM_FIELDS[4]:-}"
 
 if [[ -z "$PUBLICATION_ID" ]]; then
   echo "[seo-publication] no pending publication"
@@ -140,6 +148,13 @@ OVERRIDE="/tmp/seo-publication-${PUBLICATION_ID}.override.yml"
 ROLLBACK_OVERRIDE="/tmp/seo-publication-${PUBLICATION_ID}.rollback.yml"
 
 PREVIOUS_IMAGE="$(docker inspect tea-frontend --format '{{.Config.Image}}')"
+
+# Default build context is the approved worktree itself, exactly as before —
+# unchanged for metadata/product/cms_page publications. A blog_create
+# publication switches this to an ephemeral copy further below so the
+# regenerated prerender manifest never touches the approved worktree.
+BUILD_CONTEXT="$WORKTREE"
+EPHEMERAL_BUILD_CONTEXT=0
 
 CURRENT_STEP="claimed"
 SWAP_ATTEMPTED=0
@@ -179,14 +194,38 @@ EOF
       --message "$message" >/dev/null 2>&1 || true
   fi
 
+  if [[ "$EPHEMERAL_BUILD_CONTEXT" == "1" ]]; then
+    rm -rf "$BUILD_CONTEXT" 2>/dev/null || true
+  fi
+
   exit "$rc"
 }
 
 trap fail_handler ERR
 
-echo "[seo-publication] publication=$PUBLICATION_ID execution=$EXECUTION_ID"
+echo "[seo-publication] publication=$PUBLICATION_ID execution=$EXECUTION_ID targetType=${TARGET_TYPE:-<unknown>}"
 echo "[seo-publication] previous frontend=$PREVIOUS_IMAGE"
 echo "[seo-publication] candidate frontend=$IMAGE"
+
+# ---------------------------------------------------------------------
+# For a first-time blog_create publication: the committed prerender manifest
+# predates this brand-new Blog, so it must be regenerated from the live
+# DB/API state and proven to contain the new slug BEFORE any build — done in
+# an ephemeral copy of the approved worktree's tree so the worktree itself
+# (and its source-revision guard guarantee) is never touched.
+# ---------------------------------------------------------------------
+if [[ "$TARGET_TYPE" == "blog_create" ]]; then
+  if [[ -z "$EXPECTED_BLOG_SLUG" ]]; then
+    echo "[seo-publication] REJECTED: blog_create publication but no expected slug was reported" >&2
+    false
+  fi
+
+  CURRENT_STEP="manifest_refresh"
+  BUILD_CONTEXT="$(prepare_ephemeral_build_context "$WORKTREE" "pub-${PUBLICATION_ID}")"
+  EPHEMERAL_BUILD_CONTEXT=1
+
+  refresh_and_validate_prerender_manifest "$BUILD_CONTEXT" "$EXPECTED_BLOG_SLUG" "$WORKTREE/frontend/src/prerender-routes.json"
+fi
 
 # ---------------------------------------------------------------------
 # BUILD.
@@ -197,9 +236,9 @@ CURRENT_STEP="frontend_build"
 
 docker build \
   --build-arg SEO_CONTENT_BUILD_REVISION="$PUBLICATION_ID" \
-  -f "$WORKTREE/frontend/Dockerfile" \
+  -f "$BUILD_CONTEXT/frontend/Dockerfile" \
   -t "$IMAGE" \
-  "$WORKTREE"
+  "$BUILD_CONTEXT"
 
 # ---------------------------------------------------------------------
 # DEPLOY ONLY THE FRONTEND.
@@ -273,6 +312,10 @@ VERIFY_RC=$?
 set -e
 
 echo "[seo-publication] verification=$VERIFY_RAW"
+
+if [[ "$EPHEMERAL_BUILD_CONTEXT" == "1" ]]; then
+  rm -rf "$BUILD_CONTEXT"
+fi
 
 if [[ "$VERIFY_RC" != "0" ]]; then
   echo "[seo-publication] frontend published, but verification command reported an error" >&2

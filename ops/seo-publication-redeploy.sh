@@ -35,6 +35,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/source-revision-guard.sh"
 # shellcheck source=lib/homepage-smoke-check.sh
 source "$SCRIPT_DIR/lib/homepage-smoke-check.sh"
+# shellcheck source=lib/prerender-manifest-refresh.sh
+source "$SCRIPT_DIR/lib/prerender-manifest-refresh.sh"
 
 PUBLICATION_ID="${1:-}"
 if [[ -z "$PUBLICATION_ID" ]]; then
@@ -119,6 +121,12 @@ ROLLBACK_OVERRIDE="/tmp/seo-redeploy-${PUBLICATION_ID}.rollback.yml"
 
 PREVIOUS_IMAGE="$(docker inspect tea-frontend --format '{{.Config.Image}}')"
 
+# Default build context is the approved worktree itself — unchanged for a
+# non-blog_create redeploy. blog_create switches this to an ephemeral copy
+# below so the regenerated prerender manifest never touches the worktree.
+BUILD_CONTEXT="$WORKTREE"
+EPHEMERAL_BUILD_CONTEXT=0
+
 CURRENT_STEP="redeploy_begun"
 SWAP_ATTEMPTED=0
 MARKED_PUBLISHED=0
@@ -149,6 +157,10 @@ EOF
     run_worker failed --id "$PUBLICATION_ID" --message "$message" >/dev/null 2>&1 || true
   fi
 
+  if [[ "$EPHEMERAL_BUILD_CONTEXT" == "1" ]]; then
+    rm -rf "$BUILD_CONTEXT" 2>/dev/null || true
+  fi
+
   exit "$rc"
 }
 
@@ -162,10 +174,10 @@ echo "[seo-redeploy] candidate frontend=$IMAGE"
 # For a blog_create recovery: regenerate the prerender manifest from the
 # live API and validate it actually contains the expected slug BEFORE
 # spending a build on a manifest that would just repeat the same mismatch.
-# This refreshes the manifest file in the worktree without committing —
-# the source-revision guard above already validated the committed source;
-# this is the documented "regenerate at build time" mode the manifest
-# generator itself anticipates (see generate-route-manifest.mjs).
+# Done in an ephemeral copy of the approved worktree's committed tree (same
+# shared helper the normal first-time publication path uses) so the
+# worktree itself — and its source-revision guard guarantee — is never
+# touched.
 # ---------------------------------------------------------------------
 if [[ "$TARGET_TYPE" == "blog_create" ]]; then
   if [[ -z "$EXPECTED_BLOG_SLUG" ]]; then
@@ -173,23 +185,19 @@ if [[ "$TARGET_TYPE" == "blog_create" ]]; then
     false
   fi
 
-  CURRENT_STEP="manifest_regenerate"
-  ( cd "$WORKTREE/frontend" && npm run prerender:manifest )
+  CURRENT_STEP="manifest_refresh"
+  BUILD_CONTEXT="$(prepare_ephemeral_build_context "$WORKTREE" "redeploy-${PUBLICATION_ID}")"
+  EPHEMERAL_BUILD_CONTEXT=1
 
-  CURRENT_STEP="manifest_validate"
-  if ! grep -q "\"$EXPECTED_BLOG_SLUG\"" "$WORKTREE/frontend/src/prerender-routes.json"; then
-    echo "[seo-redeploy] REJECTED: regenerated manifest still does not contain \"$EXPECTED_BLOG_SLUG\"" >&2
-    false
-  fi
-  echo "[seo-redeploy] manifest validated: contains \"$EXPECTED_BLOG_SLUG\""
+  refresh_and_validate_prerender_manifest "$BUILD_CONTEXT" "$EXPECTED_BLOG_SLUG" "$WORKTREE/frontend/src/prerender-routes.json"
 fi
 
 CURRENT_STEP="frontend_build"
 docker build \
   --build-arg SEO_CONTENT_BUILD_REVISION="redeploy-$PUBLICATION_ID" \
-  -f "$WORKTREE/frontend/Dockerfile" \
+  -f "$BUILD_CONTEXT/frontend/Dockerfile" \
   -t "$IMAGE" \
-  "$WORKTREE"
+  "$BUILD_CONTEXT"
 
 CURRENT_STEP="frontend_swap"
 cat > "$OVERRIDE" <<EOF
@@ -245,6 +253,10 @@ VERIFY_RC=$?
 set -e
 
 echo "[seo-redeploy] verification=$VERIFY_RAW"
+
+if [[ "$EPHEMERAL_BUILD_CONTEXT" == "1" ]]; then
+  rm -rf "$BUILD_CONTEXT"
+fi
 
 if [[ "$VERIFY_RC" != "0" ]]; then
   echo "[seo-redeploy] frontend redeployed, but verification command reported an error" >&2

@@ -26,6 +26,25 @@ function out(payload: unknown): void {
   console.log(JSON.stringify(payload));
 }
 
+/**
+ * Shared by `claim` and `redeploy-begin`: the shell pipeline needs to know
+ * an execution's targetType (to decide whether a prerender-manifest refresh
+ * applies at all) and, for blog_create, the exact slug the regenerated
+ * manifest must contain — before it spends time on a build that would only
+ * repeat a stale-manifest mismatch.
+ */
+async function deriveTargetTypeAndExpectedBlogSlug(executionId: string): Promise<{ targetType: string; expectedBlogSlug: string | null }> {
+  const execution = await getExecutionById(executionId);
+  if (!execution) {
+    throw new Error(`Execution ${executionId} not found immediately after an eligibility check that required it to exist`);
+  }
+  const blogCreateTarget = execution.targetType === 'blog_create' ? execution.targets[0] : null;
+  return {
+    targetType: execution.targetType,
+    expectedBlogSlug: blogCreateTarget ? blogCreateTarget.proposed.slug ?? null : null,
+  };
+}
+
 async function main(): Promise<void> {
   const action = process.argv[2];
   await mongoose.connect(config.mongo.uri);
@@ -38,6 +57,8 @@ async function main(): Promise<void> {
       return;
     }
 
+    const { targetType, expectedBlogSlug } = await deriveTargetTypeAndExpectedBlogSlug(String(publication.executionId));
+
     out({
       ok: true,
       publication: {
@@ -46,6 +67,11 @@ async function main(): Promise<void> {
         requestedByUserId: String(publication.requestedByUserId),
         attemptCount: publication.attemptCount,
       },
+      targetType,
+      // For a blog_create publication, the shell pipeline must refresh and
+      // validate the prerender manifest contains exactly this slug before
+      // building the frontend (see ops/lib/prerender-manifest-refresh.sh).
+      expectedBlogSlug,
     });
     return;
   }
@@ -116,15 +142,7 @@ async function main(): Promise<void> {
       return;
     }
 
-    const execution = await getExecutionById(String(result.publication.executionId));
-    if (!execution) {
-      // Eligibility already confirmed the execution existed and was succeeded
-      // moments ago; this would only happen under an impossible concurrent
-      // deletion, but fail loudly rather than report an incomplete result.
-      throw new Error('Execution disappeared immediately after eligibility check');
-    }
-
-    const blogCreateTarget = execution.targetType === 'blog_create' ? execution.targets[0] : null;
+    const { targetType, expectedBlogSlug } = await deriveTargetTypeAndExpectedBlogSlug(String(result.publication.executionId));
 
     out({
       ok: true,
@@ -133,12 +151,9 @@ async function main(): Promise<void> {
         executionId: String(result.publication.executionId),
         redeployAttemptCount: result.publication.redeployAttemptCount,
       },
-      executionId: String(execution._id),
-      targetType: execution.targetType,
-      // For a blog_create redeploy, the shell pipeline needs to know which
-      // slug the regenerated prerender manifest must contain before it
-      // spends time on a build that would repeat the same mismatch.
-      expectedBlogSlug: blogCreateTarget ? blogCreateTarget.proposed.slug ?? null : null,
+      executionId: String(result.publication.executionId),
+      targetType,
+      expectedBlogSlug,
     });
     return;
   }
