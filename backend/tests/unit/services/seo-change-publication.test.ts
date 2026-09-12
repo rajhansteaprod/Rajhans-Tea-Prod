@@ -374,8 +374,14 @@ describe('beginPublicationRedeploy', () => {
     const result = await beginPublicationRedeploy({ publicationId: String(publicationId), sourceRevision: 'deadbeef'.repeat(5) });
 
     expect(result.ok).toBe(true);
+    // The atomic filter is status-only (matching every other mutator in this
+    // file) — it must NOT require redeployAttemptCount to equal a specific
+    // value, since a legacy document predating this field entirely has no
+    // such key to match against (see the "legacy document" test below).
+    const [filterArg] = mockFindOneAndUpdate.mock.calls[0];
+    expect(filterArg).toEqual({ _id: expect.any(mongoose.Types.ObjectId), status: 'published' });
     expect(mockFindOneAndUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ _id: expect.any(mongoose.Types.ObjectId), status: 'published', redeployAttemptCount: 0 }),
+      expect.objectContaining({ _id: expect.any(mongoose.Types.ObjectId), status: 'published' }),
       expect.objectContaining({
         $set: expect.objectContaining({ status: 'building' }),
         $inc: { redeployAttemptCount: 1 },
@@ -454,6 +460,64 @@ describe('beginPublicationRedeploy', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toBe('invalid_id');
     expect(mockFindOne).not.toHaveBeenCalled();
+  });
+
+  it('J (legacy record): a published publication document with NO redeployAttemptCount/redeployHistory field at all is still eligible', async () => {
+    // Mirrors a real publication row persisted before this field existed —
+    // the raw stored document has no such key, not merely a value of 0.
+    const legacyDoc = {
+      _id: publicationId,
+      status: 'published',
+      executionId,
+      frontendImage: 'rajhansteaprod/rajhans-tea-frontend:seo-pub-legacy',
+      frontendSourceRef: 'legacy123',
+      // no redeployAttemptCount, no redeployHistory
+    };
+    mockFindOne.mockReturnValue(queryResult(legacyDoc));
+    mockExecutionFindById.mockReturnValue(queryResult({ _id: executionId, status: 'succeeded' }));
+    mockVerificationFindOne.mockReturnValue(sortResult(mismatchedVerification));
+    mockFindOneAndUpdate.mockReturnValue(queryResult({ _id: publicationId, status: 'building', redeployAttemptCount: 1 }));
+
+    const result = await beginPublicationRedeploy({ publicationId: String(publicationId), sourceRevision: 'x'.repeat(40) });
+
+    expect(result.ok).toBe(true);
+    // The atomic filter never required redeployAttemptCount to equal
+    // anything, so a missing field on the legacy document never blocks it.
+    const [filterArg] = mockFindOneAndUpdate.mock.calls[0];
+    expect(filterArg).toEqual({ _id: expect.any(mongoose.Types.ObjectId), status: 'published' });
+  });
+
+  it('K (legacy record): attemptCount is initialized/incremented correctly via $inc even when the field was previously absent', async () => {
+    const legacyDoc = { _id: publicationId, status: 'published', executionId };
+    mockFindOne.mockReturnValue(queryResult(legacyDoc));
+    mockExecutionFindById.mockReturnValue(queryResult({ _id: executionId, status: 'succeeded' }));
+    mockVerificationFindOne.mockReturnValue(sortResult(mismatchedVerification));
+    mockFindOneAndUpdate.mockReturnValue(queryResult({ _id: publicationId, status: 'building', redeployAttemptCount: 1 }));
+
+    const result = await beginPublicationRedeploy({ publicationId: String(publicationId), sourceRevision: 'x'.repeat(40) });
+
+    expect(result.ok).toBe(true);
+    // $inc on a missing field starts it at 0 and increments to 1 — Mongo's
+    // own documented $inc behavior, asserted here as the contract this
+    // function relies on.
+    const [, updateArg] = mockFindOneAndUpdate.mock.calls[0];
+    expect(updateArg.$inc).toEqual({ redeployAttemptCount: 1 });
+    if (result.ok) expect(result.publication.redeployAttemptCount).toBe(1);
+  });
+
+  it('L: duplicate/concurrent redeploy cannot proceed once status has already left "published" — the atomic filter finds nothing for a second attempt', async () => {
+    mockFindOne.mockReturnValue(queryResult(publishedDoc));
+    mockExecutionFindById.mockReturnValue(queryResult({ _id: executionId, status: 'succeeded' }));
+    mockVerificationFindOne.mockReturnValue(sortResult(mismatchedVerification));
+    // Simulates a concurrent caller having already flipped the row to
+    // 'building' between the read above and this atomic update — the
+    // same race-safety guarantee every other mutator in this file relies on.
+    mockFindOneAndUpdate.mockReturnValue(queryResult(null));
+
+    const result = await beginPublicationRedeploy({ publicationId: String(publicationId), sourceRevision: 'x'.repeat(40) });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('not_published');
   });
 
   it('H: never creates a second SeoChangePublication/SeoChangeExecution — the mocked models here expose no create() at all', () => {

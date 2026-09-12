@@ -304,7 +304,6 @@ export async function beginPublicationRedeploy(opts: {
     {
       _id: new mongoose.Types.ObjectId(publicationId),
       status: 'published',
-      redeployAttemptCount: publishedPublication.redeployAttemptCount,
     },
     {
       $set: {
