@@ -1,13 +1,13 @@
-import { ArticlePlan, BlogContentEvidence, GroundedBlogDraft, GroundedBlogDraftResult } from './blog-ai.types';
+import { ArticlePlan, BlogContentEvidence, GroundedBlogDraft, GroundedBlogDraftResult, RepairDiagnostics } from './blog-ai.types';
 import { writeGroundedBlogDraft } from './openai-seo-blog-writer.service';
 import { verifyBlogDraftClaims, BlogClaimVerificationResult } from './openai-seo-blog-claim-verifier.service';
 import { repairGroundedBlogDraft } from './openai-seo-blog-repair.service';
 import { evaluateBlogDraftQuality } from './blog-draft-quality-rules';
-import { buildRepairGuidance, mergeRepairedDraft, missingRequiredFields } from './blog-repair-guidance';
+import { buildRepairGuidance, mergeRepairedDraft, missingRequiredFields, classifyPostRepairFailures, isCleanupEligible } from './blog-repair-guidance';
 
 const MODEL = process.env.OPENAI_SEO_MODEL?.trim() || 'gpt-5.6-luna';
 
-/** Thin wrapper so tests can assert "second verifier" without re-deriving the article/link shape from a GroundedBlogDraft each time. */
+/** Thin wrapper so tests can assert "final verifier" without re-deriving the article/link shape from a GroundedBlogDraft each time. */
 function verifyDraft(evidence: BlogContentEvidence, plan: ArticlePlan, draft: GroundedBlogDraft): Promise<BlogClaimVerificationResult> {
   return verifyBlogDraftClaims({
     evidence,
@@ -19,15 +19,61 @@ function verifyDraft(evidence: BlogContentEvidence, plan: ArticlePlan, draft: Gr
   });
 }
 
+function emptyVerification(): BlogClaimVerificationResult {
+  return {
+    verified: true,
+    supportedClaims: [],
+    unsupportedClaims: [],
+    questionableClaims: [],
+    misleadingImplications: [],
+    contradictions: [],
+    cannibalizationConcerns: [],
+    internalLinkConcerns: [],
+    notes: [],
+  };
+}
+
+function rejected(opts: {
+  evidence: BlogContentEvidence;
+  plan: ArticlePlan;
+  output: GroundedBlogDraft | null;
+  error: string;
+  openaiCallCount: number;
+  disposition?: 'rejected' | 'no_material_content_opportunity';
+  diagnostics?: RepairDiagnostics;
+}): GroundedBlogDraftResult {
+  return {
+    ok: false,
+    provider: 'openai',
+    model: MODEL,
+    evidence: opts.evidence,
+    plan: opts.plan,
+    output: opts.output,
+    disposition: opts.disposition ?? 'rejected',
+    error: opts.error,
+    openaiCallCount: opts.openaiCallCount,
+    readyForHumanReview: false,
+    diagnostics: opts.diagnostics,
+  };
+}
+
 /**
- * Phase 6.7A/B — autonomous grounded long-form article drafting. Writer →
- * deterministic validation → independent verifier → AT MOST ONE targeted
- * repair → deterministic re-validation → second verifier. Hard cap of 4
- * OpenAI calls total, enforced in code: exactly one writer call, one
- * verifier call, and (only if needed) one repair call + one second verifier
- * call — never a second writer attempt, never more than one repair. A
- * repair that comes back with a missing required field is rejected
- * immediately, without spending the second verifier call.
+ * Phase 6.7A/B/C — autonomous grounded long-form article drafting.
+ *
+ * Bounded call policy (never a loop, never a second writer attempt):
+ *   1. writer                                              — always
+ *   2. verifier                                             — always
+ *   3. repair                    (only if step 1/2 failed)
+ *   4. final verifier            (only if repair passed deterministic validation cleanly)
+ *   4'. ONE cleanup repair       (only if repair passed but introduced a NEW,
+ *                                 whitelisted, deterministic-only defect — see
+ *                                 blog-repair-guidance.ts isCleanupEligible)
+ *   5. final verifier            (only after a successful cleanup)
+ *
+ * Absolute maximum 5 calls. A failed cleanup terminates immediately (no 5th
+ * call). An unresolved factual-grounding failure (persisted from the
+ * original draft, or outside the cleanup whitelist) also terminates
+ * immediately after repair (3 calls) — it is NEVER retried via cleanup.
  */
 export async function generateGroundedBlogDraft(evidence: BlogContentEvidence, plan: ArticlePlan): Promise<GroundedBlogDraftResult> {
   let openaiCallCount = 0;
@@ -37,17 +83,14 @@ export async function generateGroundedBlogDraft(evidence: BlogContentEvidence, p
     openaiCallCount++;
 
     if (draft.status === 'insufficient_evidence' || !draft.contentHtml || !draft.title || !draft.slug || !draft.h1) {
-      return {
-        ok: false,
-        provider: 'openai',
-        model: MODEL,
+      return rejected({
         evidence,
         plan,
         output: draft,
-        disposition: 'no_material_content_opportunity',
         error: 'Writer judged the evidence/plan insufficient for a genuinely useful, distinct article',
         openaiCallCount,
-      };
+        disposition: 'no_material_content_opportunity',
+      });
     }
 
     const firstDetErrors = [...evaluateBlogDraftQuality(evidence, plan, draft), ...draft.unsupportedClaims.map((c) => `Writer self-reported unsupported claim: ${c}`)];
@@ -63,12 +106,13 @@ export async function generateGroundedBlogDraft(evidence: BlogContentEvidence, p
         evidence,
         plan,
         disposition: 'draft_ready',
+        readyForHumanReview: true,
         output: { ...draft, notes: [...draft.notes, ...verification.notes, 'Passed independent factual verification on first attempt.'] },
         openaiCallCount,
       };
     }
 
-    // ---- Repair path (at most once, targeted, field-preserving) ----
+    // ---- Repair (call 3) — targeted, field-preserving, always given a complete repetition profile ----
     const guidance = buildRepairGuidance({
       draft,
       productName: evidence.product?.name ?? null,
@@ -80,82 +124,127 @@ export async function generateGroundedBlogDraft(evidence: BlogContentEvidence, p
     openaiCallCount++;
 
     if (repairedRaw.status === 'insufficient_evidence') {
+      return rejected({ evidence, plan, output: repairedRaw, error: 'Repair judged the article could not be sufficiently grounded', openaiCallCount });
+    }
+
+    let candidate = mergeRepairedDraft(draft, repairedRaw, guidance);
+    const missingAfterRepair = missingRequiredFields(candidate);
+    if (missingAfterRepair.length) {
+      return rejected({ evidence, plan, output: candidate, error: `Repair output is missing required field(s): ${missingAfterRepair.join(', ')}`, openaiCallCount });
+    }
+
+    // ---- Part B — full deterministic re-validation always runs post-repair ----
+    let postRepairErrors = evaluateBlogDraftQuality(evidence, plan, candidate);
+
+    if (postRepairErrors.length === 0) {
+      // Normal repair path (4 calls): deterministic gate is clean -> final verifier.
+      const finalVerification = await verifyDraft(evidence, plan, candidate);
+      openaiCallCount++;
+      if (!finalVerification.verified) {
+        const problems = collectVerifierProblems(finalVerification);
+        return rejected({
+          evidence,
+          plan,
+          output: { ...candidate, unsupportedClaims: problems },
+          error: `Repaired article still failed independent factual verification: ${problems.join(' | ')}`,
+          openaiCallCount,
+        });
+      }
       return {
-        ok: false,
+        ok: true,
         provider: 'openai',
         model: MODEL,
         evidence,
         plan,
-        output: repairedRaw,
-        disposition: 'rejected',
-        error: 'Repair judged the article could not be sufficiently grounded',
+        disposition: 'draft_ready',
+        readyForHumanReview: true,
+        output: { ...candidate, unsupportedClaims: [], notes: [...candidate.notes, ...finalVerification.notes, 'Initial draft required a targeted repair; repaired article passed independent factual verification.'] },
         openaiCallCount,
       };
     }
 
-    // Force-preserve every field NOT implicated by the detected failures —
-    // a repair pass fixing only the body can never silently drop/alter
-    // metaTitle, metaDescription, title, slug, or h1.
-    const repaired = mergeRepairedDraft(draft, repairedRaw, guidance);
+    // ---- Part B/C — classify post-repair failures before deciding on cleanup ----
+    const classification = classifyPostRepairFailures(firstDetErrors, postRepairErrors);
+    const diagnosticsBase: RepairDiagnostics = {
+      originalFailures: firstDetErrors,
+      repairNotes: repairedRaw.notes,
+      postRepairFailures: postRepairErrors,
+      newFailures: classification.newFailures,
+      persistedFailures: classification.persistedFailures,
+      resolvedFailures: classification.resolvedFailures,
+      cleanupAttempted: false,
+    };
 
-    // Reject incomplete repair output immediately — never spend the second
-    // verifier call on a draft that's already missing a required field.
-    const missing = missingRequiredFields(repaired);
-    if (missing.length) {
-      return {
-        ok: false,
-        provider: 'openai',
-        model: MODEL,
+    if (!isCleanupEligible(classification)) {
+      // Either an original (unresolved factual-grounding) failure persisted,
+      // or a new failure falls outside the deterministic cleanup whitelist.
+      // Never retried via cleanup — terminate as a failed generation (3 calls).
+      return rejected({
         evidence,
         plan,
-        output: repaired,
-        disposition: 'rejected',
-        error: `Repair output is missing required field(s): ${missing.join(', ')}`,
+        output: candidate,
+        error: `Repaired article failed deterministic validation: ${postRepairErrors.join('; ')}`,
         openaiCallCount,
-      };
+        diagnostics: diagnosticsBase,
+      });
     }
 
-    const repairedDetErrors = evaluateBlogDraftQuality(evidence, plan, repaired);
-    if (repairedDetErrors.length) {
-      return {
-        ok: false,
-        provider: 'openai',
-        model: MODEL,
-        evidence,
-        plan,
-        output: repaired,
-        disposition: 'rejected',
-        error: `Repaired article failed deterministic validation: ${repairedDetErrors.join('; ')}`,
-        openaiCallCount,
-      };
-    }
+    // ---- Part C — ONE bounded, surgical cleanup repair (call 4) ----
+    const cleanupGuidance = buildRepairGuidance({
+      draft: candidate,
+      productName: evidence.product?.name ?? null,
+      deterministicErrors: classification.newFailures,
+      verification: emptyVerification(),
+    });
 
-    const secondVerification = await verifyDraft(evidence, plan, repaired);
+    const cleanedRaw = await repairGroundedBlogDraft({ evidence, plan, draft: candidate, guidance: cleanupGuidance });
     openaiCallCount++;
+    diagnosticsBase.cleanupAttempted = true;
 
-    if (!secondVerification.verified) {
-      const problems = [
-        ...secondVerification.unsupportedClaims,
-        ...secondVerification.questionableClaims,
-        ...secondVerification.misleadingImplications,
-        ...secondVerification.contradictions,
-        ...secondVerification.cannibalizationConcerns,
-        ...secondVerification.internalLinkConcerns,
-      ];
-      // No uncontrolled retry loop — exactly one repair attempt, ever. Still
-      // not grounded after repair ⇒ no executable draft is ever returned,
-      // and no second writer attempt is ever started.
-      return {
-        ok: false,
-        provider: 'openai',
-        model: MODEL,
+    if (cleanedRaw.status === 'insufficient_evidence') {
+      return rejected({ evidence, plan, output: candidate, error: 'Cleanup repair judged the article could not be sufficiently grounded', openaiCallCount, diagnostics: diagnosticsBase });
+    }
+
+    const cleaned = mergeRepairedDraft(candidate, cleanedRaw, cleanupGuidance);
+    const missingAfterCleanup = missingRequiredFields(cleaned);
+    if (missingAfterCleanup.length) {
+      return rejected({
         evidence,
         plan,
-        output: { ...repaired, unsupportedClaims: problems },
-        disposition: 'rejected',
-        error: `Repaired article still failed independent factual verification: ${problems.join(' | ')}`,
+        output: cleaned,
+        error: `Cleanup repair output is missing required field(s): ${missingAfterCleanup.join(', ')}`,
         openaiCallCount,
-      };
+        diagnostics: diagnosticsBase,
+      });
+    }
+
+    const cleanupErrors = evaluateBlogDraftQuality(evidence, plan, cleaned);
+    if (cleanupErrors.length) {
+      // Failed cleanup terminates immediately — no final verifier call (Part C).
+      diagnosticsBase.cleanupFailures = cleanupErrors;
+      return rejected({
+        evidence,
+        plan,
+        output: cleaned,
+        error: `Cleanup repair failed deterministic validation: ${cleanupErrors.join('; ')}`,
+        openaiCallCount,
+        diagnostics: diagnosticsBase,
+      });
+    }
+
+    // ---- Cleanup succeeded deterministically -> final verifier (call 5) ----
+    const finalVerification = await verifyDraft(evidence, plan, cleaned);
+    openaiCallCount++;
+    if (!finalVerification.verified) {
+      const problems = collectVerifierProblems(finalVerification);
+      return rejected({
+        evidence,
+        plan,
+        output: { ...cleaned, unsupportedClaims: problems },
+        error: `Cleaned-up article still failed independent factual verification: ${problems.join(' | ')}`,
+        openaiCallCount,
+        diagnostics: diagnosticsBase,
+      });
     }
 
     return {
@@ -165,23 +254,20 @@ export async function generateGroundedBlogDraft(evidence: BlogContentEvidence, p
       evidence,
       plan,
       disposition: 'draft_ready',
+      readyForHumanReview: true,
       output: {
-        ...repaired,
+        ...cleaned,
         unsupportedClaims: [],
-        notes: [...repaired.notes, ...secondVerification.notes, 'Initial draft required a targeted repair; repaired article passed independent factual verification.'],
+        notes: [...cleaned.notes, ...finalVerification.notes, 'Initial repair introduced a new deterministic defect; one bounded cleanup repair resolved it and the article passed independent factual verification.'],
       },
       openaiCallCount,
+      diagnostics: diagnosticsBase,
     };
   } catch (err) {
-    return {
-      ok: false,
-      provider: 'openai',
-      model: MODEL,
-      evidence,
-      plan,
-      output: null,
-      error: err instanceof Error ? err.message : String(err),
-      openaiCallCount,
-    };
+    return rejected({ evidence, plan, output: null, error: err instanceof Error ? err.message : String(err), openaiCallCount });
   }
+}
+
+function collectVerifierProblems(v: BlogClaimVerificationResult): string[] {
+  return [...v.unsupportedClaims, ...v.questionableClaims, ...v.misleadingImplications, ...v.contradictions, ...v.cannibalizationConcerns, ...v.internalLinkConcerns];
 }

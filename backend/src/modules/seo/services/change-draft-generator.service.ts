@@ -824,6 +824,15 @@ async function generateBlogCreateChanges(
     error: aiResult.error ?? null,
     unsupportedClaims: aiResult.output?.unsupportedClaims ?? [],
     notes: aiResult.output?.notes ?? [],
+    /**
+     * Phase 6.7C Part E/F — the authoritative signal for whether this record
+     * is a valid, approvable article preview or only a failure/diagnostic
+     * record. A human reviewer (or any downstream approval/execution check)
+     * must treat readyForHumanReview===false as non-approvable regardless of
+     * how much partial content or diagnostic detail generationEvidence carries.
+     */
+    readyForHumanReview: aiResult.readyForHumanReview,
+    diagnostics: aiResult.diagnostics ?? null,
   };
 
   if (!aiResult.ok || !aiResult.output || aiResult.output.status !== 'ok' || !aiResult.output.contentHtml || !aiResult.output.title || !aiResult.output.slug || !aiResult.output.h1) {

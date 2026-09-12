@@ -3,7 +3,7 @@ import { BlogClaimVerificationResult } from './openai-seo-blog-claim-verifier.se
 import { MAX_PRODUCT_NAME_MENTIONS, MAX_BRAND_MENTIONS } from './blog-draft-quality-rules';
 
 /**
- * Phase 6.7B Part A/B — repair must be a TARGETED correction, never a free
+ * Phase 6.7B/C Part A/B — repair must be a TARGETED correction, never a free
  * rewrite. These are the fields a repair pass is allowed to touch, derived
  * deterministically from exactly which deterministic/verifier failures were
  * raised — never a guess. Every other field is force-preserved from the
@@ -12,6 +12,80 @@ import { MAX_PRODUCT_NAME_MENTIONS, MAX_BRAND_MENTIONS } from './blog-draft-qual
 export type BlogDraftField = 'title' | 'slug' | 'metaTitle' | 'metaDescription' | 'h1' | 'body' | 'links';
 
 const REQUIRED_FIELDS: BlogDraftField[] = ['title', 'slug', 'metaTitle', 'metaDescription', 'h1', 'body'];
+
+function normalizeText(text: string): string {
+  return text.replace(/\s+/g, ' ').trim();
+}
+function stripTags(html: string): string {
+  return html.replace(/<[^>]+>/g, ' ');
+}
+function toWords(text: string): string[] {
+  return normalizeText(text).toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+}
+function splitSentences(text: string): string[] {
+  return normalizeText(text).split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
+}
+function countOccurrences(haystack: string, needle: string): number {
+  if (!needle.trim()) return 0;
+  const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return (haystack.match(new RegExp(escaped, 'gi')) ?? []).length;
+}
+
+/** Every 6+ word phrase (containing a real content word) that occurs more than once. */
+function findAllRepeatedPhrases(text: string, gramSize = 6): string[] {
+  const w = toWords(text);
+  const counts = new Map<string, number>();
+  for (let i = 0; i + gramSize <= w.length; i++) {
+    const gram = w.slice(i, i + gramSize);
+    if (!gram.some((word) => word.length >= 5)) continue;
+    const key = gram.join(' ');
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return [...counts.entries()].filter(([, count]) => count > 1).map(([phrase]) => phrase);
+}
+
+/** Every 4-word sentence OPENING that recurs across more than one sentence — catches "Rajhans Royal Darjeeling is grown..." repeated as a sentence template even when the rest of the sentence differs. */
+function findRepeatedSentenceOpenings(text: string, openingWords = 4): string[] {
+  const sentences = splitSentences(text);
+  const counts = new Map<string, number>();
+  for (const s of sentences) {
+    const words = toWords(s).slice(0, openingWords);
+    if (words.length < openingWords) continue;
+    const key = words.join(' ');
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return [...counts.entries()].filter(([, count]) => count > 1).map(([phrase]) => phrase);
+}
+
+/**
+ * Phase 6.7C Part A — a COMPLETE, deterministic repetition snapshot of a
+ * draft's body, computed unconditionally before every repair call (not just
+ * when repetition happened to be the original failure). This is what makes
+ * it possible to instruct repair "do not increase repetition while you fix
+ * something else" instead of only ever reacting after the fact.
+ */
+export interface RepetitionProfile {
+  productName: string | null;
+  productNameCount: number;
+  productNameThreshold: number;
+  brandCount: number;
+  brandThreshold: number;
+  repeatedPhrases: string[];
+  repeatedSentenceOpenings: string[];
+}
+
+export function computeRepetitionProfile(contentHtml: string, productName: string | null): RepetitionProfile {
+  const plainBody = normalizeText(stripTags(contentHtml ?? ''));
+  return {
+    productName,
+    productNameCount: productName ? countOccurrences(plainBody, productName) : 0,
+    productNameThreshold: MAX_PRODUCT_NAME_MENTIONS,
+    brandCount: countOccurrences(plainBody, 'Rajhans'),
+    brandThreshold: MAX_BRAND_MENTIONS,
+    repeatedPhrases: findAllRepeatedPhrases(plainBody),
+    repeatedSentenceOpenings: findRepeatedSentenceOpenings(plainBody),
+  };
+}
 
 /** Which fields a given deterministic-validation error message implicates. */
 function classifyDeterministicError(message: string): BlogDraftField[] {
@@ -47,15 +121,18 @@ export interface RepairGuidance {
   deterministicFailures: string[];
   /** Verbatim verifier failure messages, for the repair prompt. */
   verifierFailures: string[];
-  /** Precise, numeric repetition guidance — never vague ("reduce repetition"). */
+  /** Precise, numeric repetition guidance — never vague ("reduce repetition"). Always populated (Part A), regardless of whether repetition was the original failure. */
   repetitionNotes: string[];
+  /** The raw profile the notes above were derived from — also handed to the repair prompt directly. */
+  repetitionProfile: RepetitionProfile;
 }
 
 /**
  * Deterministically computes exactly what a repair pass is allowed to touch
- * and precise, numeric repetition guidance (Part B) — built BEFORE the
- * repair call so the prompt can cite exact counts/thresholds rather than
- * leaving the model to guess.
+ * and a COMPLETE repetition profile + guidance (Part A) — built BEFORE the
+ * repair call so the prompt can cite exact counts/thresholds and an explicit
+ * "do not increase" instruction, whether or not repetition was itself the
+ * reason repair is running.
  */
 export function buildRepairGuidance(opts: {
   draft: GroundedBlogDraft;
@@ -88,22 +165,27 @@ export function buildRepairGuidance(opts: {
     (f) => !implicated.has(f),
   );
 
-  const repetitionNotes: string[] = [];
-  const body = draft.contentHtml ?? '';
-  if (productName) {
-    const count = (body.match(new RegExp(productName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')) ?? []).length;
-    if (count > MAX_PRODUCT_NAME_MENTIONS) {
-      repetitionNotes.push(
-        `The product name "${productName}" appears ${count} times; the permitted maximum is ${MAX_PRODUCT_NAME_MENTIONS}. Replace the extra mentions with natural alternatives such as "the tea", "this tea", or the region/category name — only where it reads naturally. Do not mechanically find-and-replace if it makes a sentence awkward; rewrite the sentence instead.`,
-      );
-    }
-  }
-  const brandCount = (body.match(/Rajhans/gi) ?? []).length;
-  if (brandCount > MAX_BRAND_MENTIONS) {
+  const profile = computeRepetitionProfile(draft.contentHtml ?? '', productName);
+
+  // Part A — ALWAYS populated, never conditional on repetition being the
+  // original failure.
+  const repetitionNotes: string[] = [
+    `Current repetition profile: product name "${profile.productName ?? 'n/a'}" appears ${profile.productNameCount}/${profile.productNameThreshold} (max) times; brand "Rajhans" appears ${profile.brandCount}/${profile.brandThreshold} (max) times. Do NOT increase either count unnecessarily while making your fix — the repaired wording must remain AT OR BELOW these thresholds.`,
+  ];
+  if (profile.repeatedPhrases.length) {
     repetitionNotes.push(
-      `"Rajhans" appears ${brandCount} times; the permitted maximum is ${MAX_BRAND_MENTIONS}. Reduce to natural mentions only — do not remove the brand entirely, just avoid mechanical over-repetition.`,
+      `These phrases already recur and must be resolved (not reproduced again): ${profile.repeatedPhrases.map((p) => `"${p}"`).join('; ')}.`,
     );
   }
+  if (profile.repeatedSentenceOpenings.length) {
+    repetitionNotes.push(
+      `These sentence openings/templates already recur and must not be reused a third time: ${profile.repeatedSentenceOpenings.map((p) => `"${p}..."`).join('; ')}.`,
+    );
+  }
+  repetitionNotes.push(
+    'Do not duplicate any existing sentence opening or 6+ word phrase anywhere else in the article — check your new/edited sentences against the REST of the unchanged body before returning.',
+  );
+  repetitionNotes.push('Preserve natural prose; do not mechanically replace every mention of the product/brand name — only reduce genuine over-repetition.');
 
   return {
     fieldsToFix,
@@ -118,6 +200,7 @@ export function buildRepairGuidance(opts: {
       ...verification.internalLinkConcerns,
     ],
     repetitionNotes,
+    repetitionProfile: profile,
   };
 }
 
@@ -156,6 +239,63 @@ export function missingRequiredFields(draft: GroundedBlogDraft): BlogDraftField[
   if (!draft.h1?.trim()) missing.push('h1');
   if (!draft.contentHtml?.trim()) missing.push('body');
   return missing;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 6.7C Part B/C — post-repair failure classification and the ONE
+// bounded cleanup-repair eligibility gate.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface PostRepairClassification {
+  /** Failures present before repair that STILL exist after repair — repair did not fix the original problem. */
+  persistedFailures: string[];
+  /** Failures present before repair that are GONE after repair. */
+  resolvedFailures: string[];
+  /** Failures that were NOT present before repair — introduced (or exposed) by the repair pass itself. */
+  newFailures: string[];
+}
+
+export function classifyPostRepairFailures(originalErrors: string[], postRepairErrors: string[]): PostRepairClassification {
+  const originalSet = new Set(originalErrors);
+  const postSet = new Set(postRepairErrors);
+  return {
+    persistedFailures: originalErrors.filter((e) => postSet.has(e)),
+    resolvedFailures: originalErrors.filter((e) => !postSet.has(e)),
+    newFailures: postRepairErrors.filter((e) => !originalSet.has(e)),
+  };
+}
+
+/**
+ * Deterministic-only defect classes a SINGLE, surgical cleanup repair is
+ * allowed to touch — repetition, duplicated phrasing, heading-structure
+ * defects, and meta-field format issues. Deliberately EXCLUDES anything
+ * that could represent an unresolved factual-grounding problem (unsupported
+ * claims, external/off-plan links, health/superlative patterns, promotional
+ * content, pack/bestTakenFor framing, cross-corpus overlap, unsafe markup)
+ * — those must never be "cleaned up" via a bonus repair attempt.
+ */
+const CLEANUP_ELIGIBLE_PATTERNS: RegExp[] = [
+  /repeats? the same phrase/i,
+  /duplicated as a body heading/i,
+  /repeated verbatim in the article body/i,
+  /too few h2 sections/i,
+  /h3 headings with no parent h2/i,
+  /metatitle is missing or an unreasonable length/i,
+  /metadescription is missing or an unreasonable length/i,
+];
+
+/**
+ * True only when EVERY post-repair failure is both NEW (repair-introduced,
+ * not a persisted original problem) and a deterministic, mechanically
+ * fixable defect class. If any original failure persisted, or any failure
+ * falls outside the whitelist above, cleanup is not attempted — the run
+ * terminates as a failed generation instead (Part C: never retry unresolved
+ * grounding failures via cleanup).
+ */
+export function isCleanupEligible(classification: PostRepairClassification): boolean {
+  if (classification.persistedFailures.length > 0) return false;
+  if (classification.newFailures.length === 0) return false;
+  return classification.newFailures.every((f) => CLEANUP_ELIGIBLE_PATTERNS.some((p) => p.test(f)));
 }
 
 export { REQUIRED_FIELDS };

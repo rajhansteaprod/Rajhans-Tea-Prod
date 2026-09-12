@@ -83,12 +83,31 @@ describe('buildRepairGuidance', () => {
       deterministicErrors: [`Product name repeated 5 times — should appear naturally, not mechanically`],
       verification: verifiedResult(),
     });
-    expect(guidance.repetitionNotes).toHaveLength(1);
-    expect(guidance.repetitionNotes[0]).toContain(repeatedName);
-    expect(guidance.repetitionNotes[0]).toContain('5 times');
-    expect(guidance.repetitionNotes[0]).toContain(`maximum is ${MAX_PRODUCT_NAME_MENTIONS}`);
+    // Phase 6.7C Part A: the profile note is ALWAYS present (not conditional on
+    // this being the original failure), plus the standing "don't duplicate
+    // phrases" / "preserve natural prose" notes — at least the profile note
+    // must cite the exact term, count, and unchanged threshold.
+    const profileNote = guidance.repetitionNotes[0];
+    expect(profileNote).toContain(repeatedName);
+    expect(profileNote).toContain('5');
+    expect(profileNote).toContain(String(MAX_PRODUCT_NAME_MENTIONS));
+    expect(guidance.repetitionProfile.productNameCount).toBe(5);
+    expect(guidance.repetitionProfile.productNameThreshold).toBe(MAX_PRODUCT_NAME_MENTIONS);
     // The threshold constant itself must never be relaxed by repair guidance.
     expect(MAX_PRODUCT_NAME_MENTIONS).toBe(4);
+  });
+
+  it('Part A: repetition profile is populated even when repetition was NOT the original failure', () => {
+    const draft = makeDraft();
+    const guidance = buildRepairGuidance({
+      draft,
+      productName: 'Rajhans Royal Darjeeling',
+      deterministicErrors: ['metaTitle is missing or an unreasonable length'],
+      verification: verifiedResult(),
+    });
+    expect(guidance.repetitionProfile).toBeDefined();
+    expect(guidance.repetitionProfile.productNameThreshold).toBe(MAX_PRODUCT_NAME_MENTIONS);
+    expect(guidance.repetitionNotes.length).toBeGreaterThan(0);
   });
 });
 

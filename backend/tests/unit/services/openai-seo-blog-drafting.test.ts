@@ -98,7 +98,11 @@ function verifiedResult(overrides: Partial<BlogClaimVerificationResult> = {}): B
 }
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  // resetAllMocks (not clearAllMocks) — clearAllMocks leaves any unconsumed
+  // queued mockResolvedValueOnce implementations in place, which would leak
+  // into the next test whenever a prior test terminated early (e.g. a
+  // rejected-path test that never reaches its later queued mocks).
+  jest.resetAllMocks();
 });
 
 describe('generateGroundedBlogDraft — call-count policy and repair path', () => {
@@ -182,5 +186,173 @@ describe('generateGroundedBlogDraft — call-count policy and repair path', () =
 
     expect(result.openaiCallCount).toBeLessThanOrEqual(4);
     expect(mockRepair).toHaveBeenCalledTimes(1);
+  });
+
+  // Q: first-pass success is readyForHumanReview
+  it('Q: a first-pass-verified article is readyForHumanReview', async () => {
+    mockWrite.mockResolvedValue(validDraft());
+    mockVerify.mockResolvedValue(verifiedResult());
+
+    const result = await generateGroundedBlogDraft(evidence, plan);
+
+    expect(result.readyForHumanReview).toBe(true);
+  });
+
+  // N/P: failure records are never readyForHumanReview
+  it('P: a failed generation record is not readyForHumanReview', async () => {
+    mockWrite.mockResolvedValue(validDraft());
+    mockVerify.mockResolvedValueOnce(verifiedResult({ verified: false, unsupportedClaims: ['invented estate name'] }));
+    mockRepair.mockResolvedValue(validDraft());
+    mockVerify.mockResolvedValueOnce(verifiedResult({ verified: false, unsupportedClaims: ['still unsupported'] }));
+
+    const result = await generateGroundedBlogDraft(evidence, plan);
+
+    expect(result.ok).toBe(false);
+    expect(result.readyForHumanReview).toBe(false);
+  });
+});
+
+describe('generateGroundedBlogDraft — Part A: repetition profile always supplied to repair', () => {
+  it('A: repair receives a repetition profile even when repetition was not the original failure', async () => {
+    mockWrite.mockResolvedValue(validDraft({ contentHtml: validDraft().contentHtml + '<p>See <a href="https://example.com/x/">external</a>.</p>' }));
+    mockVerify.mockResolvedValueOnce(verifiedResult());
+    mockRepair.mockResolvedValue(validDraft());
+    mockVerify.mockResolvedValueOnce(verifiedResult());
+
+    await generateGroundedBlogDraft(evidence, plan);
+
+    expect(mockRepair).toHaveBeenCalledTimes(1);
+    const call = mockRepair.mock.calls[0][0];
+    expect(call.guidance.repetitionProfile).toBeDefined();
+    expect(call.guidance.repetitionProfile.productNameThreshold).toBeGreaterThan(0);
+  });
+
+  // B: repair receives the repeated-phrase/stem profile
+  it('B: repair receives the current repeated-phrase/sentence-opening profile', async () => {
+    const repeatingBody =
+      '<p>Rajhans Royal Darjeeling is grown on the hills. Rajhans Royal Darjeeling is grown on slopes. Rajhans Royal Darjeeling is grown on ridges.</p>' +
+      '<h2>Pack Sizes</h2><p>See the <a href="https://rajhanstea.com/product/rajhans-royal-darjeeling/">Rajhans Royal Darjeeling product page</a>.</p>';
+    mockWrite.mockResolvedValue(validDraft({ contentHtml: repeatingBody }));
+    mockVerify.mockResolvedValueOnce(verifiedResult({ verified: false, unsupportedClaims: ['bad'] }));
+    mockRepair.mockResolvedValue(validDraft());
+    mockVerify.mockResolvedValueOnce(verifiedResult());
+
+    await generateGroundedBlogDraft(evidence, plan);
+
+    const call = mockRepair.mock.calls[0][0];
+    expect(call.guidance.repetitionProfile.repeatedSentenceOpenings.length).toBeGreaterThan(0);
+  });
+});
+
+describe('generateGroundedBlogDraft — Parts B/C/D: cleanup-repair path', () => {
+  const repeatingPhrase = 'rajhans royal darjeeling is grown on';
+  // Two h2 sections (matching validDraft's structure) so this fixture fails
+  // the quality gate ONLY on the repeated phrase, not on heading count too.
+  const repeatingBody =
+    `<p>${repeatingPhrase} the slopes. ${repeatingPhrase} the ridges. It is light and floral.</p>` +
+    '<h2>Where It Comes From</h2><p>It comes from Darjeeling.</p>' +
+    '<h2>Pack Sizes</h2><p>See the <a href="https://rajhanstea.com/product/rajhans-royal-darjeeling/">Rajhans Royal Darjeeling product page</a>.</p>';
+
+  it('E/F/I: repair-introduced repetition triggers exactly one cleanup repair, which resolves it, then a final verifier runs (5 calls)', async () => {
+    mockWrite.mockResolvedValue(validDraft());
+    // Original failure: verifier flags an unsupported claim.
+    mockVerify.mockResolvedValueOnce(verifiedResult({ verified: false, unsupportedClaims: ['invented estate name'] }));
+    // Repair "fixes" the verifier issue but introduces new repetition.
+    mockRepair.mockResolvedValueOnce(validDraft({ contentHtml: repeatingBody }));
+    // Cleanup repair resolves the repetition.
+    mockRepair.mockResolvedValueOnce(validDraft());
+    // Final verifier after successful cleanup.
+    mockVerify.mockResolvedValueOnce(verifiedResult());
+
+    const result = await generateGroundedBlogDraft(evidence, plan);
+
+    expect(result.ok).toBe(true);
+    expect(result.readyForHumanReview).toBe(true);
+    expect(result.openaiCallCount).toBe(5);
+    expect(mockWrite).toHaveBeenCalledTimes(1);
+    expect(mockVerify).toHaveBeenCalledTimes(2);
+    expect(mockRepair).toHaveBeenCalledTimes(2);
+    expect(result.diagnostics?.cleanupAttempted).toBe(true);
+    expect(result.diagnostics?.newFailures.length).toBeGreaterThan(0);
+  });
+
+  it('G/H: cleanup repair preserves unrelated valid fields and cannot become a full rewrite', async () => {
+    mockWrite.mockResolvedValue(validDraft());
+    mockVerify.mockResolvedValueOnce(verifiedResult({ verified: false, unsupportedClaims: ['invented estate name'] }));
+    mockRepair.mockResolvedValueOnce(validDraft({ contentHtml: repeatingBody }));
+    // Cleanup call returns a draft with a DIFFERENT title/slug/meta — these must be force-preserved from the pre-cleanup candidate.
+    mockRepair.mockResolvedValueOnce(
+      validDraft({
+        title: 'A Totally Different Rewritten Title',
+        slug: 'totally-different-slug',
+        metaTitle: 'Different Meta Title Entirely',
+        contentHtml:
+          '<p>Rajhans Royal Darjeeling is light and floral.</p><h2>Where It Comes From</h2><p>It comes from Darjeeling.</p><h2>Pack Sizes</h2><p>See the <a href="https://rajhanstea.com/product/rajhans-royal-darjeeling/">Rajhans Royal Darjeeling product page</a>.</p>',
+      }),
+    );
+    mockVerify.mockResolvedValueOnce(verifiedResult());
+
+    const result = await generateGroundedBlogDraft(evidence, plan);
+
+    expect(result.ok).toBe(true);
+    // Title/slug/metaTitle were not implicated by the repetition-only cleanup failure, so they must be preserved byte-for-byte from the pre-cleanup candidate.
+    expect(result.output?.title).toBe(validDraft().title);
+    expect(result.output?.slug).toBe(validDraft().slug);
+    expect(result.output?.metaTitle).toBe(validDraft().metaTitle);
+  });
+
+  it('J: a cleanup repair that fails deterministic validation terminates immediately with no final verifier call (4 calls total)', async () => {
+    mockWrite.mockResolvedValue(validDraft());
+    mockVerify.mockResolvedValueOnce(verifiedResult({ verified: false, unsupportedClaims: ['invented estate name'] }));
+    mockRepair.mockResolvedValueOnce(validDraft({ contentHtml: repeatingBody }));
+    // Cleanup repair still leaves the same repeated phrase — deterministic gate fails again.
+    mockRepair.mockResolvedValueOnce(validDraft({ contentHtml: repeatingBody }));
+
+    const result = await generateGroundedBlogDraft(evidence, plan);
+
+    expect(result.ok).toBe(false);
+    expect(result.readyForHumanReview).toBe(false);
+    expect(result.openaiCallCount).toBe(4);
+    expect(mockVerify).toHaveBeenCalledTimes(1);
+    expect(mockRepair).toHaveBeenCalledTimes(2);
+  });
+
+  it('is not eligible for cleanup when an original (persisted) failure remains after repair — terminates at 3 calls, never attempts cleanup', async () => {
+    mockWrite.mockResolvedValue(validDraft());
+    // Original deterministic failure: external link.
+    const draftWithExternalLink = validDraft({ contentHtml: validDraft().contentHtml + '<p>See <a href="https://example.com/x/">external</a>.</p>' });
+    mockWrite.mockResolvedValue(draftWithExternalLink);
+    mockVerify.mockResolvedValueOnce(verifiedResult());
+    // Repair does not fix the external link (persisted failure).
+    mockRepair.mockResolvedValueOnce(draftWithExternalLink);
+
+    const result = await generateGroundedBlogDraft(evidence, plan);
+
+    expect(result.ok).toBe(false);
+    expect(result.readyForHumanReview).toBe(false);
+    expect(result.openaiCallCount).toBe(3);
+    expect(mockRepair).toHaveBeenCalledTimes(1);
+    expect(mockVerify).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('generateGroundedBlogDraft — Part D: absolute call-count ceiling', () => {
+  it('K/L/M: the absolute maximum across all paths is 5 calls; the 5th call only occurs via the exceptional cleanup path', async () => {
+    const repeatingPhrase = 'rajhans royal darjeeling is grown on';
+    const repeatingBody =
+      `<p>${repeatingPhrase} the slopes. ${repeatingPhrase} the ridges. It is light and floral.</p>` +
+      '<h2>Where It Comes From</h2><p>It comes from Darjeeling.</p>' +
+      '<h2>Pack Sizes</h2><p>See the <a href="https://rajhanstea.com/product/rajhans-royal-darjeeling/">Rajhans Royal Darjeeling product page</a>.</p>';
+    mockWrite.mockResolvedValue(validDraft());
+    mockVerify.mockResolvedValueOnce(verifiedResult({ verified: false, unsupportedClaims: ['invented estate name'] }));
+    mockRepair.mockResolvedValueOnce(validDraft({ contentHtml: repeatingBody }));
+    mockRepair.mockResolvedValueOnce(validDraft());
+    mockVerify.mockResolvedValueOnce(verifiedResult());
+
+    const result = await generateGroundedBlogDraft(evidence, plan);
+
+    expect(result.openaiCallCount).toBeLessThanOrEqual(5);
+    expect(result.openaiCallCount).toBe(5);
+    expect(mockWrite).toHaveBeenCalledTimes(1); // N: no second fresh writer, ever
   });
 });

@@ -86,6 +86,18 @@ export interface GroundedBlogDraft {
   notes: string[];
 }
 
+/** Phase 6.7C Part B — persisted repair audit trail: what failed before repair, what repair changed, what failed after, and which post-repair failures are genuinely NEW (repair-introduced) vs. persisted from the original draft. */
+export interface RepairDiagnostics {
+  originalFailures: string[];
+  repairNotes: string[];
+  postRepairFailures: string[];
+  newFailures: string[];
+  persistedFailures: string[];
+  resolvedFailures: string[];
+  cleanupAttempted: boolean;
+  cleanupFailures?: string[];
+}
+
 export interface GroundedBlogDraftResult {
   ok: boolean;
   provider: 'openai';
@@ -95,6 +107,17 @@ export interface GroundedBlogDraftResult {
   output: GroundedBlogDraft | null;
   disposition?: 'draft_ready' | 'no_material_content_opportunity' | 'rejected';
   error?: string;
-  /** Total OpenAI calls actually made for this article (writer + verifier [+ repair + second verifier]). Never exceeds 4. */
+  /**
+   * Phase 6.7C Part E — true ONLY for a valid, complete, independently
+   * re-verified article (ok===true && disposition==='draft_ready'). A
+   * generation-failure record (rejected / no_material_content_opportunity /
+   * a thrown error) is ALWAYS false, regardless of how much partial content
+   * or diagnostic detail it carries — it must never read as something a
+   * human could approve/execute.
+   */
+  readyForHumanReview: boolean;
+  /** Total OpenAI calls actually made for this article. Absolute maximum 5 — the 5th only ever occurs on the exceptional single-cleanup-repair path. */
   openaiCallCount: number;
+  /** Present whenever a repair (or cleanup repair) attempt was made — the full audit trail (Part B). */
+  diagnostics?: RepairDiagnostics;
 }

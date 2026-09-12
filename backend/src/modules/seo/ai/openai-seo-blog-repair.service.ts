@@ -52,11 +52,21 @@ Your job:
    alternatives ("the tea", "this tea", the region/category name), only
    where it reads naturally. Never mechanically find-and-replace in a way
    that makes a sentence awkward — rewrite the sentence instead if needed.
-5. Use ONLY the supplied EVIDENCE and PLAN. Do not introduce new topics,
+5. repetitionProfile is ALWAYS supplied, whether or not repetition was the
+   reason you were called. Whatever change you make to fix the listed
+   problem(s), your edited/added sentences must NOT:
+   - push productNameCount or brandCount above their stated thresholds,
+   - reproduce any phrase in repeatedPhrases,
+   - reuse any sentence opening in repeatedSentenceOpenings,
+   - introduce a brand-new duplicate sentence opening or 6+ word phrase
+     anywhere else in the body.
+   Preserve natural prose — do not mechanically replace every mention of
+   the product/brand name; only avoid adding NEW over-repetition.
+6. Use ONLY the supplied EVIDENCE and PLAN. Do not introduce new topics,
    benefits, occasions, comparisons, facts, or internal links outside
    PLAN.allowedLinkTargets.
-6. Do not pad the copy merely to increase length.
-7. Every one of title/slug/metaTitle/metaDescription/h1/contentHtml MUST be
+7. Do not pad the copy merely to increase length.
+8. Every one of title/slug/metaTitle/metaDescription/h1/contentHtml MUST be
    present and non-empty in your response — never omit a field.
 
 Return JSON only.
@@ -71,6 +81,7 @@ Return JSON only.
       deterministicFailures: opts.guidance.deterministicFailures,
       verifierFailures: opts.guidance.verifierFailures,
       repetitionNotes: opts.guidance.repetitionNotes,
+      repetitionProfile: opts.guidance.repetitionProfile,
     }),
 
     text: {
