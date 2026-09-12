@@ -91,6 +91,15 @@ export async function generateChangeDraft(opts: {
    * caller keeps the original "approved only" behavior unchanged.
    */
   allowPreview?: boolean;
+  /**
+   * Phase 6.7C Part (editorial feedback) — optional human wording/tone/
+   * structure guidance for autonomous article drafting (topical-authority
+   * blog_create only). Never expands factual evidence, allowed claims, or
+   * allowed links — the writer/repair prompts are explicitly told it is
+   * wording guidance only and that the grounding/link rules always win.
+   * Ignored by every other recommendation category.
+   */
+  editorialFeedback?: string;
 }): Promise<GenerateDraftResult> {
   if (!mongoose.isValidObjectId(opts.recommendationId)) {
     return { ok: false, error: 'not_found', message: 'Invalid recommendation id' };
@@ -108,7 +117,7 @@ export async function generateChangeDraft(opts: {
     proposedChanges,
     warnings,
     generationEvidence,
-  } = await buildProposedChanges(rec);
+  } = await buildProposedChanges(rec, opts.editorialFeedback);
 
   const validation =
     validateProposedChanges(proposedChanges, warnings);
@@ -225,6 +234,7 @@ interface GeneratedProposal {
 
 async function buildProposedChanges(
   rec: ISeoRecommendationDoc,
+  editorialFeedback?: string,
 ): Promise<GeneratedProposal> {
   switch (rec.category) {
     case 'metadata':
@@ -240,7 +250,7 @@ async function buildProposedChanges(
       return generateContentChanges(rec);
 
     case 'topical-authority':
-      return generateBlogCreateChanges(rec);
+      return generateBlogCreateChanges(rec, editorialFeedback);
 
     default:
       return generateGenericChange(rec);
@@ -743,6 +753,7 @@ async function buildBlogContentEvidence(rec: ISeoRecommendationDoc, entity: stri
 
 async function generateBlogCreateChanges(
   rec: ISeoRecommendationDoc,
+  editorialFeedback?: string,
 ): Promise<GeneratedProposal> {
   const warnings: string[] = [];
   const targetUrl = rec.affectedUrls[0] ?? '';
@@ -810,7 +821,7 @@ async function generateBlogCreateChanges(
     };
   }
 
-  const aiResult = await generateGroundedBlogDraft(blogEvidence, planResult.plan);
+  const aiResult = await generateGroundedBlogDraft(blogEvidence, planResult.plan, editorialFeedback);
 
   const generationEvidence: Record<string, unknown> = {
     mode: 'ai-article-drafting',
@@ -824,6 +835,10 @@ async function generateBlogCreateChanges(
     error: aiResult.error ?? null,
     unsupportedClaims: aiResult.output?.unsupportedClaims ?? [],
     notes: aiResult.output?.notes ?? [],
+    // Part (editorial feedback) — persisted verbatim in the audit trail so a
+    // reviewer can see exactly what wording guidance, if any, shaped this
+    // generation. Never fed back into evidence/plan — purely informational.
+    editorialFeedback: editorialFeedback ?? null,
     /**
      * Phase 6.7C Part E/F — the authoritative signal for whether this record
      * is a valid, approvable article preview or only a failure/diagnostic

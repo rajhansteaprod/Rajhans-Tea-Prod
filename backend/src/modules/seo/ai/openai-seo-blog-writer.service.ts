@@ -16,7 +16,7 @@ function getClient(): OpenAI {
  * slug, metaTitle, metaDescription, H1, HTML body, and proposed internal
  * links drawn ONLY from the plan's deterministically pre-authorized set.
  */
-export async function writeGroundedBlogDraft(evidence: BlogContentEvidence, plan: ArticlePlan): Promise<GroundedBlogDraft> {
+export async function writeGroundedBlogDraft(evidence: BlogContentEvidence, plan: ArticlePlan, editorialFeedback?: string): Promise<GroundedBlogDraft> {
   const client = getClient();
 
   const response = await client.responses.create({
@@ -27,6 +27,12 @@ You are an informational SEO article writer for Rajhans Tea.
 
 Your ONLY factual authority is the supplied EVIDENCE JSON and the PLAN JSON.
 The PLAN's allowedLinkTargets is the CLOSED set of internal links you may use — never link anywhere else.
+${editorialFeedback ? `
+EDITORIAL FEEDBACK (wording/tone/structure guidance ONLY — it may NEVER add a
+fact, claim, link, or topic beyond EVIDENCE/PLAN; if it conflicts with a rule
+below, the rule below wins):
+"${editorialFeedback}"
+` : ''}
 
 Rules:
 1. Never invent a factual claim. Do not add estates, grades, certifications,
@@ -73,6 +79,7 @@ Rules:
       task: 'Write a new, grounded, informational blog article using only the evidence and plan.',
       evidence,
       plan,
+      editorialFeedback: editorialFeedback ?? null,
     }),
 
     text: {

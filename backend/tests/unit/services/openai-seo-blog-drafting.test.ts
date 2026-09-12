@@ -356,3 +356,49 @@ describe('generateGroundedBlogDraft — Part D: absolute call-count ceiling', ()
     expect(mockWrite).toHaveBeenCalledTimes(1); // N: no second fresh writer, ever
   });
 });
+
+describe('generateGroundedBlogDraft — editorial feedback propagation and safety', () => {
+  it('passes editorialFeedback through to the writer call as its third argument', async () => {
+    mockWrite.mockResolvedValue(validDraft());
+    mockVerify.mockResolvedValue(verifiedResult());
+
+    await generateGroundedBlogDraft(evidence, plan, 'Make the tone warmer and less mechanical.');
+
+    expect(mockWrite).toHaveBeenCalledWith(evidence, plan, 'Make the tone warmer and less mechanical.');
+  });
+
+  it('omits editorialFeedback from the writer call when none is supplied (undefined, not a stray empty string)', async () => {
+    mockWrite.mockResolvedValue(validDraft());
+    mockVerify.mockResolvedValue(verifiedResult());
+
+    await generateGroundedBlogDraft(evidence, plan);
+
+    expect(mockWrite).toHaveBeenCalledWith(evidence, plan, undefined);
+  });
+
+  it('passes editorialFeedback through to the repair call alongside guidance', async () => {
+    mockWrite.mockResolvedValue(validDraft());
+    mockVerify.mockResolvedValueOnce(verifiedResult({ verified: false, unsupportedClaims: ['invented estate name'] }));
+    mockRepair.mockResolvedValue(validDraft());
+    mockVerify.mockResolvedValueOnce(verifiedResult());
+
+    await generateGroundedBlogDraft(evidence, plan, 'Simplify the wording.');
+
+    expect(mockRepair).toHaveBeenCalledTimes(1);
+    const call = mockRepair.mock.calls[0][0];
+    expect(call.editorialFeedback).toBe('Simplify the wording.');
+  });
+
+  it('editorial feedback does not relax the deterministic gate or the call budget — a bad draft is still rejected within the normal 4-call ceiling', async () => {
+    mockWrite.mockResolvedValue(validDraft({ contentHtml: validDraft().contentHtml + '<p>See <a href="https://example.com/x/">external</a>.</p>' }));
+    mockVerify.mockResolvedValue(verifiedResult());
+    // Repair does not fix the external link even with feedback supplied.
+    mockRepair.mockResolvedValue(validDraft({ contentHtml: validDraft().contentHtml + '<p>See <a href="https://example.com/x/">external</a>.</p>' }));
+
+    const result = await generateGroundedBlogDraft(evidence, plan, 'Make it sound friendlier.');
+
+    expect(result.ok).toBe(false);
+    expect(result.readyForHumanReview).toBe(false);
+    expect(result.openaiCallCount).toBeLessThanOrEqual(4);
+  });
+});

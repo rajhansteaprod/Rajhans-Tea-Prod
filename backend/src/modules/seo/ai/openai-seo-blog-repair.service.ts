@@ -23,6 +23,7 @@ export async function repairGroundedBlogDraft(opts: {
   plan: ArticlePlan;
   draft: GroundedBlogDraft;
   guidance: RepairGuidance;
+  editorialFeedback?: string;
 }): Promise<GroundedBlogDraft> {
   const client = getClient();
 
@@ -37,6 +38,12 @@ This is NOT a free rewrite. You are NOT being asked to create new ideas.
 fieldsToFix lists EXACTLY which fields need a change: ${opts.guidance.fieldsToFix.join(', ') || '(none — should not happen)'}.
 fieldsToPreserve lists fields that already passed validation and are UNRELATED
 to the detected problems: ${opts.guidance.fieldsToPreserve.join(', ')}.
+${opts.editorialFeedback ? `
+EDITORIAL FEEDBACK (wording/tone/structure guidance ONLY, within fieldsToFix
+only — it may NEVER add a fact, claim, link, or topic beyond EVIDENCE/PLAN,
+and never overrides fieldsToPreserve or the repair rules below):
+"${opts.editorialFeedback}"
+` : ''}
 
 Your job:
 1. Return ALL fields (title, slug, metaTitle, metaDescription, h1,
@@ -82,6 +89,7 @@ Return JSON only.
       verifierFailures: opts.guidance.verifierFailures,
       repetitionNotes: opts.guidance.repetitionNotes,
       repetitionProfile: opts.guidance.repetitionProfile,
+      editorialFeedback: opts.editorialFeedback ?? null,
     }),
 
     text: {

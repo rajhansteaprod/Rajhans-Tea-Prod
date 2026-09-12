@@ -165,6 +165,36 @@ jest.mock('../../../src/modules/cms/models/blog.model', () => ({
   },
 }));
 
+// Editorial-feedback propagation/safety tests (topical-authority blog_create
+// path) mock the Product/ProductVariant lookups and the three AI
+// sub-services directly — never the real OpenAI SDK/network.
+let fakeProduct: Record<string, unknown> | null = null;
+jest.mock('../../../src/modules/catalog/models/product.model', () => ({
+  Product: {
+    findOne: jest.fn(() => ({
+      lean: async () => fakeProduct,
+    })),
+  },
+}));
+jest.mock('../../../src/modules/catalog/models/product-variant.model', () => ({
+  ProductVariant: {
+    find: jest.fn(() => ({
+      select: () => ({
+        lean: async () => [],
+      }),
+    })),
+  },
+}));
+jest.mock('../../../src/modules/seo/ai/openai-seo-blog-writer.service', () => ({
+  writeGroundedBlogDraft: jest.fn(),
+}));
+jest.mock('../../../src/modules/seo/ai/openai-seo-blog-claim-verifier.service', () => ({
+  verifyBlogDraftClaims: jest.fn(),
+}));
+jest.mock('../../../src/modules/seo/ai/openai-seo-blog-repair.service', () => ({
+  repairGroundedBlogDraft: jest.fn(),
+}));
+
 import {
   generateChangeDraft,
   listChangeDrafts,
@@ -176,7 +206,15 @@ import {
   StructuredDataProposedChange,
   InternalLinkProposedChange,
   GenericProposedChange,
+  BlogCreateProposedChange,
 } from '../../../src/modules/seo/models/seo-change-draft.model';
+import { writeGroundedBlogDraft } from '../../../src/modules/seo/ai/openai-seo-blog-writer.service';
+import { verifyBlogDraftClaims } from '../../../src/modules/seo/ai/openai-seo-blog-claim-verifier.service';
+import { repairGroundedBlogDraft } from '../../../src/modules/seo/ai/openai-seo-blog-repair.service';
+
+const mockWriteBlog = writeGroundedBlogDraft as jest.Mock;
+const mockVerifyBlog = verifyBlogDraftClaims as jest.Mock;
+const mockRepairBlog = repairGroundedBlogDraft as jest.Mock;
 
 const generatedBy = new mongoose.Types.ObjectId().toString();
 
@@ -184,6 +222,10 @@ beforeEach(() => {
   recStore = [];
   draftStore = [];
   createShouldFail = false;
+  fakeProduct = null;
+  mockWriteBlog.mockReset();
+  mockVerifyBlog.mockReset();
+  mockRepairBlog.mockReset();
 });
 
 // -----------------------------------------------------------------------------
@@ -669,5 +711,179 @@ describe('recommendationExists', () => {
     expect(await recommendationExists(String(rec._id))).toBe(true);
     expect(await recommendationExists(new mongoose.Types.ObjectId().toString())).toBe(false);
     expect(await recommendationExists('not-an-object-id')).toBe(false);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Editorial feedback (topical-authority autonomous article drafting) —
+// propagation into the writer/repair calls and persistence in the audit
+// trail, never into product drafting or any other recommendation category.
+// -----------------------------------------------------------------------------
+function makeTopicalAuthorityRec(): FakeRec {
+  return makeRec({
+    category: 'topical-authority',
+    recommendationId: 'topical-authority-gap',
+    affectedUrls: ['https://rajhanstea.com/product/rajhans-royal-darjeeling/'],
+    evidence: { entity: 'Darjeeling' },
+  });
+}
+
+function validBlogDraft(overrides: Record<string, unknown> = {}) {
+  return {
+    status: 'ok',
+    title: 'What Is Darjeeling Tea?',
+    slug: 'darjeeling-tea-guide',
+    metaTitle: 'What Is Darjeeling Tea? — Rajhans Tea',
+    metaDescription: 'Learn about Darjeeling tea, a light, floral black tea from the Himalayan hills.',
+    h1: 'What Is Darjeeling Tea?',
+    contentHtml:
+      '<p>Darjeeling tea is light and floral.</p>' +
+      '<h2>Where It Comes From</h2><p>It is grown in Darjeeling.</p>' +
+      '<h2>Choosing Your Pack</h2><p>See the <a href="https://rajhanstea.com/product/rajhans-royal-darjeeling/">Rajhans Royal Darjeeling product page</a>.</p>',
+    proposedLinks: [{ href: 'https://rajhanstea.com/product/rajhans-royal-darjeeling/', anchor: 'Rajhans Royal Darjeeling product page' }],
+    claimsUsed: ['light, floral'],
+    unsupportedClaims: [],
+    notes: [],
+    ...overrides,
+  };
+}
+
+function verifiedBlogResult(overrides: Record<string, unknown> = {}) {
+  return {
+    verified: true,
+    supportedClaims: [],
+    unsupportedClaims: [],
+    questionableClaims: [],
+    misleadingImplications: [],
+    contradictions: [],
+    cannibalizationConcerns: [],
+    internalLinkConcerns: [],
+    notes: [],
+    ...overrides,
+  };
+}
+
+describe('generateChangeDraft — editorial feedback (topical-authority blog_create only)', () => {
+  beforeEach(() => {
+    fakeProduct = {
+      _id: new mongoose.Types.ObjectId(),
+      name: 'Rajhans Royal Darjeeling',
+      slug: 'rajhans-royal-darjeeling',
+      region: 'Darjeeling',
+      description: 'A light, floral black tea.',
+      shortDescription: 'Light and floral.',
+      bestTakenFor: ['Noon'],
+      hasVariants: false,
+    };
+  });
+
+  it('passes editorialFeedback through to the blog writer call', async () => {
+    const rec = makeTopicalAuthorityRec();
+    recStore.push(rec);
+    mockWriteBlog.mockResolvedValue(validBlogDraft());
+    mockVerifyBlog.mockResolvedValue(verifiedBlogResult());
+
+    await generateChangeDraft({ recommendationId: String(rec._id), generatedBy, editorialFeedback: 'Sound warmer and less mechanical.' });
+
+    expect(mockWriteBlog).toHaveBeenCalledTimes(1);
+    expect(mockWriteBlog.mock.calls[0][2]).toBe('Sound warmer and less mechanical.');
+  });
+
+  it('passes editorialFeedback through to the repair call when repair is triggered', async () => {
+    const rec = makeTopicalAuthorityRec();
+    recStore.push(rec);
+    mockWriteBlog.mockResolvedValue(validBlogDraft());
+    mockVerifyBlog.mockResolvedValueOnce(verifiedBlogResult({ verified: false, unsupportedClaims: ['bad'] }));
+    mockRepairBlog.mockResolvedValue(validBlogDraft());
+    mockVerifyBlog.mockResolvedValueOnce(verifiedBlogResult());
+
+    await generateChangeDraft({ recommendationId: String(rec._id), generatedBy, editorialFeedback: 'Simplify the wording.' });
+
+    expect(mockRepairBlog).toHaveBeenCalledTimes(1);
+    expect(mockRepairBlog.mock.calls[0][0].editorialFeedback).toBe('Simplify the wording.');
+  });
+
+  it('persists editorialFeedback verbatim in generationEvidence — the audit trail a reviewer sees', async () => {
+    const rec = makeTopicalAuthorityRec();
+    recStore.push(rec);
+    mockWriteBlog.mockResolvedValue(validBlogDraft());
+    mockVerifyBlog.mockResolvedValue(verifiedBlogResult());
+
+    const result = await generateChangeDraft({ recommendationId: String(rec._id), generatedBy, editorialFeedback: 'Sound warmer.' });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const evidence = (result.draft.inputSnapshot as { generationEvidence?: { editorialFeedback?: unknown } }).generationEvidence;
+    expect(evidence?.editorialFeedback).toBe('Sound warmer.');
+  });
+
+  it('persists editorialFeedback as null when none is supplied', async () => {
+    const rec = makeTopicalAuthorityRec();
+    recStore.push(rec);
+    mockWriteBlog.mockResolvedValue(validBlogDraft());
+    mockVerifyBlog.mockResolvedValue(verifiedBlogResult());
+
+    const result = await generateChangeDraft({ recommendationId: String(rec._id), generatedBy });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const evidence = (result.draft.inputSnapshot as { generationEvidence?: { editorialFeedback?: unknown } }).generationEvidence;
+    expect(evidence?.editorialFeedback).toBeNull();
+  });
+
+  it('does not expand the allowed link set or bypass deterministic validation when feedback is supplied', async () => {
+    const rec = makeTopicalAuthorityRec();
+    recStore.push(rec);
+    // Even with feedback present, a draft linking outside the allowed set must still fail validation.
+    mockWriteBlog.mockResolvedValue(
+      validBlogDraft({ contentHtml: validBlogDraft().contentHtml + '<p>See <a href="https://example.com/x/">external</a>.</p>' }),
+    );
+    mockVerifyBlog.mockResolvedValue(verifiedBlogResult());
+    mockRepairBlog.mockResolvedValue(
+      validBlogDraft({ contentHtml: validBlogDraft().contentHtml + '<p>See <a href="https://example.com/x/">external</a>.</p>' }),
+    );
+
+    const result = await generateChangeDraft({ recommendationId: String(rec._id), generatedBy, editorialFeedback: 'Make it friendlier.' });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const change = result.draft.proposedChanges[0] as BlogCreateProposedChange;
+    expect(change.execution).toBeUndefined();
+    expect(result.draft.validation.warnings.some((w) => w.includes('did not produce an executable proposal'))).toBe(true);
+  });
+
+  it('regeneration with different feedback produces a new draft with a new contentHash, never overwriting the prior draft', async () => {
+    const rec = makeTopicalAuthorityRec();
+    recStore.push(rec);
+    mockWriteBlog.mockResolvedValue(validBlogDraft());
+    mockVerifyBlog.mockResolvedValue(verifiedBlogResult());
+
+    const first = await generateChangeDraft({ recommendationId: String(rec._id), generatedBy, editorialFeedback: 'Sound warmer.' });
+    expect(first.ok).toBe(true);
+    if (!first.ok) return;
+
+    mockWriteBlog.mockResolvedValue(validBlogDraft({ title: 'What Is Darjeeling Tea? (Revised)' }));
+    const second = await generateChangeDraft({ recommendationId: String(rec._id), generatedBy, editorialFeedback: 'Sound even warmer.' });
+    expect(second.ok).toBe(true);
+    if (!second.ok) return;
+
+    expect(String(second.draft._id)).not.toBe(String(first.draft._id));
+    expect(second.draft.contentHash).not.toBe(first.draft.contentHash);
+
+    const history = await listChangeDrafts(String(rec._id));
+    expect(history).toHaveLength(2);
+    const priorDraft = history!.find((d) => String(d._id) === String(first.draft._id))!;
+    expect(priorDraft.proposedChanges).toEqual(first.draft.proposedChanges);
+    expect(priorDraft.status).toBe('superseded');
+  });
+
+  it('editorialFeedback on a topical-authority recommendation never reaches product-content drafting or any other category generator', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../../../src/modules/seo/services/change-draft-generator.service.ts'),
+      'utf8',
+    );
+    // generateGroundedProductDraft (Product.description AI drafting) must never be called with editorialFeedback.
+    const productDraftCallLines = src.split('\n').filter((l) => l.includes('generateGroundedProductDraft('));
+    expect(productDraftCallLines.some((l) => l.includes('editorialFeedback'))).toBe(false);
   });
 });

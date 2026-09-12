@@ -75,11 +75,15 @@ function rejected(opts: {
  * original draft, or outside the cleanup whitelist) also terminates
  * immediately after repair (3 calls) — it is NEVER retried via cleanup.
  */
-export async function generateGroundedBlogDraft(evidence: BlogContentEvidence, plan: ArticlePlan): Promise<GroundedBlogDraftResult> {
+export async function generateGroundedBlogDraft(
+  evidence: BlogContentEvidence,
+  plan: ArticlePlan,
+  editorialFeedback?: string,
+): Promise<GroundedBlogDraftResult> {
   let openaiCallCount = 0;
 
   try {
-    const draft = await writeGroundedBlogDraft(evidence, plan);
+    const draft = await writeGroundedBlogDraft(evidence, plan, editorialFeedback);
     openaiCallCount++;
 
     if (draft.status === 'insufficient_evidence' || !draft.contentHtml || !draft.title || !draft.slug || !draft.h1) {
@@ -120,7 +124,7 @@ export async function generateGroundedBlogDraft(evidence: BlogContentEvidence, p
       verification,
     });
 
-    const repairedRaw = await repairGroundedBlogDraft({ evidence, plan, draft, guidance });
+    const repairedRaw = await repairGroundedBlogDraft({ evidence, plan, draft, guidance, editorialFeedback });
     openaiCallCount++;
 
     if (repairedRaw.status === 'insufficient_evidence') {
@@ -197,7 +201,7 @@ export async function generateGroundedBlogDraft(evidence: BlogContentEvidence, p
       verification: emptyVerification(),
     });
 
-    const cleanedRaw = await repairGroundedBlogDraft({ evidence, plan, draft: candidate, guidance: cleanupGuidance });
+    const cleanedRaw = await repairGroundedBlogDraft({ evidence, plan, draft: candidate, guidance: cleanupGuidance, editorialFeedback });
     openaiCallCount++;
     diagnosticsBase.cleanupAttempted = true;
 
