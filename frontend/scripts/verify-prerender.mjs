@@ -52,11 +52,20 @@ function verify(routePrefix, slug, { requireJsonLdProduct = false, requireCards 
 }
 
 /**
- * Homepage brand/entity signals: exactly one genuinely visible H1 containing
- * "Rajhans Tea", WebSite JSON-LD with the canonical homepage URL, and the
- * existing Organization JSON-LD still present.
+ * Homepage brand/entity signals.
+ *
+ * The homepage intentionally has NO standalone H1 — its one semantic H1 is
+ * the active hero slide's own title (see hero.html), conditionally rendered
+ * only when that slide has a non-empty title. An empty hero title is a
+ * deliberate, valid content state, not a defect: this checks that the
+ * PRERENDERED H1 COUNT MATCHES the live CMS state exactly (0 when the active
+ * slide has no title, 1 when it does), rather than asserting a fixed count.
+ * More than one H1, or any H1 when the active slide has no title, still
+ * fails — as does the retired standalone `.home__brand-kicker` element ever
+ * reappearing. Also checks WebSite/Organization JSON-LD, the removed legacy
+ * headline text, and the hero section itself actually having rendered.
  */
-function verifyHomepageEntitySignals() {
+async function verifyHomepageEntitySignals() {
   const url = '/';
   const file = resolve(BROWSER, 'index.html');
   if (!existsSync(file)) {
@@ -65,13 +74,48 @@ function verifyHomepageEntitySignals() {
   }
   const html = readFileSync(file, 'utf8');
 
+  // The obsolete standalone SEO headline must never come back, in any form.
+  check(url, !/home__brand-kicker/.test(html), 'the obsolete standalone .home__brand-kicker element is present');
+  check(url, !html.includes('Premium Loose-Leaf CTC Chai'), 'the retired standalone SEO headline text is still present');
+  check(url, !html.includes('Ethically Sourced'), '"Ethically Sourced" is still present on the homepage');
+
+  // The hero section must have actually rendered (independent of whether its
+  // title happens to be empty) — an empty H1 count must never mean a broken
+  // hero, only a titleless active slide.
+  check(url, /class="hero"/.test(html) || /class="hero__frame"/.test(html), 'hero section did not render');
+
   const h1Matches = [...html.matchAll(/<h1\b([^>]*)>([\s\S]*?)<\/h1>/g)];
-  check(url, h1Matches.length === 1, `expected exactly one homepage <h1>, found ${h1Matches.length}`);
-  if (h1Matches.length >= 1) {
+  check(url, h1Matches.length <= 1, `expected at most one homepage <h1>, found ${h1Matches.length}`);
+
+  // Cross-check the actual prerendered H1 count against the SAME API this
+  // build's manifest was generated from — the one live-data signal that
+  // decides whether 0 or 1 is the correct count right now.
+  let activeSlideTitle = '';
+  try {
+    const res = await fetch(`${manifest.source}/hero-slides`, { signal: AbortSignal.timeout(20000) });
+    if (res.ok) {
+      const json = await res.json();
+      activeSlideTitle = (json?.data?.[0]?.title ?? '').trim();
+    } else {
+      failures.push(`  ✗ [${url}] could not fetch hero-slides to validate H1 count (HTTP ${res.status})`);
+    }
+  } catch (err) {
+    failures.push(`  ✗ [${url}] could not fetch hero-slides to validate H1 count (${err.message})`);
+  }
+
+  const expectedH1Count = activeSlideTitle ? 1 : 0;
+  check(
+    url,
+    h1Matches.length === expectedH1Count,
+    `homepage <h1> count (${h1Matches.length}) does not match the active hero slide's title state ` +
+      `(expected ${expectedH1Count}; active slide title is ${activeSlideTitle ? `"${activeSlideTitle}"` : 'empty'})`,
+  );
+
+  if (h1Matches.length === 1) {
     const [, attrs, inner] = h1Matches[0];
     const text = inner.replace(/<[^>]*>/g, '').trim();
-    check(url, text.includes('Rajhans Tea'), `homepage H1 does not contain "Rajhans Tea": "${text}"`);
-    check(url, !/visually-hidden/.test(attrs), 'homepage H1 is visually-hidden, not genuinely visible');
+    check(url, text === activeSlideTitle, `homepage H1 text ("${text}") does not match the active hero slide's title ("${activeSlideTitle}")`);
+    check(url, !/visually-hidden/.test(attrs), 'homepage H1 is visually-hidden, not genuinely visible — no visually-hidden workaround is allowed');
   }
 
   check(url, /"@type"\s*:\s*"WebSite"/.test(html), 'missing WebSite JSON-LD');
@@ -81,6 +125,9 @@ function verifyHomepageEntitySignals() {
     'WebSite JSON-LD missing or does not declare the canonical homepage url',
   );
   check(url, /"@type"\s*:\s*"Organization"/.test(html), 'Organization JSON-LD is no longer present');
+
+  const canonical = (html.match(/<link rel="canonical"[^>]*href="([^"]*)"/) || [])[1] || '';
+  check(url, canonical === 'https://rajhanstea.com/', `homepage canonical is not self-referential: "${canonical}"`);
 }
 
 /** One in-body link to the homepage with anchor text "Rajhans Tea" on a given static route. */
@@ -109,7 +156,7 @@ verify('page', 'faq');
 // regression check for the prerender gap above, not a tautology.
 verify('product', 'rajhans-rajdoot-dooars', { requireJsonLdProduct: true, requireDescription: true });
 
-verifyHomepageEntitySignals();
+await verifyHomepageEntitySignals();
 verifyInternalBrandLink('/page/about-us');
 verifyInternalBrandLink('/buy-in-bulk');
 
