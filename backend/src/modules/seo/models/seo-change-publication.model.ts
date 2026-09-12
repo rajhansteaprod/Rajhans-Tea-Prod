@@ -48,6 +48,17 @@ export interface ISeoChangePublicationDoc extends Document {
    */
   retryHistory: PublicationRetryHistoryEntry[];
 
+  /**
+   * Bounded recovery path for a publication that reached `published` but
+   * whose post-publish content verification came back `mismatch`/
+   * `fetch_failed` (e.g. a stale prerender manifest). Distinct from
+   * retryHistory (which is for the pending<-failed loop) because the
+   * starting state, eligibility rule, and the field being audited
+   * (verificationStatus, not errorMessage) are all different.
+   */
+  redeployAttemptCount: number;
+  redeployHistory: PublicationRedeployEntry[];
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -58,6 +69,16 @@ export interface PublicationRetryHistoryEntry {
   errorMessage: string | null;
   attemptCount: number;
   retriedAt: Date;
+}
+
+/** One snapshot of the pre-redeploy state, captured immediately before a bounded redeploy/reverify attempt resets published->building. */
+export interface PublicationRedeployEntry {
+  attemptedAt: Date;
+  sourceRevision: string;
+  previousFrontendImage: string | null;
+  previousFrontendSourceRef: string | null;
+  previousVerificationId: mongoose.Types.ObjectId | null;
+  previousVerificationStatus: string | null;
 }
 
 const seoChangePublicationSchema =
@@ -161,6 +182,26 @@ const seoChangePublicationSchema =
             errorMessage: { type: String, default: null },
             attemptCount: { type: Number, required: true },
             retriedAt: { type: Date, required: true },
+          },
+        ],
+        default: [],
+      },
+
+      redeployAttemptCount: {
+        type: Number,
+        default: 0,
+      },
+
+      redeployHistory: {
+        type: [
+          {
+            _id: false,
+            attemptedAt: { type: Date, required: true },
+            sourceRevision: { type: String, required: true },
+            previousFrontendImage: { type: String, default: null },
+            previousFrontendSourceRef: { type: String, default: null },
+            previousVerificationId: { type: Schema.Types.ObjectId, ref: 'SeoChangeVerification', default: null },
+            previousVerificationStatus: { type: String, default: null },
           },
         ],
         default: [],

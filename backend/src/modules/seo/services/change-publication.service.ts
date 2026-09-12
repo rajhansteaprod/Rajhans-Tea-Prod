@@ -4,8 +4,12 @@ import {
   ISeoChangePublicationDoc,
 } from '../models/seo-change-publication.model';
 import { SeoChangeExecution } from '../models/seo-change-execution.model';
+import { SeoChangeVerification } from '../models/seo-change-verification.model';
 
 export const PUBLICATION_WORKER_VERSION = '5.4a-publication-worker-v1';
+
+/** Hard ceiling on redeploy attempts for one publication — never an unbounded/looping retry. */
+export const MAX_REDEPLOY_ATTEMPTS = 3;
 
 export type PublicationMutationResult =
   | { ok: true; publication: ISeoChangePublicationDoc }
@@ -210,6 +214,124 @@ export async function retryFailedPublication(
       error: 'not_found_or_state',
       message: 'Publication was not found in failed state',
     };
+  }
+
+  return { ok: true, publication };
+}
+
+export type BeginRedeployError =
+  | 'invalid_id'
+  | 'not_found'
+  | 'not_published'
+  | 'execution_invalid'
+  | 'no_mismatched_verification'
+  | 'redeploy_limit_reached';
+
+export type BeginRedeployResult =
+  | { ok: true; publication: ISeoChangePublicationDoc }
+  | { ok: false; error: BeginRedeployError; message: string };
+
+/**
+ * Narrowest safe recovery path for a publication that reached `published`
+ * (the build/swap itself succeeded) but whose post-publish content
+ * verification came back `mismatch`/`fetch_failed` — e.g. a stale prerender
+ * manifest that didn't list a just-created blog slug. `markPublicationPublished`
+ * and `markPublicationFailed` both require `building`, and `retryFailedPublication`
+ * requires `failed`, so none of them can act on an already-`published` record;
+ * this is the one function that transitions published -> building again, and
+ * ONLY when every eligibility condition below holds. Reuses the SAME
+ * execution/Blog document and the SAME publication row (the unique index on
+ * `executionId` makes a second publication row for this execution impossible
+ * by construction) — never creates a new execution, Blog, or publication.
+ *
+ * Eligibility (every condition required):
+ *   - publication.status === 'published'
+ *   - the associated execution still exists and is 'succeeded'
+ *   - the NEWEST verification for that execution is mismatch/fetch_failed
+ *     (a currently-'verified' execution has nothing to recover from)
+ *   - redeployAttemptCount < MAX_REDEPLOY_ATTEMPTS (bounded — no loops)
+ *
+ * On success: status -> 'building' (so the existing markPublicationPublished/
+ * markPublicationFailed/recordPublicationVerification functions apply
+ * unchanged from here), redeployAttemptCount += 1, and a redeployHistory
+ * entry snapshots the pre-redeploy frontendImage/frontendSourceRef/
+ * verification so the forensic record of the failed attempt is never lost.
+ */
+export async function beginPublicationRedeploy(opts: {
+  publicationId: string;
+  sourceRevision: string;
+}): Promise<BeginRedeployResult> {
+  const { publicationId, sourceRevision } = opts;
+  if (!mongoose.isValidObjectId(publicationId)) {
+    return { ok: false, error: 'invalid_id', message: 'Invalid publication id' };
+  }
+
+  const publishedPublication = await SeoChangePublication.findOne({
+    _id: new mongoose.Types.ObjectId(publicationId),
+    status: 'published',
+  }).exec();
+
+  if (!publishedPublication) {
+    return { ok: false, error: 'not_published', message: 'Publication was not found in published state' };
+  }
+
+  if (publishedPublication.redeployAttemptCount >= MAX_REDEPLOY_ATTEMPTS) {
+    return {
+      ok: false,
+      error: 'redeploy_limit_reached',
+      message: `Publication has already reached the maximum of ${MAX_REDEPLOY_ATTEMPTS} redeploy attempts`,
+    };
+  }
+
+  const execution = await SeoChangeExecution.findById(publishedPublication.executionId).exec();
+  if (!execution || execution.status !== 'succeeded') {
+    return { ok: false, error: 'execution_invalid', message: 'Associated execution is missing or not in a succeeded state' };
+  }
+
+  const latestVerification = await SeoChangeVerification.findOne({ executionId: execution._id })
+    .sort({ verifiedAt: -1 })
+    .exec();
+
+  if (!latestVerification || latestVerification.status === 'verified') {
+    return {
+      ok: false,
+      error: 'no_mismatched_verification',
+      message: 'No mismatch/fetch_failed verification exists for this execution — nothing to recover from',
+    };
+  }
+
+  const publication = await SeoChangePublication.findOneAndUpdate(
+    {
+      _id: new mongoose.Types.ObjectId(publicationId),
+      status: 'published',
+      redeployAttemptCount: publishedPublication.redeployAttemptCount,
+    },
+    {
+      $set: {
+        status: 'building',
+        startedAt: new Date(),
+        failedAt: null,
+        errorMessage: null,
+      },
+      $inc: {
+        redeployAttemptCount: 1,
+      },
+      $push: {
+        redeployHistory: {
+          attemptedAt: new Date(),
+          sourceRevision,
+          previousFrontendImage: publishedPublication.frontendImage,
+          previousFrontendSourceRef: publishedPublication.frontendSourceRef,
+          previousVerificationId: latestVerification._id,
+          previousVerificationStatus: latestVerification.status,
+        },
+      },
+    },
+    { new: true },
+  ).exec();
+
+  if (!publication) {
+    return { ok: false, error: 'not_published', message: 'Publication was not found in published state' };
   }
 
   return { ok: true, publication };

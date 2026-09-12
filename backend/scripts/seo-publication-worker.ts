@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { config } from '../src/config';
 import {
+  beginPublicationRedeploy,
   claimNextPendingPublication,
   getPublicationById,
   markPublicationFailed,
@@ -11,6 +12,7 @@ import {
 import {
   verifyExecution,
 } from '../src/modules/seo/services/change-verification.service';
+import { getExecutionById } from '../src/modules/seo/services/change-execution.service';
 
 function value(flag: string): string | null {
   const i = process.argv.indexOf(flag);
@@ -99,6 +101,48 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (action === 'redeploy-begin') {
+    const publicationId = value('--id');
+    const sourceRevision = value('--source-revision');
+    if (!publicationId || !sourceRevision) {
+      throw new Error('redeploy-begin requires --id and --source-revision');
+    }
+
+    const result = await beginPublicationRedeploy({ publicationId, sourceRevision });
+
+    if (!result.ok) {
+      out({ ok: false, error: result.error, message: result.message });
+      process.exitCode = 2;
+      return;
+    }
+
+    const execution = await getExecutionById(String(result.publication.executionId));
+    if (!execution) {
+      // Eligibility already confirmed the execution existed and was succeeded
+      // moments ago; this would only happen under an impossible concurrent
+      // deletion, but fail loudly rather than report an incomplete result.
+      throw new Error('Execution disappeared immediately after eligibility check');
+    }
+
+    const blogCreateTarget = execution.targetType === 'blog_create' ? execution.targets[0] : null;
+
+    out({
+      ok: true,
+      publication: {
+        id: String(result.publication._id),
+        executionId: String(result.publication.executionId),
+        redeployAttemptCount: result.publication.redeployAttemptCount,
+      },
+      executionId: String(execution._id),
+      targetType: execution.targetType,
+      // For a blog_create redeploy, the shell pipeline needs to know which
+      // slug the regenerated prerender manifest must contain before it
+      // spends time on a build that would repeat the same mismatch.
+      expectedBlogSlug: blogCreateTarget ? blogCreateTarget.proposed.slug ?? null : null,
+    });
+    return;
+  }
+
   if (action === 'verify') {
     const publicationId = value('--id');
     if (!publicationId) throw new Error('verify requires --id');
@@ -159,7 +203,7 @@ async function main(): Promise<void> {
   }
 
   throw new Error(
-    'Usage: seo-publication-worker.ts claim|published|failed|retry|verify',
+    'Usage: seo-publication-worker.ts claim|published|failed|retry|redeploy-begin|verify',
   );
 }
 
