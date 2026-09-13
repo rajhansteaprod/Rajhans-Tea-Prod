@@ -244,6 +244,12 @@ export function toView(rec: ISeoRecommendationDoc, runId: string) {
     reviewNote: rec.reviewNote ?? null,
     reviewedAt: rec.reviewedAt ?? null,
     reviewedBy: rec.reviewedBy ? String(rec.reviewedBy) : null,
+    // Phase 6.7B exact-draft approval binding — exposed read-only so an admin
+    // UI can show/verify "approved for THIS exact draft" without needing its
+    // own separate lookup. Null whenever the draft-agnostic review path (or no
+    // approval at all) is in effect.
+    reviewedDraftId: rec.reviewedDraftId ? String(rec.reviewedDraftId) : null,
+    reviewedDraftContentHash: rec.reviewedDraftContentHash ?? null,
     state,
   };
 }

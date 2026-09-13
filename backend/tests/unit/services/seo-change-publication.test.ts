@@ -42,11 +42,13 @@ jest.mock(
 import {
   beginPublicationRedeploy,
   claimNextPendingPublication,
+  getPublicationByExecutionId,
   markPublicationPublished,
   markPublicationFailed,
   MAX_REDEPLOY_ATTEMPTS,
   recordPublicationVerification,
   retryFailedPublication,
+  toPublicationView,
 } from '../../../src/modules/seo/services/change-publication.service';
 
 function queryResult(value: unknown) {
@@ -551,5 +553,114 @@ describe('beginPublicationRedeploy', () => {
       expect.anything(),
       { new: true },
     );
+  });
+});
+
+describe('getPublicationByExecutionId', () => {
+  it('fails closed on an invalid execution id before any Mongo call', async () => {
+    const result = await getPublicationByExecutionId('not-an-object-id');
+    expect(result).toBeNull();
+    expect(mockFindOne).not.toHaveBeenCalled();
+  });
+
+  it('queries by executionId and returns null when none exists', async () => {
+    const executionId = new mongoose.Types.ObjectId().toString();
+    mockFindOne.mockReturnValue(queryResult(null));
+    const result = await getPublicationByExecutionId(executionId);
+    expect(result).toBeNull();
+    expect(mockFindOne).toHaveBeenCalledWith({ executionId });
+  });
+
+  it('returns the matching publication document', async () => {
+    const executionId = new mongoose.Types.ObjectId().toString();
+    const doc = { _id: new mongoose.Types.ObjectId(), executionId, status: 'published' };
+    mockFindOne.mockReturnValue(queryResult(doc));
+    const result = await getPublicationByExecutionId(executionId);
+    expect(result).toBe(doc);
+  });
+});
+
+describe('toPublicationView', () => {
+  function baseDoc(overrides: Record<string, unknown> = {}) {
+    return {
+      _id: new mongoose.Types.ObjectId(),
+      executionId: new mongoose.Types.ObjectId(),
+      recommendationId: new mongoose.Types.ObjectId(),
+      draftId: new mongoose.Types.ObjectId(),
+      requestedByUserId: new mongoose.Types.ObjectId(),
+      requestedAt: new Date('2026-01-01T00:00:00Z'),
+      status: 'published',
+      startedAt: new Date('2026-01-01T00:01:00Z'),
+      publishedAt: new Date('2026-01-01T00:02:00Z'),
+      failedAt: null,
+      frontendImage: 'rajhansteaprod/rajhans-tea-frontend:seo-pub-abc',
+      frontendSourceRef: 'abc1234',
+      attemptCount: 1,
+      errorMessage: null,
+      publicationVersion: '5.4a-publication-v1',
+      verificationId: null,
+      verificationStatus: null,
+      redeployAttemptCount: 0,
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      updatedAt: new Date('2026-01-01T00:02:00Z'),
+      ...overrides,
+    };
+  }
+
+  it('serializes every id field to a string and never exposes anything beyond the document fields (no secrets to leak in the first place)', () => {
+    // @ts-expect-error — plain fixture, not a real hydrated Mongoose document
+    const view = toPublicationView(baseDoc());
+    expect(typeof view.id).toBe('string');
+    expect(typeof view.executionId).toBe('string');
+    expect(typeof view.recommendationId).toBe('string');
+    expect(typeof view.draftId).toBe('string');
+    expect(typeof view.requestedByUserId).toBe('string');
+    expect(Object.keys(view).sort()).toEqual(
+      [
+        'attemptCount',
+        'createdAt',
+        'draftId',
+        'errorMessage',
+        'executionId',
+        'failedAt',
+        'frontendImage',
+        'frontendSourceRef',
+        'id',
+        'publicationVersion',
+        'publishedAt',
+        'recommendationId',
+        'redeployAttemptCount',
+        'redeployEligible',
+        'requestedAt',
+        'requestedByUserId',
+        'startedAt',
+        'status',
+        'updatedAt',
+        'verificationId',
+        'verificationStatus',
+      ].sort(),
+    );
+  });
+
+  it('redeployEligible is true only when published, mismatched/fetch_failed, and under the attempt cap', () => {
+    // @ts-expect-error — plain fixture
+    const eligible = toPublicationView(baseDoc({ status: 'published', verificationStatus: 'mismatch', redeployAttemptCount: 1 }));
+    expect(eligible.redeployEligible).toBe(true);
+
+    // @ts-expect-error — plain fixture
+    const notPublished = toPublicationView(baseDoc({ status: 'building', verificationStatus: 'mismatch' }));
+    expect(notPublished.redeployEligible).toBe(false);
+
+    // @ts-expect-error — plain fixture
+    const alreadyVerified = toPublicationView(baseDoc({ status: 'published', verificationStatus: 'verified' }));
+    expect(alreadyVerified.redeployEligible).toBe(false);
+
+    // @ts-expect-error — plain fixture
+    const noVerificationYet = toPublicationView(baseDoc({ status: 'published', verificationStatus: null }));
+    expect(noVerificationYet.redeployEligible).toBe(false);
+
+    // @ts-expect-error — plain fixture
+    const atCap = toPublicationView(baseDoc({ status: 'published', verificationStatus: 'mismatch', redeployAttemptCount: MAX_REDEPLOY_ATTEMPTS }));
+    expect(atCap.redeployEligible).toBe(false);
   });
 });

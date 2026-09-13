@@ -394,3 +394,44 @@ export async function getPublicationById(
   if (!mongoose.isValidObjectId(publicationId)) return null;
   return SeoChangePublication.findById(publicationId).exec();
 }
+
+/** The (at most one, per the unique index on executionId) publication for one execution. Null ⇒ invalid id, not found, or no publication was ever requested for it (e.g. a non-blog_create execution). */
+export async function getPublicationByExecutionId(
+  executionId: string,
+): Promise<ISeoChangePublicationDoc | null> {
+  if (!mongoose.isValidObjectId(executionId)) return null;
+  return SeoChangePublication.findOne({ executionId }).exec();
+}
+
+/** Read-only admin view. Never exposes anything beyond what's already in the document — no image registry credentials or deploy secrets are ever stored here in the first place. */
+export function toPublicationView(doc: ISeoChangePublicationDoc) {
+  return {
+    id: String(doc._id),
+    executionId: String(doc.executionId),
+    recommendationId: String(doc.recommendationId),
+    draftId: String(doc.draftId),
+    requestedByUserId: String(doc.requestedByUserId),
+    requestedAt: doc.requestedAt,
+    status: doc.status,
+    startedAt: doc.startedAt,
+    publishedAt: doc.publishedAt,
+    failedAt: doc.failedAt,
+    frontendImage: doc.frontendImage,
+    frontendSourceRef: doc.frontendSourceRef,
+    attemptCount: doc.attemptCount,
+    errorMessage: doc.errorMessage,
+    publicationVersion: doc.publicationVersion,
+    verificationId: doc.verificationId ? String(doc.verificationId) : null,
+    verificationStatus: doc.verificationStatus ?? null,
+    redeployAttemptCount: doc.redeployAttemptCount,
+    // Mirrors beginPublicationRedeploy's own eligibility rule exactly — advisory
+    // only, the real check always reruns server-side when a redeploy is begun.
+    redeployEligible:
+      doc.status === 'published' &&
+      !!doc.verificationStatus &&
+      doc.verificationStatus !== 'verified' &&
+      doc.redeployAttemptCount < MAX_REDEPLOY_ATTEMPTS,
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+  };
+}

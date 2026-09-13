@@ -1,0 +1,76 @@
+<div class="agent">
+  <div class="agent__header">
+    <div>
+      <h1>SEO Agent</h1>
+      <p class="agent__subtitle">
+        Operate the existing recommendation → preview → approval → preflight → execute/publish → verify → complete
+        lifecycle. Every action here calls the same backend services used throughout this project — nothing here
+        bypasses approval, execution, or publication safeguards.
+      </p>
+    </div>
+    <button class="agent__btn" (click)="load()" [disabled]="loading()">{{ loading() ? 'Loading…' : 'Refresh' }}</button>
+  </div>
+
+  @if (error()) { <div class="agent__error">{{ error() }}</div> }
+
+  @if (report(); as rep) {
+    <div class="agent__filters">
+      <button class="agent__filter-btn" [class.agent__filter-btn--active]="filter === 'all'" (click)="filter = 'all'">
+        All ({{ countFor('all') }})
+      </button>
+      <button class="agent__filter-btn" [class.agent__filter-btn--active]="filter === 'pending'" (click)="filter = 'pending'">
+        Pending Review ({{ countFor('pending') }})
+      </button>
+      <button class="agent__filter-btn" [class.agent__filter-btn--active]="filter === 'approved'" (click)="filter = 'approved'">
+        Approved ({{ countFor('approved') }})
+      </button>
+      <button class="agent__filter-btn agent__filter-btn--attention" [class.agent__filter-btn--active]="filter === 'needs-attention'" (click)="filter = 'needs-attention'">
+        Needs Attention ({{ countFor('needs-attention') }})
+      </button>
+      <button class="agent__filter-btn agent__filter-btn--done" [class.agent__filter-btn--active]="filter === 'completed'" (click)="filter = 'completed'">
+        Completed ({{ countFor('completed') }})
+      </button>
+    </div>
+
+    @if (rep.recommendations.length === 0) {
+      <p class="agent__muted">No open recommendations.</p>
+    } @else if (filtered().length === 0) {
+      <p class="agent__muted">No recommendations match this filter.</p>
+    } @else {
+      <table class="agent__table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Title / Entity</th>
+            <th>Priority</th>
+            <th>Review</th>
+            <th>Preview</th>
+            <th>Execution</th>
+            <th>Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of filtered(); track r.id) {
+            <tr class="agent__row" (click)="open(r)">
+              <td><span class="agent__chip">{{ r.category }}</span></td>
+              <td>
+                <div class="agent__title">{{ r.title }}</div>
+                <div class="agent__target">{{ r.affectedUrls[0] }}</div>
+              </td>
+              <td>
+                <span class="agent__chip agent__chip--{{ r.priority }}">{{ r.priority }}</span>
+                <span class="agent__score">score {{ r.score }}</span>
+              </td>
+              <td><span class="agent__chip agent__chip--review-{{ r.reviewStatus }}">{{ reviewStatusLabel(r.reviewStatus) }}</span></td>
+              <td>{{ previewStatusLabel(r) }}</td>
+              <td>{{ executionStatusLabel(r) }}</td>
+              <td class="agent__muted">{{ r.reviewedAt ? (r.reviewedAt | date: 'MMM d, y') : '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  } @else if (loading()) {
+    <p class="agent__muted">Loading…</p>
+  }
+</div>

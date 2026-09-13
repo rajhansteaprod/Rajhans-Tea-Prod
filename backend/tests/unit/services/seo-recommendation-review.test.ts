@@ -17,6 +17,8 @@ interface FakeDoc {
   reviewNote: string | null;
   reviewedAt: Date | null;
   reviewedBy: mongoose.Types.ObjectId | null;
+  reviewedDraftId: mongoose.Types.ObjectId | null;
+  reviewedDraftContentHash: string | null;
   affectedUrls: string[];
   resolvedRunId: mongoose.Types.ObjectId | null;
   lastSeenRunId: mongoose.Types.ObjectId | null;
@@ -43,6 +45,8 @@ function makeDoc(fields: Partial<FakeDoc> = {}): FakeDoc {
     reviewNote: null,
     reviewedAt: null,
     reviewedBy: null,
+    reviewedDraftId: null,
+    reviewedDraftContentHash: null,
     affectedUrls: [],
     resolvedRunId: null,
     lastSeenRunId: null,
@@ -234,6 +238,25 @@ describe('toView() — exposes the review fields + safe string id', () => {
     const rec = makeDoc({ reviewStatus: 'approved', reviewedBy: reviewer, reviewedAt: new Date() });
     const view = toView(rec as never, String(rec.lastSeenRunId));
     expect(view.reviewedBy).toBe(String(reviewer));
+  });
+
+  it('exposes reviewedDraftId/reviewedDraftContentHash (exact-draft approval binding) — null when draft-agnostic or unapproved', () => {
+    const rec = makeDoc({ reviewStatus: 'pending' });
+    const view = toView(rec as never, String(rec.lastSeenRunId));
+    expect(view.reviewedDraftId).toBeNull();
+    expect(view.reviewedDraftContentHash).toBeNull();
+  });
+
+  it('stringifies reviewedDraftId and passes reviewedDraftContentHash through when an exact-draft approval is bound', () => {
+    const draftId = new mongoose.Types.ObjectId();
+    const rec = makeDoc({
+      reviewStatus: 'approved',
+      reviewedDraftId: draftId,
+      reviewedDraftContentHash: 'abc123',
+    });
+    const view = toView(rec as never, String(rec.lastSeenRunId));
+    expect(view.reviewedDraftId).toBe(String(draftId));
+    expect(view.reviewedDraftContentHash).toBe('abc123');
   });
 });
 

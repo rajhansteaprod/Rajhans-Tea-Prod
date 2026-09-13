@@ -7,9 +7,14 @@ import { listRuns, getReport, getRunIssues } from './services/report.service';
 import {
   getRecommendationsReport,
   updateRecommendationReview,
+  approveRecommendationForDraft,
   toView as toRecommendationView,
   RecommendationReviewStatus,
 } from './services/recommendation.service';
+import {
+  getPublicationByExecutionId,
+  toPublicationView,
+} from './services/change-publication.service';
 import {
   generateChangeDraft,
   listChangeDrafts,
@@ -158,13 +163,26 @@ export const reviewRecommendation = async (req: Request, res: Response) => {
   return sendSuccess(res, toRecommendationView(updated, String(updated.lastSeenRunId)), 'Review updated');
 };
 
+const EDITORIAL_FEEDBACK_MAX_LENGTH = 4000;
+
 /**
- * Phase 5.2 — generate a new structured change-draft for an approved, OPEN
- * recommendation. GENERATION ONLY: this never publishes, mutates, or executes
- * any SEO change — it only persists a reviewable proposal document. Approval
- * eligibility is re-checked server-side; nothing about the frontend's state
- * is trusted. Regenerating supersedes the recommendation's previous active
- * draft(s) rather than overwriting them (audit history is preserved).
+ * Phase 5.2 — generate a new structured change-draft for a recommendation.
+ * GENERATION ONLY: this never publishes, mutates, or executes any SEO change
+ * — it only persists a reviewable proposal document. Eligibility (open
+ * status, and approved-unless-allowPreview) is re-checked server-side;
+ * nothing about the frontend's state is trusted. Regenerating supersedes the
+ * recommendation's previous active draft(s) rather than overwriting them
+ * (audit history is preserved) and always produces a NEW contentHash.
+ *
+ * `allowPreview` lets a still-PENDING recommendation get a human-reviewable
+ * preview draft (existing Phase 6.7B lifecycle) — it does not relax any
+ * approval/execution gate; evaluateExecutionPreflight independently still
+ * requires the recommendation to be reviewStatus==='approved' for THIS exact
+ * draft before anything can execute. `editorialFeedback` is optional wording/
+ * tone/structure guidance for autonomous article drafting (existing Phase
+ * 6.7C mechanism) — it can never expand factual evidence, allowed claims, or
+ * allowed links; every existing deterministic/factual/repetition gate and the
+ * bounded OpenAI call policy are unchanged.
  */
 export const generateRecommendationDraft = async (req: Request, res: Response) => {
   const id = str(req.params.id) ?? '';
@@ -172,12 +190,75 @@ export const generateRecommendationDraft = async (req: Request, res: Response) =
     return res.status(400).json({ success: false, statusCode: 400, message: 'Invalid recommendation id' });
   }
 
-  const result = await generateChangeDraft({ recommendationId: id, generatedBy: req.user!.userId });
+  const rawFeedback = req.body?.editorialFeedback;
+  if (rawFeedback != null && typeof rawFeedback !== 'string') {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'editorialFeedback must be a string' });
+  }
+  const trimmedFeedback = typeof rawFeedback === 'string' ? rawFeedback.trim() : '';
+  if (trimmedFeedback.length > EDITORIAL_FEEDBACK_MAX_LENGTH) {
+    return res
+      .status(400)
+      .json({ success: false, statusCode: 400, message: `editorialFeedback must be ${EDITORIAL_FEEDBACK_MAX_LENGTH} characters or fewer` });
+  }
+
+  const allowPreview = req.body?.allowPreview === true;
+
+  const result = await generateChangeDraft({
+    recommendationId: id,
+    generatedBy: req.user!.userId,
+    allowPreview,
+    editorialFeedback: trimmedFeedback || undefined,
+  });
   if (!result.ok) {
     const statusCode = result.error === 'not_found' ? 404 : 409;
     return res.status(statusCode).json({ success: false, statusCode, message: result.message });
   }
   return sendSuccess(res, toChangeDraftView(result.draft), 'Draft generated', 201);
+};
+
+/**
+ * Phase 6.7B — bind human approval to ONE EXACT draft/contentHash, never the
+ * draft-agnostic path (`reviewRecommendation` above, still available for
+ * plain approve/reject/needs_changes/pending when no specific preview is
+ * being reviewed). The service re-reads the draft's own persisted
+ * contentHash server-side — the request can select WHICH draft to approve
+ * by id, but can never supply or spoof the hash being approved. Regenerating
+ * a new draft afterward does not carry this approval over: preflight's
+ * approval_draft_mismatch check requires an exact id+hash match against
+ * whatever draft is actually being executed.
+ */
+export const approveRecommendationDraft = async (req: Request, res: Response) => {
+  const id = str(req.params.id) ?? '';
+  const draftId = str(req.body?.draftId) ?? '';
+  if (!mongoose.isValidObjectId(id) || !mongoose.isValidObjectId(draftId)) {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'Invalid recommendation id or draftId' });
+  }
+
+  const rawNote = req.body?.reviewNote;
+  if (rawNote != null && typeof rawNote !== 'string') {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'reviewNote must be a string' });
+  }
+  const trimmedNote = typeof rawNote === 'string' ? rawNote.trim() : '';
+  if (trimmedNote.length > REVIEW_NOTE_MAX_LENGTH) {
+    return res
+      .status(400)
+      .json({ success: false, statusCode: 400, message: `reviewNote must be ${REVIEW_NOTE_MAX_LENGTH} characters or fewer` });
+  }
+
+  const result = await approveRecommendationForDraft({
+    recommendationId: id,
+    draftId,
+    reviewedBy: req.user!.userId,
+    reviewNote: trimmedNote || null,
+  });
+
+  if (!result.ok) {
+    const statusByError: Record<string, number> = { not_found: 404, draft_not_found: 404, draft_mismatch: 409 };
+    const statusCode = statusByError[result.error] ?? 409;
+    return res.status(statusCode).json({ success: false, statusCode, message: `Could not approve draft: ${result.error}` });
+  }
+
+  return sendSuccess(res, toRecommendationView(result.recommendation, String(result.recommendation.lastSeenRunId)), 'Draft approved');
 };
 
 /** Draft history for one recommendation, newest first. */
@@ -282,6 +363,24 @@ export const getChangeExecution = async (req: Request, res: Response) => {
   const execution = await getExecutionById(executionId);
   if (!execution) return res.status(404).json({ success: false, statusCode: 404, message: 'Execution not found' });
   return sendSuccess(res, toExecutionView(execution));
+};
+
+/**
+ * Read-only. The (at most one) publication record for an execution — created
+ * automatically by executeApprovedChangeDraft for a blog_create execution,
+ * and otherwise absent (null data, still 200: "no publication exists for
+ * this execution" is a normal state for metadata/product/schema/internal-
+ * link executions, not an error). Never exposes anything beyond the
+ * document's own fields — no registry credentials or deploy secrets are
+ * ever stored on it.
+ */
+export const getExecutionPublication = async (req: Request, res: Response) => {
+  const executionId = str(req.params.executionId) ?? '';
+  if (!mongoose.isValidObjectId(executionId)) {
+    return res.status(400).json({ success: false, statusCode: 400, message: 'Invalid execution id' });
+  }
+  const publication = await getPublicationByExecutionId(executionId);
+  return sendSuccess(res, publication ? toPublicationView(publication) : null);
 };
 
 /**

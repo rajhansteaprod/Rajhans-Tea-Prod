@@ -1,0 +1,352 @@
+<div class="agentd">
+  <a routerLink="/admin/seo/agent" class="agentd__back">&larr; Back to SEO Agent</a>
+
+  @if (error()) { <div class="agentd__error">{{ error() }}</div> }
+  @if (loading()) { <p class="agentd__muted">Loading…</p> }
+
+  @if (recommendation(); as rec) {
+    <!-- ═══ OPPORTUNITY ═══ -->
+    <section class="agentd__section">
+      <div class="agentd__heading-row">
+        <h1>{{ rec.title }}</h1>
+        <span class="agentd__chip agentd__chip--review-{{ rec.reviewStatus }}">{{ rec.reviewStatus }}</span>
+      </div>
+      <p class="agentd__muted">{{ rec.category }} · {{ rec.priority }} priority · score {{ rec.score }}</p>
+      <p>{{ rec.why }}</p>
+      <p class="agentd__suggested"><strong>Suggested fix:</strong> {{ rec.suggestedFix }}</p>
+      <p class="agentd__target">Target: <a [href]="rec.affectedUrls[0]" target="_blank" rel="noopener">{{ rec.affectedUrls[0] }}</a></p>
+
+      @if (rec.reviewedDraftId) {
+        <p class="agentd__approval-note">
+          Approved for draft <code>{{ rec.reviewedDraftId }}</code> (hash <code>{{ rec.reviewedDraftContentHash?.slice(0, 16) }}…</code>)
+          @if (approvalIsStale) {
+            <span class="agentd__chip agentd__chip--stale">STALE — a newer draft exists; re-review required</span>
+          }
+        </p>
+      }
+
+      <button class="agentd__link-btn" (click)="showRawEvidence.set(!showRawEvidence())">
+        {{ showRawEvidence() ? 'Hide' : 'Show' }} raw evidence
+      </button>
+      @if (showRawEvidence()) { <pre class="agentd__raw">{{ json(rec.evidence) }}</pre> }
+    </section>
+
+    <!-- ═══ PREVIEW / GENERATE ═══ -->
+    <section class="agentd__section">
+      <h2>Preview</h2>
+
+      @if (!activeDraft) {
+        <p class="agentd__muted">No preview has been generated yet.</p>
+      }
+
+      @if (supportsEditorialFeedback) {
+        <label class="agentd__label">Editorial feedback (optional — steers wording/tone only, never adds facts or links)</label>
+        <textarea class="agentd__textarea" rows="4" [(ngModel)]="editorialFeedback" placeholder="e.g. Sound warmer and less mechanical; keep all facts the same."></textarea>
+      }
+
+      <div class="agentd__actions">
+        <button class="agentd__btn" (click)="generatePreview()" [disabled]="generating()">
+          {{ generating() ? 'Generating…' : (activeDraft ? 'Regenerate' : 'Generate Preview') }}
+        </button>
+      </div>
+      @if (generateError()) { <div class="agentd__error">{{ generateError() }}</div> }
+
+      @if (activeDraft; as draft) {
+        <div class="agentd__draft-meta">
+          <span>Draft <code>{{ draft.id }}</code></span>
+          <span>Hash <code>{{ draft.contentHash.slice(0, 16) }}…</code></span>
+          <span>previewOnly: {{ draft.previewOnly }}</span>
+          <span class="agentd__chip" [class.agentd__chip--good]="generationEvidence?.readyForHumanReview" [class.agentd__chip--bad]="generationEvidence?.readyForHumanReview === false">
+            readyForHumanReview: {{ generationEvidence?.readyForHumanReview ?? (draft.validation.isValid && !!proposedChange) }}
+          </span>
+          <span>generatorVersion {{ draft.generatorVersion }}</span>
+        </div>
+
+        @if (isFailedGeneration) {
+          <div class="agentd__banner agentd__banner--bad">
+            <strong>Generation failed — not reviewable/approvable.</strong>
+            <p>{{ generationEvidence?.error || draft.validation.warnings.join(' ') || 'No executable content was produced.' }}</p>
+            @if (generationEvidence?.diagnostics; as diag) {
+              <p class="agentd__muted">
+                Original failures: {{ diag.originalFailures.join('; ') || 'none' }}<br>
+                New (repair-introduced) failures: {{ diag.newFailures.join('; ') || 'none' }}<br>
+                Persisted failures: {{ diag.persistedFailures.join('; ') || 'none' }}<br>
+                Cleanup attempted: {{ diag.cleanupAttempted }}
+              </p>
+            }
+          </div>
+        } @else {
+          <!-- ── Content preview, by change kind ── -->
+          @if (isBlogCreate && blogCreateChange?.execution; as ex) {
+            <div class="agentd__blog-preview">
+              <h3>{{ ex.title }}</h3>
+              <p class="agentd__muted">/blog/{{ ex.slug }}/</p>
+              <dl class="agentd__dl">
+                <dt>Meta title</dt><dd>{{ ex.metaTitle }}</dd>
+                <dt>Meta description</dt><dd>{{ ex.metaDescription }}</dd>
+              </dl>
+              <p class="agentd__label">Article body (shown as source — never rendered as live HTML for review safety)</p>
+              <pre class="agentd__article-body">{{ ex.content }}</pre>
+              <p class="agentd__label">Proposed internal links</p>
+              <ul>
+                @for (link of extractLinks(ex.content); track link.href) {
+                  <li><a [href]="link.href" target="_blank" rel="noopener">{{ link.anchor }}</a> → {{ link.href }}</li>
+                } @empty {
+                  <li class="agentd__muted">None</li>
+                }
+              </ul>
+            </div>
+          } @else if (proposedChange; as pc) {
+            @switch (pc.kind) {
+              @case ('metadata') {
+                <div class="agentd__changes">
+                  @if (pc.fields.title; as f) {
+                    <div class="agentd__change-field">
+                      <strong>title</strong>
+                      <div class="agentd__before-after">
+                        <div><span class="agentd__label">Current</span><p>{{ f.current || '(empty)' }}</p></div>
+                        <div><span class="agentd__label">Proposed</span><p>{{ f.proposed }}</p></div>
+                      </div>
+                    </div>
+                  }
+                  @if (pc.fields.metaDescription; as f) {
+                    <div class="agentd__change-field">
+                      <strong>metaDescription</strong>
+                      <div class="agentd__before-after">
+                        <div><span class="agentd__label">Current</span><p>{{ f.current || '(empty)' }}</p></div>
+                        <div><span class="agentd__label">Proposed</span><p>{{ f.proposed }}</p></div>
+                      </div>
+                    </div>
+                  }
+                  @if (pc.fields.h1; as f) {
+                    <div class="agentd__change-field">
+                      <strong>h1</strong>
+                      <div class="agentd__before-after">
+                        <div><span class="agentd__label">Current</span><p>{{ f.current || '(empty)' }}</p></div>
+                        <div><span class="agentd__label">Proposed</span><p>{{ f.proposed }}</p></div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+              @case ('content') {
+                <div class="agentd__changes">
+                  @if (pc.field; as field) {
+                    <div class="agentd__before-after">
+                      <div><span class="agentd__label">Current description</span><p>{{ field.current || '(empty)' }}</p></div>
+                      <div><span class="agentd__label">Proposed description</span><p>{{ field.proposed }}</p></div>
+                    </div>
+                  } @else if (pc.blocks; as blocks) {
+                    @for (block of blocks; track block.heading) {
+                      <div class="agentd__change-field"><strong>{{ block.heading }}</strong><p>{{ block.body }}</p></div>
+                    }
+                  }
+                </div>
+              }
+              @case ('structured_data') {
+                <div><span class="agentd__label">{{ pc.schemaType }} JSON-LD</span><pre class="agentd__raw">{{ json(pc.jsonLd) }}</pre></div>
+              }
+              @case ('internal_link') {
+                <p>Source: {{ pc.sourceUrl || 'unresolved' }}<br>Target: {{ pc.targetUrl }}<br>Anchor: {{ pc.anchorText || '(none)' }}</p>
+              }
+              @case ('faq') {
+                <ul>
+                  @for (item of pc.items; track item.question) {
+                    <li><strong>{{ item.question }}</strong><p>{{ item.answer }}</p></li>
+                  }
+                </ul>
+              }
+              @case ('generic') {
+                <p>{{ pc.summary }}</p>
+                <p class="agentd__muted">{{ pc.instructions }}</p>
+              }
+            }
+          }
+
+          @if (generationEvidence?.unsupportedClaims?.length) {
+            <div class="agentd__banner agentd__banner--warn">
+              <strong>Unsupported claims flagged</strong>
+              <ul>@for (c of generationEvidence!.unsupportedClaims!; track c) { <li>{{ c }}</li> }</ul>
+            </div>
+          }
+          @if (generationEvidence?.plan?.cannibalizationNotes?.length) {
+            <p class="agentd__muted"><strong>Cannibalization:</strong> {{ generationEvidence!.plan!.cannibalizationNotes!.join(' ') }}</p>
+          }
+          @if (generationEvidence?.openaiCallCount != null) {
+            <p class="agentd__muted">OpenAI calls used: {{ generationEvidence!.openaiCallCount }} · model: {{ generationEvidence!.model }}</p>
+          }
+        }
+
+        <div class="agentd__quality">
+          <span class="agentd__chip" [class.agentd__chip--good]="draft.validation.isValid" [class.agentd__chip--bad]="!draft.validation.isValid">
+            Deterministic validation: {{ draft.validation.isValid ? 'Valid' : 'Invalid' }}
+          </span>
+          @if (draft.validation.errors.length) {
+            <ul class="agentd__errors">@for (e of draft.validation.errors; track e) { <li>{{ e }}</li> }</ul>
+          }
+          @if (draft.validation.warnings.length) {
+            <ul class="agentd__warnings">@for (w of draft.validation.warnings; track w) { <li>{{ w }}</li> }</ul>
+          }
+        </div>
+
+        <button class="agentd__link-btn" (click)="showRawDraft.set(!showRawDraft())">{{ showRawDraft() ? 'Hide' : 'Show' }} raw draft JSON</button>
+        @if (showRawDraft()) { <pre class="agentd__raw">{{ json(draft) }}</pre> }
+      }
+    </section>
+
+    @if (activeDraft && !isFailedGeneration) {
+      <!-- ═══ APPROVAL ═══ -->
+      <section class="agentd__section">
+        <h2>Approval</h2>
+        @if (isApprovedForActiveDraft) {
+          <p class="agentd__banner agentd__banner--good">Approved for this exact draft/hash.</p>
+        } @else {
+          <label class="agentd__label">Review note (required to reject / needs changes)</label>
+          <textarea class="agentd__textarea" rows="2" [(ngModel)]="reviewNote"></textarea>
+          @if (reviewError()) { <div class="agentd__error">{{ reviewError() }}</div> }
+          <div class="agentd__actions">
+            <button class="agentd__btn agentd__btn--primary" (click)="approveExactDraft()" [disabled]="approving()">
+              {{ approving() ? 'Approving…' : 'Approve This Exact Draft' }}
+            </button>
+            <button class="agentd__btn agentd__btn--danger" (click)="reject()" [disabled]="reviewSubmitting()">Reject</button>
+            <button class="agentd__btn" (click)="needsChanges()" [disabled]="reviewSubmitting()">Needs Changes</button>
+          </div>
+          @if (approveError()) { <div class="agentd__error">{{ approveError() }}</div> }
+        }
+        @if (rec.reviewStatus !== 'pending') {
+          <button class="agentd__link-btn" (click)="keepPending()" [disabled]="reviewSubmitting()">Reset to Pending</button>
+        }
+      </section>
+    }
+
+    @if (isApprovedForActiveDraft) {
+      <!-- ═══ PREFLIGHT ═══ -->
+      <section class="agentd__section">
+        <h2>Preflight</h2>
+        <div class="agentd__actions">
+          <button class="agentd__btn" (click)="runPreflight()" [disabled]="preflighting()">{{ preflighting() ? 'Running…' : 'Run Preflight' }}</button>
+        </div>
+        @if (preflightError()) { <div class="agentd__error">{{ preflightError() }}</div> }
+        @if (preflight(); as pf) {
+          <div class="agentd__banner" [class.agentd__banner--good]="pf.executable" [class.agentd__banner--bad]="!pf.executable">
+            <strong>{{ pf.executable ? 'Executable' : 'Blocked' }}</strong> · {{ riskLabel(pf.riskLevel) }}
+          </div>
+          @if (pf.blockers.length) {
+            <p class="agentd__label">Blockers</p>
+            <ul class="agentd__errors">@for (b of pf.blockers; track b.code) { <li>{{ b.message }}</li> }</ul>
+          }
+          @if (pf.warnings.length) {
+            <p class="agentd__label">Warnings</p>
+            <ul class="agentd__warnings">@for (w of pf.warnings; track w.code) { <li>{{ w.message }}</li> }</ul>
+          }
+          <p class="agentd__label">Checks</p>
+          <ul class="agentd__checks">
+            @for (c of pf.checks; track c.code) {
+              <li [class.agentd__check--fail]="c.status === 'fail'" [class.agentd__check--warn]="c.status === 'warn'">
+                {{ checkStatusLabel(c.status) }} — {{ c.message }}
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <!-- ═══ EXECUTE / PUBLISH ═══ -->
+      <section class="agentd__section">
+        <h2>Execute / Publish</h2>
+        @if (executions().length === 0) {
+          <p class="agentd__muted">
+            Not yet executed.
+            @if (!preflight()) { This requires a passing preflight first. }
+          </p>
+          <div class="agentd__actions">
+            <button class="agentd__btn agentd__btn--primary" (click)="executeDraft()" [disabled]="!canExecute || executing()">
+              {{ executing() ? 'Executing…' : 'Execute & Publish' }}
+            </button>
+          </div>
+          @if (executeError()) { <div class="agentd__error">{{ executeError() }}</div> }
+        } @else {
+          <p class="agentd__banner agentd__banner--good">Already executed — see Execution / Publication below.</p>
+        }
+      </section>
+    }
+
+    @if (latestExecution; as exec) {
+      <!-- ═══ EXECUTION / PUBLICATION ═══ -->
+      <section class="agentd__section">
+        <h2>Execution / Publication</h2>
+        <p>Execution <code>{{ exec.id }}</code> — {{ exec.status }} ({{ exec.executedAt | date: 'MMM d, y HH:mm' }})</p>
+
+        @if (publication(); as pub) {
+          <div class="agentd__banner" [class.agentd__banner--good]="pub.status === 'published'" [class.agentd__banner--bad]="pub.status === 'failed'">
+            {{ publicationStatusLabel(pub) }}
+          </div>
+          <dl class="agentd__dl">
+            <dt>Publication</dt><dd><code>{{ pub.id }}</code></dd>
+            @if (pub.frontendImage) { <dt>Frontend image</dt><dd><code>{{ pub.frontendImage }}</code></dd> }
+            @if (pub.redeployAttemptCount > 0) { <dt>Redeploy attempts</dt><dd>{{ pub.redeployAttemptCount }}</dd> }
+          </dl>
+          @if (pub.redeployEligible) {
+            <p class="agentd__muted">Redeploy-eligible (published but content verification did not pass) — run via the existing ops redeploy pipeline; not triggered from this UI.</p>
+          }
+        } @else if (exec.targetType === 'blog_create') {
+          <p class="agentd__muted">No publication record yet.</p>
+        }
+      </section>
+
+      <!-- ═══ VERIFICATION ═══ -->
+      <section class="agentd__section">
+        <h2>Verification</h2>
+        <div class="agentd__actions">
+          <button class="agentd__btn" (click)="verifyLive()" [disabled]="!canVerify || verifying()">{{ verifying() ? 'Verifying…' : 'Verify Live' }}</button>
+        </div>
+        @if (verifyError()) { <div class="agentd__error">{{ verifyError() }}</div> }
+        @if (latestVerification; as v) {
+          <div class="agentd__banner" [class.agentd__banner--good]="v.status === 'verified'" [class.agentd__banner--bad]="v.status !== 'verified'">
+            {{ verificationStatusLabel(v.status) }} ({{ v.verifiedAt | date: 'MMM d, y HH:mm' }})
+          </div>
+          @for (t of v.targets; track t.targetUrl) {
+            <p><a [href]="t.targetUrl" target="_blank" rel="noopener">{{ t.targetUrl }}</a> — HTTP {{ t.fetch.finalStatus ?? '—' }}</p>
+            @if (t.mismatchFields.length) {
+              <p class="agentd__muted">mismatchFields: {{ t.mismatchFields.join(', ') }}</p>
+            } @else {
+              <p class="agentd__muted">mismatchFields: []</p>
+            }
+          }
+        } @else {
+          <p class="agentd__muted">Not yet verified.</p>
+        }
+      </section>
+
+      <!-- ═══ COMPLETION ═══ -->
+      <section class="agentd__section">
+        <h2>Completion</h2>
+        @if (latestCompletion; as c) {
+          <p class="agentd__banner agentd__banner--good">Completed {{ c.completedAt | date: 'MMM d, y HH:mm' }} (completion <code>{{ c.id }}</code>)</p>
+        } @else {
+          <div class="agentd__actions">
+            <button class="agentd__btn agentd__btn--primary" (click)="completeExecution()" [disabled]="!canComplete || completing()">
+              {{ completing() ? 'Completing…' : 'Complete' }}
+            </button>
+          </div>
+          @if (!canComplete) { <p class="agentd__muted">Requires a "verified" verification result first.</p> }
+          @if (completeError()) { <div class="agentd__error">{{ completeError() }}</div> }
+        }
+      </section>
+    }
+
+    <!-- ═══ HISTORY ═══ -->
+    @if (supersededDrafts.length) {
+      <section class="agentd__section">
+        <h2>History — Superseded Drafts</h2>
+        <ul class="agentd__history">
+          @for (d of supersededDrafts; track d.id) {
+            <li>
+              <code>{{ d.id }}</code> — {{ d.generatedAt | date: 'MMM d, y HH:mm' }} — hash {{ d.contentHash.slice(0, 12) }}… —
+              previewOnly: {{ d.previewOnly }}
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+</div>

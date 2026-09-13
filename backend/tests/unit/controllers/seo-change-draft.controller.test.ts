@@ -113,6 +113,54 @@ describe('generateRecommendationDraft', () => {
     await generateRecommendationDraft(req, res);
     expect(mockGenerate).toHaveBeenCalledWith(expect.objectContaining({ recommendationId: validId, generatedBy: userId }));
   });
+
+  it('passes allowPreview through when the body explicitly requests it', async () => {
+    mockGenerate.mockResolvedValue({ ok: true, draft: { id: 'draft-1' } });
+    const req = makeReq({ body: { allowPreview: true } });
+    const res = makeRes();
+    await generateRecommendationDraft(req, res);
+    expect(mockGenerate).toHaveBeenCalledWith(expect.objectContaining({ allowPreview: true }));
+  });
+
+  it('defaults allowPreview to false when not explicitly true (rejects any other truthy value)', async () => {
+    mockGenerate.mockResolvedValue({ ok: true, draft: { id: 'draft-1' } });
+    const req = makeReq({ body: { allowPreview: 'yes' } });
+    const res = makeRes();
+    await generateRecommendationDraft(req, res);
+    expect(mockGenerate).toHaveBeenCalledWith(expect.objectContaining({ allowPreview: false }));
+  });
+
+  it('passes trimmed editorialFeedback through to generateChangeDraft', async () => {
+    mockGenerate.mockResolvedValue({ ok: true, draft: { id: 'draft-1' } });
+    const req = makeReq({ body: { editorialFeedback: '  sound warmer  ' } });
+    const res = makeRes();
+    await generateRecommendationDraft(req, res);
+    expect(mockGenerate).toHaveBeenCalledWith(expect.objectContaining({ editorialFeedback: 'sound warmer' }));
+  });
+
+  it('omits editorialFeedback (undefined, not empty string) when none is supplied', async () => {
+    mockGenerate.mockResolvedValue({ ok: true, draft: { id: 'draft-1' } });
+    const req = makeReq();
+    const res = makeRes();
+    await generateRecommendationDraft(req, res);
+    expect(mockGenerate).toHaveBeenCalledWith(expect.objectContaining({ editorialFeedback: undefined }));
+  });
+
+  it('rejects a non-string editorialFeedback', async () => {
+    const req = makeReq({ body: { editorialFeedback: { not: 'a string' } } });
+    const res = makeRes();
+    await generateRecommendationDraft(req, res);
+    expect(res.statusCode).toBe(400);
+    expect(mockGenerate).not.toHaveBeenCalled();
+  });
+
+  it('rejects an editorialFeedback longer than the max length', async () => {
+    const req = makeReq({ body: { editorialFeedback: 'x'.repeat(4001) } });
+    const res = makeRes();
+    await generateRecommendationDraft(req, res);
+    expect(res.statusCode).toBe(400);
+    expect(mockGenerate).not.toHaveBeenCalled();
+  });
 });
 
 describe('getRecommendationDraftHistory', () => {

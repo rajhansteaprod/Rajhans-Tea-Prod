@@ -9,14 +9,22 @@ import { Request, Response } from 'express';
 
 jest.mock('../../../src/modules/seo/services/recommendation.service', () => ({
   updateRecommendationReview: jest.fn(),
-  toView: jest.fn((rec: { id: string; reviewStatus: string }) => ({ id: rec.id, reviewStatus: rec.reviewStatus })),
+  approveRecommendationForDraft: jest.fn(),
+  toView: jest.fn((rec: { id?: string; _id?: string; reviewStatus: string }) => ({ id: rec.id ?? rec._id, reviewStatus: rec.reviewStatus })),
   getRecommendationsReport: jest.fn(),
 }));
 
-import { reviewRecommendation } from '../../../src/modules/seo/seo.controller';
-import { updateRecommendationReview } from '../../../src/modules/seo/services/recommendation.service';
+jest.mock('../../../src/modules/seo/services/change-publication.service', () => ({
+  getPublicationByExecutionId: jest.fn(),
+  toPublicationView: jest.fn(),
+}));
+
+import mongoose from 'mongoose';
+import { reviewRecommendation, approveRecommendationDraft } from '../../../src/modules/seo/seo.controller';
+import { updateRecommendationReview, approveRecommendationForDraft } from '../../../src/modules/seo/services/recommendation.service';
 
 const mockUpdateRecommendationReview = updateRecommendationReview as jest.Mock;
+const mockApproveForDraft = approveRecommendationForDraft as jest.Mock;
 
 function makeRes() {
   const res: Partial<Response> & { statusCode?: number; body?: unknown } = {};
@@ -149,5 +157,93 @@ describe('reviewRecommendation — not-found handling', () => {
     const res = makeRes();
     await reviewRecommendation(req, res);
     expect(res.statusCode).toBe(404);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// approveRecommendationDraft — exact-draft approval (never the draft-agnostic
+// path above when a specific preview is being reviewed).
+// -----------------------------------------------------------------------------
+describe('approveRecommendationDraft', () => {
+  const recId = new mongoose.Types.ObjectId().toString();
+  const draftId = new mongoose.Types.ObjectId().toString();
+
+  function makeApproveReq(overrides: { params?: object; body?: object } = {}) {
+    return {
+      params: { id: recId },
+      body: { draftId },
+      user: { userId: reviewerId, role: 'admin' },
+      ...overrides,
+    } as unknown as Parameters<typeof approveRecommendationDraft>[0];
+  }
+
+  it('rejects an invalid recommendation id', async () => {
+    const req = makeApproveReq({ params: { id: 'not-an-object-id' } });
+    const res = makeRes();
+    await approveRecommendationDraft(req, res);
+    expect(res.statusCode).toBe(400);
+    expect(mockApproveForDraft).not.toHaveBeenCalled();
+  });
+
+  it('rejects an invalid draftId', async () => {
+    const req = makeApproveReq({ body: { draftId: 'not-an-object-id' } });
+    const res = makeRes();
+    await approveRecommendationDraft(req, res);
+    expect(res.statusCode).toBe(400);
+    expect(mockApproveForDraft).not.toHaveBeenCalled();
+  });
+
+  it('calls approveRecommendationForDraft with the recommendation id, draftId, and the AUTHENTICATED reviewer — never a spoofed reviewedBy', async () => {
+    mockApproveForDraft.mockResolvedValue({ ok: true, recommendation: { id: recId, reviewStatus: 'approved', lastSeenRunId: 'run-1' } });
+    const req = makeApproveReq({ body: { draftId, reviewedBy: 'someone-else' } });
+    const res = makeRes();
+    await approveRecommendationDraft(req, res);
+    expect(mockApproveForDraft).toHaveBeenCalledWith({
+      recommendationId: recId,
+      draftId,
+      reviewedBy: reviewerId,
+      reviewNote: null,
+    });
+  });
+
+  it('returns 200 with the updated recommendation on success', async () => {
+    mockApproveForDraft.mockResolvedValue({ ok: true, recommendation: { id: recId, reviewStatus: 'approved', lastSeenRunId: 'run-1' } });
+    const req = makeApproveReq();
+    const res = makeRes();
+    await approveRecommendationDraft(req, res);
+    expect(res.statusCode ?? 200).toBe(200);
+    expect((res.body as { data: { reviewStatus: string } }).data.reviewStatus).toBe('approved');
+  });
+
+  it('maps draft_mismatch (stale draft/hash) to 409', async () => {
+    mockApproveForDraft.mockResolvedValue({ ok: false, error: 'draft_mismatch' });
+    const req = makeApproveReq();
+    const res = makeRes();
+    await approveRecommendationDraft(req, res);
+    expect(res.statusCode).toBe(409);
+  });
+
+  it('maps draft_not_found to 404', async () => {
+    mockApproveForDraft.mockResolvedValue({ ok: false, error: 'draft_not_found' });
+    const req = makeApproveReq();
+    const res = makeRes();
+    await approveRecommendationDraft(req, res);
+    expect(res.statusCode).toBe(404);
+  });
+
+  it('maps not_found (unknown/non-open recommendation) to 404', async () => {
+    mockApproveForDraft.mockResolvedValue({ ok: false, error: 'not_found' });
+    const req = makeApproveReq();
+    const res = makeRes();
+    await approveRecommendationDraft(req, res);
+    expect(res.statusCode).toBe(404);
+  });
+
+  it('rejects a reviewNote longer than the max length', async () => {
+    const req = makeApproveReq({ body: { draftId, reviewNote: 'x'.repeat(5001) } });
+    const res = makeRes();
+    await approveRecommendationDraft(req, res);
+    expect(res.statusCode).toBe(400);
+    expect(mockApproveForDraft).not.toHaveBeenCalled();
   });
 });

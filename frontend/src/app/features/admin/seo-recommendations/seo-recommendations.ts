@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 
-type ReviewStatus = 'pending' | 'approved' | 'rejected' | 'needs_changes';
+export type ReviewStatus = 'pending' | 'approved' | 'rejected' | 'needs_changes';
 
 interface MarketEvidence {
   clusterLabel?: string;
@@ -21,7 +21,7 @@ interface MarketEvidence {
   relatedRecommendationIds?: string[];
 }
 
-interface Recommendation {
+export interface Recommendation {
   id: string;
   recommendationId: string;
   category: string;
@@ -47,9 +47,12 @@ interface Recommendation {
   reviewNote: string | null;
   reviewedAt: string | null;
   reviewedBy: string | null;
+  /** Phase 6.7B exact-draft approval binding — null when draft-agnostic review (or no approval) is in effect. */
+  reviewedDraftId: string | null;
+  reviewedDraftContentHash: string | null;
 }
 
-interface RecoReport {
+export interface RecoReport {
   summary: {
     runId: string;
     date: string;
@@ -66,53 +69,72 @@ interface RecoReport {
 }
 
 // ── Phase 5.2 — change-draft types (mirrors backend SeoChangeDraft view) ──
-interface MetadataFieldChange {
+export interface MetadataFieldChange {
   current: string | null;
   proposed: string;
 }
-interface MetadataProposedChange {
+export interface MetadataProposedChange {
   kind: 'metadata';
   targetUrl: string;
   fields: { title?: MetadataFieldChange; metaDescription?: MetadataFieldChange; h1?: MetadataFieldChange };
 }
-interface StructuredDataProposedChange {
+export interface StructuredDataProposedChange {
   kind: 'structured_data';
   targetUrl: string;
   schemaType: string;
   jsonLd: Record<string, unknown>;
 }
-interface InternalLinkProposedChange {
+export interface InternalLinkProposedChange {
   kind: 'internal_link';
   sourceUrl: string | null;
   targetUrl: string;
   anchorText: string | null;
 }
-interface ContentProposedChange {
+export interface ContentProposedChange {
   kind: 'content';
   targetUrl: string;
-  blocks: { heading: string; body: string }[];
+  /** Historical content recommendations (structural blocks). */
+  blocks?: { heading: string; body: string }[];
+  /** Phase 6.3C executable AI product-content drafts (Product.description). */
+  field?: { name: 'description'; current: string; proposed: string };
 }
-interface FaqProposedChange {
+export interface FaqProposedChange {
   kind: 'faq';
   targetUrl: string;
   items: { question: string; answer: string }[];
 }
-interface GenericProposedChange {
+export interface GenericProposedChange {
   kind: 'generic';
   targetUrl: string;
   summary: string;
   instructions: string;
   details?: Record<string, unknown>;
 }
-type ProposedChange =
+/** Phase 6.6A/6.7A — a brand-new blog article. `execution` is absent when autonomous drafting did not produce an executable article (a failure/diagnostic-only draft — never approvable/executable). */
+export interface BlogCreateProposedChange {
+  kind: 'blog_create';
+  targetUrl: string;
+  execution?: {
+    slug: string;
+    title: string;
+    metaTitle: string;
+    metaDescription: string;
+    excerpt: string;
+    content: string;
+    tags: string[];
+    status: 'draft' | 'published';
+  };
+}
+export type ProposedChange =
   | MetadataProposedChange
   | StructuredDataProposedChange
   | InternalLinkProposedChange
   | ContentProposedChange
   | FaqProposedChange
-  | GenericProposedChange;
+  | GenericProposedChange
+  | BlogCreateProposedChange;
 
-interface ChangeDraft {
+export interface ChangeDraft {
   id: string;
   recommendationId: string;
   recommendationFingerprint: string;
@@ -126,6 +148,10 @@ interface ChangeDraft {
   inputSnapshot: Record<string, unknown>;
   proposedChanges: ProposedChange[];
   validation: { isValid: boolean; warnings: string[]; errors: string[] };
+  /** Phase 6.7B — immutable fingerprint of proposedChanges; an approval binds to this exact value. */
+  contentHash: string;
+  /** Phase 6.7B — true whenever the recommendation was pending (not yet approved) at generation time. Never executable regardless of this flag — evaluateExecutionPreflight independently requires reviewStatus==='approved'. */
+  previewOnly: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -134,24 +160,24 @@ interface ChangeDraft {
 // ChangeExecutionPreflightService view). A preflight result is ADVISORY: the
 // backend reruns the identical evaluation inside its transaction before writing,
 // so nothing displayed here is ever authorization to execute. ──
-type PreflightRiskLevel = 'low' | 'medium' | 'high';
-type PreflightCheckStatus = 'pass' | 'warn' | 'fail';
-interface PreflightFinding {
+export type PreflightRiskLevel = 'low' | 'medium' | 'high';
+export type PreflightCheckStatus = 'pass' | 'warn' | 'fail';
+export interface PreflightFinding {
   code: string;
   message: string;
   targetUrl?: string;
 }
-interface PreflightCheck {
+export interface PreflightCheck {
   code: string;
   status: PreflightCheckStatus;
   message: string;
   targetUrl?: string;
 }
-interface PreflightChangedFields {
+export interface PreflightChangedFields {
   targetUrl: string;
   fields: string[];
 }
-interface ChangeDraftPreflight {
+export interface ChangeDraftPreflight {
   executable: boolean;
   riskLevel: PreflightRiskLevel;
   blockers: PreflightFinding[];
@@ -162,7 +188,7 @@ interface ChangeDraftPreflight {
   evaluatorVersion: string;
 }
 /** Immutable evidence of the evaluation that authorized one execution. Null for pre-Phase-5.5 executions. */
-interface ExecutionQualityControl {
+export interface ExecutionQualityControl {
   preflightVersion: string;
   riskLevel: PreflightRiskLevel;
   warnings: PreflightFinding[];
@@ -172,23 +198,33 @@ interface ExecutionQualityControl {
 }
 
 // ── Phase 5.3 — controlled execution types (mirrors backend SeoChangeExecution view) ──
-interface ExecutedFieldSnapshot {
+export interface ExecutedFieldSnapshot {
   metaTitle?: string;
   metaDescription?: string;
+  description?: string;
+  content?: string;
+  linkTargetUrl?: string;
+  linkAnchorText?: string;
+  faqSchema?: string;
+  title?: string;
+  slug?: string;
+  excerpt?: string;
+  tags?: string[];
+  blogStatus?: 'draft' | 'published';
 }
-interface ExecutedTarget {
+export interface ExecutedTarget {
   targetUrl: string;
   targetDocumentId: string;
   before: ExecutedFieldSnapshot;
   proposed: ExecutedFieldSnapshot;
   after: ExecutedFieldSnapshot;
 }
-interface ChangeExecution {
+export interface ChangeExecution {
   id: string;
   draftId: string;
   recommendationId: string;
   recommendationFingerprint: string;
-  targetType: 'cms_page';
+  targetType: 'cms_page' | 'product' | 'blog' | 'blog_create';
   targets: ExecutedTarget[];
   executorUserId: string;
   executedAt: string;
@@ -200,8 +236,8 @@ interface ChangeExecution {
 }
 
 // ── Phase 5.4A — post-execution verification types (mirrors backend SeoChangeVerification view) ──
-type VerificationStatus = 'verified' | 'mismatch' | 'fetch_failed';
-interface VerificationFetchInfo {
+export type VerificationStatus = 'verified' | 'mismatch' | 'fetch_failed';
+export interface VerificationFetchInfo {
   requestedUrl: string;
   finalUrl: string | null;
   finalStatus: number | null;
@@ -209,19 +245,38 @@ interface VerificationFetchInfo {
   error: string | null;
   transient: boolean;
 }
-interface VerificationExpected {
+export interface VerificationExpected {
   renderedTitle?: string;
   metaDescription?: string;
+  description?: string;
+  linkTargetUrl?: string;
+  linkAnchorText?: string;
+  faqSchema?: string;
+  h1?: string;
+  bodyExcerpts?: string[];
+  requiredLinks?: { href: string; anchor: string }[];
 }
-interface VerificationObserved {
+export interface VerificationObserved {
   renderedTitle?: string | null;
   metaDescription?: string | null;
+  description?: string | null;
+  linkPresent?: boolean | null;
+  faqSchema?: string | null;
+  h1?: string | null;
+  bodyPresent?: boolean | null;
+  linksPresent?: boolean | null;
 }
-interface VerificationMatches {
+export interface VerificationMatches {
   title?: boolean;
   metaDescription?: boolean;
+  description?: boolean;
+  link?: boolean;
+  faqSchema?: boolean;
+  h1?: boolean;
+  body?: boolean;
+  links?: boolean;
 }
-interface VerifiedTarget {
+export interface VerifiedTarget {
   targetUrl: string;
   targetDocumentId: string;
   fetch: VerificationFetchInfo;
@@ -231,7 +286,7 @@ interface VerifiedTarget {
   status: VerificationStatus;
   mismatchFields: string[];
 }
-interface ChangeVerification {
+export interface ChangeVerification {
   id: string;
   executionId: string;
   recommendationId: string;
@@ -248,7 +303,7 @@ interface ChangeVerification {
 // backend SeoChangeCompletion / SeoChangeRollback views). Both are immutable
 // forensic records: completion never touches the page or the recommendation's
 // machine-owned status, and a later rollback never deletes the completion. ──
-interface ChangeCompletion {
+export interface ChangeCompletion {
   id: string;
   executionId: string;
   recommendationId: string;
@@ -260,14 +315,14 @@ interface ChangeCompletion {
   completionVersion: string;
   createdAt: string;
 }
-interface RolledBackTarget {
+export interface RolledBackTarget {
   targetUrl: string;
   targetDocumentId: string;
   beforeRollback: ExecutedFieldSnapshot;
   restored: ExecutedFieldSnapshot;
   afterRollback: ExecutedFieldSnapshot;
 }
-interface ChangeRollback {
+export interface ChangeRollback {
   id: string;
   executionId: string;
   recommendationId: string;
@@ -282,7 +337,7 @@ interface ChangeRollback {
 }
 
 /** Current human implementation outcome, derived only from the immutable records. */
-type ImplementationState = 'executed' | 'verified' | 'completed' | 'rolled_back';
+export type ImplementationState = 'executed' | 'verified' | 'completed' | 'rolled_back';
 
 /**
  * SEO growth recommendations (Phase 3A) plus a human review layer (Phase 5.1).
