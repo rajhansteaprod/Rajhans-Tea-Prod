@@ -225,6 +225,23 @@ export class SeoAgentDetailComponent implements OnInit {
     return this.completions()[0] ?? null;
   }
 
+  /** The recommendation's relevant execution has a successful, persisted completion record — the primary lifecycle state per Part A. This is a purely derived UI state; it never writes to recommendation.status or any other persisted field. */
+  get isCompleted(): boolean {
+    return !!this.latestCompletion;
+  }
+
+  /** Best-effort live URL for the completion summary, from whichever persisted record already has it — never invented when absent. */
+  get completionLiveUrl(): string | null {
+    const v = this.latestVerification;
+    const fromVerification = v?.targets?.[0]?.fetch?.finalUrl ?? v?.targets?.[0]?.targetUrl ?? null;
+    if (fromVerification) return fromVerification;
+    return this.latestExecution?.targets?.[0]?.targetUrl ?? null;
+  }
+
+  get completionMismatchFields(): string[] {
+    return this.latestVerification?.targets?.[0]?.mismatchFields ?? [];
+  }
+
   /** Only topical-authority recommendations go through the autonomous AI writer — editorial feedback is meaningless (silently ignored server-side) for every other category, so the UI never offers it there. */
   get supportsEditorialFeedback(): boolean {
     return this.recommendation()?.category === 'topical-authority';

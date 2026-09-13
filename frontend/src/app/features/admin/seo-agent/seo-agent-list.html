@@ -61,7 +61,13 @@
                 <span class="agent__chip agent__chip--{{ r.priority }}">{{ r.priority }}</span>
                 <span class="agent__score">score {{ r.score }}</span>
               </td>
-              <td><span class="agent__chip agent__chip--review-{{ r.reviewStatus }}">{{ reviewStatusLabel(r.reviewStatus) }}</span></td>
+              <td>
+                @if (isCompleted(r)) {
+                  <span class="agent__chip agent__chip--done">Completed</span>
+                } @else {
+                  <span class="agent__chip agent__chip--review-{{ r.reviewStatus }}">{{ reviewStatusLabel(r.reviewStatus) }}</span>
+                }
+              </td>
               <td>{{ previewStatusLabel(r) }}</td>
               <td>{{ executionStatusLabel(r) }}</td>
               <td class="agent__muted">{{ r.reviewedAt ? (r.reviewedAt | date: 'MMM d, y') : '—' }}</td>

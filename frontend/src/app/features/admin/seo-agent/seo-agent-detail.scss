@@ -59,6 +59,7 @@
     &--good { background: #dcfce7; color: #15803d; }
     &--bad { background: #fee2e2; color: #b91c1c; }
     &--stale { background: #fef3c7; color: #92400e; margin-left: 8px; }
+    &--completed-primary { background: #15803d; color: #fff; font-size: 13px; padding: 4px 14px; }
     &--review-pending { background: #f3f4f6; color: #374151; }
     &--review-approved { background: #dcfce7; color: #15803d; }
     &--review-rejected { background: #fee2e2; color: #b91c1c; }

@@ -9,8 +9,14 @@
     <section class="agentd__section">
       <div class="agentd__heading-row">
         <h1>{{ rec.title }}</h1>
+        @if (isCompleted) {
+          <span class="agentd__chip agentd__chip--completed-primary">Completed</span>
+        }
         <span class="agentd__chip agentd__chip--review-{{ rec.reviewStatus }}">{{ rec.reviewStatus }}</span>
       </div>
+      @if (isCompleted) {
+        <p class="agentd__muted">This recommendation's lifecycle is finished. It is shown read-only below for audit purposes.</p>
+      }
       <p class="agentd__muted">{{ rec.category }} · {{ rec.priority }} priority · score {{ rec.score }}</p>
       <p>{{ rec.why }}</p>
       <p class="agentd__suggested"><strong>Suggested fix:</strong> {{ rec.suggestedFix }}</p>
@@ -31,6 +37,27 @@
       @if (showRawEvidence()) { <pre class="agentd__raw">{{ json(rec.evidence) }}</pre> }
     </section>
 
+    @if (isCompleted) {
+      <!-- ═══ COMPLETION SUMMARY (read-only, Part C) ═══ -->
+      <section class="agentd__section">
+        <h2>Completion Summary</h2>
+        <p class="agentd__banner agentd__banner--good">Completed</p>
+        <dl class="agentd__dl">
+          @if (completionLiveUrl) {
+            <dt>Live URL</dt><dd><a [href]="completionLiveUrl" target="_blank" rel="noopener noreferrer">{{ completionLiveUrl }}</a></dd>
+          }
+          @if (latestExecution) { <dt>Execution ID</dt><dd><code>{{ latestExecution!.id }}</code></dd> }
+          @if (publication()) { <dt>Publication ID</dt><dd><code>{{ publication()!.id }}</code></dd> }
+          @if (latestVerification) { <dt>Verification ID</dt><dd><code>{{ latestVerification!.id }}</code></dd> }
+          @if (latestCompletion) { <dt>Completion ID</dt><dd><code>{{ latestCompletion!.id }}</code></dd> }
+          @if (latestVerification) { <dt>Verification status</dt><dd>{{ verificationStatusLabel(latestVerification!.status) }}</dd> }
+          <dt>mismatchFields</dt><dd>{{ completionMismatchFields.length ? completionMismatchFields.join(', ') : '[]' }}</dd>
+          @if (latestVerification) { <dt>Verified at</dt><dd>{{ latestVerification!.verifiedAt | date: 'MMM d, y HH:mm' }}</dd> }
+          @if (latestCompletion) { <dt>Completed at</dt><dd>{{ latestCompletion!.completedAt | date: 'MMM d, y HH:mm' }}</dd> }
+        </dl>
+      </section>
+    }
+
     <!-- ═══ PREVIEW / GENERATE ═══ -->
     <section class="agentd__section">
       <h2>Preview</h2>
@@ -39,17 +66,21 @@
         <p class="agentd__muted">No preview has been generated yet.</p>
       }
 
-      @if (supportsEditorialFeedback) {
-        <label class="agentd__label">Editorial feedback (optional — steers wording/tone only, never adds facts or links)</label>
-        <textarea class="agentd__textarea" rows="4" [(ngModel)]="editorialFeedback" placeholder="e.g. Sound warmer and less mechanical; keep all facts the same."></textarea>
-      }
+      @if (isCompleted) {
+        <p class="agentd__muted">This recommendation is completed — generating a new preview is disabled.</p>
+      } @else {
+        @if (supportsEditorialFeedback) {
+          <label class="agentd__label">Editorial feedback (optional — steers wording/tone only, never adds facts or links)</label>
+          <textarea class="agentd__textarea" rows="4" [(ngModel)]="editorialFeedback" placeholder="e.g. Sound warmer and less mechanical; keep all facts the same."></textarea>
+        }
 
-      <div class="agentd__actions">
-        <button class="agentd__btn" (click)="generatePreview()" [disabled]="generating()">
-          {{ generating() ? 'Generating…' : (activeDraft ? 'Regenerate' : 'Generate Preview') }}
-        </button>
-      </div>
-      @if (generateError()) { <div class="agentd__error">{{ generateError() }}</div> }
+        <div class="agentd__actions">
+          <button class="agentd__btn" (click)="generatePreview()" [disabled]="generating()">
+            {{ generating() ? 'Generating…' : (activeDraft ? 'Regenerate' : 'Generate Preview') }}
+          </button>
+        </div>
+        @if (generateError()) { <div class="agentd__error">{{ generateError() }}</div> }
+      }
 
       @if (activeDraft; as draft) {
         <div class="agentd__draft-meta">
@@ -194,7 +225,7 @@
       }
     </section>
 
-    @if (activeDraft && !isFailedGeneration) {
+    @if (activeDraft && !isFailedGeneration && !isCompleted) {
       <!-- ═══ APPROVAL ═══ -->
       <section class="agentd__section">
         <h2>Approval</h2>
@@ -217,9 +248,14 @@
           <button class="agentd__link-btn" (click)="keepPending()" [disabled]="reviewSubmitting()">Reset to Pending</button>
         }
       </section>
+    } @else if (isCompleted && isApprovedForActiveDraft) {
+      <section class="agentd__section">
+        <h2>Approval</h2>
+        <p class="agentd__banner agentd__banner--good">Approved for this exact draft/hash. (Read-only — this recommendation is completed.)</p>
+      </section>
     }
 
-    @if (isApprovedForActiveDraft) {
+    @if (isApprovedForActiveDraft && !isCompleted) {
       <!-- ═══ PREFLIGHT ═══ -->
       <section class="agentd__section">
         <h2>Preflight</h2>
@@ -296,10 +332,12 @@
       <!-- ═══ VERIFICATION ═══ -->
       <section class="agentd__section">
         <h2>Verification</h2>
-        <div class="agentd__actions">
-          <button class="agentd__btn" (click)="verifyLive()" [disabled]="!canVerify || verifying()">{{ verifying() ? 'Verifying…' : 'Verify Live' }}</button>
-        </div>
-        @if (verifyError()) { <div class="agentd__error">{{ verifyError() }}</div> }
+        @if (!isCompleted) {
+          <div class="agentd__actions">
+            <button class="agentd__btn" (click)="verifyLive()" [disabled]="!canVerify || verifying()">{{ verifying() ? 'Verifying…' : 'Verify Live' }}</button>
+          </div>
+          @if (verifyError()) { <div class="agentd__error">{{ verifyError() }}</div> }
+        }
         @if (latestVerification; as v) {
           <div class="agentd__banner" [class.agentd__banner--good]="v.status === 'verified'" [class.agentd__banner--bad]="v.status !== 'verified'">
             {{ verificationStatusLabel(v.status) }} ({{ v.verifiedAt | date: 'MMM d, y HH:mm' }})
@@ -322,7 +360,7 @@
         <h2>Completion</h2>
         @if (latestCompletion; as c) {
           <p class="agentd__banner agentd__banner--good">Completed {{ c.completedAt | date: 'MMM d, y HH:mm' }} (completion <code>{{ c.id }}</code>)</p>
-        } @else {
+        } @else if (!isCompleted) {
           <div class="agentd__actions">
             <button class="agentd__btn agentd__btn--primary" (click)="completeExecution()" [disabled]="!canComplete || completing()">
               {{ completing() ? 'Completing…' : 'Complete' }}

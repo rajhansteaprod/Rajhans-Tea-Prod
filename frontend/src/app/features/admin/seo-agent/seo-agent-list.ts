@@ -119,6 +119,11 @@ export class SeoAgentListComponent implements OnInit {
     return this.summaries()[r.id] ?? null;
   }
 
+  /** The row's execution has a successful completion record — purely derived for display, never written back to recommendation.status. */
+  isCompleted(r: Recommendation): boolean {
+    return this.summaryFor(r)?.completed === true;
+  }
+
   previewStatusLabel(r: Recommendation): string {
     const s = this.summaryFor(r);
     if (!s) return this.summariesLoading() ? 'Loading…' : 'Unknown';
