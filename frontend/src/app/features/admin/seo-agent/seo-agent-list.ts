@@ -146,7 +146,11 @@ export class SeoAgentListComponent implements OnInit {
     const s = this.summaryFor(r);
     if (s?.completed) return 'completed';
     if (r.reviewStatus === 'approved') return 'approved';
-    if (r.reviewStatus === 'needs_changes') return 'needs-attention';
+    // Rejected/needs-changes are both human-decided, non-actionable-as-pending
+    // states — neither should clutter Pending Review. There is no dedicated
+    // "Rejected" filter tab, so this reuses the existing Needs Attention
+    // bucket (still fully visible under All either way).
+    if (r.reviewStatus === 'needs_changes' || r.reviewStatus === 'rejected') return 'needs-attention';
     const ge = (s?.draft?.inputSnapshot?.['generationEvidence'] as { readyForHumanReview?: boolean } | undefined) ?? undefined;
     if (ge?.readyForHumanReview === false) return 'needs-attention';
     return 'pending';

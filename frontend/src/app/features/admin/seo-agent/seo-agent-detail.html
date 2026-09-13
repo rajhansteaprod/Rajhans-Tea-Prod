@@ -68,6 +68,8 @@
 
       @if (isCompleted) {
         <p class="agentd__muted">This recommendation is completed — generating a new preview is disabled.</p>
+      } @else if (isRejected) {
+        <p class="agentd__muted">This recommendation is rejected — generating a new preview is disabled until it is reset to Pending.</p>
       } @else {
         @if (supportsEditorialFeedback) {
           <label class="agentd__label">Editorial feedback (optional — steers wording/tone only, never adds facts or links)</label>
@@ -225,22 +227,35 @@
       }
     </section>
 
-    @if (activeDraft && !isFailedGeneration && !isCompleted) {
-      <!-- ═══ APPROVAL ═══ -->
+    @if (!isCompleted) {
+      <!-- ═══ APPROVAL / REJECTION — Reject is available regardless of whether
+           a draft exists or generation succeeded; only Approve/Needs Changes
+           require a real, successfully-generated draft. ═══ -->
       <section class="agentd__section">
         <h2>Approval</h2>
-        @if (isApprovedForActiveDraft) {
+        @if (rec.reviewStatus === 'rejected') {
+          <p class="agentd__banner agentd__banner--bad">
+            Rejected @if (rec.reviewedAt) { ({{ rec.reviewedAt | date: 'MMM d, y HH:mm' }}) }.
+            @if (rec.reviewNote) { <br>Reason: {{ rec.reviewNote }} }
+          </p>
+        } @else if (activeDraft && !isFailedGeneration && isApprovedForActiveDraft) {
           <p class="agentd__banner agentd__banner--good">Approved for this exact draft/hash.</p>
         } @else {
-          <label class="agentd__label">Review note (required to reject / needs changes)</label>
+          <label class="agentd__label">Rejection reason (required to reject{{ activeDraft && !isFailedGeneration ? ' / needs changes' : '' }})</label>
           <textarea class="agentd__textarea" rows="2" [(ngModel)]="reviewNote"></textarea>
           @if (reviewError()) { <div class="agentd__error">{{ reviewError() }}</div> }
           <div class="agentd__actions">
-            <button class="agentd__btn agentd__btn--primary" (click)="approveExactDraft()" [disabled]="approving()">
-              {{ approving() ? 'Approving…' : 'Approve This Exact Draft' }}
+            @if (activeDraft && !isFailedGeneration) {
+              <button class="agentd__btn agentd__btn--primary" (click)="approveExactDraft()" [disabled]="approving()">
+                {{ approving() ? 'Approving…' : 'Approve This Exact Draft' }}
+              </button>
+            }
+            <button class="agentd__btn agentd__btn--danger" (click)="reject()" [disabled]="reviewSubmitting()">
+              {{ reviewSubmitting() ? 'Rejecting…' : 'Reject Recommendation' }}
             </button>
-            <button class="agentd__btn agentd__btn--danger" (click)="reject()" [disabled]="reviewSubmitting()">Reject</button>
-            <button class="agentd__btn" (click)="needsChanges()" [disabled]="reviewSubmitting()">Needs Changes</button>
+            @if (activeDraft && !isFailedGeneration) {
+              <button class="agentd__btn" (click)="needsChanges()" [disabled]="reviewSubmitting()">Needs Changes</button>
+            }
           </div>
           @if (approveError()) { <div class="agentd__error">{{ approveError() }}</div> }
         }

@@ -230,6 +230,11 @@ export class SeoAgentDetailComponent implements OnInit {
     return !!this.latestCompletion;
   }
 
+  /** Human-rejected — read-only (no new preview/approval) until reset via the existing "Reset to Pending" action. */
+  get isRejected(): boolean {
+    return this.recommendation()?.reviewStatus === 'rejected';
+  }
+
   /** Best-effort live URL for the completion summary, from whichever persisted record already has it — never invented when absent. */
   get completionLiveUrl(): string | null {
     const v = this.latestVerification;
@@ -375,9 +380,16 @@ export class SeoAgentDetailComponent implements OnInit {
   reject(): void {
     const note = this.reviewNote.trim();
     if (!note) {
-      this.reviewError.set('A note is required to reject.');
+      this.reviewError.set('A rejection reason is required.');
       return;
     }
+    // Draft-agnostic — works whether or not a preview has ever been generated.
+    // Never creates a draft, runs preflight, or touches execution/publication.
+    const confirmed = confirm(
+      `Reject this recommendation?\n\nReason: ${note}\n\n` +
+        'It will move out of Pending Review. This can be undone via "Reset to Pending".',
+    );
+    if (!confirmed) return;
     this.patchReview('rejected', note);
   }
 
