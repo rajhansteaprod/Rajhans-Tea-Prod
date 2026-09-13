@@ -30,11 +30,14 @@ function verify(routePrefix, slug, { requireJsonLdProduct = false, requireCards 
   }
   const html = readFileSync(file, 'utf8');
   const title = (html.match(/<title>([^<]*)<\/title>/) || [])[1] || '';
+  const canonicalTags = [...html.matchAll(/<link rel="canonical"[^>]*>/g)];
   const canonical = (html.match(/<link rel="canonical"[^>]*href="([^"]*)"/) || [])[1] || '';
   const h1 = (html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/) || [])[1]?.replace(/<[^>]*>/g, '').trim() || '';
 
   check(url, !title.includes(SHELL_TITLE) && title.length > 0, `title looks like the homepage shell / empty: "${title}"`);
+  check(url, canonicalTags.length === 1, `expected exactly one canonical tag, found ${canonicalTags.length}`);
   check(url, canonical.endsWith(url), `canonical is not self-referential: "${canonical}" (expected to end with "${url}")`);
+  check(url, canonical !== 'https://rajhanstea.com/' && canonical !== 'https://rajhanstea.com', `canonical fell back to the homepage: "${canonical}"`);
   check(url, h1.length > 0, 'no <h1> content');
   if (requireJsonLdProduct) check(url, /"@type"\s*:\s*"Product"/.test(html), 'missing Product JSON-LD');
   if (requireCards) check(url, /app-product-card/.test(html), 'no product cards rendered');
@@ -150,6 +153,13 @@ function verifyInternalBrandLink(routePath) {
 verify('product', manifest.product[0], { requireJsonLdProduct: true });
 verify('catalog', manifest.catalog[0], { requireCards: true });
 if (manifest.blog[0]) verify('blog', manifest.blog[0]);
+// Regression check for the shared blog-detail canonical bug: an established
+// old blog and both newly-published blogs that were previously missing from
+// the manifest (and therefore served the homepage-shell canonical) must all
+// self-canonicalize correctly.
+if (manifest.blog.includes('assam-tea-guide')) verify('blog', 'assam-tea-guide');
+if (manifest.blog.includes('nilgiri-tea-guide')) verify('blog', 'nilgiri-tea-guide');
+if (manifest.blog.includes('rajhans-rajdoot-dooars-guide')) verify('blog', 'rajhans-rajdoot-dooars-guide');
 // A DB-backed CMS page (content comes from the API at build, like the dynamic routes).
 verify('page', 'faq');
 // Known-good production data with a real Product.description — a targeted

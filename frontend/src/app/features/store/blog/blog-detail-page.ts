@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -32,6 +32,7 @@ export class BlogDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly titleService = inject(Title);
   private readonly meta = inject(Meta);
+  private readonly document = inject(DOCUMENT);
 
   blog = signal<Blog | null>(null);
   loading = signal(false);
@@ -55,6 +56,21 @@ export class BlogDetailPageComponent implements OnInit {
           name: 'description',
           content: res.data.excerpt,
         });
+
+        // Self-referencing canonical, derived from the resolved blog's own slug
+        // (never the raw route param, and never left at whatever default —
+        // e.g. the homepage — a shared route-level service may have set before
+        // this data arrived). Matches the site's trailing-slash convention used
+        // by the sitemap and product-detail.ts's identical pattern.
+        const pageUrl = `https://rajhanstea.com/blog/${res.data.slug}/`;
+        let canonical = this.document.querySelector('link[rel="canonical"]');
+        if (!canonical) {
+          canonical = this.document.createElement('link');
+          canonical.setAttribute('rel', 'canonical');
+          this.document.head.appendChild(canonical);
+        }
+        canonical.setAttribute('href', pageUrl);
+
         this.loading.set(false);
       },
       error: () => {
