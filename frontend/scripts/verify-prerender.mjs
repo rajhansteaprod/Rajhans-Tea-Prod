@@ -21,7 +21,7 @@ function check(name, cond, detail) {
   if (!cond) failures.push(`  ✗ [${name}] ${detail}`);
 }
 
-function verify(routePrefix, slug, { requireJsonLdProduct = false, requireCards = false, requireDescription = false } = {}) {
+function verify(routePrefix, slug, { requireJsonLdProduct = false, requireCards = false, requireDescription = false, requireBlogPosting = false } = {}) {
   const url = `/${routePrefix}/${slug}/`;
   const file = resolve(BROWSER, routePrefix, slug, 'index.html');
   if (!existsSync(file)) {
@@ -51,6 +51,39 @@ function verify(routePrefix, slug, { requireJsonLdProduct = false, requireCards 
     const panel = (html.match(/data-seo="product-description"[\s\S]*?<p[^>]*>([\s\S]*?)<\/p>/) || [])[1] || '';
     const text = panel.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
     check(url, text.length > 40, `product description panel missing/too short in prerendered HTML (got ${text.length} chars)`);
+  }
+  if (requireBlogPosting) {
+    const ldBlocks = [...html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+    const blogPostings = [];
+    for (const block of ldBlocks) {
+      let parsed;
+      try {
+        parsed = JSON.parse(block);
+      } catch {
+        continue; // Other, unrelated JSON-LD blocks (Organization/WebSite) are not this check's concern.
+      }
+      if (parsed && parsed['@type'] === 'BlogPosting') blogPostings.push(parsed);
+    }
+    check(url, blogPostings.length === 1, `expected exactly one BlogPosting JSON-LD block, found ${blogPostings.length}`);
+    if (blogPostings.length === 1) {
+      const bp = blogPostings[0];
+      check(url, bp['@context'] === 'https://schema.org', `BlogPosting @context is not "https://schema.org": "${bp['@context']}"`);
+      check(url, typeof bp.headline === 'string' && bp.headline.length > 0, 'BlogPosting missing a non-empty headline');
+      check(url, bp.headline === h1, `BlogPosting headline ("${bp.headline}") does not match the page's own <h1> ("${h1}")`);
+      const mainEntityId = bp.mainEntityOfPage?.['@id'];
+      check(url, mainEntityId === canonical, `BlogPosting mainEntityOfPage @id ("${mainEntityId}") does not match the page's own canonical ("${canonical}")`);
+      check(url, bp.publisher?.['@type'] === 'Organization' && bp.publisher?.name === 'Rajhans Tea', 'BlogPosting publisher is missing/not the Rajhans Tea Organization');
+      // No invented fields: only the properties this build actually knows how
+      // to derive from real Blog data may ever appear.
+      const allowedKeys = new Set([
+        '@context', '@type', 'headline', 'mainEntityOfPage', 'publisher', 'datePublished', 'dateModified', 'author', 'image',
+      ]);
+      const unexpected = Object.keys(bp).filter((k) => !allowedKeys.has(k));
+      check(url, unexpected.length === 0, `BlogPosting has unexpected field(s): ${unexpected.join(', ')}`);
+    }
+    // Organization/WebSite JSON-LD (baked into every route via index.html) must still be present, unchanged.
+    check(url, /"@type"\s*:\s*"Organization"/.test(html), 'Organization JSON-LD is missing on this blog page');
+    check(url, /"@type"\s*:\s*"WebSite"/.test(html), 'WebSite JSON-LD is missing on this blog page');
   }
 }
 
@@ -152,14 +185,10 @@ function verifyInternalBrandLink(routePath) {
 // One representative of each dynamic route type (first slug in the manifest).
 verify('product', manifest.product[0], { requireJsonLdProduct: true });
 verify('catalog', manifest.catalog[0], { requireCards: true });
-if (manifest.blog[0]) verify('blog', manifest.blog[0]);
-// Regression check for the shared blog-detail canonical bug: an established
-// old blog and both newly-published blogs that were previously missing from
-// the manifest (and therefore served the homepage-shell canonical) must all
-// self-canonicalize correctly.
-if (manifest.blog.includes('assam-tea-guide')) verify('blog', 'assam-tea-guide');
-if (manifest.blog.includes('nilgiri-tea-guide')) verify('blog', 'nilgiri-tea-guide');
-if (manifest.blog.includes('rajhans-rajdoot-dooars-guide')) verify('blog', 'rajhans-rajdoot-dooars-guide');
+// Every published blog — both the shared canonical fix and the shared
+// BlogPosting structured data are sitewide, so every currently-published
+// blog is checked, not just one representative.
+for (const slug of manifest.blog) verify('blog', slug, { requireBlogPosting: true });
 // A DB-backed CMS page (content comes from the API at build, like the dynamic routes).
 verify('page', 'faq');
 // Known-good production data with a real Product.description — a targeted

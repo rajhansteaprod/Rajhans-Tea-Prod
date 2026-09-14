@@ -4,6 +4,7 @@ import { RouterLink, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Meta, Title } from '@angular/platform-browser';
+import { injectJsonLd } from '../../../core/seo/seo-content';
 
 interface Blog {
   _id: string;
@@ -16,6 +17,7 @@ interface Blog {
   tags: string[];
   publishedAt: string;
   createdAt: string;
+  updatedAt: string;
   metaTitle?: string;
   metaDescription?: string;
 }
@@ -70,6 +72,32 @@ export class BlogDetailPageComponent implements OnInit {
           this.document.head.appendChild(canonical);
         }
         canonical.setAttribute('href', pageUrl);
+
+        // BlogPosting structured data — built only from fields the Blog model
+        // actually and reliably has (see backend/src/modules/cms/models/blog.model.ts).
+        // Author/image are omitted when genuinely absent rather than
+        // substituted with any placeholder (getImageUrl()'s stock-photo
+        // fallback is deliberately NOT used here — it isn't real article
+        // data). mainEntityOfPage always mirrors the canonical set above.
+        const schema: Record<string, unknown> = {
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: res.data.title,
+          mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
+          publisher: { '@type': 'Organization', name: 'Rajhans Tea', url: 'https://rajhanstea.com' },
+        };
+        if (res.data.publishedAt) schema['datePublished'] = res.data.publishedAt;
+        if (res.data.updatedAt) schema['dateModified'] = res.data.updatedAt;
+        if (res.data.author?.firstName) {
+          schema['author'] = { '@type': 'Person', name: `${res.data.author.firstName} ${res.data.author.lastName || ''}`.trim() };
+        }
+        if (res.data.coverImage) {
+          const absoluteImage = res.data.coverImage.startsWith('http')
+            ? res.data.coverImage
+            : `${environment.apiUrl.replace('/api', '')}${res.data.coverImage}`;
+          schema['image'] = absoluteImage;
+        }
+        injectJsonLd(this.document, 'blogposting-jsonld', schema);
 
         this.loading.set(false);
       },
