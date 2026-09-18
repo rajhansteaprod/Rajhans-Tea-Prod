@@ -84,6 +84,30 @@ function verify(routePrefix, slug, { requireJsonLdProduct = false, requireCards 
     // Organization/WebSite JSON-LD (baked into every route via index.html) must still be present, unchanged.
     check(url, /"@type"\s*:\s*"Organization"/.test(html), 'Organization JSON-LD is missing on this blog page');
     check(url, /"@type"\s*:\s*"WebSite"/.test(html), 'WebSite JSON-LD is missing on this blog page');
+
+    // Regression guard for "a valid prerendered blog becomes Blog Post Not
+    // Found after Angular hydration" (the Soft 404 incident): confirmed via a
+    // real headless-browser reproduction that this happens whenever the
+    // server render has no hydration annotations/transfer-cache state at
+    // all, because the client then bootstraps as a fresh, non-hydrated
+    // instance and re-fetches this exact blog from scratch — and, before a
+    // separate fix, ANY failure of that refetch (not just a real 404) was
+    // rendered as "Blog Post Not Found", replacing the real article. This
+    // check can't run a browser, but it can — and must — catch the
+    // structural precondition for the bug: without both an `ngh` hydration
+    // attribute and this blog's own data embedded in the TransferState
+    // ("ng-state") blob, the client is guaranteed to re-fetch on every load,
+    // reopening the door to that class of failure.
+    check(url, /\sngh="[^"]*"/.test(html), 'no hydration (ngh) annotations present — client will not hydrate, only fully re-render');
+    const stateMatch = html.match(/<script id="[^"]*-state" type="application\/json">([\s\S]*?)<\/script>/);
+    check(url, !!stateMatch, 'no TransferState ("*-state") script block present — client cannot reuse the SSR blog fetch and will always refetch');
+    if (stateMatch && blogPostings.length === 1) {
+      check(
+        url,
+        stateMatch[1].includes(JSON.stringify(blogPostings[0].headline).slice(1, -1)),
+        "this blog's own title was not found inside the embedded TransferState blob — the wrong (or no) response was cached",
+      );
+    }
   }
 }
 

@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Meta, Title } from '@angular/platform-browser';
 import { injectJsonLd } from '../../../core/seo/seo-content';
@@ -39,6 +39,11 @@ export class BlogDetailPageComponent implements OnInit {
   blog = signal<Blog | null>(null);
   loading = signal(false);
   notFound = signal(false);
+  /** A transient failure (network/CORS/5xx/timeout) fetching an otherwise-valid
+   * slug — never confused with notFound, which is reserved for a confirmed
+   * backend 404 for this exact slug. Only shown when there is no already-loaded
+   * article to protect (see loadBlog's error handler). */
+  loadError = signal(false);
 
   ngOnInit() {
     this.route.params.subscribe((params) => {
@@ -49,6 +54,7 @@ export class BlogDetailPageComponent implements OnInit {
   loadBlog(slug: string) {
     this.loading.set(true);
     this.notFound.set(false);
+    this.loadError.set(false);
 
     this.http.get<{ data: Blog }>(`${environment.apiUrl}/blog/${slug}`).subscribe({
       next: (res) => {
@@ -101,9 +107,21 @@ export class BlogDetailPageComponent implements OnInit {
 
         this.loading.set(false);
       },
-      error: () => {
-        this.notFound.set(true);
+      error: (err: HttpErrorResponse) => {
         this.loading.set(false);
+        // Only a confirmed backend 404 for this exact slug means "not found".
+        // Any other failure (network error, CORS, timeout, 5xx) is transient
+        // and must never destroy an already-valid article or masquerade as
+        // one — that was exactly how a correctly-prerendered blog page turned
+        // into "Blog Post Not Found" after hydration's client-side refetch
+        // hit an unrelated, non-404 error.
+        if (err.status === 404) {
+          this.notFound.set(true);
+        } else if (!this.blog()) {
+          this.loadError.set(true);
+        }
+        // else: blog() already holds valid data (e.g. from SSR/hydration) —
+        // leave it fully intact and show no error at all.
       },
     });
   }

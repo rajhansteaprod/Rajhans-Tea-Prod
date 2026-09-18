@@ -33,6 +33,17 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   const isRefreshEndpoint = req.url.includes('/auth/refresh-token');
 
+  // Public, anonymous, cacheable content reads (currently: blog-detail GET)
+  // that never need a session cookie. `withCredentials: true` unconditionally
+  // disqualifies a request from Angular's default HTTP transfer cache
+  // (see @angular/common's hasOutgoingCredentials check, applied regardless
+  // of any auth-header setting) — so forcing it here for a public GET was
+  // silently defeating provideClientHydration()'s built-in transfer cache,
+  // forcing a second client-side fetch after every hydration. Scoped to this
+  // one known-public, non-admin endpoint; every other request keeps its
+  // existing credentialed behavior unchanged.
+  const isPublicCacheableContentGet = req.method === 'GET' && !req.url.includes('/admin/') && /\/blog\/[^/?]+(?:\?.*)?$/.test(req.url);
+
   // ─────────────────────────────────────────────────────────────────────────
   // STEP 2: Attach access token if available (and not a public endpoint)
   // ─────────────────────────────────────────────────────────────────────────
@@ -42,7 +53,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       setHeaders: { Authorization: `Bearer ${token}` },
       withCredentials: true,
     });
-  } else {
+  } else if (!isPublicCacheableContentGet) {
     req = req.clone({ withCredentials: true });
   }
 
